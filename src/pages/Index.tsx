@@ -1,6 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Search, FileText, Building, MapPin, Map, ChevronRight } from "lucide-react";
+import { Search, FileText, Building, MapPin, Map, ChevronRight, User, Home, Gavel, BookOpen, Tag, Info, Mail, Newspaper } from "lucide-react";
 import justclicLogo from "../Feelinx_upload/justclic-logo.png";
 
 const Index = () => {
@@ -17,154 +17,224 @@ const Index = () => {
       
       <div className="w-full h-screen flex flex-col">
         {/* Header with Logo */}
-        <header className="bg-white h-32 flex items-center justify-center relative border-b border-gray-100">
+        <header className="bg-white h-20 flex items-center justify-center relative border-b border-border shadow-sm">
           <div className="text-center">
             {/* Actual JustClic Logo */}
-            <div className="flex items-center justify-center mb-2">
+            <div className="flex items-center justify-center mb-1">
               <img 
                 src="/lovable-uploads/e9c07c06-5d02-4e3a-a6d8-b04fdb0c7ffa.png" 
                 alt="JustClic.tn" 
-                className="h-16 w-auto object-contain"
+                className="h-12 w-auto object-contain"
               />
             </div>
-            <p className="text-blue-600 text-sm font-medium">Information citoyenne simplifiée</p>
+            <p className="text-primary text-xs font-medium">Information citoyenne simplifiée</p>
           </div>
           
-          {/* Language Switcher & Profile */}
-          <div className="absolute right-8 top-4 flex items-center gap-4">
-            <div className="flex items-center bg-gray-50 rounded-full p-1">
-              <Button size="sm" className="bg-blue-600 text-white hover:bg-blue-700 rounded-full px-4 py-1 text-sm">
+          {/* Language Switcher & Login */}
+          <div className="absolute right-8 top-1/2 -translate-y-1/2 flex items-center gap-4">
+            <div className="flex items-center bg-muted rounded-full p-1">
+              <Button size="sm" className="bg-primary text-primary-foreground hover:bg-primary/90 rounded-full px-4 py-1 text-sm font-medium">
                 FR
               </Button>
-              <Button variant="ghost" size="sm" className="text-gray-600 hover:bg-transparent rounded-full px-4 py-1 text-sm">
+              <Button variant="ghost" size="sm" className="text-muted-foreground hover:bg-transparent rounded-full px-4 py-1 text-sm">
                 AR
               </Button>
             </div>
-            <div className="w-10 h-10 bg-gray-200 rounded-full border-2 border-white shadow-sm"></div>
+            <Button variant="outline" size="sm" className="flex items-center gap-2 rounded-full px-4 py-2 text-sm font-medium border-border hover:bg-accent">
+              <User className="w-4 h-4" />
+              Se connecter
+            </Button>
           </div>
         </header>
 
         {/* Main Content - Split Screen */}
         <div className="flex-1 flex">
-          {/* Left Section - Blue Background */}
-          <div className="w-1/2 bg-blue-100 flex flex-col items-center justify-start pt-16 px-8">
-            <h2 className="text-blue-700 text-3xl font-spartan font-semibold text-center mb-12 max-w-md">
-              Observatoire des Droits Fondamentaux
-            </h2>
-            
-            <div className="w-full max-w-md space-y-6">
-              {/* Search Bar */}
-              <Button className="w-full h-12 bg-yellow-200 hover:bg-yellow-300 text-gray-700 rounded-lg shadow-sm border-0 flex items-center justify-center gap-3">
-                <Search className="w-5 h-5" />
-                <span className="font-medium">Rechercher une décision</span>
+          {/* Left Section - Blue Background - Legal Observatory */}
+          <div className="w-1/2 bg-gradient-to-b from-blue-50 to-blue-100 flex flex-col relative">
+            {/* Left Navigation */}
+            <nav className="absolute top-8 left-8 flex flex-col gap-4">
+              <Button variant="ghost" className="justify-start gap-3 text-primary hover:bg-white/50 transition-colors">
+                <Home className="w-4 h-4" />
+                Accueil
               </Button>
+              <Button variant="ghost" className="justify-start gap-3 text-primary hover:bg-white/50 transition-colors">
+                <Gavel className="w-4 h-4" />
+                Décisions
+              </Button>
+              <Button variant="ghost" className="justify-start gap-3 text-primary hover:bg-white/50 transition-colors">
+                <BookOpen className="w-4 h-4" />
+                Fiches pratiques
+              </Button>
+              <Button variant="ghost" className="justify-start gap-3 text-primary hover:bg-white/50 transition-colors">
+                <Tag className="w-4 h-4" />
+                Thématiques
+              </Button>
+            </nav>
 
-              {/* Textes fondamentaux */}
-              <Card className="bg-white rounded-lg shadow-sm border-0">
-                <CardContent className="p-6">
-                  <div className="flex items-center gap-3 mb-4">
-                    <FileText className="w-5 h-5 text-blue-600" />
-                    <h3 className="font-semibold text-gray-900">Textes fondamentaux</h3>
-                  </div>
-                  <div className="space-y-3 pl-2">
-                    <div className="flex items-center gap-3 text-gray-700">
-                      <div className="w-2 h-2 bg-gray-400 rounded-sm"></div>
-                      <span>Constitution</span>
-                    </div>
-                    <div className="flex items-center gap-3 text-gray-700">
-                      <div className="w-2 h-2 bg-gray-400 rounded-sm"></div>
-                      <span>Lois fondamentales</span>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
+            <div className="flex flex-col items-center justify-center pt-20 px-8">
+              <h2 className="text-primary text-3xl font-spartan font-bold text-center mb-12 max-w-md">
+                Observatoire des Droits Fondamentaux
+              </h2>
+              
+              <div className="w-full max-w-md space-y-6">
+                {/* Search Bar */}
+                <Button className="w-full h-14 bg-accent hover:bg-accent/90 text-accent-foreground rounded-xl shadow-lg border-0 flex items-center justify-center gap-3 transition-all hover:scale-105">
+                  <Search className="w-5 h-5" />
+                  <span className="font-semibold">Rechercher une décision</span>
+                </Button>
 
-              {/* Juridictions */}
-              <Card className="bg-white rounded-lg shadow-sm border-0">
-                <CardContent className="p-6">
-                  <div className="flex items-center gap-3 mb-4">
-                    <Building className="w-5 h-5 text-blue-600" />
-                    <h3 className="font-semibold text-gray-900">Juridictions</h3>
-                  </div>
-                  <div className="space-y-3 pl-2">
-                    <div className="flex items-center gap-3 text-gray-700">
-                      <div className="w-2 h-2 bg-gray-700 rounded-full"></div>
-                      <span>Conseil constitutionnel</span>
+                {/* Textes fondamentaux */}
+                <Card className="bg-white/80 backdrop-blur-sm rounded-xl shadow-lg border-0 hover:shadow-xl transition-all duration-300">
+                  <CardContent className="p-6">
+                    <div className="flex items-center gap-3 mb-4">
+                      <FileText className="w-5 h-5 text-primary" />
+                      <h3 className="font-semibold text-card-foreground">Textes fondamentaux</h3>
                     </div>
-                    <div className="flex items-center gap-3 text-gray-700">
-                      <div className="w-2 h-2 bg-gray-700 rounded-full"></div>
-                      <span>Tribunal administratif</span>
+                    <div className="space-y-3 pl-2">
+                      <div className="flex items-center gap-3 text-muted-foreground hover:text-foreground transition-colors cursor-pointer">
+                        <div className="w-2 h-2 bg-primary rounded-sm"></div>
+                        <span>Constitution</span>
+                      </div>
+                      <div className="flex items-center gap-3 text-muted-foreground hover:text-foreground transition-colors cursor-pointer">
+                        <div className="w-2 h-2 bg-primary rounded-sm"></div>
+                        <span>Lois fondamentales</span>
+                      </div>
                     </div>
-                    <div className="flex items-center gap-3 text-gray-700">
-                      <div className="w-2 h-2 bg-gray-700 rounded-full"></div>
-                      <span>Cour de cassation</span>
+                  </CardContent>
+                </Card>
+
+                {/* Juridictions */}
+                <Card className="bg-white/80 backdrop-blur-sm rounded-xl shadow-lg border-0 hover:shadow-xl transition-all duration-300">
+                  <CardContent className="p-6">
+                    <div className="flex items-center gap-3 mb-4">
+                      <Building className="w-5 h-5 text-primary" />
+                      <h3 className="font-semibold text-card-foreground">Juridictions</h3>
                     </div>
-                  </div>
-                </CardContent>
-              </Card>
+                    <div className="space-y-3 pl-2">
+                      <div className="flex items-center gap-3 text-muted-foreground hover:text-foreground transition-colors cursor-pointer">
+                        <div className="w-2 h-2 bg-primary rounded-full"></div>
+                        <span>Conseil constitutionnel</span>
+                      </div>
+                      <div className="flex items-center gap-3 text-muted-foreground hover:text-foreground transition-colors cursor-pointer">
+                        <div className="w-2 h-2 bg-primary rounded-full"></div>
+                        <span>Tribunal administratif</span>
+                      </div>
+                      <div className="flex items-center gap-3 text-muted-foreground hover:text-foreground transition-colors cursor-pointer">
+                        <div className="w-2 h-2 bg-primary rounded-full"></div>
+                        <span>Cour de cassation</span>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
             </div>
           </div>
 
-          {/* Right Section - Yellow Background */}
-          <div className="w-1/2 bg-yellow-100 flex flex-col items-center justify-start pt-16 px-8">
-            <h2 className="text-blue-700 text-3xl font-spartan font-semibold text-center mb-12 max-w-md">
-              Accès aux droits
-            </h2>
+          {/* Right Section - Yellow Background - Citizen Access */}
+          <div className="w-1/2 bg-gradient-to-b from-yellow-50 to-yellow-100 flex flex-col relative">
+            {/* Right Navigation */}
+            <nav className="absolute top-8 right-8 flex flex-col gap-4 items-end">
+              <Button variant="ghost" className="justify-start gap-3 text-primary hover:bg-white/50 transition-colors">
+                <Info className="w-4 h-4" />
+                À propos
+              </Button>
+              <Button variant="ghost" className="justify-start gap-3 text-primary hover:bg-white/50 transition-colors">
+                <Mail className="w-4 h-4" />
+                Contact
+              </Button>
+              <Button variant="ghost" className="justify-start gap-3 text-primary hover:bg-white/50 transition-colors">
+                <Newspaper className="w-4 h-4" />
+                Articles
+              </Button>
+            </nav>
 
-            <div className="w-full max-w-md space-y-6">
-              {/* Guides pratiques */}
-              <Card className="bg-orange-50 rounded-lg shadow-sm border-0">
-                <CardContent className="p-6">
-                  <div className="flex items-center gap-3 mb-4">
-                    <div className="w-5 h-5 bg-orange-500 rounded flex items-center justify-center">
-                      <span className="text-white text-xs">📋</span>
-                    </div>
-                    <h3 className="font-semibold text-gray-900">Guides pratiques</h3>
-                  </div>
-                  <div className="space-y-3 pl-2">
-                    <div className="flex items-center justify-between text-gray-700">
-                      <span>Vos droits au quotidien</span>
-                      <ChevronRight className="w-4 h-4" />
-                    </div>
-                    <div className="flex items-center justify-between text-gray-700">
-                      <span>Publications citoyennes</span>
-                      <ChevronRight className="w-4 h-4" />
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
+            <div className="flex flex-col items-center justify-center pt-20 px-8">
+              <h2 className="text-primary text-3xl font-spartan font-bold text-center mb-12 max-w-md">
+                Accès aux droits
+              </h2>
 
-              {/* Campagnes d'information */}
-              <Card className="bg-blue-50 rounded-lg shadow-sm border-0">
-                <CardContent className="p-6">
-                  <div className="flex items-center gap-3 mb-4">
-                    <MapPin className="w-5 h-5 text-blue-600" />
-                    <h3 className="font-semibold text-gray-900">Campagnes d'information</h3>
-                  </div>
-                  
-                  <Button className="w-full h-12 bg-white hover:bg-gray-50 text-gray-700 border border-gray-200 rounded-lg shadow-sm flex items-center justify-center gap-3">
-                    <Map className="w-5 h-5" />
-                    <span className="font-medium">Carte dynamique interactive</span>
-                  </Button>
-                </CardContent>
-              </Card>
+              <div className="w-full max-w-md space-y-6">
+                {/* Guides pratiques */}
+                <Card className="bg-white/80 backdrop-blur-sm rounded-xl shadow-lg border-0 hover:shadow-xl transition-all duration-300">
+                  <CardContent className="p-6">
+                    <div className="flex items-center gap-3 mb-4">
+                      <div className="w-5 h-5 bg-orange-500 rounded-lg flex items-center justify-center">
+                        <BookOpen className="w-3 h-3 text-white" />
+                      </div>
+                      <h3 className="font-semibold text-card-foreground">Guides pratiques</h3>
+                    </div>
+                    <div className="space-y-3 pl-2">
+                      <div className="flex items-center justify-between text-muted-foreground hover:text-foreground transition-colors cursor-pointer group">
+                        <span>Vos droits au quotidien</span>
+                        <ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                      </div>
+                      <div className="flex items-center justify-between text-muted-foreground hover:text-foreground transition-colors cursor-pointer group">
+                        <span>Publications citoyennes</span>
+                        <ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                {/* Campagnes d'information */}
+                <Card className="bg-white/80 backdrop-blur-sm rounded-xl shadow-lg border-0 hover:shadow-xl transition-all duration-300">
+                  <CardContent className="p-6">
+                    <div className="flex items-center gap-3 mb-4">
+                      <MapPin className="w-5 h-5 text-primary" />
+                      <h3 className="font-semibold text-card-foreground">Campagnes d'information</h3>
+                    </div>
+                    
+                    <Button className="w-full h-14 bg-white hover:bg-accent/50 text-foreground border border-border rounded-xl shadow-sm flex items-center justify-center gap-3 transition-all hover:scale-105">
+                      <Map className="w-5 h-5" />
+                      <span className="font-semibold">Carte dynamique interactive</span>
+                    </Button>
+                  </CardContent>
+                </Card>
+              </div>
             </div>
           </div>
         </div>
 
         {/* Footer */}
-        <footer className="bg-white border-t border-gray-100 py-4">
-          <div className="flex justify-center gap-16">
-            <div className="flex gap-8 text-blue-600">
-              <a href="#" className="text-sm font-medium hover:text-blue-800">Accueil</a>
-              <a href="#" className="text-sm hover:text-blue-800">Décisions</a>
-              <a href="#" className="text-sm hover:text-blue-800">Fiches pratiques</a>
-              <a href="#" className="text-sm hover:text-blue-800">Thématiques</a>
+        <footer className="bg-white border-t border-border py-6 shadow-sm">
+          <div className="flex justify-center gap-20">
+            {/* Left Section Navigation */}
+            <div className="flex gap-8">
+              <a href="#" className="text-sm font-medium text-primary hover:text-primary/80 transition-colors flex items-center gap-2">
+                <Home className="w-3 h-3" />
+                Accueil
+              </a>
+              <a href="#" className="text-sm text-primary hover:text-primary/80 transition-colors flex items-center gap-2">
+                <Gavel className="w-3 h-3" />
+                Décisions
+              </a>
+              <a href="#" className="text-sm text-primary hover:text-primary/80 transition-colors flex items-center gap-2">
+                <BookOpen className="w-3 h-3" />
+                Fiches pratiques
+              </a>
+              <a href="#" className="text-sm text-primary hover:text-primary/80 transition-colors flex items-center gap-2">
+                <Tag className="w-3 h-3" />
+                Thématiques
+              </a>
             </div>
-            <div className="flex gap-8 text-blue-600">
-              <a href="#" className="text-sm hover:text-blue-800">JustiClic</a>
-              <a href="#" className="text-sm hover:text-blue-800">À propos</a>
-              <a href="#" className="text-sm hover:text-blue-800">Contact</a>
+            {/* Right Section Navigation */}
+            <div className="flex gap-8">
+              <a href="#" className="text-sm text-primary hover:text-primary/80 transition-colors flex items-center gap-2">
+                <MapPin className="w-3 h-3" />
+                Accès aux droits
+              </a>
+              <a href="#" className="text-sm text-primary hover:text-primary/80 transition-colors flex items-center gap-2">
+                <Info className="w-3 h-3" />
+                À propos
+              </a>
+              <a href="#" className="text-sm text-primary hover:text-primary/80 transition-colors flex items-center gap-2">
+                <Mail className="w-3 h-3" />
+                Contact
+              </a>
+              <a href="#" className="text-sm text-primary hover:text-primary/80 transition-colors flex items-center gap-2">
+                <Newspaper className="w-3 h-3" />
+                Articles
+              </a>
             </div>
           </div>
         </footer>
