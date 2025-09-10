@@ -51,27 +51,7 @@ const Index = () => {
         <div className="flex-1 flex">
           {/* Left Section - Blue Background - Legal Observatory */}
           <div className="w-1/2 bg-gradient-to-b from-blue-50 to-blue-100 flex flex-col relative">
-            {/* Left Navigation */}
-            <nav className="absolute top-8 left-8 flex flex-col gap-4">
-              <Button variant="ghost" className="justify-start gap-3 text-primary hover:bg-white/50 transition-colors">
-                <Home className="w-4 h-4" />
-                Accueil
-              </Button>
-              <Button variant="ghost" className="justify-start gap-3 text-primary hover:bg-white/50 transition-colors">
-                <Gavel className="w-4 h-4" />
-                Décisions
-              </Button>
-              <Button variant="ghost" className="justify-start gap-3 text-primary hover:bg-white/50 transition-colors">
-                <BookOpen className="w-4 h-4" />
-                Fiches pratiques
-              </Button>
-              <Button variant="ghost" className="justify-start gap-3 text-primary hover:bg-white/50 transition-colors">
-                <Tag className="w-4 h-4" />
-                Thématiques
-              </Button>
-            </nav>
-
-            <div className="flex flex-col items-center justify-center pt-20 px-8">
+            <div className="flex flex-col items-center justify-center px-8 h-full">
               <h2 className="text-primary text-3xl font-spartan font-bold text-center mb-12 max-w-md">
                 Observatoire des Droits Fondamentaux
               </h2>
@@ -132,23 +112,7 @@ const Index = () => {
 
           {/* Right Section - Yellow Background - Citizen Access */}
           <div className="w-1/2 bg-gradient-to-b from-yellow-50 to-yellow-100 flex flex-col relative">
-            {/* Right Navigation */}
-            <nav className="absolute top-8 right-8 flex flex-col gap-4 items-end">
-              <Button variant="ghost" className="justify-start gap-3 text-primary hover:bg-white/50 transition-colors">
-                <Info className="w-4 h-4" />
-                À propos
-              </Button>
-              <Button variant="ghost" className="justify-start gap-3 text-primary hover:bg-white/50 transition-colors">
-                <Mail className="w-4 h-4" />
-                Contact
-              </Button>
-              <Button variant="ghost" className="justify-start gap-3 text-primary hover:bg-white/50 transition-colors">
-                <Newspaper className="w-4 h-4" />
-                Articles
-              </Button>
-            </nav>
-
-            <div className="flex flex-col items-center justify-center pt-20 px-8">
+            <div className="flex flex-col items-center justify-center px-8 h-full">
               <h2 className="text-primary text-3xl font-spartan font-bold text-center mb-12 max-w-md">
                 Accès aux droits
               </h2>
@@ -200,39 +164,31 @@ const Index = () => {
           <div className="flex justify-center gap-20">
             {/* Left Section Navigation */}
             <div className="flex gap-8">
-              <a href="#" className="text-sm font-medium text-primary hover:text-primary/80 transition-colors flex items-center gap-2">
-                <Home className="w-3 h-3" />
+              <a href="#" className="text-sm font-medium text-primary hover:text-primary/80 transition-colors">
                 Accueil
               </a>
-              <a href="#" className="text-sm text-primary hover:text-primary/80 transition-colors flex items-center gap-2">
-                <Gavel className="w-3 h-3" />
+              <a href="#" className="text-sm text-primary hover:text-primary/80 transition-colors">
                 Décisions
               </a>
-              <a href="#" className="text-sm text-primary hover:text-primary/80 transition-colors flex items-center gap-2">
-                <BookOpen className="w-3 h-3" />
+              <a href="#" className="text-sm text-primary hover:text-primary/80 transition-colors">
                 Fiches pratiques
               </a>
-              <a href="#" className="text-sm text-primary hover:text-primary/80 transition-colors flex items-center gap-2">
-                <Tag className="w-3 h-3" />
+              <a href="#" className="text-sm text-primary hover:text-primary/80 transition-colors">
                 Thématiques
               </a>
             </div>
             {/* Right Section Navigation */}
             <div className="flex gap-8">
-              <a href="#" className="text-sm text-primary hover:text-primary/80 transition-colors flex items-center gap-2">
-                <MapPin className="w-3 h-3" />
+              <a href="#" className="text-sm text-primary hover:text-primary/80 transition-colors">
                 Accès aux droits
               </a>
-              <a href="#" className="text-sm text-primary hover:text-primary/80 transition-colors flex items-center gap-2">
-                <Info className="w-3 h-3" />
+              <a href="#" className="text-sm text-primary hover:text-primary/80 transition-colors">
                 À propos
               </a>
-              <a href="#" className="text-sm text-primary hover:text-primary/80 transition-colors flex items-center gap-2">
-                <Mail className="w-3 h-3" />
+              <a href="#" className="text-sm text-primary hover:text-primary/80 transition-colors">
                 Contact
               </a>
-              <a href="#" className="text-sm text-primary hover:text-primary/80 transition-colors flex items-center gap-2">
-                <Newspaper className="w-3 h-3" />
+              <a href="#" className="text-sm text-primary hover:text-primary/80 transition-colors">
                 Articles
               </a>
             </div>
