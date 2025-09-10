@@ -25,7 +25,7 @@ const Index = () => {
                 <span className="bg-gradient-to-r from-blue-500 to-blue-700 bg-clip-text text-transparent">CLIC</span>
                 <span className="text-red-500 text-xl">.tn</span>
               </h1>
-              <p className="text-sm text-[hsl(var(--justclic-blue))] font-medium">
+              <p className="text-sm text-[hsl(var(--justclic-blue))] font-medium font-poppins">
                 Information citoyenne simplifiée
               </p>
             </div>
@@ -36,14 +36,14 @@ const Index = () => {
             <Button 
               variant="default"
               size="sm"
-              className="bg-[hsl(var(--justclic-blue-light))] text-[hsl(var(--justclic-blue))] hover:bg-[hsl(var(--justclic-blue-light))]/80 rounded-full px-4"
+              className="bg-[hsl(var(--justclic-blue-light))] text-[hsl(var(--justclic-blue))] hover:bg-[hsl(var(--justclic-blue-light))]/80 rounded-full px-4 font-inter font-medium"
             >
               FR
             </Button>
             <Button 
               variant="ghost"
               size="sm"
-              className="text-gray-500 rounded-full px-4"
+              className="text-gray-500 rounded-full px-4 font-inter font-medium"
             >
               AR
             </Button>
@@ -54,7 +54,7 @@ const Index = () => {
         {/* Left Section - Observatoire des Droits Fondamentaux */}
         <section className="flex-1 bg-gradient-to-br from-blue-100 to-blue-200 pt-24">
           <div className="h-full flex flex-col justify-center px-12 py-8">
-            <h2 className="text-4xl font-bold text-[hsl(var(--justclic-blue))] mb-12 text-center">
+            <h2 className="text-4xl font-bold text-[hsl(var(--justclic-blue))] mb-12 text-center font-league-spartan">
               Observatoire des Droits Fondamentaux
             </h2>
 
@@ -74,16 +74,16 @@ const Index = () => {
               <Card className="p-6 bg-gray-50 border-0 shadow-lg">
                 <div className="flex items-center space-x-3 mb-4">
                   <Book className="w-6 h-6 text-[hsl(var(--justclic-blue))]" />
-                  <h3 className="text-xl font-semibold text-gray-900">Textes fondamentaux</h3>
+                  <h3 className="text-xl font-semibold text-gray-900 font-poppins">Textes fondamentaux</h3>
                 </div>
                 <div className="space-y-3">
                   <div className="flex items-center space-x-3 text-gray-700 hover:text-[hsl(var(--justclic-blue))] cursor-pointer transition-colors">
                     <div className="w-4 h-4 bg-gray-400 rounded-sm"></div>
-                    <span>Constitution</span>
+                    <span className="font-poppins">Constitution</span>
                   </div>
                   <div className="flex items-center space-x-3 text-gray-700 hover:text-[hsl(var(--justclic-blue))] cursor-pointer transition-colors">
                     <div className="w-4 h-4 bg-gray-400 rounded-sm"></div>
-                    <span>Lois fondamentales</span>
+                    <span className="font-poppins">Lois fondamentales</span>
                   </div>
                 </div>
               </Card>
@@ -92,20 +92,20 @@ const Index = () => {
               <Card className="p-6 bg-gray-50 border-0 shadow-lg">
                 <div className="flex items-center space-x-3 mb-4">
                   <Building2 className="w-6 h-6 text-[hsl(var(--justclic-blue))]" />
-                  <h3 className="text-xl font-semibold text-gray-900">Juridictions</h3>
+                  <h3 className="text-xl font-semibold text-gray-900 font-poppins">Juridictions</h3>
                 </div>
                 <div className="space-y-3">
                   <div className="flex items-center space-x-3 text-gray-700 hover:text-[hsl(var(--justclic-blue))] cursor-pointer transition-colors">
                     <div className="w-3 h-3 bg-gray-400 rounded-full"></div>
-                    <span>Conseil constitutionnel</span>
+                    <span className="font-poppins">Conseil constitutionnel</span>
                   </div>
                   <div className="flex items-center space-x-3 text-gray-700 hover:text-[hsl(var(--justclic-blue))] cursor-pointer transition-colors">
                     <div className="w-3 h-3 bg-gray-400 rounded-full"></div>
-                    <span>Tribunal administratif</span>
+                    <span className="font-poppins">Tribunal administratif</span>
                   </div>
                   <div className="flex items-center space-x-3 text-gray-700 hover:text-[hsl(var(--justclic-blue))] cursor-pointer transition-colors">
                     <div className="w-3 h-3 bg-gray-400 rounded-full"></div>
-                    <span>Cour de cassation</span>
+                    <span className="font-poppins">Cour de cassation</span>
                   </div>
                 </div>
               </Card>
@@ -116,7 +116,7 @@ const Index = () => {
         {/* Right Section - Accès aux droits */}
         <section className="flex-1 bg-gradient-to-br from-yellow-100 to-yellow-200 pt-24">
           <div className="h-full flex flex-col justify-center px-12 py-8">
-            <h2 className="text-4xl font-bold text-[hsl(var(--justclic-blue))] mb-12 text-center">
+            <h2 className="text-4xl font-bold text-[hsl(var(--justclic-blue))] mb-12 text-center font-league-spartan">
               Accès aux droits
             </h2>
 
@@ -125,16 +125,16 @@ const Index = () => {
               <Card className="p-6 bg-orange-50 border-0 shadow-lg">
                 <div className="flex items-center space-x-3 mb-4">
                   <FileText className="w-6 h-6 text-orange-500" />
-                  <h3 className="text-xl font-semibold text-gray-900">Guides pratiques</h3>
+                  <h3 className="text-xl font-semibold text-gray-900 font-poppins">Guides pratiques</h3>
                 </div>
                 <div className="space-y-3">
                   <div className="flex items-center space-x-3 text-gray-700 hover:text-[hsl(var(--justclic-blue))] cursor-pointer transition-colors">
                     <ArrowRight className="w-4 h-4" />
-                    <span>Vos droits au quotidien</span>
+                    <span className="font-poppins">Vos droits au quotidien</span>
                   </div>
                   <div className="flex items-center space-x-3 text-gray-700 hover:text-[hsl(var(--justclic-blue))] cursor-pointer transition-colors">
                     <ArrowRight className="w-4 h-4" />
-                    <span>Publications citoyennes</span>
+                    <span className="font-poppins">Publications citoyennes</span>
                   </div>
                 </div>
               </Card>
@@ -143,9 +143,9 @@ const Index = () => {
               <Card className="p-6 bg-gradient-to-r from-blue-50 to-orange-50 border-0 shadow-lg">
                 <div className="flex items-center space-x-3 mb-4">
                   <Users className="w-6 h-6 text-[hsl(var(--justclic-blue))]" />
-                  <h3 className="text-xl font-semibold text-gray-900">Campagnes d'information</h3>
+                  <h3 className="text-xl font-semibold text-gray-900 font-poppins">Campagnes d'information</h3>
                 </div>
-                <Button className="w-full bg-white text-gray-700 hover:bg-gray-50 border border-gray-200 justify-center">
+                <Button className="w-full bg-white text-gray-700 hover:bg-gray-50 border border-gray-200 justify-center font-poppins">
                   <Map className="w-5 h-5 mr-2" />
                   Carte dynamique interactive
                 </Button>
@@ -158,15 +158,15 @@ const Index = () => {
         <footer className="absolute bottom-0 left-0 right-0 bg-white border-t border-gray-200 py-4">
           <div className="flex justify-between px-12">
             <nav className="flex space-x-12">
-              <a href="#" className="text-[hsl(var(--justclic-blue))] hover:underline">Accueil</a>
-              <a href="#" className="text-[hsl(var(--justclic-blue))] hover:underline">Décisions</a>
-              <a href="#" className="text-[hsl(var(--justclic-blue))] hover:underline">Fiches pratiques</a>
-              <a href="#" className="text-[hsl(var(--justclic-blue))] hover:underline">Thématiques</a>
+              <a href="#" className="text-[hsl(var(--justclic-blue))] hover:underline font-poppins">Accueil</a>
+              <a href="#" className="text-[hsl(var(--justclic-blue))] hover:underline font-poppins">Décisions</a>
+              <a href="#" className="text-[hsl(var(--justclic-blue))] hover:underline font-poppins">Fiches pratiques</a>
+              <a href="#" className="text-[hsl(var(--justclic-blue))] hover:underline font-poppins">Thématiques</a>
             </nav>
             <nav className="flex space-x-12">
-              <a href="#" className="text-[hsl(var(--justclic-blue))] hover:underline">JustiClic</a>
-              <a href="#" className="text-[hsl(var(--justclic-blue))] hover:underline">À propos</a>
-              <a href="#" className="text-[hsl(var(--justclic-blue))] hover:underline">Contact</a>
+              <a href="#" className="text-[hsl(var(--justclic-blue))] hover:underline font-poppins">JustiClic</a>
+              <a href="#" className="text-[hsl(var(--justclic-blue))] hover:underline font-poppins">À propos</a>
+              <a href="#" className="text-[hsl(var(--justclic-blue))] hover:underline font-poppins">Contact</a>
             </nav>
           </div>
         </footer>
