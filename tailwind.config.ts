@@ -14,8 +14,9 @@ export default {
     },
     extend: {
       fontFamily: {
+        sans: ["Inter", "ui-sans-serif", "system-ui"],
         'poppins': ['Poppins', 'sans-serif'],
-        'league-spartan': ['League Spartan', 'sans-serif'],
+        'spartan': ['League Spartan', 'sans-serif'], 
         'inter': ['Inter', 'sans-serif'],
       },
       colors: {
