@@ -1,6 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Search, FileText, Building, MapPin, Map, ChevronRight } from "lucide-react";
+import justclicLogo from "../Feelinx_upload/justclic-logo.png";
 
 const Index = () => {
   return (
@@ -18,13 +19,13 @@ const Index = () => {
         {/* Header with Logo */}
         <header className="bg-white h-32 flex items-center justify-center relative border-b border-gray-100">
           <div className="text-center">
-            {/* Logo Placeholder - Replace with actual logo when available */}
+            {/* Actual JustClic Logo */}
             <div className="flex items-center justify-center mb-2">
-              <span className="text-5xl font-bold">
-                <span className="text-yellow-400">JUST</span>
-                <span className="text-blue-600">CLIC</span>
-                <span className="text-red-500 text-2xl">.tn</span>
-              </span>
+              <img 
+                src="/lovable-uploads/e9c07c06-5d02-4e3a-a6d8-b04fdb0c7ffa.png" 
+                alt="JustClic.tn" 
+                className="h-16 w-auto object-contain"
+              />
             </div>
             <p className="text-blue-600 text-sm font-medium">Information citoyenne simplifiée</p>
           </div>
