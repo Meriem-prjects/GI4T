@@ -5,7 +5,6 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
-import odfLogo from "@/Feelinx_upload/odf-logo.png";
 
 const Observatoire = () => {
   const [searchQuery, setSearchQuery] = useState("");
@@ -58,7 +57,7 @@ const Observatoire = () => {
         <div className="container mx-auto px-4 py-3">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-3">
-              <img src={odfLogo} alt="ODF Logo" className="h-8 w-auto" />
+              <img src="/lovable-uploads/888880df-e212-4664-9c76-1b772b3e15de.png" alt="ODF Logo" className="h-8 w-auto" />
               <h1 className="text-lg md:text-xl font-bold text-primary hidden sm:block">Observatoire des Droits Fondamentaux</h1>
               <h1 className="text-lg font-bold text-primary sm:hidden">ODF</h1>
             </div>
