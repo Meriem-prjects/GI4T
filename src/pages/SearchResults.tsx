@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { Link } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { Link, useSearchParams } from "react-router-dom";
 import { Search, Filter, ChevronDown, Grid3X3, List, ArrowUpDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -12,10 +12,21 @@ import { Badge } from "@/components/ui/badge";
 import { Breadcrumb, BreadcrumbList, BreadcrumbItem, BreadcrumbLink, BreadcrumbPage, BreadcrumbSeparator } from "@/components/ui/breadcrumb";
 
 const SearchResults = () => {
-  const [searchQuery, setSearchQuery] = useState("décisions récentes sur la vie privée des 6 derniers mois");
+  const [searchParams] = useSearchParams();
+  const [searchQuery, setSearchQuery] = useState("");
   const [selectedTribunal, setSelectedTribunal] = useState("all");
   const [viewMode, setViewMode] = useState("grid");
   const [sortBy, setSortBy] = useState("recent");
+
+  // Get search query from URL params on component mount
+  useEffect(() => {
+    const queryFromUrl = searchParams.get('q');
+    if (queryFromUrl) {
+      setSearchQuery(decodeURIComponent(queryFromUrl));
+    } else {
+      setSearchQuery("décisions récentes sur la vie privée des 6 derniers mois");
+    }
+  }, [searchParams]);
 
   const activeFilters = ["Décisions majeures", "Constitutionnelles", "Récentes", "Vie privée", "Liberté d'expression"];
 
@@ -124,25 +135,38 @@ const SearchResults = () => {
         </Breadcrumb>
 
         {/* Search Bar */}
-        <div className="max-w-4xl mx-auto mb-6">
+        <div className="max-w-4xl mx-auto mb-6 animate-fade-in" style={{animationDelay: '100ms'}}>
           <div className="relative">
             <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-muted-foreground" size={20} />
             <Input
               placeholder="Recherche intelligente..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-12 pr-32 py-4 text-base bg-background rounded-lg border"
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') {
+                  window.location.href = `/search-results?q=${encodeURIComponent(searchQuery)}`;
+                }
+              }}
+              className="pl-12 pr-32 py-4 text-base bg-background rounded-lg border transition-all duration-300 hover:shadow-lg focus:shadow-lg"
             />
-            <Button className="absolute right-2 top-1/2 transform -translate-y-1/2 px-6">
+            <Button 
+              className="absolute right-2 top-1/2 transform -translate-y-1/2 px-6 transition-all duration-300 hover:scale-105"
+              onClick={() => window.location.href = `/search-results?q=${encodeURIComponent(searchQuery)}`}
+            >
               Rechercher
             </Button>
           </div>
         </div>
 
         {/* Active Filters */}
-        <div className="flex flex-wrap gap-2 mb-6 justify-center">
-          {activeFilters.map((filter) => (
-            <Badge key={filter} variant="secondary" className="px-3 py-1">
+        <div className="flex flex-wrap gap-2 mb-6 justify-center animate-fade-in" style={{animationDelay: '200ms'}}>
+          {activeFilters.map((filter, index) => (
+            <Badge 
+              key={filter} 
+              variant="secondary" 
+              className="px-3 py-1 animate-fade-in" 
+              style={{animationDelay: `${300 + index * 50}ms`}}
+            >
               {filter}
             </Badge>
           ))}
@@ -240,9 +264,14 @@ const SearchResults = () => {
           {/* Main Content */}
           <div className="flex-1">
             {/* Results Header */}
-            <div className="flex items-center justify-between mb-6">
+            <div className="flex items-center justify-between mb-6 animate-fade-in" style={{animationDelay: '400ms'}}>
               <div className="flex items-center gap-4">
-                <span className="text-sm text-muted-foreground">1,247 décisions trouvées</span>
+                <span className="text-sm text-muted-foreground">
+                  1,247 décisions trouvées 
+                  {searchQuery && (
+                    <span className="font-medium"> pour "{searchQuery}"</span>
+                  )}
+                </span>
                 <div className="flex items-center gap-2">
                   <Button 
                     variant={viewMode === "grid" ? "default" : "outline"} 

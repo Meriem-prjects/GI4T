@@ -42,6 +42,7 @@ All colors MUST be HSL.
     /* Page Transitions */
     --transition-page: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
     --transition-smooth: all 0.3s ease-out;
+    --transition-search: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
 
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 210 40% 98%;
@@ -115,5 +116,10 @@ All colors MUST be HSL.
 
   body {
     @apply bg-background text-foreground;
+  }
+  
+  /* Search transition effects */
+  .search-container.animate-fade-out {
+    @apply animate-fade-out;
   }
 }

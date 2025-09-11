@@ -17,7 +17,15 @@ const Observatoire = () => {
 
   const handleSearch = () => {
     if (searchQuery.trim()) {
-      navigate(`/search-results?q=${encodeURIComponent(searchQuery)}`);
+      // Add a small delay for smooth transition visual effect
+      const searchContainer = document.querySelector('.search-container');
+      if (searchContainer) {
+        searchContainer.classList.add('animate-fade-out');
+      }
+      
+      setTimeout(() => {
+        navigate(`/search-results?q=${encodeURIComponent(searchQuery)}`);
+      }, 150);
     }
   };
 
@@ -121,18 +129,18 @@ const Observatoire = () => {
           </p>
           
           {/* Search Bar */}
-          <div className="max-w-4xl mx-auto mb-6 md:mb-8">
-            <div className="relative">
+          <div className="max-w-4xl mx-auto mb-6 md:mb-8 search-container">
+            <div className="relative transition-all duration-300">
               <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-muted-foreground" size={20} />
               <Input
                 placeholder="Recherchez des décisions, analyses..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
-                className="pl-12 pr-20 sm:pr-32 py-4 md:py-6 text-base md:text-lg bg-background text-foreground rounded-xl"
+                className="pl-12 pr-20 sm:pr-32 py-4 md:py-6 text-base md:text-lg bg-background text-foreground rounded-xl transition-all duration-300 hover:shadow-lg focus:shadow-lg"
               />
               <Button 
-                className="absolute right-2 top-1/2 transform -translate-y-1/2 text-sm md:text-base px-3 md:px-4"
+                className="absolute right-2 top-1/2 transform -translate-y-1/2 text-sm md:text-base px-3 md:px-4 transition-all duration-300 hover:scale-105"
                 onClick={handleSearch}
               >
                 <span className="hidden sm:inline">Rechercher</span>
