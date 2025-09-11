@@ -20,6 +20,7 @@ export interface Decision {
   summary?: string;
   legalPrinciples?: string[];
   downloadUrl?: string;
+  scanImages?: string[];
 }
 
 export interface SearchFilters {

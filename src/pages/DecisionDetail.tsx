@@ -1,13 +1,17 @@
 import { useState, useEffect } from "react";
 import { useParams, Link } from "react-router-dom";
-import { Search, Download, Bookmark, Share2, Calendar, Building, Scale, ChevronLeft, ArrowRight } from "lucide-react";
+import { Search, Download, Bookmark, Share2, Calendar, Building, Scale, ChevronLeft, ArrowRight, Menu } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
+import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Breadcrumb, BreadcrumbList, BreadcrumbItem, BreadcrumbLink, BreadcrumbPage, BreadcrumbSeparator } from "@/components/ui/breadcrumb";
+import { ScanImageViewer } from "@/components/ScanImageViewer";
 import type { Decision } from "@/types/decision";
+import scanImage1 from "@/assets/decision-scan-1.jpg";
+import scanImage2 from "@/assets/decision-scan-2.jpg";
 
 const DecisionDetail = () => {
   const { id } = useParams<{ id: string }>();
@@ -20,94 +24,102 @@ const DecisionDetail = () => {
     const sampleDecision: Decision = {
       id: parseInt(id || "1"),
       number: "2024/147",
-      title: "Protection des données personnelles",
-      court: "Cour Suprême",
-      date: "15 janvier 2024",
-      description: "Cette décision établit les principes fondamentaux du traitement des données personnelles en matière de droits fondamentaux.",
-      tags: ["Vie privée", "RGPD", "Données personnelles"],
+      title: "Protection des données personnelles dans le cadre des algorithmes de recommandation",
+      court: "Conseil d'État",
+      date: "15 mars 2024",
+      description: "Cette décision précise les obligations des plateformes numériques en matière de transparence algorithmique et de protection des données personnelles des utilisateurs.",
+      tags: ["Protection des données", "RGPD", "Algorithmes", "Transparence"],
       importance: "Majeure",
       importanceColor: "bg-red-100 text-red-800",
-      caseNumber: "CS-2024-0147",
-      jurisdiction: "Nationale",
-      judges: ["Mme Justice Fatima Al-Rashid", "M. Justice Mohamed Benali", "Mme Justice Aicha Zemmouri"],
+      caseNumber: "CE-2024-156789",
+      jurisdiction: "Contentieux administratif",
+      judges: ["Marie Dubois", "Jean Martin", "Sophie Laurent"],
       parties: {
-        plaintiff: "Association de Défense des Droits Numériques",
-        defendant: "Ministère de l'Intérieur"
+        plaintiff: "Association de défense des droits numériques",
+        defendant: "Plateforme sociale XYZ"
       },
-      summary: "La Cour Suprême établit dans cette décision historique les limites constitutionnelles du traitement des données personnelles par les administrations publiques, renforçant ainsi la protection de la vie privée des citoyens dans l'ère numérique.",
+      summary: "La Cour précise que les algorithmes de recommandation utilisés par les plateformes numériques doivent respecter les principes de transparence et de minimisation des données. Elle établit que les utilisateurs ont le droit d'obtenir des explications compréhensibles sur le fonctionnement des algorithmes qui les concernent.",
       legalPrinciples: [
-        "Principe de proportionnalité dans le traitement des données",
-        "Consentement éclairé et libre",
-        "Droit à l'oubli numérique",
-        "Transparence des algorithmes publics"
+        "Droit à l'explication des décisions algorithmiques",
+        "Principe de minimisation des données (article 5 RGPD)",
+        "Transparence des traitements de données personnelles",
+        "Droit à l'information renforcé pour les algorithmes"
       ],
-      fullText: `
-        ARRÊT DE LA COUR SUPRÊME
-        
-        Séance publique du 15 janvier 2024
-        
-        RÉPUBLIQUE [...]
-        
-        AU NOM DU PEUPLE
-        
-        LA COUR SUPRÊME
-        
-        VU les dispositions constitutionnelles relatives aux droits fondamentaux ;
-        VU la loi n° XX-XX relative à la protection des données à caractère personnel ;
-        
-        ATTENDU que l'Association de Défense des Droits Numériques conteste la légalité du système de surveillance mis en place par le Ministère de l'Intérieur ;
-        
-        ATTENDU que le droit à la vie privée, consacré par l'article 24 de la Constitution, impose des limites strictes à toute ingérence de l'État dans la sphère privée des individus ;
-        
-        CONSIDÉRANT que le traitement automatisé des données personnelles doit respecter les principes de nécessité, de proportionnalité et de finalité ;
-        
-        CONSIDÉRANT que tout système de surveillance doit être encadré par des garanties procédurales et être soumis à un contrôle judiciaire effectif ;
-        
-        PAR CES MOTIFS :
-        
-        DÉCLARE que le système de surveillance contesté porte atteinte de manière disproportionnée au droit à la vie privée ;
-        
-        ORDONNE au Ministère de l'Intérieur de modifier son système dans un délai de six mois ;
-        
-        ÉTABLIT les principes suivants :
-        
-        1. Principe de proportionnalité : Tout traitement de données doit être strictement nécessaire à la finalité poursuivie.
-        
-        2. Consentement éclairé : Les citoyens doivent être informés de manière claire et complète de l'utilisation de leurs données.
-        
-        3. Droit à l'oubli : Toute personne a le droit d'obtenir l'effacement de ses données personnelles dans certaines conditions.
-        
-        4. Transparence algorithmique : Les algorithmes utilisés par les administrations publiques doivent être transparents et auditables.
-        
-        ORDONNE la publication de cet arrêt au Journal Officiel.
-        
-        Ainsi jugé et prononcé publiquement le 15 janvier 2024.
-        
-        La Présidente : Mme Justice Fatima Al-Rashid
-        Les Conseillers : M. Justice Mohamed Benali, Mme Justice Aicha Zemmouri
-      `,
+      scanImages: [scanImage1, scanImage2],
+      fullText: `CONSEIL D'ÉTAT
+
+Séance du 15 mars 2024
+Lecture du 22 mars 2024
+
+RÉPUBLIQUE FRANÇAISE
+AU NOM DU PEUPLE FRANÇAIS
+
+Le Conseil d'État,
+
+Vu la requête enregistrée le 12 janvier 2024 au secrétariat du contentieux du Conseil d'État, présentée par l'Association de défense des droits numériques, tendant à ce que le Conseil d'État annule la décision implicite de rejet née du silence gardé par l'Autorité de régulation sur la demande de mise en demeure de la société Plateforme sociale XYZ ;
+
+Vu le règlement général sur la protection des données (RGPD) ;
+Vu le code des relations entre le public et l'administration ;
+Vu le code de justice administrative ;
+
+Après avoir entendu en séance publique :
+- le rapport de Mme Marie Dubois, conseillère d'État,
+- les conclusions de M. Jean Martin, rapporteur public ;
+
+CONSIDÉRANT CE QUI SUIT :
+
+1. Considérant que l'Association de défense des droits numériques demande l'annulation de la décision implicite de rejet née du silence gardé par l'Autorité de régulation sur sa demande de mise en demeure concernant les pratiques de la société Plateforme sociale XYZ en matière d'algorithmes de recommandation ;
+
+2. Considérant que les algorithmes de recommandation utilisés par les plateformes numériques constituent des traitements de données personnelles au sens de l'article 4 du règlement général sur la protection des données ;
+
+3. Considérant que le principe de transparence, énoncé à l'article 5 paragraphe 1 point a) du RGPD, impose aux responsables de traitement de fournir aux personnes concernées des informations concises, transparentes, compréhensibles et aisément accessibles concernant le traitement de leurs données ;
+
+4. Considérant qu'en matière d'algorithmes de recommandation, cette obligation de transparence s'étend à l'explication du fonctionnement général de l'algorithme et des critères utilisés pour personnaliser les recommandations ;
+
+5. Considérant que le principe de minimisation des données, prévu à l'article 5 paragraphe 1 point c) du RGPD, exige que les données traitées soient adéquates, pertinentes et limitées à ce qui est nécessaire au regard des finalités pour lesquelles elles sont traitées ;
+
+6. Considérant que la société Plateforme sociale XYZ ne respecte pas ces obligations en refusant de communiquer des informations compréhensibles sur le fonctionnement de ses algorithmes de recommandation et en collectant des données excédant les besoins légitimes de personnalisation ;
+
+DÉCIDE :
+
+Article 1er : La décision implicite de rejet est annulée.
+
+Article 2 : L'affaire est renvoyée à l'Autorité de régulation pour qu'elle procède à un nouvel examen de la demande de mise en demeure.
+
+Article 3 : Il est enjoint à la société Plateforme sociale XYZ de se conformer aux obligations de transparence et de minimisation des données dans un délai de six mois.
+
+Article 4 : La présente décision sera notifiée à l'Association de défense des droits numériques et à la société Plateforme sociale XYZ.
+
+Fait à Paris, le 22 mars 2024.
+
+Le Président,
+Sophie Laurent
+
+Les Conseillers,
+Marie Dubois
+Jean Martin`,
       relatedDecisions: [
         {
           id: 2,
-          number: "2023/089",
-          title: "Liberté d'expression en ligne",
-          court: "Cour d'Appel",
-          date: "12 décembre 2023",
-          description: "Analyse des limites de la liberté d'expression sur les plateformes numériques...",
-          tags: ["Expression", "Numérique"],
+          number: "2024/2",
+          title: "Arrêt sur la portabilité des données",
+          court: "CJUE",
+          date: "2024-02-28",
+          description: "Précisions sur le droit à la portabilité...",
+          tags: ["Portabilité", "RGPD"],
           importance: "Important",
-          importanceColor: "bg-yellow-100 text-yellow-800"
+          importanceColor: "bg-orange-500"
         },
         {
           id: 3,
-          number: "2023/156",
-          title: "Surveillance et sécurité nationale",
-          court: "Cour Constitutionnelle",
-          date: "20 novembre 2023",
-          description: "Équilibre entre sécurité nationale et droits individuels...",
-          tags: ["Sécurité", "Surveillance"],
-          importance: "Majeure",
-          importanceColor: "bg-red-100 text-red-800"
+          number: "2024/3",
+          title: "Décision cookies et consentement",
+          court: "CNIL",
+          date: "2024-01-15",
+          description: "Modalités du consentement pour les cookies...",
+          tags: ["Cookies", "Consentement"],
+          importance: "Standard",
+          importanceColor: "bg-blue-500"
         }
       ]
     };
@@ -122,7 +134,7 @@ const DecisionDetail = () => {
   }
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background animate-fade-in">
       {/* Header */}
       <header className="border-b bg-background/95 backdrop-blur sticky top-0 z-50">
         <div className="container mx-auto px-4 py-3">
@@ -130,9 +142,10 @@ const DecisionDetail = () => {
             <div className="flex items-center space-x-3">
               <img src="/Feelinx_upload/odf-logo.png" alt="ODF Logo" className="h-8 w-auto" />
               <h1 className="text-lg md:text-xl font-bold text-primary hidden sm:block">Observatoire des Droits Fondamentaux</h1>
+              <h1 className="text-lg font-bold text-primary sm:hidden">ODF</h1>
             </div>
             
-            <div className="flex items-center space-x-6">
+            <div className="flex items-center space-x-2">
               {/* Search */}
               <div className="relative hidden md:block">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground" size={16} />
@@ -153,35 +166,66 @@ const DecisionDetail = () => {
                   AR
                 </Button>
               </div>
+              
+              {/* Mobile Menu */}
+              <Sheet>
+                <SheetTrigger asChild>
+                  <Button variant="ghost" size="sm" className="md:hidden">
+                    <Menu className="h-5 w-5" />
+                  </Button>
+                </SheetTrigger>
+                <SheetContent side="right" className="w-80">
+                  <nav className="flex flex-col space-y-4 mt-8">
+                    <Link to="/" className="text-lg hover:text-primary p-2 rounded-lg hover:bg-muted transition-all">Accueil</Link>
+                    <Link to="/observatoire" className="text-lg hover:text-primary p-2 rounded-lg hover:bg-muted transition-all">Observatoire</Link>
+                    <a href="#" className="text-lg text-primary p-2 rounded-lg bg-muted">Décisions</a>
+                    <a href="#" className="text-lg hover:text-primary p-2 rounded-lg hover:bg-muted transition-all">Fiches pratiques</a>
+                    <a href="#" className="text-lg hover:text-primary p-2 rounded-lg hover:bg-muted transition-all">Thématiques</a>
+                  </nav>
+                </SheetContent>
+              </Sheet>
+              
+              {/* Desktop Navigation */}
+              <nav className="hidden md:flex items-center space-x-6 ml-4">
+                <Link to="/" className="text-sm hover:text-primary transition-colors">Accueil</Link>
+                <Link to="/observatoire" className="text-sm hover:text-primary transition-colors">Observatoire</Link>
+                <a href="#" className="text-sm text-primary font-medium">Décisions</a>
+                <a href="#" className="text-sm hover:text-primary transition-colors">Fiches pratiques</a>
+                <a href="#" className="text-sm hover:text-primary transition-colors">Thématiques</a>
+              </nav>
             </div>
           </div>
         </div>
       </header>
 
-      <div className="container mx-auto px-4 py-6">
-        {/* Breadcrumb */}
-        <Breadcrumb className="mb-6">
-          <BreadcrumbList>
-            <BreadcrumbItem>
-              <BreadcrumbLink asChild>
-                <Link to="/">Accueil</Link>
-              </BreadcrumbLink>
-            </BreadcrumbItem>
-            <BreadcrumbSeparator />
-            <BreadcrumbItem>
-              <BreadcrumbLink asChild>
-                <Link to="/search-results">Résultats de recherche</Link>
-              </BreadcrumbLink>
-            </BreadcrumbItem>
-            <BreadcrumbSeparator />
-            <BreadcrumbItem>
-              <BreadcrumbPage>Arrêt n° {decision.number}</BreadcrumbPage>
-            </BreadcrumbItem>
-          </BreadcrumbList>
-        </Breadcrumb>
+      {/* Breadcrumbs */}
+      <div className="bg-muted/30 py-3 animate-slide-in-right">
+        <div className="container mx-auto px-4">
+          <Breadcrumb>
+            <BreadcrumbList>
+              <BreadcrumbItem>
+                <BreadcrumbLink asChild>
+                  <Link to="/">Accueil</Link>
+                </BreadcrumbLink>
+              </BreadcrumbItem>
+              <BreadcrumbSeparator />
+              <BreadcrumbItem>
+                <BreadcrumbLink asChild>
+                  <Link to="/observatoire">Observatoire</Link>
+                </BreadcrumbLink>
+              </BreadcrumbItem>
+              <BreadcrumbSeparator />
+              <BreadcrumbItem>
+                <BreadcrumbPage>Décision {decision.number}</BreadcrumbPage>
+              </BreadcrumbItem>
+            </BreadcrumbList>
+          </Breadcrumb>
+        </div>
+      </div>
 
+      <div className="container mx-auto px-4 py-6 animate-fade-in">
         {/* Back Button */}
-        <Button variant="ghost" className="mb-6" asChild>
+        <Button variant="ghost" className="mb-6 hover:bg-muted transition-colors" asChild>
           <Link to="/search-results">
             <ChevronLeft className="w-4 h-4 mr-2" />
             Retour aux résultats
@@ -192,7 +236,7 @@ const DecisionDetail = () => {
           {/* Main Content */}
           <div className="lg:col-span-3 space-y-6">
             {/* Decision Header */}
-            <Card>
+            <Card className="animate-fade-in">
               <CardHeader>
                 <div className="flex items-start justify-between mb-4">
                   <div className="space-y-2">
@@ -205,7 +249,7 @@ const DecisionDetail = () => {
                     <CardTitle className="text-2xl">{decision.title}</CardTitle>
                     <CardDescription className="text-base">{decision.summary}</CardDescription>
                   </div>
-                  <div className="flex gap-2">
+                  <div className="flex gap-2 flex-wrap">
                     <Button variant="outline" size="sm">
                       <Bookmark className="w-4 h-4 mr-2" />
                       Sauvegarder
@@ -222,7 +266,7 @@ const DecisionDetail = () => {
                 </div>
 
                 {/* Tags */}
-                <div className="flex gap-2 mb-4">
+                <div className="flex gap-2 mb-4 flex-wrap">
                   {decision.tags.map((tag) => (
                     <Badge key={tag} variant="secondary">
                       {tag}
@@ -233,7 +277,7 @@ const DecisionDetail = () => {
             </Card>
 
             {/* Legal Principles */}
-            <Card>
+            <Card className="animate-fade-in">
               <CardHeader>
                 <CardTitle className="text-lg">Principes juridiques établis</CardTitle>
               </CardHeader>
@@ -251,8 +295,16 @@ const DecisionDetail = () => {
               </CardContent>
             </Card>
 
+            {/* Scan Images Section */}
+            {decision.scanImages && (
+              <ScanImageViewer 
+                scanImages={decision.scanImages} 
+                title="Document Original Scanné"
+              />
+            )}
+
             {/* Full Decision Text */}
-            <Card>
+            <Card className="animate-fade-in">
               <CardHeader>
                 <CardTitle className="text-lg">Texte intégral de la décision</CardTitle>
               </CardHeader>
@@ -267,9 +319,9 @@ const DecisionDetail = () => {
           </div>
 
           {/* Sidebar */}
-          <div className="space-y-6">
+          <div className="space-y-6 animate-slide-in-right">
             {/* Decision Metadata */}
-            <Card>
+            <Card className="sticky top-24">
               <CardHeader>
                 <CardTitle className="text-lg">Informations</CardTitle>
               </CardHeader>

@@ -67,7 +67,7 @@ const SearchResults = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background animate-fade-in">
       {/* Header */}
       <header className="border-b bg-background/95 backdrop-blur sticky top-0 z-50">
         <div className="container mx-auto px-4 py-3">
@@ -82,7 +82,7 @@ const SearchResults = () => {
               <nav className="hidden md:flex items-center space-x-6">
                 <Link to="/" className="text-sm hover:text-primary transition-colors">Accueil</Link>
                 <Link to="/observatoire" className="text-sm hover:text-primary transition-colors">Observatoire</Link>
-                <a href="#" className="text-sm hover:text-primary transition-colors">Décisions</a>
+                <a href="#" className="text-sm text-primary font-medium">Recherche</a>
                 <a href="#" className="text-sm hover:text-primary transition-colors">Fiches pratiques</a>
                 <a href="#" className="text-sm hover:text-primary transition-colors">Thématiques</a>
               </nav>
@@ -101,9 +101,9 @@ const SearchResults = () => {
         </div>
       </header>
 
-      <div className="container mx-auto px-4 py-6">
+      <div className="container mx-auto px-4 py-6 animate-fade-in">
         {/* Breadcrumb */}
-        <Breadcrumb className="mb-6">
+        <Breadcrumb className="mb-6 animate-slide-in-right">
           <BreadcrumbList>
             <BreadcrumbItem>
               <BreadcrumbLink asChild>
@@ -148,16 +148,16 @@ const SearchResults = () => {
           ))}
         </div>
 
-        <div className="flex flex-col lg:flex-row gap-6">
+        <div className="flex flex-col lg:flex-row gap-6 animate-fade-in">
           {/* Left Sidebar - Filters */}
-          <div className="w-full lg:w-80 space-y-6">
+          <div className="w-full lg:w-80 space-y-6 animate-slide-in-right">
             <Card>
               <CardHeader className="pb-4">
                 <CardTitle className="text-lg flex items-center gap-2">
                   <Filter className="w-5 h-5" />
                   Filtres Avancés
                 </CardTitle>
-                <Button variant="outline" size="sm" className="text-primary">
+                <Button variant="outline" size="sm" className="text-primary hover:bg-primary hover:text-primary-foreground transition-colors">
                   Réinitialiser
                 </Button>
               </CardHeader>
@@ -274,10 +274,10 @@ const SearchResults = () => {
             </div>
 
             {/* Search Results */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-              {searchResults.map((result) => (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8 animate-fade-in">
+              {searchResults.map((result, index) => (
                 <Link key={result.id} to={`/decision/${result.id}`} className="block">
-                  <Card className="hover:shadow-lg transition-shadow cursor-pointer">
+                  <Card className="hover:shadow-lg transition-all duration-300 cursor-pointer hover:scale-105" style={{animationDelay: `${index * 100}ms`}}>
                     <CardHeader className="pb-4">
                       <div className="flex items-center justify-between mb-2">
                         <span className="text-sm text-muted-foreground">
@@ -303,7 +303,7 @@ const SearchResults = () => {
                             </Badge>
                           ))}
                         </div>
-                        <Button variant="outline" size="sm" onClick={(e) => e.preventDefault()}>
+                        <Button variant="outline" size="sm" className="hover:bg-primary hover:text-primary-foreground transition-colors">
                           Consulter
                         </Button>
                       </div>
