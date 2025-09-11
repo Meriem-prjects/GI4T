@@ -55,7 +55,7 @@ const Observatoire = () => {
         <div className="container mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-8">
-              <h1 className="text-2xl font-bold text-primary">ODF</h1>
+              <img src="/lovable-uploads/518e38e3-af2e-497e-84a3-e8944dcf10f5.png" alt="ODF Logo" className="h-8 w-auto" />
               <nav className="hidden md:flex items-center space-x-6">
                 <a href="/" className="text-sm hover:text-primary">Accueil</a>
                 <a href="#" className="text-sm text-primary">Observatoire</a>
