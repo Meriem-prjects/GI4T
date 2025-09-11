@@ -64,15 +64,14 @@ const Observatoire = () => {
             
             <div className="flex items-center space-x-2">
               {/* Language Switcher */}
-              <Select defaultValue="fr">
-                <SelectTrigger className="w-16 h-10 border bg-background">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent className="bg-background border shadow-lg">
-                  <SelectItem value="fr">🇫🇷 FR</SelectItem>
-                  <SelectItem value="ar">🇸🇦 AR</SelectItem>
-                </SelectContent>
-              </Select>
+              <div className="flex items-center bg-muted rounded-full p-1">
+                <Button size="sm" className="bg-primary text-primary-foreground hover:bg-primary/90 rounded-full px-4 py-1 text-sm font-medium">
+                  FR
+                </Button>
+                <Button variant="ghost" size="sm" className="text-muted-foreground hover:bg-transparent rounded-full px-4 py-1 text-sm">
+                  AR
+                </Button>
+              </div>
               
               {/* Mobile Menu */}
               <Sheet open={isMobileMenuOpen} onOpenChange={setIsMobileMenuOpen}>
@@ -108,9 +107,6 @@ const Observatoire = () => {
       {/* Hero Section with Search */}
       <section className="bg-gradient-to-br from-primary to-primary-foreground text-primary-foreground py-8 md:py-16">
         <div className="container mx-auto px-4 text-center">
-          <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-6xl font-bold mb-4 md:mb-6 leading-tight">
-            Explorez vos Droits Fondamentaux
-          </h1>
           <p className="text-base sm:text-lg md:text-xl mb-8 md:mb-12 max-w-3xl mx-auto opacity-90 px-4">
             Accédez facilement aux décisions de justice, analyses juridiques et guides pratiques 
             pour comprendre et défendre vos droits fondamentaux.
