@@ -67,12 +67,16 @@ const Observatoire = () => {
                 <a href="#" className="text-sm hover:text-primary">Thématiques</a>
               </nav>
             </div>
-            <div className="flex items-center space-x-4">
-              <div className="flex items-center space-x-2">
-                <Button variant="ghost" size="sm">FR</Button>
-                <Button variant="ghost" size="sm">AR</Button>
-              </div>
-              <Button size="sm">Se connecter</Button>
+            <div className="flex items-center">
+              <Select defaultValue="fr">
+                <SelectTrigger className="w-20 h-8 border-none bg-transparent">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="fr">🇫🇷 FR</SelectItem>
+                  <SelectItem value="ar">🇸🇦 AR</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
           </div>
         </div>
