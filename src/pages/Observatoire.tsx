@@ -25,7 +25,7 @@ const Observatoire = () => {
       
       setTimeout(() => {
         navigate(`/search-results?q=${encodeURIComponent(searchQuery)}`);
-      }, 150);
+      }, 300);
     }
   };
 

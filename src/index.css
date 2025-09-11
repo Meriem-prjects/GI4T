@@ -117,9 +117,4 @@ All colors MUST be HSL.
   body {
     @apply bg-background text-foreground;
   }
-  
-  /* Search transition effects */
-  .search-container.animate-fade-out {
-    @apply animate-fade-out;
-  }
 }
