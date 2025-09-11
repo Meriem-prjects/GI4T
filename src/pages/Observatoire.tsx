@@ -49,13 +49,16 @@ const Observatoire = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background max-w-7xl mx-auto">
       {/* Header */}
       <header className="border-b bg-background/95 backdrop-blur">
         <div className="container mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-8">
-              <img src="/lovable-uploads/518e38e3-af2e-497e-84a3-e8944dcf10f5.png" alt="ODF Logo" className="h-8 w-auto" />
+              <div className="flex items-center space-x-3">
+                <img src="/lovable-uploads/518e38e3-af2e-497e-84a3-e8944dcf10f5.png" alt="ODF Logo" className="h-8 w-auto" />
+                <h1 className="text-xl font-bold text-primary">Observatoire des Droits Fondamentaux</h1>
+              </div>
               <nav className="hidden md:flex items-center space-x-6">
                 <a href="/" className="text-sm hover:text-primary">Accueil</a>
                 <a href="#" className="text-sm text-primary">Observatoire</a>
