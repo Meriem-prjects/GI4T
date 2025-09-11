@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { Link } from "react-router-dom";
 import { Search, Filter, ChevronDown, Grid3X3, List, ArrowUpDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -8,6 +9,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
+import { Breadcrumb, BreadcrumbList, BreadcrumbItem, BreadcrumbLink, BreadcrumbPage, BreadcrumbSeparator } from "@/components/ui/breadcrumb";
 
 const SearchResults = () => {
   const [searchQuery, setSearchQuery] = useState("décisions récentes sur la vie privée des 6 derniers mois");
@@ -78,7 +80,8 @@ const SearchResults = () => {
             <div className="flex items-center space-x-6">
               {/* Navigation */}
               <nav className="hidden md:flex items-center space-x-6">
-                <a href="/" className="text-sm hover:text-primary transition-colors">Accueil</a>
+                <Link to="/" className="text-sm hover:text-primary transition-colors">Accueil</Link>
+                <Link to="/observatoire" className="text-sm hover:text-primary transition-colors">Observatoire</Link>
                 <a href="#" className="text-sm hover:text-primary transition-colors">Décisions</a>
                 <a href="#" className="text-sm hover:text-primary transition-colors">Fiches pratiques</a>
                 <a href="#" className="text-sm hover:text-primary transition-colors">Thématiques</a>
@@ -99,6 +102,27 @@ const SearchResults = () => {
       </header>
 
       <div className="container mx-auto px-4 py-6">
+        {/* Breadcrumb */}
+        <Breadcrumb className="mb-6">
+          <BreadcrumbList>
+            <BreadcrumbItem>
+              <BreadcrumbLink asChild>
+                <Link to="/">Accueil</Link>
+              </BreadcrumbLink>
+            </BreadcrumbItem>
+            <BreadcrumbSeparator />
+            <BreadcrumbItem>
+              <BreadcrumbLink asChild>
+                <Link to="/observatoire">Observatoire</Link>
+              </BreadcrumbLink>
+            </BreadcrumbItem>
+            <BreadcrumbSeparator />
+            <BreadcrumbItem>
+              <BreadcrumbPage>Résultats de recherche</BreadcrumbPage>
+            </BreadcrumbItem>
+          </BreadcrumbList>
+        </Breadcrumb>
+
         {/* Search Bar */}
         <div className="max-w-4xl mx-auto mb-6">
           <div className="relative">
@@ -124,9 +148,9 @@ const SearchResults = () => {
           ))}
         </div>
 
-        <div className="flex gap-6">
+        <div className="flex flex-col lg:flex-row gap-6">
           {/* Left Sidebar - Filters */}
-          <div className="w-80 space-y-6">
+          <div className="w-full lg:w-80 space-y-6">
             <Card>
               <CardHeader className="pb-4">
                 <CardTitle className="text-lg flex items-center gap-2">
@@ -252,38 +276,40 @@ const SearchResults = () => {
             {/* Search Results */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
               {searchResults.map((result) => (
-                <Card key={result.id} className="hover:shadow-lg transition-shadow">
-                  <CardHeader className="pb-4">
-                    <div className="flex items-center justify-between mb-2">
-                      <span className="text-sm text-muted-foreground">
-                        {result.court} • {result.date}
-                      </span>
-                      <span className={`text-xs px-2 py-1 rounded-full ${result.importanceColor}`}>
-                        {result.importance}
-                      </span>
-                    </div>
-                    <CardTitle className="text-lg">
-                      Arrêt n° {result.number} - {result.title}
-                    </CardTitle>
-                    <CardDescription className="text-sm">
-                      {result.description}
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent className="pt-0">
-                    <div className="flex items-center justify-between">
-                      <div className="flex gap-2">
-                        {result.tags.map((tag) => (
-                          <Badge key={tag} variant="outline" className="text-xs">
-                            {tag}
-                          </Badge>
-                        ))}
+                <Link key={result.id} to={`/decision/${result.id}`} className="block">
+                  <Card className="hover:shadow-lg transition-shadow cursor-pointer">
+                    <CardHeader className="pb-4">
+                      <div className="flex items-center justify-between mb-2">
+                        <span className="text-sm text-muted-foreground">
+                          {result.court} • {result.date}
+                        </span>
+                        <span className={`text-xs px-2 py-1 rounded-full ${result.importanceColor}`}>
+                          {result.importance}
+                        </span>
                       </div>
-                      <Button variant="outline" size="sm">
-                        Consulter
-                      </Button>
-                    </div>
-                  </CardContent>
-                </Card>
+                      <CardTitle className="text-lg hover:text-primary transition-colors">
+                        Arrêt n° {result.number} - {result.title}
+                      </CardTitle>
+                      <CardDescription className="text-sm">
+                        {result.description}
+                      </CardDescription>
+                    </CardHeader>
+                    <CardContent className="pt-0">
+                      <div className="flex items-center justify-between">
+                        <div className="flex gap-2">
+                          {result.tags.map((tag) => (
+                            <Badge key={tag} variant="outline" className="text-xs">
+                              {tag}
+                            </Badge>
+                          ))}
+                        </div>
+                        <Button variant="outline" size="sm" onClick={(e) => e.preventDefault()}>
+                          Consulter
+                        </Button>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </Link>
               ))}
             </div>
 
