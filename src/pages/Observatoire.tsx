@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Search, Filter, Calendar, FileText, Scale, Users, Database, Mic, Briefcase, Heart, Menu, X } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -90,11 +90,11 @@ const Observatoire = () => {
                 </SheetTrigger>
                 <SheetContent side="right" className="w-80">
                   <nav className="flex flex-col space-y-4 mt-8">
-                    <a href="/" className="text-lg hover:text-primary p-2 rounded-lg hover:bg-muted">Accueil</a>
+                    <Link to="/" className="text-lg hover:text-primary p-2 rounded-lg hover:bg-muted">Accueil</Link>
                     <a href="#" className="text-lg text-primary p-2 rounded-lg bg-muted">Observatoire</a>
-                    <a href="#" className="text-lg hover:text-primary p-2 rounded-lg hover:bg-muted">Décisions</a>
-                    <a href="#" className="text-lg hover:text-primary p-2 rounded-lg hover:bg-muted">Fiches pratiques</a>
-                    <a href="#" className="text-lg hover:text-primary p-2 rounded-lg hover:bg-muted">Thématiques</a>
+                    <Link to="/textes-fondamentaux" className="text-lg hover:text-primary p-2 rounded-lg hover:bg-muted">Textes fondamentaux</Link>
+                    <Link to="/analyses-opinions" className="text-lg hover:text-primary p-2 rounded-lg hover:bg-muted">Analyses & Opinions</Link>
+                    <Link to="/actualites" className="text-lg hover:text-primary p-2 rounded-lg hover:bg-muted">Actualités</Link>
                   </nav>
                 </SheetContent>
               </Sheet>

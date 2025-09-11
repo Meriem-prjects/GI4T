@@ -8,6 +8,11 @@ import Observatoire from "./pages/Observatoire";
 import SearchResults from "./pages/SearchResults";
 import DecisionDetail from "./pages/DecisionDetail";
 import NotFound from "./pages/NotFound";
+import TextesFondamentaux from "./pages/TextesFondamentaux";
+import AnalysesOpinions from "./pages/AnalysesOpinions";
+import Actualites from "./pages/Actualites";
+import ODFPartenaires from "./pages/ODFPartenaires";
+import Contact from "./pages/Contact";
 
 const queryClient = new QueryClient();
 
@@ -22,6 +27,11 @@ const App = () => (
           <Route path="/observatoire" element={<Observatoire />} />
           <Route path="/search-results" element={<SearchResults />} />
           <Route path="/decision/:id" element={<DecisionDetail />} />
+          <Route path="/textes-fondamentaux" element={<TextesFondamentaux />} />
+          <Route path="/analyses-opinions" element={<AnalysesOpinions />} />
+          <Route path="/actualites" element={<Actualites />} />
+          <Route path="/odf-partenaires" element={<ODFPartenaires />} />
+          <Route path="/contact" element={<Contact />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>

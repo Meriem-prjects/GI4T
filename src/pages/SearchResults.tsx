@@ -94,8 +94,9 @@ const SearchResults = () => {
                 <Link to="/" className="text-sm hover:text-primary transition-colors">Accueil</Link>
                 <Link to="/observatoire" className="text-sm hover:text-primary transition-colors">Observatoire</Link>
                 <a href="#" className="text-sm text-primary font-medium">Recherche</a>
-                <a href="#" className="text-sm hover:text-primary transition-colors">Fiches pratiques</a>
-                <a href="#" className="text-sm hover:text-primary transition-colors">Thématiques</a>
+                <Link to="/textes-fondamentaux" className="text-sm hover:text-primary transition-colors">Textes fondamentaux</Link>
+                <Link to="/analyses-opinions" className="text-sm hover:text-primary transition-colors">Analyses & Opinions</Link>
+                <Link to="/actualites" className="text-sm hover:text-primary transition-colors">Actualités</Link>
               </nav>
               
               {/* Language Switcher */}
