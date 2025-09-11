@@ -57,7 +57,7 @@ const Observatoire = () => {
         <div className="container mx-auto px-4 py-3">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-3">
-              <img src="/lovable-uploads/888880df-e212-4664-9c76-1b772b3e15de.png" alt="ODF Logo" className="h-8 w-auto" />
+              <img src="/Feelinx_upload/odf-logo.png" alt="ODF Logo" className="h-8 w-auto" />
               <h1 className="text-lg md:text-xl font-bold text-primary hidden sm:block">Observatoire des Droits Fondamentaux</h1>
               <h1 className="text-lg font-bold text-primary sm:hidden">ODF</h1>
             </div>
