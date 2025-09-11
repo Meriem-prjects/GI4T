@@ -31,8 +31,8 @@ const Index = () => {
             <p className="text-primary text-xs font-medium">Information citoyenne simplifiée</p>
           </div>
           
-          {/* Language Switcher & Login */}
-          <div className="absolute right-8 top-1/2 -translate-y-1/2 flex items-center gap-4">
+          {/* Language Switcher */}
+          <div className="absolute right-8 top-1/2 -translate-y-1/2 flex items-center">
             <div className="flex items-center bg-muted rounded-full p-1">
               <Button size="sm" className="bg-primary text-primary-foreground hover:bg-primary/90 rounded-full px-4 py-1 text-sm font-medium">
                 FR
@@ -41,10 +41,6 @@ const Index = () => {
                 AR
               </Button>
             </div>
-            <Button variant="outline" size="sm" className="flex items-center gap-2 rounded-full px-4 py-2 text-sm font-medium border-border hover:bg-accent">
-              <User className="w-4 h-4" />
-              Se connecter
-            </Button>
           </div>
         </header>
 
