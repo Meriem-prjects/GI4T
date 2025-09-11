@@ -23,7 +23,7 @@ const Index = () => {
             {/* Actual JustClic Logo */}
             <div className="flex items-center justify-center mb-1">
               <img 
-                src="/lovable-uploads/e9c07c06-5d02-4e3a-a6d8-b04fdb0c7ffa.png" 
+                src={justclicLogo} 
                 alt="JustClic.tn" 
                 className="h-12 w-auto object-contain"
               />
