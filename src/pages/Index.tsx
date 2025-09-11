@@ -49,9 +49,9 @@ const Index = () => {
         </header>
 
         {/* Main Content - Split Screen */}
-        <div className="flex-1 flex">
+        <div className="flex-1 flex flex-col md:flex-row">
           {/* Left Section - Blue Background - Legal Observatory */}
-          <Link to="/observatoire" className="w-1/2 bg-gradient-to-b from-blue-50 to-blue-100 flex flex-col relative hover:from-blue-100 hover:to-blue-200 transition-all duration-300 cursor-pointer group">
+          <Link to="/observatoire" className="w-full md:w-1/2 h-1/2 md:h-full bg-gradient-to-b from-blue-50 to-blue-100 flex flex-col relative hover:from-blue-100 hover:to-blue-200 transition-all duration-300 cursor-pointer group">
             <div className="flex flex-col items-center justify-center px-8 h-full">
               <h2 className="text-primary text-3xl font-spartan font-bold text-center mb-12 max-w-md">
                 Observatoire des Droits Fondamentaux
@@ -112,7 +112,7 @@ const Index = () => {
           </Link>
 
           {/* Right Section - Yellow Background - Citizen Access */}
-          <Link to="/acces-aux-droits" className="w-1/2 bg-gradient-to-b from-yellow-50 to-yellow-100 flex flex-col relative hover:from-yellow-100 hover:to-yellow-200 transition-all duration-300 cursor-pointer group">
+          <Link to="/acces-aux-droits" className="w-full md:w-1/2 h-1/2 md:h-full bg-gradient-to-b from-yellow-50 to-yellow-100 flex flex-col relative hover:from-yellow-100 hover:to-yellow-200 transition-all duration-300 cursor-pointer group">
             <div className="flex flex-col items-center justify-center px-8 h-full">
               <h2 className="text-primary text-3xl font-spartan font-bold text-center mb-12 max-w-md">
                 Accès aux droits
