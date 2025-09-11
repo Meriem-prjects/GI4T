@@ -2,7 +2,6 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Search, FileText, Building, MapPin, Map, ChevronRight, User, Home, Gavel, BookOpen, Tag, Info, Mail, Newspaper } from "lucide-react";
 import { Link } from "react-router-dom";
-import justclicLogo from "../Feelinx_upload/justclic-logo.png";
 
 const Index = () => {
   return (
@@ -23,7 +22,7 @@ const Index = () => {
             {/* Actual JustClic Logo */}
             <div className="flex items-center justify-center mb-1">
               <img 
-                src={justclicLogo} 
+                src="/lovable-uploads/726488ba-6ddd-4799-b68d-391fb9383227.png" 
                 alt="JustClic.tn" 
                 className="h-12 w-auto object-contain"
               />
