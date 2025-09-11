@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Search, Filter, Calendar, FileText, Scale, Users, Database, Mic, Briefcase, Heart, Menu, X } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -7,11 +8,18 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 
 const Observatoire = () => {
+  const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedJurisdiction, setSelectedJurisdiction] = useState("all");
   const [selectedContentType, setSelectedContentType] = useState("all");
   const [selectedPeriod, setSelectedPeriod] = useState("all");
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+
+  const handleSearch = () => {
+    if (searchQuery.trim()) {
+      navigate(`/search-results?q=${encodeURIComponent(searchQuery)}`);
+    }
+  };
 
   const popularTags = ["RGPD", "Liberté d'expression", "Droit du travail", "Égalité"];
   
@@ -120,9 +128,13 @@ const Observatoire = () => {
                 placeholder="Recherchez des décisions, analyses..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
+                onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
                 className="pl-12 pr-20 sm:pr-32 py-4 md:py-6 text-base md:text-lg bg-background text-foreground rounded-xl"
               />
-              <Button className="absolute right-2 top-1/2 transform -translate-y-1/2 text-sm md:text-base px-3 md:px-4">
+              <Button 
+                className="absolute right-2 top-1/2 transform -translate-y-1/2 text-sm md:text-base px-3 md:px-4"
+                onClick={handleSearch}
+              >
                 <span className="hidden sm:inline">Rechercher</span>
                 <Search className="sm:hidden h-4 w-4" />
               </Button>
