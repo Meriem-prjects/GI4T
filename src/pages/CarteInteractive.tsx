@@ -57,7 +57,7 @@ const CarteInteractive = () => {
         <div className="container mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
             <Link to="/acces-aux-droits" className="flex items-center space-x-4">
-              <img src="/Feelinx_upload/odf-logo.png" alt="ODF Logo" className="h-12" />
+              <img src="/Feelinx_upload/logo-acces-aux-droits.png" alt="Accès aux Droits Logo" className="h-12" />
               <div>
                 <h1 className="text-xl font-bold text-foreground">Accès aux Droits</h1>
                 <p className="text-sm text-muted-foreground">Carte interactive</p>
