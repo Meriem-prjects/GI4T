@@ -23,16 +23,16 @@ const AccesAuxDroits = () => {
                 <p className="text-xs sm:text-sm text-muted-foreground hidden sm:block">Espace citoyen - Connaître et exercer vos droits</p>
               </div>
             </div>
-            <div className="flex items-center space-x-2 sm:space-x-4">
-              <Button variant="outline" size="sm" className="text-xs sm:text-sm">العربية</Button>
-              <Link to="/observatoire">
+            <div className="flex items-center space-x-2 sm:space-x-4 ml-auto">
+              <Button variant="outline" size="sm" className="text-xs sm:text-sm hidden sm:inline-flex">العربية</Button>
+              <Link to="/observatoire" className="hidden sm:inline-flex">
                 <Button variant="ghost" size="sm" className="text-xs sm:text-sm">Observatoire</Button>
               </Link>
               
               {/* Mobile Menu */}
               <Sheet open={isMobileMenuOpen} onOpenChange={setIsMobileMenuOpen}>
                 <SheetTrigger asChild>
-                  <Button variant="ghost" size="sm" className="md:hidden p-2">
+                  <Button variant="ghost" size="sm" className="md:hidden p-2 ml-auto">
                     <Menu className="h-4 w-4" />
                   </Button>
                 </SheetTrigger>
