@@ -76,6 +76,40 @@ const Observatoire = () => {
               <Link to="/acces-aux-droits">
                 <Button variant="ghost" size="sm" className="text-xs sm:text-sm">Accès aux Droits</Button>
               </Link>
+              
+              {/* Mobile Menu */}
+              <Sheet open={isMobileMenuOpen} onOpenChange={setIsMobileMenuOpen}>
+                <SheetTrigger asChild>
+                  <Button variant="ghost" size="sm" className="md:hidden p-2">
+                    <Menu className="h-4 w-4" />
+                  </Button>
+                </SheetTrigger>
+                <SheetContent side="right" className="w-80">
+                  <div className="flex flex-col h-full">
+                    <div className="flex items-center space-x-2 p-4 border-b">
+                      <img src="/Feelinx_upload/odf-logo.png" alt="ODF Logo" className="h-8 w-auto" />
+                      <h2 className="font-bold text-primary">ODF</h2>
+                    </div>
+                    <nav className="flex flex-col space-y-2 mt-4 px-4">
+                      <Link to="/" className="text-base hover:text-primary p-2 rounded-lg hover:bg-muted">Accueil</Link>
+                      <a href="#" className="text-base text-primary p-2 rounded-lg bg-muted font-medium">Observatoire</a>
+                      <Link to="/qui-sommes-nous" className="text-base hover:text-primary p-2 rounded-lg hover:bg-muted">Qui sommes-nous</Link>
+                      <Link to="/textes-fondamentaux" className="text-base hover:text-primary p-2 rounded-lg hover:bg-muted">Textes fondamentaux</Link>
+                      <Link to="/analyses-opinions" className="text-base hover:text-primary p-2 rounded-lg hover:bg-muted">Analyses & Opinions</Link>
+                      <Link to="/actualites" className="text-base hover:text-primary p-2 rounded-lg hover:bg-muted">Actualités</Link>
+                      <Link to="/odf-partenaires" className="text-base hover:text-primary p-2 rounded-lg hover:bg-muted">Partenaires ODF</Link>
+                      <Link to="/methodologie" className="text-base hover:text-primary p-2 rounded-lg hover:bg-muted">Méthodologie</Link>
+                      <Link to="/a-propos" className="text-base hover:text-primary p-2 rounded-lg hover:bg-muted">À propos</Link>
+                      <Link to="/contact" className="text-base hover:text-primary p-2 rounded-lg hover:bg-muted">Contact</Link>
+                      <div className="border-t pt-4 mt-4">
+                        <Link to="/acces-aux-droits" className="text-base hover:text-primary p-2 rounded-lg hover:bg-muted flex items-center">
+                          <span>→ Accès aux Droits</span>
+                        </Link>
+                      </div>
+                    </nav>
+                  </div>
+                </SheetContent>
+              </Sheet>
             </div>
           </div>
         </div>

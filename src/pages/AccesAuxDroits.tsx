@@ -1,12 +1,15 @@
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Search, BookOpen, Map, Video, FileText, Scale } from "lucide-react";
+import { Search, BookOpen, Map, Video, FileText, Scale, Menu } from "lucide-react";
 import { Link } from "react-router-dom";
+import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import AccesAuxDroitsNav from "@/components/AccesAuxDroitsNav";
 import Footer from "@/components/Footer";
 
 const AccesAuxDroits = () => {
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
@@ -25,6 +28,42 @@ const AccesAuxDroits = () => {
               <Link to="/observatoire">
                 <Button variant="ghost" size="sm" className="text-xs sm:text-sm">Observatoire</Button>
               </Link>
+              
+              {/* Mobile Menu */}
+              <Sheet open={isMobileMenuOpen} onOpenChange={setIsMobileMenuOpen}>
+                <SheetTrigger asChild>
+                  <Button variant="ghost" size="sm" className="md:hidden p-2">
+                    <Menu className="h-4 w-4" />
+                  </Button>
+                </SheetTrigger>
+                <SheetContent side="right" className="w-80">
+                  <div className="flex flex-col h-full">
+                    <div className="flex items-center space-x-2 p-4 border-b">
+                      <img src="/Feelinx_upload/logo-acces-aux-droits.png" alt="Accès aux Droits Logo" className="h-8 w-auto" />
+                      <h2 className="font-bold text-primary">Droits</h2>
+                    </div>
+                    <nav className="flex flex-col space-y-2 mt-4 px-4">
+                      <Link to="/" className="text-base hover:text-primary p-2 rounded-lg hover:bg-muted">Accueil</Link>
+                      <a href="#" className="text-base text-primary p-2 rounded-lg bg-muted font-medium">Accès aux Droits</a>
+                      <Link to="/guides-pratiques" className="text-base hover:text-primary p-2 rounded-lg hover:bg-muted">Guides pratiques</Link>
+                      <Link to="/ressources-pratiques" className="text-base hover:text-primary p-2 rounded-lg hover:bg-muted">Ressources pratiques</Link>
+                      <Link to="/carte-interactive" className="text-base hover:text-primary p-2 rounded-lg hover:bg-muted">Carte interactive</Link>
+                      <Link to="/mediatheque" className="text-base hover:text-primary p-2 rounded-lg hover:bg-muted">Médiathèque</Link>
+                      <Link to="/publications" className="text-base hover:text-primary p-2 rounded-lg hover:bg-muted">Publications</Link>
+                      <Link to="/liens-utiles" className="text-base hover:text-primary p-2 rounded-lg hover:bg-muted">Liens utiles</Link>
+                      <Link to="/albums-photos" className="text-base hover:text-primary p-2 rounded-lg hover:bg-muted">Albums photos</Link>
+                      <Link to="/partenaires" className="text-base hover:text-primary p-2 rounded-lg hover:bg-muted">Partenaires</Link>
+                      <Link to="/chatbot-faq" className="text-base hover:text-primary p-2 rounded-lg hover:bg-muted">FAQ</Link>
+                      <Link to="/contact" className="text-base hover:text-primary p-2 rounded-lg hover:bg-muted">Contact</Link>
+                      <div className="border-t pt-4 mt-4">
+                        <Link to="/observatoire" className="text-base hover:text-primary p-2 rounded-lg hover:bg-muted flex items-center">
+                          <span>→ Observatoire</span>
+                        </Link>
+                      </div>
+                    </nav>
+                  </div>
+                </SheetContent>
+              </Sheet>
             </div>
           </div>
         </div>
