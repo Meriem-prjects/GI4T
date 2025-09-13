@@ -155,7 +155,7 @@ const GuidesPratiques = () => {
                       <Clock className="h-4 w-4" />
                       {guide.duration}
                     </div>
-                    <Badge variant={guide.difficulty === "Facile" ? "default" : guide.difficulty === "Moyen" ? "secondary" : "destructive"} size="sm">
+                    <Badge variant={guide.difficulty === "Facile" ? "default" : guide.difficulty === "Moyen" ? "secondary" : "destructive"}>
                       {guide.difficulty}
                     </Badge>
                   </div>
