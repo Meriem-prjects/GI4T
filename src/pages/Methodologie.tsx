@@ -98,19 +98,29 @@ const Methodologie = () => {
     <div className="min-h-screen bg-background">
       {/* Header */}
       <header className="border-b bg-card">
-        <div className="container mx-auto px-4 py-4">
+        <div className="container mx-auto px-4 py-3 sm:py-4 relative">
           <div className="flex items-center justify-between">
-            <Link to="/observatoire" className="flex items-center space-x-4">
-              <img src="/Feelinx_upload/odf-logo.png" alt="ODF Logo" className="h-12" />
-              <div>
-                <h1 className="text-xl font-bold text-foreground">Observatoire des Droits Fondamentaux</h1>
-                <p className="text-sm text-muted-foreground">Méthodologie</p>
+            <Link to="/observatoire" className="flex items-center space-x-2 sm:space-x-4 flex-1 min-w-0">
+              <img src="/Feelinx_upload/odf-logo.png" alt="ODF Logo" className="h-8 sm:h-10 flex-shrink-0" />
+              <div className="min-w-0">
+                <h1 className="text-sm sm:text-lg font-bold text-foreground truncate">Méthodologie</h1>
+                <p className="text-xs sm:text-sm text-muted-foreground hidden sm:block">Observatoire des Droits Fondamentaux</p>
               </div>
             </Link>
-            <div className="flex items-center space-x-4">
-              <Button variant="outline" size="sm">العربية</Button>
+            
+            <div className="hidden sm:flex items-center space-x-2 sm:space-x-4 ml-4">
+              <Button variant="outline" size="sm" className="text-xs sm:text-sm">العربية</Button>
               <Link to="/acces-aux-droits">
-                <Button variant="ghost" size="sm">Accès aux Droits</Button>
+                <Button variant="ghost" size="sm" className="text-xs sm:text-sm">Accès aux Droits</Button>
+              </Link>
+            </div>
+
+            {/* Mobile: Just the essential navigation */}
+            <div className="sm:hidden">
+              <Link to="/observatoire">
+                <Button variant="ghost" size="sm" className="text-xs px-2">
+                  ← Retour
+                </Button>
               </Link>
             </div>
           </div>
@@ -132,12 +142,12 @@ const Methodologie = () => {
         </Breadcrumb>
 
         {/* Page Header */}
-        <div className="mb-12">
-          <div className="flex items-center gap-3 mb-4">
-            <BookOpen className="h-8 w-8 text-primary" />
-            <h1 className="text-3xl font-bold">Méthodologie</h1>
+        <div className="mb-8 sm:mb-12">
+          <div className="flex items-center gap-2 sm:gap-3 mb-3 sm:mb-4">
+            <BookOpen className="h-6 w-6 sm:h-8 sm:w-8 text-primary flex-shrink-0" />
+            <h1 className="text-2xl sm:text-3xl font-bold">Méthodologie</h1>
           </div>
-          <p className="text-lg text-mutable-foreground max-w-2xl">
+          <p className="text-base sm:text-lg text-muted-foreground max-w-2xl leading-relaxed">
             Notre approche scientifique rigoureuse pour la collecte, l'analyse et la classification 
             des décisions relatives aux droits fondamentaux
           </p>
