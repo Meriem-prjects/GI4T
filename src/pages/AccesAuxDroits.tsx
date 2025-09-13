@@ -14,12 +14,12 @@ const AccesAuxDroits = () => {
     <div className="min-h-screen bg-background">
       {/* Header */}
       <header className="border-b bg-card">
-        <div className="container mx-auto px-4 py-4">
+        <div className="container mx-auto px-4 py-2 sm:py-4 relative">
           <div className="flex items-center justify-between flex-wrap gap-4">
             <div className="flex items-center space-x-2 sm:space-x-4">
               <img src="/Feelinx_upload/logo-acces-aux-droits.png" alt="Accès aux Droits Logo" className="h-6 sm:h-10" />
               <div>
-                <h1 className="text-lg sm:text-2xl font-bold text-foreground">Accès aux Droits</h1>
+                <h1 className="text-base sm:text-2xl font-bold text-foreground">Accès aux Droits</h1>
                 <p className="text-xs sm:text-sm text-muted-foreground hidden sm:block">Espace citoyen - Connaître et exercer vos droits</p>
               </div>
             </div>
@@ -34,7 +34,7 @@ const AccesAuxDroits = () => {
               {/* Mobile Menu */}
               <Sheet open={isMobileMenuOpen} onOpenChange={setIsMobileMenuOpen}>
                 <SheetTrigger asChild>
-                  <Button variant="ghost" size="sm" className="md:hidden p-1">
+                  <Button variant="ghost" size="sm" className="md:hidden p-2 absolute right-4 top-3">
                     <Menu className="h-5 w-5" />
                   </Button>
                 </SheetTrigger>

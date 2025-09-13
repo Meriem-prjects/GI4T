@@ -62,12 +62,12 @@ const Observatoire = () => {
     <div className="min-h-screen bg-background">
       {/* Header */}
       <header className="border-b bg-card">
-        <div className="container mx-auto px-4 py-4">
+        <div className="container mx-auto px-4 py-2 sm:py-4 relative">
           <div className="flex items-center justify-between flex-wrap gap-4">
             <div className="flex items-center space-x-2 sm:space-x-4">
               <img src="/Feelinx_upload/odf-logo.png" alt="ODF Logo" className="h-8 sm:h-12" />
               <div>
-                <h1 className="text-lg sm:text-2xl font-bold text-foreground">Observatoire des Droits Fondamentaux</h1>
+                <h1 className="text-base sm:text-2xl font-bold text-foreground">Observatoire des Droits Fondamentaux</h1>
                 <p className="text-xs sm:text-sm text-muted-foreground hidden sm:block">Surveillance et protection des droits citoyens</p>
               </div>
             </div>
@@ -82,7 +82,7 @@ const Observatoire = () => {
               {/* Mobile Menu */}
               <Sheet open={isMobileMenuOpen} onOpenChange={setIsMobileMenuOpen}>
                 <SheetTrigger asChild>
-                  <Button variant="ghost" size="sm" className="md:hidden p-1">
+                  <Button variant="ghost" size="sm" className="md:hidden p-2 absolute right-4 top-3">
                     <Menu className="h-5 w-5" />
                   </Button>
                 </SheetTrigger>
@@ -118,7 +118,7 @@ const Observatoire = () => {
       </header>
 
       {/* Hero Section with Search */}
-      <section className="bg-gradient-to-br from-primary to-primary-foreground text-primary-foreground py-6 sm:py-8 md:py-16">
+      <section className="bg-gradient-to-br from-primary to-primary-foreground text-primary-foreground py-4 sm:py-8 md:py-16">
         <div className="container mx-auto px-4 text-center">
           <p className="text-sm sm:text-base md:text-lg lg:text-xl mb-6 sm:mb-8 md:mb-12 max-w-3xl mx-auto opacity-90 px-2 sm:px-4 leading-relaxed">
             Accédez facilement aux décisions de justice, analyses juridiques et guides pratiques 
@@ -169,7 +169,7 @@ const Observatoire = () => {
               <SelectTrigger className="bg-background text-foreground h-10 sm:h-12 text-sm md:text-base">
                 <SelectValue placeholder="Toutes juridictions" />
               </SelectTrigger>
-              <SelectContent className="bg-background border shadow-lg">
+              <SelectContent className="bg-background border shadow-lg z-50">
                 <SelectItem value="all">Toutes juridictions</SelectItem>
                 <SelectItem value="cedh">CEDH</SelectItem>
                 <SelectItem value="conseil-etat">Conseil d'État</SelectItem>
@@ -181,7 +181,7 @@ const Observatoire = () => {
               <SelectTrigger className="bg-background text-foreground h-10 sm:h-12 text-sm md:text-base">
                 <SelectValue placeholder="Type de contenu" />
               </SelectTrigger>
-              <SelectContent className="bg-background border shadow-lg">
+              <SelectContent className="bg-background border shadow-lg z-50">
                 <SelectItem value="all">Tous contenus</SelectItem>
                 <SelectItem value="decisions">Décisions</SelectItem>
                 <SelectItem value="fiches">Fiches pratiques</SelectItem>
@@ -193,7 +193,7 @@ const Observatoire = () => {
               <SelectTrigger className="bg-background text-foreground h-10 sm:h-12 text-sm md:text-base sm:col-span-2 md:col-span-1">
                 <SelectValue placeholder="Toute période" />
               </SelectTrigger>
-              <SelectContent className="bg-background border shadow-lg">
+              <SelectContent className="bg-background border shadow-lg z-50">
                 <SelectItem value="all">Toute période</SelectItem>
                 <SelectItem value="week">Cette semaine</SelectItem>
                 <SelectItem value="month">Ce mois</SelectItem>
