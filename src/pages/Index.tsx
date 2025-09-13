@@ -49,11 +49,11 @@ const Index = () => {
           <Link to="/observatoire" className="w-full h-1/2 bg-gradient-to-b from-blue-50 to-blue-100 flex flex-col relative hover:from-blue-100 hover:to-blue-200 transition-all duration-300 cursor-pointer group">
             <div className="flex flex-col items-center justify-center px-4 sm:px-8 h-full">
               {/* ODF Logo */}
-              <div className="mb-3 sm:mb-4">
+              <div className="mb-2 sm:mb-3">
                 <img 
                   src="/Feelinx_upload/odf-logo.png" 
                   alt="Observatoire des Droits" 
-                  className="h-12 sm:h-16 w-auto object-contain"
+                  className="h-8 sm:h-12 w-auto object-contain max-w-full"
                 />
               </div>
               
@@ -99,11 +99,11 @@ const Index = () => {
           <Link to="/acces-aux-droits" className="w-full h-1/2 bg-gradient-to-b from-yellow-50 to-yellow-100 flex flex-col relative hover:from-yellow-100 hover:to-yellow-200 transition-all duration-300 cursor-pointer group">
             <div className="flex flex-col items-center justify-center px-4 sm:px-8 h-full">
               {/* Accès aux Droits Logo */}
-              <div className="mb-3 sm:mb-4">
+              <div className="mb-2 sm:mb-3">
                 <img 
                   src="/Feelinx_upload/logo-acces-aux-droits.png" 
                   alt="Accès aux Droits" 
-                  className="h-12 sm:h-16 w-auto object-contain"
+                  className="h-8 sm:h-12 w-auto object-contain max-w-full"
                 />
               </div>
               
