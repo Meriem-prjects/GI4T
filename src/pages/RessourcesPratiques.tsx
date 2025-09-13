@@ -268,7 +268,8 @@ const RessourcesPratiques = () => {
             <Link to="/contact">
               <Button>Faire une suggestion</Button>
             </Link>
-        </Card>
+          </Card>
+        </div>
       </div>
       
       <Footer />

@@ -226,7 +226,8 @@ const CarteInteractive = () => {
             <Link to="/contact">
               <Button>Signaler un service</Button>
             </Link>
-        </Card>
+          </Card>
+        </div>
       </div>
       
       <Footer />

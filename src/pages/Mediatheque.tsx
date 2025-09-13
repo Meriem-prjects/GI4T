@@ -291,7 +291,8 @@ const Mediatheque = () => {
             <Link to="/contact">
               <Button>Partager votre expérience</Button>
             </Link>
-        </Card>
+          </Card>
+        </div>
       </div>
       
       <Footer />
