@@ -92,6 +92,7 @@ const Observatoire = () => {
                   <nav className="flex flex-col space-y-4 mt-8">
                     <Link to="/" className="text-lg hover:text-primary p-2 rounded-lg hover:bg-muted">Accueil</Link>
                     <a href="#" className="text-lg text-primary p-2 rounded-lg bg-muted">Observatoire</a>
+                    <Link to="/qui-sommes-nous" className="text-lg hover:text-primary p-2 rounded-lg hover:bg-muted">Qui sommes-nous</Link>
                     <Link to="/textes-fondamentaux" className="text-lg hover:text-primary p-2 rounded-lg hover:bg-muted">Textes fondamentaux</Link>
                     <Link to="/analyses-opinions" className="text-lg hover:text-primary p-2 rounded-lg hover:bg-muted">Analyses & Opinions</Link>
                     <Link to="/actualites" className="text-lg hover:text-primary p-2 rounded-lg hover:bg-muted">Actualités</Link>
@@ -101,8 +102,9 @@ const Observatoire = () => {
               
               {/* Desktop Navigation */}
               <nav className="hidden md:flex items-center space-x-6 ml-4">
-                <a href="/" className="text-sm hover:text-primary transition-colors">Accueil</a>
+                <Link to="/" className="text-sm hover:text-primary transition-colors">Accueil</Link>
                 <a href="#" className="text-sm text-primary font-medium">Observatoire</a>
+                <Link to="/qui-sommes-nous" className="text-sm hover:text-primary transition-colors">Qui sommes-nous</Link>
                 <a href="#" className="text-sm hover:text-primary transition-colors">Décisions</a>
                 <a href="#" className="text-sm hover:text-primary transition-colors">Fiches pratiques</a>
                 <a href="#" className="text-sm hover:text-primary transition-colors">Thématiques</a>
