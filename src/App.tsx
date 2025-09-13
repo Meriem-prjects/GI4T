@@ -13,6 +13,17 @@ import AnalysesOpinions from "./pages/AnalysesOpinions";
 import Actualites from "./pages/Actualites";
 import ODFPartenaires from "./pages/ODFPartenaires";
 import Contact from "./pages/Contact";
+import AccesAuxDroits from "./pages/AccesAuxDroits";
+import GuidesPratiques from "./pages/GuidesPratiques";
+import RessourcesPratiques from "./pages/RessourcesPratiques";
+import CarteInteractive from "./pages/CarteInteractive";
+import Mediatheque from "./pages/Mediatheque";
+import RechercheAvancee from "./pages/RechercheAvancee";
+import APropos from "./pages/APropos";
+import QuiSommesNous from "./pages/QuiSommesNous";
+import Methodologie from "./pages/Methodologie";
+import MentionsLegales from "./pages/MentionsLegales";
+import PlanDuSite from "./pages/PlanDuSite";
 
 const queryClient = new QueryClient();
 
@@ -32,6 +43,24 @@ const App = () => (
           <Route path="/actualites" element={<Actualites />} />
           <Route path="/odf-partenaires" element={<ODFPartenaires />} />
           <Route path="/contact" element={<Contact />} />
+          
+          {/* Accès aux droits interface */}
+          <Route path="/acces-aux-droits" element={<AccesAuxDroits />} />
+          <Route path="/guides-pratiques" element={<GuidesPratiques />} />
+          <Route path="/ressources-pratiques" element={<RessourcesPratiques />} />
+          <Route path="/carte-interactive" element={<CarteInteractive />} />
+          <Route path="/mediatheque" element={<Mediatheque />} />
+          
+          {/* Enhanced observatoire features */}
+          <Route path="/recherche-avancee" element={<RechercheAvancee />} />
+          
+          {/* Institutional pages */}
+          <Route path="/a-propos" element={<APropos />} />
+          <Route path="/qui-sommes-nous" element={<QuiSommesNous />} />
+          <Route path="/methodologie" element={<Methodologie />} />
+          <Route path="/mentions-legales" element={<MentionsLegales />} />
+          <Route path="/plan-du-site" element={<PlanDuSite />} />
+          
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>
