@@ -1,9 +1,10 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Search, BookOpen, Map, Video, FileText, Scale, Users, Phone } from "lucide-react";
+import { Search, BookOpen, Map, Video, FileText, Scale } from "lucide-react";
 import { Link } from "react-router-dom";
 import AccesAuxDroitsNav from "@/components/AccesAuxDroitsNav";
+import Footer from "@/components/Footer";
 
 const AccesAuxDroits = () => {
   return (
@@ -142,43 +143,7 @@ const AccesAuxDroits = () => {
         </div>
       </section>
 
-      {/* Footer */}
-      <footer className="bg-card border-t py-12">
-        <div className="container mx-auto px-4">
-          <div className="grid md:grid-cols-4 gap-8">
-            <div>
-              <h4 className="font-semibold mb-4">Navigation</h4>
-              <ul className="space-y-2 text-sm">
-                <li><Link to="/guides-pratiques" className="text-muted-foreground hover:text-foreground">Guides pratiques</Link></li>
-                <li><Link to="/ressources-pratiques" className="text-muted-foreground hover:text-foreground">Ressources</Link></li>
-                <li><Link to="/carte-interactive" className="text-muted-foreground hover:text-foreground">Carte interactive</Link></li>
-              </ul>
-            </div>
-            <div>
-              <h4 className="font-semibold mb-4">À propos</h4>
-              <ul className="space-y-2 text-sm">
-                <li><Link to="/a-propos" className="text-muted-foreground hover:text-foreground">À propos de l'ODF</Link></li>
-                <li><Link to="/qui-sommes-nous" className="text-muted-foreground hover:text-foreground">Qui sommes-nous</Link></li>
-                <li><Link to="/methodologie" className="text-muted-foreground hover:text-foreground">Méthodologie</Link></li>
-              </ul>
-            </div>
-            <div>
-              <h4 className="font-semibold mb-4">Légal</h4>
-              <ul className="space-y-2 text-sm">
-                <li><Link to="/mentions-legales" className="text-muted-foreground hover:text-foreground">Mentions légales</Link></li>
-                <li><Link to="/plan-du-site" className="text-muted-foreground hover:text-foreground">Plan du site</Link></li>
-              </ul>
-            </div>
-            <div>
-              <h4 className="font-semibold mb-4">Contact</h4>
-              <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                <Phone className="h-4 w-4" />
-                <Link to="/contact">Nous contacter</Link>
-              </div>
-            </div>
-          </div>
-        </div>
-      </footer>
+      <Footer />
     </div>
   );
 };

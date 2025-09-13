@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui/button";
-import { BookOpen, FileText, MapPin, Video, Users, MessageSquare, Share2, Shield, ExternalLink, Camera } from "lucide-react";
+import { BookOpen, FileText, MapPin, Video, ExternalLink, Camera } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
 import { cn } from "@/lib/utils";
 
@@ -48,30 +48,6 @@ const AccesAuxDroitsNav = () => {
       label: "Albums photos",
       icon: Camera,
       description: "Galerie événements"
-    },
-    {
-      path: "/partenaires",
-      label: "Partenaires",
-      icon: Users,
-      description: "Nos partenaires"
-    },
-    {
-      path: "/chatbot-faq",
-      label: "FAQ",
-      icon: MessageSquare,
-      description: "Aide en ligne"
-    },
-    {
-      path: "/reseaux-sociaux",
-      label: "Réseaux sociaux",
-      icon: Share2,
-      description: "Suivez-nous"
-    },
-    {
-      path: "/cgu-cookies",
-      label: "CGU",
-      icon: Shield,
-      description: "Conditions d'usage"
     }
   ];
 

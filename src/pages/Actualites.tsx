@@ -4,6 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { Breadcrumb, BreadcrumbList, BreadcrumbItem, BreadcrumbLink, BreadcrumbPage, BreadcrumbSeparator } from "@/components/ui/breadcrumb";
 import { Calendar, Clock, Tag, TrendingUp, Bell, Eye } from "lucide-react";
+import Footer from "@/components/Footer";
 
 const Actualites = () => {
   const news = [
@@ -56,6 +57,7 @@ const Actualites = () => {
   const categories = [
     { name: "Toutes", count: 156, active: true },
     { name: "Jurisprudence", count: 67, active: false },
+    { name: "Accès aux droits", count: 23, active: false },
     { name: "ODF", count: 34, active: false },
     { name: "Événement", count: 28, active: false },
     { name: "Publication", count: 27, active: false }
@@ -272,47 +274,7 @@ const Actualites = () => {
         </section>
       </div>
 
-      {/* Footer */}
-      <footer className="bg-muted mt-16 py-12">
-        <div className="container mx-auto px-4">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
-            <div>
-              <img src="/Feelinx_upload/odf-logo.png" alt="ODF Logo" className="h-8 w-auto mb-4" />
-              <h3 className="font-semibold mb-2">Observatoire des Droits Fondamentaux</h3>
-              <p className="text-sm text-muted-foreground">
-                Facilitant l'accès à la justice et aux droits fondamentaux pour tous
-              </p>
-            </div>
-            <div>
-              <h3 className="font-semibold mb-4">Navigation</h3>
-              <div className="space-y-2 text-sm">
-                <Link to="/" className="block hover:text-primary transition-colors">Accueil</Link>
-                <Link to="/observatoire" className="block hover:text-primary transition-colors">Observatoire</Link>
-                <Link to="/search-results" className="block hover:text-primary transition-colors">Recherche</Link>
-              </div>
-            </div>
-            <div>
-              <h3 className="font-semibold mb-4">Contenus</h3>
-              <div className="space-y-2 text-sm">
-                <a href="#" className="block hover:text-primary transition-colors">Décisions de justice</a>
-                <Link to="/textes-fondamentaux" className="block hover:text-primary transition-colors">Textes fondamentaux</Link>
-                <Link to="/analyses-opinions" className="block hover:text-primary transition-colors">Analyses & Opinions</Link>
-              </div>
-            </div>
-            <div>
-              <h3 className="font-semibold mb-4">Informations</h3>
-              <div className="space-y-2 text-sm">
-                <Link to="/odf-partenaires" className="block hover:text-primary transition-colors">À propos</Link>
-                <Link to="/contact" className="block hover:text-primary transition-colors">Contact</Link>
-                <a href="#" className="block hover:text-primary transition-colors">Mentions légales</a>
-              </div>
-            </div>
-          </div>
-          <div className="border-t mt-8 pt-8 text-center text-sm text-muted-foreground">
-            <p>&copy; 2024 Observatoire des Droits Fondamentaux. Tous droits réservés.</p>
-          </div>
-        </div>
-      </footer>
+      <Footer />
     </div>
   );
 };
