@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Search, ExternalLink, Globe, Building, Users, Scale, Heart, BookOpen } from "lucide-react";
 import { Link } from "react-router-dom";
 import AccesAuxDroitsNav from "@/components/AccesAuxDroitsNav";
+import Footer from "@/components/Footer";
 
 const LiensUtiles = () => {
   const linkCategories = [
@@ -152,8 +153,8 @@ const LiensUtiles = () => {
             <div className="flex items-center space-x-4">
               <img src="/Feelinx_upload/odf-logo.png" alt="ODF Logo" className="h-12" />
               <div>
-                <h1 className="text-2xl font-bold text-foreground">Liens Utiles</h1>
-                <p className="text-sm text-muted-foreground">Répertoire des ressources externes</p>
+                <h1 className="text-2xl font-bold text-foreground">Accès aux Droits</h1>
+                <p className="text-sm text-muted-foreground">Campagne d'information avec carte interactive</p>
               </div>
             </div>
             <div className="flex items-center space-x-4">
@@ -262,6 +263,8 @@ const LiensUtiles = () => {
           </CardContent>
         </Card>
       </div>
+      
+      <Footer />
     </div>
   );
 };

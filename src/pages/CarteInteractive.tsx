@@ -6,6 +6,7 @@ import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbP
 import { Search, MapPin, Phone, Clock, Navigation, Filter } from "lucide-react";
 import { Link } from "react-router-dom";
 import AccesAuxDroitsNav from "@/components/AccesAuxDroitsNav";
+import Footer from "@/components/Footer";
 
 const CarteInteractive = () => {
   const services = [
@@ -225,9 +226,10 @@ const CarteInteractive = () => {
             <Link to="/contact">
               <Button>Signaler un service</Button>
             </Link>
-          </Card>
-        </div>
+        </Card>
       </div>
+      
+      <Footer />
     </div>
   );
 };

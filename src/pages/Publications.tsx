@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Search, FileText, Download, Calendar, Eye, Filter } from "lucide-react";
 import { Link } from "react-router-dom";
 import AccesAuxDroitsNav from "@/components/AccesAuxDroitsNav";
+import Footer from "@/components/Footer";
 
 const Publications = () => {
   const publications = [
@@ -88,8 +89,8 @@ const Publications = () => {
             <div className="flex items-center space-x-4">
               <img src="/Feelinx_upload/odf-logo.png" alt="ODF Logo" className="h-12" />
               <div>
-                <h1 className="text-2xl font-bold text-foreground">Publications</h1>
-                <p className="text-sm text-muted-foreground">Documents officiels et guides pratiques</p>
+                <h1 className="text-2xl font-bold text-foreground">Accès aux Droits</h1>
+                <p className="text-sm text-muted-foreground">Campagne d'information avec carte interactive</p>
               </div>
             </div>
             <div className="flex items-center space-x-4">
@@ -122,7 +123,7 @@ const Publications = () => {
 
         {/* Page Header */}
         <div className="mb-8">
-          <h2 className="text-3xl font-bold mb-4">Publications et Documents Officiels</h2>
+          <h2 className="text-3xl font-bold mb-4">Publications</h2>
           <p className="text-lg text-muted-foreground mb-6">
             Accédez à tous les documents officiels, guides pratiques et rapports sur les droits fondamentaux en Tunisie.
           </p>
@@ -222,6 +223,8 @@ const Publications = () => {
           </CardContent>
         </Card>
       </div>
+      
+      <Footer />
     </div>
   );
 };

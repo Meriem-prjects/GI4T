@@ -6,6 +6,7 @@ import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbP
 import { Search, Play, Video, Headphones, FileText, Eye, Clock, ThumbsUp } from "lucide-react";
 import { Link } from "react-router-dom";
 import AccesAuxDroitsNav from "@/components/AccesAuxDroitsNav";
+import Footer from "@/components/Footer";
 
 const Mediatheque = () => {
   const mediaContent = [
@@ -290,9 +291,10 @@ const Mediatheque = () => {
             <Link to="/contact">
               <Button>Partager votre expérience</Button>
             </Link>
-          </Card>
-        </div>
+        </Card>
       </div>
+      
+      <Footer />
     </div>
   );
 };

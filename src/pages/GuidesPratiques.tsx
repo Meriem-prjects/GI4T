@@ -6,6 +6,7 @@ import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbP
 import { Search, BookOpen, Download, Clock, Users, ArrowRight } from "lucide-react";
 import { Link } from "react-router-dom";
 import AccesAuxDroitsNav from "@/components/AccesAuxDroitsNav";
+import Footer from "@/components/Footer";
 
 const GuidesPratiques = () => {
   const guides = [
@@ -197,6 +198,8 @@ const GuidesPratiques = () => {
           </Card>
         </div>
       </div>
+      
+      <Footer />
     </div>
   );
 };

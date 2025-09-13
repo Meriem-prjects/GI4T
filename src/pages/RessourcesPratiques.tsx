@@ -6,6 +6,7 @@ import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbP
 import { Search, FileText, Download, Calendar, Eye, ArrowRight } from "lucide-react";
 import { Link } from "react-router-dom";
 import AccesAuxDroitsNav from "@/components/AccesAuxDroitsNav";
+import Footer from "@/components/Footer";
 
 const RessourcesPratiques = () => {
   const resources = [
@@ -267,9 +268,10 @@ const RessourcesPratiques = () => {
             <Link to="/contact">
               <Button>Faire une suggestion</Button>
             </Link>
-          </Card>
-        </div>
+        </Card>
       </div>
+      
+      <Footer />
     </div>
   );
 };

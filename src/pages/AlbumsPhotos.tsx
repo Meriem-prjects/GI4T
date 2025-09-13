@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Search, Calendar, MapPin, Users, Eye, Camera, Image as ImageIcon } from "lucide-react";
 import { Link } from "react-router-dom";
 import AccesAuxDroitsNav from "@/components/AccesAuxDroitsNav";
+import Footer from "@/components/Footer";
 
 const AlbumsPhotos = () => {
   const albums = [
@@ -90,8 +91,8 @@ const AlbumsPhotos = () => {
             <div className="flex items-center space-x-4">
               <img src="/Feelinx_upload/odf-logo.png" alt="ODF Logo" className="h-12" />
               <div>
-                <h1 className="text-2xl font-bold text-foreground">Albums Photos</h1>
-                <p className="text-sm text-muted-foreground">Galerie des événements et campagnes</p>
+                <h1 className="text-2xl font-bold text-foreground">Accès aux Droits</h1>
+                <p className="text-sm text-muted-foreground">Campagne d'information avec carte interactive</p>
               </div>
             </div>
             <div className="flex items-center space-x-4">
@@ -264,6 +265,8 @@ const AlbumsPhotos = () => {
           </CardContent>
         </Card>
       </div>
+      
+      <Footer />
     </div>
   );
 };
