@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui/button";
-import { BookOpen, FileText, MapPin, Video } from "lucide-react";
+import { BookOpen, FileText, MapPin, Video, Users, MessageSquare, Share2, Shield, ExternalLink, Camera } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
 import { cn } from "@/lib/utils";
 
@@ -9,7 +9,7 @@ const AccesAuxDroitsNav = () => {
   const navItems = [
     {
       path: "/guides-pratiques",
-      label: "Guides pratiques",
+      label: "Guides",
       icon: BookOpen,
       description: "Guides step-by-step"
     },
@@ -23,13 +23,55 @@ const AccesAuxDroitsNav = () => {
       path: "/carte-interactive",
       label: "Carte interactive", 
       icon: MapPin,
-      description: "Services près de vous"
+      description: "Campagne d'information"
+    },
+    {
+      path: "/publications",
+      label: "Publications",
+      icon: BookOpen,
+      description: "Documents officiels"
+    },
+    {
+      path: "/liens-utiles",
+      label: "Liens utiles",
+      icon: ExternalLink,
+      description: "Sites externes"
     },
     {
       path: "/mediatheque",
       label: "Médiathèque",
       icon: Video,
       description: "Vidéos et témoignages"
+    },
+    {
+      path: "/albums-photos",
+      label: "Albums photos",
+      icon: Camera,
+      description: "Galerie événements"
+    },
+    {
+      path: "/partenaires",
+      label: "Partenaires",
+      icon: Users,
+      description: "Nos partenaires"
+    },
+    {
+      path: "/chatbot-faq",
+      label: "FAQ",
+      icon: MessageSquare,
+      description: "Aide en ligne"
+    },
+    {
+      path: "/reseaux-sociaux",
+      label: "Réseaux sociaux",
+      icon: Share2,
+      description: "Suivez-nous"
+    },
+    {
+      path: "/cgu-cookies",
+      label: "CGU",
+      icon: Shield,
+      description: "Conditions d'usage"
     }
   ];
 
