@@ -50,6 +50,13 @@ const App = () => (
           <Route path="/ressources-pratiques" element={<RessourcesPratiques />} />
           <Route path="/carte-interactive" element={<CarteInteractive />} />
           <Route path="/mediatheque" element={<Mediatheque />} />
+          <Route path="/publications" element={<Publications />} />
+          <Route path="/liens-utiles" element={<LiensUtiles />} />
+          <Route path="/albums-photos" element={<AlbumsPhotos />} />
+          <Route path="/partenaires" element={<Partenaires />} />
+          <Route path="/chatbot-faq" element={<ChatbotFAQ />} />
+          <Route path="/reseaux-sociaux" element={<ReseauxSociaux />} />
+          <Route path="/cgu-cookies" element={<CGUCookies />} />
           
           {/* Enhanced observatoire features */}
           <Route path="/recherche-avancee" element={<RechercheAvancee />} />
