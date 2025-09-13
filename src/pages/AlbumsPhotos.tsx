@@ -87,18 +87,18 @@ const AlbumsPhotos = () => {
       {/* Header */}
       <header className="border-b bg-card">
         <div className="container mx-auto px-4 py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-4">
-              <img src="/Feelinx_upload/logo-acces-aux-droits.png" alt="Accès aux Droits Logo" className="h-12" />
+          <div className="flex items-center justify-between flex-wrap gap-4">
+            <Link to="/acces-aux-droits" className="flex items-center space-x-2 sm:space-x-4">
+              <img src="/Feelinx_upload/logo-acces-aux-droits.png" alt="Accès aux Droits Logo" className="h-8 sm:h-12" />
               <div>
-                <h1 className="text-2xl font-bold text-foreground">Accès aux Droits</h1>
-                <p className="text-sm text-muted-foreground">Campagne d'information avec carte interactive</p>
+                <h1 className="text-lg sm:text-xl font-bold text-foreground">Accès aux Droits</h1>
+                <p className="text-xs sm:text-sm text-muted-foreground">Albums photos</p>
               </div>
-            </div>
-            <div className="flex items-center space-x-4">
-              <Button variant="outline" size="sm">العربية</Button>
+            </Link>
+            <div className="flex items-center space-x-2 sm:space-x-4">
+              <Button variant="outline" size="sm" className="text-xs sm:text-sm">العربية</Button>
               <Link to="/observatoire">
-                <Button variant="ghost" size="sm">Observatoire</Button>
+                <Button variant="ghost" size="sm" className="text-xs sm:text-sm">Observatoire</Button>
               </Link>
             </div>
           </div>
@@ -107,9 +107,9 @@ const AlbumsPhotos = () => {
 
       <AccesAuxDroitsNav />
 
-      <div className="container mx-auto px-4 py-8">
+      <div className="container mx-auto px-4 py-4 sm:py-8">
         {/* Breadcrumb */}
-        <Breadcrumb className="mb-8">
+        <Breadcrumb className="mb-4 sm:mb-8">
           <BreadcrumbList>
             <BreadcrumbItem>
               <BreadcrumbLink asChild>
@@ -124,49 +124,52 @@ const AlbumsPhotos = () => {
         </Breadcrumb>
 
         {/* Page Header */}
-        <div className="mb-8">
-          <h2 className="text-3xl font-bold mb-4">Albums Photos</h2>
-          <p className="text-lg text-muted-foreground mb-6">
+        <div className="mb-6 sm:mb-8">
+          <div className="flex items-center gap-2 sm:gap-3 mb-4">
+            <Camera className="h-6 w-6 sm:h-8 sm:w-8 text-primary" />
+            <h2 className="text-2xl sm:text-3xl font-bold">Albums Photos</h2>
+          </div>
+          <p className="text-base sm:text-lg text-muted-foreground mb-4 sm:mb-6">
             Découvrez en images nos campagnes, événements et actions de sensibilisation aux droits fondamentaux en Tunisie.
           </p>
+        </div>
 
-          {/* Search and Stats */}
-          <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
-            <div className="relative">
-              <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-              <Input placeholder="Rechercher un album..." className="pl-10 w-80" />
-            </div>
-            <div className="flex items-center gap-6 text-sm text-muted-foreground">
-              <div className="flex items-center gap-1">
-                <ImageIcon className="h-4 w-4" />
-                <span>316 photos au total</span>
-              </div>
-              <div className="flex items-center gap-1">
-                <Camera className="h-4 w-4" />
-                <span>6 albums</span>
-              </div>
-            </div>
+        {/* Search and Stats */}
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
+          <div className="relative">
+            <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+            <Input placeholder="Rechercher un album..." className="pl-10 w-80" />
           </div>
-
-          {/* Category Filters */}
-          <div className="flex flex-wrap gap-2">
-            {categories.map((category) => (
-              <Button
-                key={category}
-                variant={category === "Tous" ? "default" : "outline"}
-                size="sm"
-                className="rounded-full"
-              >
-                {category}
-              </Button>
-            ))}
+          <div className="flex items-center gap-6 text-sm text-muted-foreground">
+            <div className="flex items-center gap-1">
+              <ImageIcon className="h-4 w-4" />
+              <span>316 photos au total</span>
+            </div>
+            <div className="flex items-center gap-1">
+              <Camera className="h-4 w-4" />
+              <span>6 albums</span>
+            </div>
           </div>
         </div>
 
+        {/* Category Filters */}
+        <div className="flex flex-wrap gap-2 mb-8">
+          {categories.map((category) => (
+            <Button
+              key={category}
+              variant={category === "Tous" ? "default" : "outline"}
+              size="sm"
+              className="rounded-full"
+            >
+              {category}
+            </Button>
+          ))}
+        </div>
+
         {/* Featured Albums */}
-        <div className="mb-8">
-          <h3 className="text-xl font-semibold mb-4">Albums en vedette</h3>
-          <div className="grid md:grid-cols-2 gap-6">
+        <div className="mb-6 sm:mb-8">
+          <h3 className="text-lg sm:text-xl font-semibold mb-4">Albums en vedette</h3>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
             {albums.filter(album => album.featured).map((album) => (
               <Card key={album.id} className="overflow-hidden hover:shadow-lg transition-shadow">
                 <div className="aspect-video bg-muted relative">
