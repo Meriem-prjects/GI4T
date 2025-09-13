@@ -48,6 +48,15 @@ const Index = () => {
           {/* Top Section - Blue Background - Legal Observatory */}
           <Link to="/observatoire" className="w-full h-1/2 bg-gradient-to-b from-blue-50 to-blue-100 flex flex-col relative hover:from-blue-100 hover:to-blue-200 transition-all duration-300 cursor-pointer group">
             <div className="flex flex-col items-center justify-center px-4 sm:px-8 h-full">
+              {/* ODF Logo */}
+              <div className="mb-3 sm:mb-4">
+                <img 
+                  src="/Feelinx_upload/odf-logo.png" 
+                  alt="Observatoire des Droits" 
+                  className="h-12 sm:h-16 w-auto object-contain"
+                />
+              </div>
+              
               <h2 className="text-primary text-xl sm:text-2xl md:text-3xl font-spartan font-bold text-center mb-4 sm:mb-8 max-w-md leading-tight">
                 Observatoire<br className="sm:hidden" />
                 <span className="hidden sm:inline"> des</span> Droits
@@ -89,6 +98,15 @@ const Index = () => {
           {/* Bottom Section - Yellow Background - Citizen Access */}
           <Link to="/acces-aux-droits" className="w-full h-1/2 bg-gradient-to-b from-yellow-50 to-yellow-100 flex flex-col relative hover:from-yellow-100 hover:to-yellow-200 transition-all duration-300 cursor-pointer group">
             <div className="flex flex-col items-center justify-center px-4 sm:px-8 h-full">
+              {/* Accès aux Droits Logo */}
+              <div className="mb-3 sm:mb-4">
+                <img 
+                  src="/Feelinx_upload/logo-acces-aux-droits.png" 
+                  alt="Accès aux Droits" 
+                  className="h-12 sm:h-16 w-auto object-contain"
+                />
+              </div>
+              
               <h2 className="text-primary text-xl sm:text-2xl md:text-3xl font-spartan font-bold text-center mb-4 sm:mb-8 max-w-md leading-tight">
                 Accès aux Droits
               </h2>
