@@ -5,6 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbPage, BreadcrumbSeparator } from "@/components/ui/breadcrumb";
 import { Search, FileText, Download, Calendar, Eye, ArrowRight } from "lucide-react";
 import { Link } from "react-router-dom";
+import AccesAuxDroitsNav from "@/components/AccesAuxDroitsNav";
 
 const RessourcesPratiques = () => {
   const resources = [
@@ -95,6 +96,8 @@ const RessourcesPratiques = () => {
           </div>
         </div>
       </header>
+
+      <AccesAuxDroitsNav />
 
       <div className="container mx-auto px-4 py-8">
         {/* Breadcrumb */}

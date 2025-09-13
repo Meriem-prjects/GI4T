@@ -5,6 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbPage, BreadcrumbSeparator } from "@/components/ui/breadcrumb";
 import { Search, Play, Video, Headphones, FileText, Eye, Clock, ThumbsUp } from "lucide-react";
 import { Link } from "react-router-dom";
+import AccesAuxDroitsNav from "@/components/AccesAuxDroitsNav";
 
 const Mediatheque = () => {
   const mediaContent = [
@@ -107,6 +108,8 @@ const Mediatheque = () => {
           </div>
         </div>
       </header>
+
+      <AccesAuxDroitsNav />
 
       <div className="container mx-auto px-4 py-8">
         {/* Breadcrumb */}
