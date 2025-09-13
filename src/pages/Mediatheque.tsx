@@ -92,18 +92,18 @@ const Mediatheque = () => {
       {/* Header */}
       <header className="border-b bg-card">
         <div className="container mx-auto px-4 py-4">
-          <div className="flex items-center justify-between">
-            <Link to="/acces-aux-droits" className="flex items-center space-x-4">
-              <img src="/Feelinx_upload/logo-acces-aux-droits.png" alt="Accès aux Droits Logo" className="h-12" />
+          <div className="flex items-center justify-between flex-wrap gap-4">
+            <Link to="/acces-aux-droits" className="flex items-center space-x-2 sm:space-x-4">
+              <img src="/Feelinx_upload/logo-acces-aux-droits.png" alt="Accès aux Droits Logo" className="h-8 sm:h-12" />
               <div>
-                <h1 className="text-xl font-bold text-foreground">Accès aux Droits</h1>
-                <p className="text-sm text-muted-foreground">Médiathèque</p>
+                <h1 className="text-lg sm:text-xl font-bold text-foreground">Accès aux Droits</h1>
+                <p className="text-xs sm:text-sm text-muted-foreground">Médiathèque</p>
               </div>
             </Link>
-            <div className="flex items-center space-x-4">
-              <Button variant="outline" size="sm">العربية</Button>
+            <div className="flex items-center space-x-2 sm:space-x-4">
+              <Button variant="outline" size="sm" className="text-xs sm:text-sm">العربية</Button>
               <Link to="/observatoire">
-                <Button variant="ghost" size="sm">Observatoire</Button>
+                <Button variant="ghost" size="sm" className="text-xs sm:text-sm">Observatoire</Button>
               </Link>
             </div>
           </div>

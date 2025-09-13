@@ -73,18 +73,18 @@ const GuidesPratiques = () => {
       {/* Header */}
       <header className="border-b bg-card">
         <div className="container mx-auto px-4 py-4">
-          <div className="flex items-center justify-between">
-            <Link to="/acces-aux-droits" className="flex items-center space-x-4">
-              <img src="/Feelinx_upload/logo-acces-aux-droits.png" alt="Accès aux Droits Logo" className="h-12" />
+          <div className="flex items-center justify-between flex-wrap gap-4">
+            <Link to="/acces-aux-droits" className="flex items-center space-x-2 sm:space-x-4">
+              <img src="/Feelinx_upload/logo-acces-aux-droits.png" alt="Accès aux Droits Logo" className="h-8 sm:h-12" />
               <div>
-                <h1 className="text-xl font-bold text-foreground">Accès aux Droits</h1>
-                <p className="text-sm text-muted-foreground">Guides pratiques</p>
+                <h1 className="text-lg sm:text-xl font-bold text-foreground">Accès aux Droits</h1>
+                <p className="text-xs sm:text-sm text-muted-foreground">Guides pratiques</p>
               </div>
             </Link>
-            <div className="flex items-center space-x-4">
-              <Button variant="outline" size="sm">العربية</Button>
+            <div className="flex items-center space-x-2 sm:space-x-4">
+              <Button variant="outline" size="sm" className="text-xs sm:text-sm">العربية</Button>
               <Link to="/observatoire">
-                <Button variant="ghost" size="sm">Observatoire</Button>
+                <Button variant="ghost" size="sm" className="text-xs sm:text-sm">Observatoire</Button>
               </Link>
             </div>
           </div>
@@ -93,9 +93,9 @@ const GuidesPratiques = () => {
 
       <AccesAuxDroitsNav />
 
-      <div className="container mx-auto px-4 py-8">
+      <div className="container mx-auto px-4 py-4 sm:py-8">
         {/* Breadcrumb */}
-        <Breadcrumb className="mb-8">
+        <Breadcrumb className="mb-4 sm:mb-8">
           <BreadcrumbList>
             <BreadcrumbItem>
               <BreadcrumbLink href="/acces-aux-droits">Accès aux Droits</BreadcrumbLink>
@@ -108,21 +108,21 @@ const GuidesPratiques = () => {
         </Breadcrumb>
 
         {/* Page Header */}
-        <div className="mb-8">
-          <div className="flex items-center gap-3 mb-4">
-            <BookOpen className="h-8 w-8 text-primary" />
-            <h1 className="text-3xl font-bold">Guides pratiques</h1>
+        <div className="mb-6 sm:mb-8">
+          <div className="flex items-center gap-2 sm:gap-3 mb-4">
+            <BookOpen className="h-6 w-6 sm:h-8 sm:w-8 text-primary" />
+            <h1 className="text-2xl sm:text-3xl font-bold">Guides pratiques</h1>
           </div>
-          <p className="text-lg text-muted-foreground max-w-2xl">
+          <p className="text-base sm:text-lg text-muted-foreground max-w-2xl">
             Des guides step-by-step pour vous accompagner dans l'exercice de vos droits fondamentaux
           </p>
         </div>
 
         {/* Search and Filters */}
-        <div className="mb-8 space-y-4">
-          <div className="relative max-w-md">
+        <div className="mb-6 sm:mb-8 space-y-4">
+          <div className="relative max-w-sm sm:max-w-md">
             <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-            <Input placeholder="Rechercher un guide..." className="pl-10" />
+            <Input placeholder="Rechercher un guide..." className="pl-10 text-sm sm:text-base" />
           </div>
           <div className="flex flex-wrap gap-2">
             {categories.map((category) => (
@@ -130,6 +130,7 @@ const GuidesPratiques = () => {
                 key={category}
                 variant={category === "Tous" ? "default" : "outline"}
                 size="sm"
+                className="text-xs sm:text-sm"
               >
                 {category}
               </Button>
@@ -138,7 +139,7 @@ const GuidesPratiques = () => {
         </div>
 
         {/* Guides Grid */}
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 mb-8 sm:mb-12">
           {guides.map((guide, index) => (
             <Card key={index} className="hover:shadow-lg transition-shadow">
               <CardHeader>

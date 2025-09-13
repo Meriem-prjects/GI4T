@@ -55,18 +55,18 @@ const CarteInteractive = () => {
       {/* Header */}
       <header className="border-b bg-card">
         <div className="container mx-auto px-4 py-4">
-          <div className="flex items-center justify-between">
-            <Link to="/acces-aux-droits" className="flex items-center space-x-4">
-              <img src="/Feelinx_upload/logo-acces-aux-droits.png" alt="Accès aux Droits Logo" className="h-12" />
+          <div className="flex items-center justify-between flex-wrap gap-4">
+            <Link to="/acces-aux-droits" className="flex items-center space-x-2 sm:space-x-4">
+              <img src="/Feelinx_upload/logo-acces-aux-droits.png" alt="Accès aux Droits Logo" className="h-8 sm:h-12" />
               <div>
-                <h1 className="text-xl font-bold text-foreground">Accès aux Droits</h1>
-                <p className="text-sm text-muted-foreground">Carte interactive</p>
+                <h1 className="text-lg sm:text-xl font-bold text-foreground">Accès aux Droits</h1>
+                <p className="text-xs sm:text-sm text-muted-foreground">Carte interactive</p>
               </div>
             </Link>
-            <div className="flex items-center space-x-4">
-              <Button variant="outline" size="sm">العربية</Button>
+            <div className="flex items-center space-x-2 sm:space-x-4">
+              <Button variant="outline" size="sm" className="text-xs sm:text-sm">العربية</Button>
               <Link to="/observatoire">
-                <Button variant="ghost" size="sm">Observatoire</Button>
+                <Button variant="ghost" size="sm" className="text-xs sm:text-sm">Observatoire</Button>
               </Link>
             </div>
           </div>
@@ -75,9 +75,9 @@ const CarteInteractive = () => {
 
       <AccesAuxDroitsNav />
 
-      <div className="container mx-auto px-4 py-8">
+      <div className="container mx-auto px-4 py-4 sm:py-8">
         {/* Breadcrumb */}
-        <Breadcrumb className="mb-8">
+        <Breadcrumb className="mb-4 sm:mb-8">
           <BreadcrumbList>
             <BreadcrumbItem>
               <BreadcrumbLink href="/acces-aux-droits">Accès aux Droits</BreadcrumbLink>
@@ -90,24 +90,24 @@ const CarteInteractive = () => {
         </Breadcrumb>
 
         {/* Page Header */}
-        <div className="mb-8">
-          <div className="flex items-center gap-3 mb-4">
-            <MapPin className="h-8 w-8 text-primary" />
-            <h1 className="text-3xl font-bold">Carte interactive</h1>
+        <div className="mb-6 sm:mb-8">
+          <div className="flex items-center gap-2 sm:gap-3 mb-4">
+            <MapPin className="h-6 w-6 sm:h-8 sm:w-8 text-primary" />
+            <h1 className="text-2xl sm:text-3xl font-bold">Carte interactive</h1>
           </div>
-          <p className="text-lg text-muted-foreground max-w-2xl">
+          <p className="text-base sm:text-lg text-muted-foreground max-w-2xl">
             Trouvez les services d'aide juridique et sociale près de chez vous
           </p>
         </div>
 
         {/* Search and Filters */}
-        <div className="mb-8 space-y-4">
-          <div className="flex gap-4">
-            <div className="relative flex-1 max-w-md">
+        <div className="mb-6 sm:mb-8 space-y-4">
+          <div className="flex flex-col sm:flex-row gap-4">
+            <div className="relative flex-1">
               <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-              <Input placeholder="Entrez votre adresse ou code postal..." className="pl-10" />
+              <Input placeholder="Entrez votre adresse..." className="pl-10 text-sm sm:text-base" />
             </div>
-            <Button>
+            <Button className="w-full sm:w-auto">
               <Navigation className="h-4 w-4 mr-2" />
               Me géolocaliser
             </Button>
