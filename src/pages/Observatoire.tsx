@@ -71,17 +71,19 @@ const Observatoire = () => {
                 <p className="text-xs sm:text-sm text-muted-foreground hidden sm:block">Surveillance et protection des droits citoyens</p>
               </div>
             </div>
-            <div className="flex items-center space-x-2 sm:space-x-4 ml-auto">
-              <Button variant="outline" size="sm" className="text-xs sm:text-sm hidden sm:inline-flex">العربية</Button>
-              <Link to="/acces-aux-droits" className="hidden sm:inline-flex">
-                <Button variant="ghost" size="sm" className="text-xs sm:text-sm">Accès aux Droits</Button>
-              </Link>
+            <div className="flex items-center ml-auto">
+              <div className="hidden sm:flex items-center space-x-2 sm:space-x-4">
+                <Button variant="outline" size="sm" className="text-xs sm:text-sm">العربية</Button>
+                <Link to="/acces-aux-droits">
+                  <Button variant="ghost" size="sm" className="text-xs sm:text-sm">Accès aux Droits</Button>
+                </Link>
+              </div>
               
               {/* Mobile Menu */}
               <Sheet open={isMobileMenuOpen} onOpenChange={setIsMobileMenuOpen}>
                 <SheetTrigger asChild>
-                  <Button variant="ghost" size="sm" className="md:hidden p-2 ml-auto">
-                    <Menu className="h-4 w-4" />
+                  <Button variant="ghost" size="sm" className="md:hidden p-1">
+                    <Menu className="h-5 w-5" />
                   </Button>
                 </SheetTrigger>
                 <SheetContent side="right" className="w-80">
