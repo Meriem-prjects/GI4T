@@ -24,6 +24,13 @@ import QuiSommesNous from "./pages/QuiSommesNous";
 import Methodologie from "./pages/Methodologie";
 import MentionsLegales from "./pages/MentionsLegales";
 import PlanDuSite from "./pages/PlanDuSite";
+import Publications from "./pages/Publications";
+import LiensUtiles from "./pages/LiensUtiles";
+import AlbumsPhotos from "./pages/AlbumsPhotos";
+import Partenaires from "./pages/Partenaires";
+import ChatbotFAQ from "./pages/ChatbotFAQ";
+import ReseauxSociaux from "./pages/ReseauxSociaux";
+import CGUCookies from "./pages/CGUCookies";
 
 const queryClient = new QueryClient();
 
