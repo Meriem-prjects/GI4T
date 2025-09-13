@@ -3,6 +3,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Input } from "@/components/ui/input";
 import { Search, BookOpen, Map, Video, FileText, Scale, Users, Phone } from "lucide-react";
 import { Link } from "react-router-dom";
+import AccesAuxDroitsNav from "@/components/AccesAuxDroitsNav";
 
 const AccesAuxDroits = () => {
   return (
@@ -27,6 +28,9 @@ const AccesAuxDroits = () => {
           </div>
         </div>
       </header>
+
+      {/* Navigation */}
+      <AccesAuxDroitsNav />
 
       {/* Hero Section */}
       <section className="bg-gradient-to-r from-primary/10 to-primary/5 py-16">
