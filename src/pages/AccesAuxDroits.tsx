@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Search, BookOpen, Map, Video, FileText, Scale, Menu } from "lucide-react";
+import { Search, BookOpen, Map, Video, FileText, Scale, Menu, History, Bookmark, Globe, ChevronRight, Users } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import AccesAuxDroitsNav from "@/components/AccesAuxDroitsNav";
@@ -12,20 +12,40 @@ const AccesAuxDroits = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   return (
     <div className="min-h-screen bg-background">
-      {/* Header */}
-      <header className="border-b bg-card">
+      {/* Enhanced Sticky Header */}
+      <header className="sticky top-0 z-50 border-b bg-card/95 backdrop-blur supports-[backdrop-filter]:bg-card/60">
         <div className="container mx-auto px-4 py-2 sm:py-4 relative">
           <div className="flex items-center justify-between flex-wrap gap-4">
             <div className="flex items-center space-x-2 sm:space-x-4">
-              <img src="/Feelinx_upload/logo-acces-aux-droits.png" alt="Accès aux Droits Logo" className="h-6 sm:h-10" />
+              <img src="/Feelinx_upload/logo-acces-aux-droits.png" alt="Accès aux Droits Logo" className="h-8 sm:h-12" />
               <div>
                 <h1 className="text-base sm:text-2xl font-bold text-foreground">Accès aux Droits</h1>
                 <p className="text-xs sm:text-sm text-muted-foreground hidden sm:block">Espace citoyen - Connaître et exercer vos droits</p>
               </div>
             </div>
+            
+            {/* Desktop Quick Actions */}
+            <div className="hidden lg:flex items-center space-x-4">
+              <div className="flex items-center space-x-2 text-sm text-muted-foreground">
+                <Users className="h-4 w-4" />
+                <span>1,247 guides</span>
+              </div>
+              <Button variant="ghost" size="sm">
+                <History className="h-4 w-4 mr-2" />
+                Historique
+              </Button>
+              <Button variant="ghost" size="sm">
+                <Bookmark className="h-4 w-4 mr-2" />
+                Favoris
+              </Button>
+            </div>
+
             <div className="flex items-center ml-auto">
               <div className="hidden sm:flex items-center space-x-2 sm:space-x-4">
-                <Button variant="outline" size="sm" className="text-xs sm:text-sm">العربية</Button>
+                <Button variant="outline" size="sm" className="text-xs sm:text-sm">
+                  <Globe className="h-4 w-4 mr-2" />
+                  العربية
+                </Button>
                 <Link to="/observatoire">
                   <Button variant="ghost" size="sm" className="text-xs sm:text-sm">Observatoire</Button>
                 </Link>
@@ -66,6 +86,17 @@ const AccesAuxDroits = () => {
                   </div>
                 </SheetContent>
               </Sheet>
+            </div>
+          </div>
+        </div>
+        
+        {/* Breadcrumb Navigation */}
+        <div className="hidden md:block border-t bg-muted/30">
+          <div className="container mx-auto px-4 py-2">
+            <div className="flex items-center space-x-2 text-sm text-muted-foreground">
+              <Link to="/" className="hover:text-primary">Accueil</Link>
+              <ChevronRight className="h-4 w-4" />
+              <span className="text-foreground font-medium">Accès aux Droits</span>
             </div>
           </div>
         </div>
