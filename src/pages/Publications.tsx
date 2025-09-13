@@ -85,18 +85,18 @@ const Publications = () => {
       {/* Header */}
       <header className="border-b bg-card">
         <div className="container mx-auto px-4 py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-4">
-              <img src="/Feelinx_upload/logo-acces-aux-droits.png" alt="Accès aux Droits Logo" className="h-12" />
+          <div className="flex items-center justify-between flex-wrap gap-4">
+            <Link to="/acces-aux-droits" className="flex items-center space-x-2 sm:space-x-4">
+              <img src="/Feelinx_upload/logo-acces-aux-droits.png" alt="Accès aux Droits Logo" className="h-8 sm:h-12" />
               <div>
-                <h1 className="text-2xl font-bold text-foreground">Accès aux Droits</h1>
-                <p className="text-sm text-muted-foreground">Campagne d'information avec carte interactive</p>
+                <h1 className="text-lg sm:text-xl font-bold text-foreground">Accès aux Droits</h1>
+                <p className="text-xs sm:text-sm text-muted-foreground">Publications</p>
               </div>
-            </div>
-            <div className="flex items-center space-x-4">
-              <Button variant="outline" size="sm">العربية</Button>
+            </Link>
+            <div className="flex items-center space-x-2 sm:space-x-4">
+              <Button variant="outline" size="sm" className="text-xs sm:text-sm">العربية</Button>
               <Link to="/observatoire">
-                <Button variant="ghost" size="sm">Observatoire</Button>
+                <Button variant="ghost" size="sm" className="text-xs sm:text-sm">Observatoire</Button>
               </Link>
             </div>
           </div>
@@ -105,9 +105,9 @@ const Publications = () => {
 
       <AccesAuxDroitsNav />
 
-      <div className="container mx-auto px-4 py-8">
+      <div className="container mx-auto px-4 py-4 sm:py-8">
         {/* Breadcrumb */}
-        <Breadcrumb className="mb-8">
+        <Breadcrumb className="mb-4 sm:mb-8">
           <BreadcrumbList>
             <BreadcrumbItem>
               <BreadcrumbLink asChild>
@@ -122,19 +122,22 @@ const Publications = () => {
         </Breadcrumb>
 
         {/* Page Header */}
-        <div className="mb-8">
-          <h2 className="text-3xl font-bold mb-4">Publications</h2>
-          <p className="text-lg text-muted-foreground mb-6">
+        <div className="mb-6 sm:mb-8">
+          <div className="flex items-center gap-2 sm:gap-3 mb-4">
+            <FileText className="h-6 w-6 sm:h-8 sm:w-8 text-primary" />
+            <h2 className="text-2xl sm:text-3xl font-bold">Publications</h2>
+          </div>
+          <p className="text-base sm:text-lg text-muted-foreground mb-4 sm:mb-6">
             Accédez à tous les documents officiels, guides pratiques et rapports sur les droits fondamentaux en Tunisie.
           </p>
 
           {/* Search and Filters */}
-          <div className="flex flex-col md:flex-row gap-4 mb-6">
+          <div className="flex flex-col sm:flex-row gap-4 mb-6">
             <div className="relative flex-1">
               <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-              <Input placeholder="Rechercher dans les publications..." className="pl-10" />
+              <Input placeholder="Rechercher dans les publications..." className="pl-10 text-sm sm:text-base" />
             </div>
-            <Button variant="outline" className="flex items-center gap-2">
+            <Button variant="outline" className="flex items-center gap-2 w-full sm:w-auto">
               <Filter className="h-4 w-4" />
               Filtres
             </Button>
@@ -147,7 +150,7 @@ const Publications = () => {
                 key={category}
                 variant={category === "Tous" ? "default" : "outline"}
                 size="sm"
-                className="rounded-full"
+                className="rounded-full text-xs sm:text-sm"
               >
                 {category}
               </Button>
@@ -156,7 +159,7 @@ const Publications = () => {
         </div>
 
         {/* Publications Grid */}
-        <div className="grid gap-6 mb-8">
+        <div className="grid gap-4 sm:gap-6 mb-6 sm:mb-8">
           {publications.map((publication) => (
             <Card key={publication.id} className="hover:shadow-md transition-shadow">
               <CardHeader>
@@ -175,29 +178,29 @@ const Publications = () => {
                 </div>
               </CardHeader>
               <CardContent>
-                <div className="flex items-center justify-between mb-4">
-                  <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-4 gap-2">
+                  <div className="flex flex-wrap items-center gap-2 sm:gap-4 text-xs sm:text-sm text-muted-foreground">
                     <div className="flex items-center gap-1">
-                      <Calendar className="h-4 w-4" />
+                      <Calendar className="h-3 w-3 sm:h-4 sm:w-4" />
                       {publication.date}
                     </div>
                     <div className="flex items-center gap-1">
-                      <Download className="h-4 w-4" />
+                      <Download className="h-3 w-3 sm:h-4 sm:w-4" />
                       {publication.downloads} téléchargements  
                     </div>
                     <div className="flex items-center gap-1">
-                      <Eye className="h-4 w-4" />
+                      <Eye className="h-3 w-3 sm:h-4 sm:w-4" />
                       {publication.pages} pages
                     </div>
                   </div>
-                  <span className="text-sm text-muted-foreground">{publication.size}</span>
+                  <span className="text-xs sm:text-sm text-muted-foreground">{publication.size}</span>
                 </div>
-                <div className="flex gap-3">
+                <div className="flex flex-col sm:flex-row gap-3">
                   <Button className="flex-1">
                     <Download className="h-4 w-4 mr-2" />
                     Télécharger PDF
                   </Button>
-                  <Button variant="outline">
+                  <Button variant="outline" className="sm:w-auto">
                     <Eye className="h-4 w-4 mr-2" />
                     Aperçu
                   </Button>
@@ -210,15 +213,15 @@ const Publications = () => {
         {/* Newsletter Subscription */}
         <Card className="bg-primary/5 border-primary/20">
           <CardHeader className="text-center">
-            <CardTitle>Recevez nos nouvelles publications</CardTitle>
-            <CardDescription>
+            <CardTitle className="text-lg sm:text-xl">Recevez nos nouvelles publications</CardTitle>
+            <CardDescription className="text-sm sm:text-base">
               Abonnez-vous pour être informé des dernières publications et mises à jour.
             </CardDescription>
           </CardHeader>
           <CardContent className="text-center">
-            <div className="flex max-w-md mx-auto gap-2">
-              <Input placeholder="Votre email" type="email" />
-              <Button>S'abonner</Button>
+            <div className="flex flex-col sm:flex-row max-w-md mx-auto gap-2">
+              <Input placeholder="Votre email" type="email" className="flex-1" />
+              <Button className="w-full sm:w-auto">S'abonner</Button>
             </div>
           </CardContent>
         </Card>
