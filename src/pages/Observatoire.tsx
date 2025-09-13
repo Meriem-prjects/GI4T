@@ -64,19 +64,19 @@ const Observatoire = () => {
       <header className="border-b bg-background/95 backdrop-blur sticky top-0 z-50">
         <div className="container mx-auto px-4 py-3">
           <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-3">
-              <img src="/Feelinx_upload/odf-logo.png" alt="ODF Logo" className="h-8 w-auto" />
-              <h1 className="text-lg md:text-xl font-bold text-primary hidden sm:block">Observatoire des Droits Fondamentaux</h1>
-              <h1 className="text-lg font-bold text-primary sm:hidden">ODF</h1>
+            <div className="flex items-center space-x-2 sm:space-x-3">
+              <img src="/Feelinx_upload/odf-logo.png" alt="ODF Logo" className="h-6 sm:h-8 w-auto" />
+              <h1 className="text-base sm:text-lg md:text-xl font-bold text-primary hidden lg:block">Observatoire des Droits Fondamentaux</h1>
+              <h1 className="text-base sm:text-lg font-bold text-primary lg:hidden">ODF</h1>
             </div>
             
-            <div className="flex items-center space-x-2">
+            <div className="flex items-center space-x-1 sm:space-x-2">
               {/* Language Switcher */}
               <div className="flex items-center bg-muted rounded-full p-1">
-                <Button size="sm" className="bg-primary text-primary-foreground hover:bg-primary/90 rounded-full px-4 py-1 text-sm font-medium">
+                <Button size="sm" className="bg-primary text-primary-foreground hover:bg-primary/90 rounded-full px-2 sm:px-4 py-1 text-xs sm:text-sm font-medium">
                   FR
                 </Button>
-                <Button variant="ghost" size="sm" className="text-muted-foreground hover:bg-transparent rounded-full px-4 py-1 text-sm">
+                <Button variant="ghost" size="sm" className="text-muted-foreground hover:bg-transparent rounded-full px-2 sm:px-4 py-1 text-xs sm:text-sm">
                   AR
                 </Button>
               </div>
@@ -84,8 +84,8 @@ const Observatoire = () => {
               {/* Mobile Menu */}
               <Sheet open={isMobileMenuOpen} onOpenChange={setIsMobileMenuOpen}>
                 <SheetTrigger asChild>
-                  <Button variant="ghost" size="sm" className="md:hidden">
-                    <Menu className="h-5 w-5" />
+                  <Button variant="ghost" size="sm" className="md:hidden p-2">
+                    <Menu className="h-4 w-4 sm:h-5 sm:w-5" />
                   </Button>
                 </SheetTrigger>
                 <SheetContent side="right" className="w-80">
@@ -101,7 +101,7 @@ const Observatoire = () => {
               </Sheet>
               
               {/* Desktop Navigation */}
-              <nav className="hidden md:flex items-center space-x-6 ml-4">
+              <nav className="hidden md:flex items-center space-x-4 lg:space-x-6 ml-4">
                 <Link to="/" className="text-sm hover:text-primary transition-colors">Accueil</Link>
                 <a href="#" className="text-sm text-primary font-medium">Observatoire</a>
                 <Link to="/qui-sommes-nous" className="text-sm hover:text-primary transition-colors">Qui sommes-nous</Link>
@@ -115,9 +115,9 @@ const Observatoire = () => {
       </header>
 
       {/* Hero Section with Search */}
-      <section className="bg-gradient-to-br from-primary to-primary-foreground text-primary-foreground py-8 md:py-16">
+      <section className="bg-gradient-to-br from-primary to-primary-foreground text-primary-foreground py-6 sm:py-8 md:py-16">
         <div className="container mx-auto px-4 text-center">
-          <p className="text-base sm:text-lg md:text-xl mb-8 md:mb-12 max-w-3xl mx-auto opacity-90 px-4">
+          <p className="text-sm sm:text-base md:text-lg lg:text-xl mb-6 sm:mb-8 md:mb-12 max-w-3xl mx-auto opacity-90 px-2 sm:px-4 leading-relaxed">
             Accédez facilement aux décisions de justice, analyses juridiques et guides pratiques 
             pour comprendre et défendre vos droits fondamentaux.
           </p>
@@ -131,13 +131,14 @@ const Observatoire = () => {
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
-                className="pl-12 pr-32 py-4 text-base bg-background rounded-lg border transition-all duration-300 hover:shadow-lg focus:shadow-lg"
+                className="pl-12 pr-16 sm:pr-32 py-4 text-base bg-background rounded-lg border transition-all duration-300 hover:shadow-lg focus:shadow-lg"
               />
               <Button 
-                className="absolute right-2 top-1/2 transform -translate-y-1/2 px-6 transition-all duration-300 hover:scale-105"
+                className="absolute right-2 top-1/2 transform -translate-y-1/2 px-2 sm:px-6 py-2 transition-all duration-300 hover:scale-105 text-xs sm:text-sm"
                 onClick={handleSearch}
               >
-                Rechercher
+                <Search className="h-4 w-4 sm:hidden" />
+                <span className="hidden sm:inline">Rechercher</span>
               </Button>
             </div>
           </div>
@@ -151,7 +152,7 @@ const Observatoire = () => {
                   key={tag}
                   variant="secondary"
                   size="sm"
-                  className="bg-background/20 text-primary-foreground hover:bg-background/30 text-xs md:text-sm px-3 py-2 h-auto"
+                  className="bg-background/20 text-primary-foreground hover:bg-background/30 text-xs sm:text-sm px-2 sm:px-3 py-1 sm:py-2 h-auto rounded-full"
                 >
                   {tag}
                 </Button>
@@ -162,7 +163,7 @@ const Observatoire = () => {
           {/* Advanced Filters */}
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 md:gap-4 max-w-4xl mx-auto">
             <Select value={selectedJurisdiction} onValueChange={setSelectedJurisdiction}>
-              <SelectTrigger className="bg-background text-foreground h-12 text-sm md:text-base">
+              <SelectTrigger className="bg-background text-foreground h-10 sm:h-12 text-sm md:text-base">
                 <SelectValue placeholder="Toutes juridictions" />
               </SelectTrigger>
               <SelectContent className="bg-background border shadow-lg">
@@ -174,7 +175,7 @@ const Observatoire = () => {
             </Select>
 
             <Select value={selectedContentType} onValueChange={setSelectedContentType}>
-              <SelectTrigger className="bg-background text-foreground h-12 text-sm md:text-base">
+              <SelectTrigger className="bg-background text-foreground h-10 sm:h-12 text-sm md:text-base">
                 <SelectValue placeholder="Type de contenu" />
               </SelectTrigger>
               <SelectContent className="bg-background border shadow-lg">
@@ -186,7 +187,7 @@ const Observatoire = () => {
             </Select>
 
             <Select value={selectedPeriod} onValueChange={setSelectedPeriod}>
-              <SelectTrigger className="bg-background text-foreground h-12 text-sm md:text-base sm:col-span-2 md:col-span-1">
+              <SelectTrigger className="bg-background text-foreground h-10 sm:h-12 text-sm md:text-base sm:col-span-2 md:col-span-1">
                 <SelectValue placeholder="Toute période" />
               </SelectTrigger>
               <SelectContent className="bg-background border shadow-lg">
