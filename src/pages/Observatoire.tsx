@@ -96,13 +96,9 @@ const Observatoire = () => {
                       <Link to="/" className="text-base hover:text-primary p-2 rounded-lg hover:bg-muted">Accueil</Link>
                       <a href="#" className="text-base text-primary p-2 rounded-lg bg-muted font-medium">Observatoire</a>
                       <Link to="/qui-sommes-nous" className="text-base hover:text-primary p-2 rounded-lg hover:bg-muted">Qui sommes-nous</Link>
-                      <Link to="/textes-fondamentaux" className="text-base hover:text-primary p-2 rounded-lg hover:bg-muted">Textes fondamentaux</Link>
                       <Link to="/analyses-opinions" className="text-base hover:text-primary p-2 rounded-lg hover:bg-muted">Analyses & Opinions</Link>
                       <Link to="/actualites" className="text-base hover:text-primary p-2 rounded-lg hover:bg-muted">Actualités</Link>
-                      <Link to="/odf-partenaires" className="text-base hover:text-primary p-2 rounded-lg hover:bg-muted">Partenaires ODF</Link>
                       <Link to="/methodologie" className="text-base hover:text-primary p-2 rounded-lg hover:bg-muted">Méthodologie</Link>
-                      <Link to="/a-propos" className="text-base hover:text-primary p-2 rounded-lg hover:bg-muted">À propos</Link>
-                      <Link to="/contact" className="text-base hover:text-primary p-2 rounded-lg hover:bg-muted">Contact</Link>
                       <div className="border-t pt-4 mt-4">
                         <Link to="/acces-aux-droits" className="text-base hover:text-primary p-2 rounded-lg hover:bg-muted flex items-center">
                           <span>→ Accès aux Droits</span>
