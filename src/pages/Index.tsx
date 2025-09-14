@@ -103,7 +103,7 @@ const Index = () => {
                 <img 
                   src="/Feelinx_upload/logo-acces-aux-droits.png" 
                   alt="Accès aux Droits" 
-                  className="h-6 sm:h-8 md:h-10 w-auto object-contain max-w-full"
+                  className="h-4 sm:h-6 md:h-8 w-auto object-contain max-w-full"
                 />
               </div>
               
