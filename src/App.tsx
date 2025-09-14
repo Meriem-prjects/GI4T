@@ -31,6 +31,7 @@ import Partenaires from "./pages/Partenaires";
 import ChatbotFAQ from "./pages/ChatbotFAQ";
 import ReseauxSociaux from "./pages/ReseauxSociaux";
 import CGUCookies from "./pages/CGUCookies";
+import AccesAuxDroitsLayout from "./layouts/AccesAuxDroitsLayout";
 
 const queryClient = new QueryClient();
 
@@ -53,13 +54,15 @@ const App = () => (
           
           {/* Accès aux droits interface */}
           <Route path="/acces-aux-droits" element={<AccesAuxDroits />} />
-          <Route path="/guides-pratiques" element={<GuidesPratiques />} />
-          <Route path="/ressources-pratiques" element={<RessourcesPratiques />} />
-          <Route path="/carte-interactive" element={<CarteInteractive />} />
-          <Route path="/mediatheque" element={<Mediatheque />} />
-          <Route path="/publications" element={<Publications />} />
-          <Route path="/liens-utiles" element={<LiensUtiles />} />
-          <Route path="/albums-photos" element={<AlbumsPhotos />} />
+          <Route element={<AccesAuxDroitsLayout />}>
+            <Route path="/guides-pratiques" element={<GuidesPratiques />} />
+            <Route path="/ressources-pratiques" element={<RessourcesPratiques />} />
+            <Route path="/carte-interactive" element={<CarteInteractive />} />
+            <Route path="/mediatheque" element={<Mediatheque />} />
+            <Route path="/publications" element={<Publications />} />
+            <Route path="/liens-utiles" element={<LiensUtiles />} />
+            <Route path="/albums-photos" element={<AlbumsPhotos />} />
+          </Route>
           <Route path="/partenaires" element={<Partenaires />} />
           <Route path="/chatbot-faq" element={<ChatbotFAQ />} />
           <Route path="/reseaux-sociaux" element={<ReseauxSociaux />} />
