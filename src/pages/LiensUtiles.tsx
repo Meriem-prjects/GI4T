@@ -147,11 +147,11 @@ const LiensUtiles = () => {
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
-      <header className="border-b bg-card">
+      <header className="border-b bg-card animate-fade-in">
         <div className="container mx-auto px-4 py-4">
           <div className="flex items-center justify-between flex-wrap gap-4">
-            <Link to="/acces-aux-droits" className="flex items-center space-x-2 sm:space-x-4">
-              <img src="/Feelinx_upload/logo-acces-aux-droits.png" alt="Accès aux Droits Logo" className="h-8 sm:h-12" />
+            <Link to="/acces-aux-droits" className="flex items-center space-x-2 sm:space-x-4 hover:opacity-80 transition-opacity duration-200">
+              <img src="/Feelinx_upload/logo-acces-aux-droits.png" alt="Accès aux Droits Logo" className="h-4 sm:h-8" />
               <div>
                 <h1 className="text-lg sm:text-xl font-bold text-foreground">Accès aux Droits</h1>
                 <p className="text-xs sm:text-sm text-muted-foreground">Liens utiles</p>
@@ -163,6 +163,16 @@ const LiensUtiles = () => {
                 <Button variant="ghost" size="sm" className="text-xs sm:text-sm">Observatoire</Button>
               </Link>
             </div>
+          </div>
+          
+          {/* Return Navigation */}
+          <div className="mt-3 pt-3 border-t border-border/50">
+            <Link 
+              to="/acces-aux-droits" 
+              className="inline-flex items-center text-sm text-muted-foreground hover:text-primary transition-colors duration-200"
+            >
+              ← Retour à Accès aux Droits
+            </Link>
           </div>
         </div>
       </header>
