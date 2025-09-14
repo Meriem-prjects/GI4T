@@ -44,9 +44,9 @@ const Index = () => {
         </header>
 
         {/* Main Content - Split Screen */}
-        <div className="flex-1 flex flex-col lg:flex-row">
+        <div className="flex-1 flex flex-col md:flex-row">
           {/* Left Section (Desktop) / Top Section (Mobile) - Blue Background - Legal Observatory */}
-          <Link to="/observatoire" className="w-full h-1/2 lg:w-1/2 lg:h-full bg-gradient-to-b lg:bg-gradient-to-r from-blue-50 to-blue-100 flex flex-col relative hover:from-blue-100 hover:to-blue-200 transition-all duration-300 cursor-pointer group">
+          <Link to="/observatoire" className="w-full h-1/2 md:w-1/2 md:h-full bg-gradient-to-b md:bg-gradient-to-r from-blue-50 to-blue-100 flex flex-col relative hover:from-blue-100 hover:to-blue-200 transition-all duration-300 cursor-pointer group">
             <div className="flex flex-col items-center justify-center px-4 sm:px-8 h-full">
               {/* ODF Logo */}
               <div className="mb-2 sm:mb-3">
@@ -96,14 +96,14 @@ const Index = () => {
           </Link>
 
           {/* Right Section (Desktop) / Bottom Section (Mobile) - Yellow Background - Citizen Access */}
-          <Link to="/acces-aux-droits" className="w-full h-1/2 lg:w-1/2 lg:h-full bg-gradient-to-b lg:bg-gradient-to-l from-yellow-50 to-yellow-100 flex flex-col relative hover:from-yellow-100 hover:to-yellow-200 transition-all duration-300 cursor-pointer group">
+          <Link to="/acces-aux-droits" className="w-full h-1/2 md:w-1/2 md:h-full bg-gradient-to-b md:bg-gradient-to-l from-yellow-50 to-yellow-100 flex flex-col relative hover:from-yellow-100 hover:to-yellow-200 transition-all duration-300 cursor-pointer group">
             <div className="flex flex-col items-center justify-center px-4 sm:px-8 h-full">
               {/* Accès aux Droits Logo */}
               <div className="mb-2 sm:mb-3">
                 <img 
                   src="/Feelinx_upload/logo-acces-aux-droits.png" 
                   alt="Accès aux Droits" 
-                  className="h-8 sm:h-12 w-auto object-contain max-w-full"
+                  className="h-6 sm:h-8 md:h-10 w-auto object-contain max-w-full"
                 />
               </div>
               
