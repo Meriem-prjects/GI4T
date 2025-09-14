@@ -45,7 +45,7 @@ const Index = () => {
 
         {/* Main Content - Split Screen */}
         <div className="flex-1 flex flex-col lg:flex-row">
-          {/* Left Section (Mobile: Top) - Blue Background - Legal Observatory */}
+          {/* Left Section (Desktop) / Top Section (Mobile) - Blue Background - Legal Observatory */}
           <Link to="/observatoire" className="w-full h-1/2 lg:w-1/2 lg:h-full bg-gradient-to-b lg:bg-gradient-to-r from-blue-50 to-blue-100 flex flex-col relative hover:from-blue-100 hover:to-blue-200 transition-all duration-300 cursor-pointer group">
             <div className="flex flex-col items-center justify-center px-4 sm:px-8 h-full">
               {/* ODF Logo */}
@@ -95,7 +95,7 @@ const Index = () => {
             </div>
           </Link>
 
-          {/* Right Section (Mobile: Bottom) - Yellow Background - Citizen Access */}
+          {/* Right Section (Desktop) / Bottom Section (Mobile) - Yellow Background - Citizen Access */}
           <Link to="/acces-aux-droits" className="w-full h-1/2 lg:w-1/2 lg:h-full bg-gradient-to-b lg:bg-gradient-to-l from-yellow-50 to-yellow-100 flex flex-col relative hover:from-yellow-100 hover:to-yellow-200 transition-all duration-300 cursor-pointer group">
             <div className="flex flex-col items-center justify-center px-4 sm:px-8 h-full">
               {/* Accès aux Droits Logo */}
