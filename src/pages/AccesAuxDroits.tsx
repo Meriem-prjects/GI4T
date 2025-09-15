@@ -74,26 +74,6 @@ const AccesAuxDroits = () => {
       {/* Navigation */}
       <AccesAuxDroitsNav />
 
-      {/* Hero Section */}
-      <section className="bg-gradient-to-r from-primary/10 to-primary/5 py-8 sm:py-16">
-        <div className="container mx-auto px-4 text-center">
-          <h2 className="text-2xl sm:text-4xl font-bold text-foreground mb-4">
-            Connaissez vos droits fondamentaux
-          </h2>
-          <p className="text-base sm:text-xl text-muted-foreground mb-6 sm:mb-8 max-w-2xl mx-auto px-4">
-            Informations pratiques, guides et ressources pour comprendre et exercer vos droits
-          </p>
-          <div className="max-w-sm sm:max-w-md mx-auto px-4">
-            <div className="relative">
-              <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-              <Input 
-                placeholder="Rechercher un droit..." 
-                className="pl-10 text-sm sm:text-base"
-              />
-            </div>
-          </div>
-        </div>
-      </section>
 
       {/* Quick Access Cards */}
       <section className="py-8 sm:py-16">
