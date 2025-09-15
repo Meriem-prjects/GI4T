@@ -54,7 +54,7 @@ const AccesAuxDroitsNav = () => {
   return (
     <nav className="border-b bg-card/50 animate-fade-in">
       <div className="container mx-auto px-2 sm:px-4">
-        <div className="flex items-center space-x-1 overflow-x-auto py-2 scrollbar-hide scroll-smooth">
+        <div className="flex items-center justify-center space-x-1 overflow-x-auto py-2 scrollbar-hide scroll-smooth">
           {navItems.map((item) => {
             const Icon = item.icon;
             const isActive = location.pathname === item.path;
