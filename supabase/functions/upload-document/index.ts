@@ -63,15 +63,33 @@ serve(async (req) => {
 
     console.log('File uploaded successfully:', uploadData.path);
 
-    // Get file content for parsing - skip content reading for PDFs to avoid memory issues
+    // Get file content for parsing
     let fileContent = '';
     
-    // Only read content for non-PDF files
-    if (file.type !== 'application/pdf' && !file.name.toLowerCase().endsWith('.pdf')) {
+    // Handle PDF files with dedicated parser
+    if (file.type === 'application/pdf' || file.name.toLowerCase().endsWith('.pdf')) {
+      console.log('Processing PDF file...');
+      
+      // Call PDF parser function
+      const pdfFormData = new FormData();
+      pdfFormData.append('file', file);
+      
+      const { data: pdfData, error: pdfError } = await supabaseAdmin.functions.invoke('pdf-parser', {
+        body: pdfFormData
+      });
+
+      if (pdfError) {
+        console.error('PDF parsing error:', pdfError);
+        fileContent = 'Erreur lors de l\'extraction du contenu PDF';
+      } else {
+        fileContent = pdfData.text || 'Contenu PDF extrait';
+      }
+    } else {
+      // For text files, read as text
       fileContent = await file.text();
     }
     
-    // Call document-analysis function for AI processing (skip for binary files)
+    // Call document-analysis function for AI processing
     let analysisData = {
       title: file.name,
       summary: 'Document uploadé',
@@ -79,7 +97,7 @@ serve(async (req) => {
       language: 'fr'
     };
     
-    if (file.type !== 'application/pdf' && !file.name.toLowerCase().endsWith('.pdf')) {
+    if (fileContent && fileContent.length > 10) {
       console.log('Calling document analysis...');
       const { data, error: analysisError } = await supabaseAdmin.functions.invoke('document-analysis', {
         body: {
@@ -94,7 +112,7 @@ serve(async (req) => {
         analysisData = data;
       }
     } else {
-      console.log('Skipping analysis for PDF file');
+      console.log('Skipping analysis - insufficient content');
     }
 
     console.log('Document processing completed');
@@ -112,7 +130,7 @@ serve(async (req) => {
       title_ar: analysisData.title_ar || null,
       summary: analysisData.summary || '',
       summary_ar: analysisData.summary_ar || null,
-      content: (file.type === 'application/pdf' || file.name.toLowerCase().endsWith('.pdf')) ? '' : fileContent, // Don't store PDF content
+      content: fileContent, // Store extracted content for all file types
       keywords: analysisData.keywords || [],
       keywords_ar: analysisData.keywords_ar || [],
       language: analysisData.language || 'fr',
