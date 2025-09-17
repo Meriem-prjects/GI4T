@@ -284,29 +284,41 @@ const Observatoire = () => {
             </Button>
           </div>
           
-          <div className="space-y-3 md:space-y-4">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6">
             {[1, 2, 3, 4].map((i) => (
-              <Card key={i} className="hover:shadow-md transition-shadow">
-                <CardContent className="p-4 md:p-6">
-                  <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-4">
-                    <div className="flex-1">
-                      <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 mb-2">
-                        <span className="text-sm font-medium">Arrêt n° 2024-{i}23</span>
-                        <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                          <span>Conseil d'État</span>
-                          <span>• 12 Nov 2024</span>
-                        </div>
+              <Card key={i} className="hover:shadow-lg transition-all duration-300 hover:scale-[1.02] cursor-pointer">
+                <CardContent className="p-4 md:p-5">
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs font-medium text-primary bg-primary/10 px-2 py-1 rounded-full">
+                        Arrêt n° 2024-{i}23
+                      </span>
+                      <span className="text-xs text-muted-foreground">12 Nov 2024</span>
+                    </div>
+                    
+                    <div>
+                      <div className="flex items-center gap-2 mb-2">
+                        <Scale className="w-4 h-4 text-muted-foreground" />
+                        <span className="text-sm text-muted-foreground">Conseil d'État</span>
                       </div>
-                      <h3 className="font-semibold mb-2 text-base md:text-lg leading-tight">
+                      <h3 className="font-semibold text-base leading-tight mb-2 hover:text-primary transition-colors">
                         Décision relative au droit à l'information en matière environnementale
                       </h3>
-                      <p className="text-sm text-muted-foreground">
-                        Le Conseil d'État précise les conditions d'accès aux documents administratifs...
+                      <p className="text-sm text-muted-foreground line-clamp-2">
+                        Le Conseil d'État précise les conditions d'accès aux documents administratifs concernant l'environnement...
                       </p>
                     </div>
-                    <div className="flex gap-2 lg:ml-4 flex-wrap">
-                      <Button variant="outline" size="sm" className="flex-1 sm:flex-none">Voir</Button>
-                      <Button variant="ghost" size="sm" className="flex-1 sm:flex-none">Sauvegarder</Button>
+                    
+                    <div className="flex items-center justify-between pt-2 border-t">
+                      <div className="flex gap-1">
+                        <span className="text-xs bg-muted text-muted-foreground px-2 py-1 rounded">Environnement</span>
+                        <span className="text-xs bg-muted text-muted-foreground px-2 py-1 rounded">Information</span>
+                      </div>
+                      <div className="flex gap-2">
+                        <Button variant="outline" size="sm" className="text-xs px-3 hover:bg-primary hover:text-primary-foreground">
+                          Voir
+                        </Button>
+                      </div>
                     </div>
                   </div>
                 </CardContent>
