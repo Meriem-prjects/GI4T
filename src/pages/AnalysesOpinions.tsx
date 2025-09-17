@@ -67,52 +67,7 @@ const AnalysesOpinions = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-background">
-      {/* Header */}
-      <header className="border-b bg-card">
-        <div className="container mx-auto px-3 sm:px-4 py-3 sm:py-4 relative">
-          <div className="flex items-center justify-between">
-            <Link to="/observatoire" className="flex items-center space-x-2 sm:space-x-3 flex-1 min-w-0">
-              <img src="/Feelinx_upload/odf-logo.png" alt="ODF Logo" className="h-6 sm:h-8 flex-shrink-0" />
-              <div className="min-w-0">
-                <h1 className="text-sm sm:text-lg font-bold text-primary truncate">Analyses & Opinions</h1>
-                <p className="text-xs text-muted-foreground hidden sm:block">Observatoire des Droits Fondamentaux</p>
-              </div>
-            </Link>
-            
-            <div className="hidden md:flex items-center space-x-4">
-              <nav className="flex items-center space-x-4">
-                <Link to="/" className="text-sm hover:text-primary transition-colors">Accueil</Link>
-                <Link to="/observatoire" className="text-sm hover:text-primary transition-colors">Observatoire</Link>
-                <Link to="/actualites" className="text-sm hover:text-primary transition-colors">Actualités</Link>
-              </nav>
-              
-              <div className="flex items-center bg-muted rounded-full p-1">
-                <Button size="sm" className="bg-primary text-primary-foreground hover:bg-primary/90 rounded-full px-3 py-1 text-sm">
-                  FR
-                </Button>
-                <Button variant="ghost" size="sm" className="text-muted-foreground hover:bg-transparent rounded-full px-3 py-1 text-sm">
-                  AR
-                </Button>
-              </div>
-            </div>
-
-            {/* Mobile: Simplified navigation */}
-            <div className="md:hidden flex items-center space-x-2">
-              <div className="flex items-center bg-muted rounded-full p-1">
-                <Button size="sm" className="bg-primary text-primary-foreground rounded-full px-2 py-1 text-xs">
-                  FR
-                </Button>
-                <Button variant="ghost" size="sm" className="text-muted-foreground rounded-full px-2 py-1 text-xs">
-                  AR
-                </Button>
-              </div>
-            </div>
-          </div>
-        </div>
-      </header>
-
-      <div className="container mx-auto px-4 py-6">
+    <div className="container mx-auto px-4 py-6">
         {/* Breadcrumb */}
         <Breadcrumb className="mb-6">
           <BreadcrumbList>
@@ -238,49 +193,6 @@ const AnalysesOpinions = () => {
           </Button>
         </section>
       </div>
-
-      {/* Footer */}
-      <footer className="bg-muted mt-16 py-12">
-        <div className="container mx-auto px-4">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
-            <div>
-              <img src="/Feelinx_upload/odf-logo.png" alt="ODF Logo" className="h-8 w-auto mb-4" />
-              <h3 className="font-semibold mb-2">Observatoire des Droits Fondamentaux</h3>
-              <p className="text-sm text-muted-foreground">
-                Facilitant l'accès à la justice et aux droits fondamentaux pour tous
-              </p>
-            </div>
-            <div>
-              <h3 className="font-semibold mb-4">Navigation</h3>
-              <div className="space-y-2 text-sm">
-                <Link to="/" className="block hover:text-primary transition-colors">Accueil</Link>
-                <Link to="/observatoire" className="block hover:text-primary transition-colors">Observatoire</Link>
-                <Link to="/search-results" className="block hover:text-primary transition-colors">Recherche</Link>
-              </div>
-            </div>
-            <div>
-              <h3 className="font-semibold mb-4">Contenus</h3>
-              <div className="space-y-2 text-sm">
-                <a href="#" className="block hover:text-primary transition-colors">Décisions de justice</a>
-                <Link to="/textes-fondamentaux" className="block hover:text-primary transition-colors">Textes fondamentaux</Link>
-                <Link to="/analyses-opinions" className="block hover:text-primary transition-colors">Analyses & Opinions</Link>
-              </div>
-            </div>
-            <div>
-              <h3 className="font-semibold mb-4">Informations</h3>
-              <div className="space-y-2 text-sm">
-                <Link to="/odf-partenaires" className="block hover:text-primary transition-colors">À propos</Link>
-                <Link to="/contact" className="block hover:text-primary transition-colors">Contact</Link>
-                <a href="#" className="block hover:text-primary transition-colors">Mentions légales</a>
-              </div>
-            </div>
-          </div>
-          <div className="border-t mt-8 pt-8 text-center text-sm text-muted-foreground">
-            <p>&copy; 2024 Observatoire des Droits Fondamentaux. Tous droits réservés.</p>
-          </div>
-        </div>
-      </footer>
-    </div>
   );
 };
 
