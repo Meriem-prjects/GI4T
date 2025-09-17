@@ -1,6 +1,4 @@
 import { Button } from "@/components/ui/button";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { ChevronDown } from "lucide-react";
 import { Link } from "react-router-dom";
 
 const HomeHeader = () => {
@@ -37,41 +35,21 @@ const HomeHeader = () => {
         <nav className="border-t border-border">
           <div className="flex items-center justify-center py-3">
             <div className="flex items-center space-x-6">
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" className="flex items-center gap-1 text-sm">
-                    Information
-                    <ChevronDown className="h-4 w-4" />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent className="w-48 bg-background">
-                  <DropdownMenuItem asChild>
-                    <Link to="/information/qui-sommes-nous" className="cursor-pointer">
-                      Qui sommes-nous
-                    </Link>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem asChild>
-                    <Link to="/information/actualites" className="cursor-pointer">
-                      Actualités
-                    </Link>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem asChild>
-                    <Link to="/information/faq-chatbot" className="cursor-pointer">
-                      FAQ / Chatbot
-                    </Link>
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-
-              <Link to="/observatoire">
+              <Link to="/information/qui-sommes-nous">
                 <Button variant="ghost" className="text-sm">
-                  Observatoire
+                  Qui sommes-nous
                 </Button>
               </Link>
 
-              <Link to="/acces-aux-droits">
+              <Link to="/information/actualites">
                 <Button variant="ghost" className="text-sm">
-                  Accès aux Droits
+                  Actualités
+                </Button>
+              </Link>
+
+              <Link to="/information/faq-chatbot">
+                <Button variant="ghost" className="text-sm">
+                  FAQ/Chatbot
                 </Button>
               </Link>
             </div>
