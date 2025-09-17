@@ -6,6 +6,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Index from "./pages/Index";
 import Observatoire from "./pages/Observatoire";
 import SearchResults from "./pages/SearchResults";
+import SearchResultsRedirect from "./components/SearchResultsRedirect";
 import DecisionDetail from "./pages/DecisionDetail";
 import NotFound from "./pages/NotFound";
 import TextesFondamentaux from "./pages/TextesFondamentaux";
@@ -46,7 +47,11 @@ const App = () => (
         <Routes>
           <Route path="/" element={<Index />} />
           <Route path="/observatoire/*" element={<Observatoire />} />
-          <Route path="/search-results" element={<SearchResults />} />
+          <Route element={<ObservatoireLayout />}>
+            <Route path="/observatoire/search-results" element={<SearchResults />} />
+          </Route>
+          {/* Legacy redirect for old search-results URL */}
+          <Route path="/search-results" element={<SearchResultsRedirect />} />
           <Route path="/decision/:id" element={<DecisionDetail />} />
           
           {/* Standalone observatoire pages - moved to nested structure */}

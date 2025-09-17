@@ -15,7 +15,7 @@ const Recherche = () => {
 
   const handleSearch = () => {
     if (searchQuery.trim()) {
-      navigate(`/search-results?q=${encodeURIComponent(searchQuery)}`);
+      navigate(`/observatoire/search-results?q=${encodeURIComponent(searchQuery)}`);
     }
   };
 
