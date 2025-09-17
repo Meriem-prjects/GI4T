@@ -54,9 +54,6 @@ const AccesAuxDroits = () => {
                       <Link to="/acces-aux-droits/publications" className="text-base hover:text-primary p-2 rounded-lg hover:bg-muted">Publications</Link>
                       <Link to="/acces-aux-droits/liens-utiles" className="text-base hover:text-primary p-2 rounded-lg hover:bg-muted">Liens utiles</Link>
                       <Link to="/acces-aux-droits/albums-photos" className="text-base hover:text-primary p-2 rounded-lg hover:bg-muted">Albums photos</Link>
-                      <Link to="/partenaires" className="text-base hover:text-primary p-2 rounded-lg hover:bg-muted">Partenaires</Link>
-                      <Link to="/chatbot-faq" className="text-base hover:text-primary p-2 rounded-lg hover:bg-muted">FAQ</Link>
-                      <Link to="/contact" className="text-base hover:text-primary p-2 rounded-lg hover:bg-muted">Contact</Link>
                       <div className="border-t pt-4 mt-4">
                         <Link to="/observatoire" className="text-base hover:text-primary p-2 rounded-lg hover:bg-muted flex items-center">
                           <span>→ Observatoire</span>

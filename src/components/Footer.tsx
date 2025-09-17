@@ -5,47 +5,22 @@ import { Link } from "react-router-dom";
 const Footer = () => {
   const footerSections = [
     {
-      title: "Nous contacter",
+      title: "Information",
       items: [
         {
-          path: "/contact",
-          label: "Contactez-nous",
-          icon: Mail,
-        }
-      ]
-    },
-    {
-      title: "Informations légales",
-      items: [
+          path: "/information/qui-sommes-nous",
+          label: "Qui sommes-nous",
+          icon: Users,
+        },
         {
-          path: "/mentions-legales",
-          label: "Mentions légales",
+          path: "/information/actualites",
+          label: "Actualités",
           icon: FileText,
         },
         {
-          path: "/plan-du-site",
-          label: "Plan du site",
-          icon: MapPin,
-        },
-        {
-          path: "/cgu-cookies",
-          label: "CGU / Cookies",
-          icon: Shield,
-        }
-      ]
-    },
-    {
-      title: "Aide & Social",
-      items: [
-        {
-          path: "/chatbot-faq",
-          label: "Chatbot / FAQ",
+          path: "/information/faq-chatbot",
+          label: "FAQ / Chatbot",
           icon: MessageSquare,
-        },
-        {
-          path: "/reseaux-sociaux",
-          label: "Réseaux sociaux ODF",
-          icon: Share2,
         }
       ]
     }

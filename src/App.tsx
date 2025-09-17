@@ -20,6 +20,10 @@ import LiensUtiles from "./pages/LiensUtiles";
 import AlbumsPhotos from "./pages/AlbumsPhotos";
 import AccesAuxDroitsLayout from "./layouts/AccesAuxDroitsLayout";
 import ObservatoireLayout from "./layouts/ObservatoireLayout";
+import InformationLayout from "./layouts/InformationLayout";
+import QuiSommesNous from "./pages/QuiSommesNous";
+import InformationActualites from "./pages/InformationActualites";
+import FAQChatbot from "./pages/FAQChatbot";
 
 const queryClient = new QueryClient();
 
@@ -31,6 +35,11 @@ const App = () => (
       <BrowserRouter>
         <Routes>
           <Route path="/" element={<Index />} />
+          
+          {/* Legacy redirect */}
+          <Route path="/search-results" element={<SearchResults />} />
+          
+          {/* Observatoire interface */}
           <Route path="/observatoire/*" element={<Observatoire />} />
           <Route element={<ObservatoireLayout />}>
             <Route path="/observatoire/search-results" element={<SearchResults />} />
@@ -49,6 +58,13 @@ const App = () => (
             <Route path="/acces-aux-droits/publications" element={<Publications />} />
             <Route path="/acces-aux-droits/liens-utiles" element={<LiensUtiles />} />
             <Route path="/acces-aux-droits/albums-photos" element={<AlbumsPhotos />} />
+          </Route>
+          
+          {/* Information interface */}
+          <Route element={<InformationLayout />}>
+            <Route path="/information/qui-sommes-nous" element={<QuiSommesNous />} />
+            <Route path="/information/actualites" element={<InformationActualites />} />
+            <Route path="/information/faq-chatbot" element={<FAQChatbot />} />
           </Route>
           
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
