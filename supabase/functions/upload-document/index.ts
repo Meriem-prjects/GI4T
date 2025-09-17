@@ -122,7 +122,7 @@ serve(async (req) => {
       .from('documents')
       .getPublicUrl(uploadData.path);
 
-    // Save document to database with null user_id (public upload)
+    // Save document to database with enhanced metadata
     const documentData = {
       original_filename: file.name,
       file_url: publicUrl,
@@ -141,6 +141,14 @@ serve(async (req) => {
       user_id: null, // Public upload - no user required
       status: 'processed'
     };
+
+    console.log('Saving document with enhanced metadata:', {
+      title: documentData.title,
+      language: documentData.language,
+      keywords_count: documentData.keywords.length,
+      content_length: documentData.content.length,
+      summary_length: documentData.summary.length
+    });
 
     const { data: document, error: dbError } = await supabaseAdmin
       .from('documents')

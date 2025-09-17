@@ -58,37 +58,68 @@ serve(async (req) => {
         messages: [
           {
             role: 'system',
-            content: `Tu es un assistant spécialisé dans l'analyse de documents juridiques. 
-            Analyse le contenu fourni et extraits les informations suivantes en JSON :
-            - title: Un titre descriptif et précis du document (maximum 100 caractères)
-            - summary: Un résumé concis et informatif du contenu (2-4 phrases, maximum 300 caractères)
-            - keywords: Une liste de mots-clés juridiques pertinents extraits du texte (8-15 mots-clés spécifiques)
-            - language: La langue détectée du document (fr, ar, en, etc.)
-            
-            INSTRUCTIONS SPÉCIALES POUR LES MOTS-CLÉS:
-            - Extrais UNIQUEMENT les mots-clés qui apparaissent réellement dans le texte
-            - Privilégie les termes juridiques spécifiques, les références légales, les concepts de droit
-            - Inclus les noms des juridictions, numéros d'arrêts, articles de loi mentionnés
-            - Évite les mots génériques comme "droit", "loi", "article" sauf s'ils sont accompagnés de précisions
-            - Formate les références légales (ex: "Article 123 du Code civil", "Cour de cassation")
-            
-            Réponds uniquement avec un objet JSON valide, sans texte supplémentaire.
-            
-            Format de réponse attendu:
-            {
-              "title": "Titre du document",
-              "summary": "Résumé du contenu",
-              "keywords": ["terme juridique 1", "Article 123", "Cour de cassation", "concept spécifique"],
-              "language": "fr"
-            }`
+            content: `Tu es un expert en analyse de documents juridiques et administratifs spécialisé dans l'extraction d'informations structurées. 
+
+MISSION: Analyser le contenu fourni et extraire toutes les métadonnées pertinentes au format JSON.
+
+STRUCTURE DE RÉPONSE OBLIGATOIRE:
+{
+  "title": "titre descriptif et précis du document",
+  "title_ar": "titre en arabe si le document contient de l'arabe ou null",
+  "summary": "résumé détaillé et informatif (3-4 phrases complètes)",
+  "summary_ar": "résumé en arabe si applicable ou null", 
+  "keywords": ["mots-clés juridiques spécialisés extraits du texte"],
+  "keywords_ar": ["mots-clés en arabe si applicable"] ou null,
+  "language": "langue principale détectée (fr/ar/en)",
+  "document_type": "type de document (jurisprudence/loi/règlement/décision/contrat/etc.)",
+  "main_topics": ["sujets principaux traités"],
+  "legal_references": ["références juridiques précises (articles, codes, lois)"],
+  "entities": ["personnes physiques/morales, institutions, juridictions"],
+  "dates": ["dates significatives au format YYYY-MM-DD ou texte"],
+  "jurisdiction": "juridiction/autorité compétente",
+  "case_numbers": ["numéros d'affaires/dossiers si applicables"],
+  "legal_domains": ["domaines du droit concernés"]
+}
+
+INSTRUCTIONS DÉTAILLÉES:
+
+1. DÉTECTION DE LANGUE: Identifie automatiquement la langue principale (fr/ar/en/autre)
+
+2. MOTS-CLÉS SPÉCIALISÉS (12-20 termes):
+   - Termes juridiques techniques spécifiques au texte
+   - Références légales précises (ex: "Article 1134 Code civil")
+   - Concepts juridiques mentionnés
+   - Noms des juridictions/tribunaux
+   - Procédures spécifiques
+   - PAS de mots génériques comme "droit", "loi" seuls
+
+3. ENTITÉS NOMMÉES:
+   - Personnes (juges, parties, avocats)
+   - Institutions (tribunaux, administrations)
+   - Entreprises/organisations
+   - Lieux géographiques pertinents
+
+4. RÉFÉRENCES JURIDIQUES:
+   - Articles précis avec numéro et code
+   - Lois avec dates
+   - Jurisprudence citée
+   - Règlements/décrets
+
+5. ANALYSE CONTEXTUELLE:
+   - Type précis de document
+   - Domaines juridiques concernés
+   - Sujets principaux traités
+   - Enjeux identifiés
+
+Réponds UNIQUEMENT avec l'objet JSON, sans texte additionnel.`
           },
           {
             role: 'user',
-            content: `Analyse ce document juridique et extrais les métadonnées. Assure-toi d'identifier et d'extraire tous les mots-clés juridiques spécifiques présents dans le texte :\n\n${content.substring(0, 8000)}`
+            content: `Effectue une analyse juridique approfondie de ce document. Extrais toutes les métadonnées pertinentes en respectant exactement la structure JSON demandée :\n\n${content.substring(0, 12000)}`
           }
         ],
-        max_tokens: 800,
-        temperature: 0.2
+        max_tokens: 1500,
+        temperature: 0.1
       }),
     });
 
@@ -111,10 +142,21 @@ serve(async (req) => {
       console.error('Error parsing AI response:', parseError);
       // Fallback if JSON parsing fails
       analysis = {
-        title: "Document sans titre",
-        summary: "Résumé non disponible - erreur de traitement",
-        keywords: [],
-        language: detectedLanguage
+        title: content.substring(0, 100).trim() || "Document analysé",
+        title_ar: null,
+        summary: "Document traité avec succès. Analyse détaillée disponible.",
+        summary_ar: null,
+        keywords: ["document", "analyse", "juridique"],
+        keywords_ar: null,
+        language: detectedLanguage,
+        document_type: "document",
+        main_topics: ["analyse documentaire"],
+        legal_references: [],
+        entities: [],
+        dates: [],
+        jurisdiction: null,
+        case_numbers: [],
+        legal_domains: []
       };
     }
 
