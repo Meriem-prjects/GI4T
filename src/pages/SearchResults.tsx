@@ -110,14 +110,14 @@ const SearchResults = () => {
             onChange={(e) => setSearchQuery(e.target.value)}
             onKeyDown={(e) => {
               if (e.key === 'Enter') {
-                window.location.href = `/observatoire/search-results?q=${encodeURIComponent(searchQuery)}`;
+                window.location.href = `/observatoire/recherche/search-results?q=${encodeURIComponent(searchQuery)}`;
               }
             }}
             className="pl-12 pr-32 py-4 text-base bg-background rounded-lg border"
           />
           <Button 
             className="absolute right-2 top-1/2 transform -translate-y-1/2 px-6"
-            onClick={() => window.location.href = `/observatoire/search-results?q=${encodeURIComponent(searchQuery)}`}
+            onClick={() => window.location.href = `/observatoire/recherche/search-results?q=${encodeURIComponent(searchQuery)}`}
           >
             Rechercher
           </Button>

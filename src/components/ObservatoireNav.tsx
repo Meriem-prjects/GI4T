@@ -8,7 +8,7 @@ const ObservatoireNav = () => {
 
   const navItems = [
     {
-      path: "/observatoire/search-results",
+      path: "/observatoire/recherche/search-results",
       label: "Recherche",
       icon: Search,
       description: "Recherche avancée"

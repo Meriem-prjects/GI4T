@@ -7,8 +7,8 @@ const SearchResultsRedirect = () => {
   // Get query parameter to preserve it in the redirect
   const query = searchParams.get('q');
   const redirectUrl = query 
-    ? `/observatoire/search-results?q=${query}` 
-    : '/observatoire/search-results';
+    ? `/observatoire/recherche/search-results?q=${query}` 
+    : '/observatoire/recherche/search-results';
 
   return <Navigate to={redirectUrl} replace />;
 };

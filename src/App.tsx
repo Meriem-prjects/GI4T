@@ -47,7 +47,7 @@ const App = () => (
           <Route path="/" element={<Index />} />
           <Route path="/observatoire/*" element={<Observatoire />} />
           <Route element={<ObservatoireLayout />}>
-            <Route path="/observatoire/search-results" element={<SearchResults />} />
+            <Route path="/observatoire/recherche/search-results" element={<SearchResults />} />
           </Route>
           {/* Legacy redirect for old search-results URL */}
           <Route path="/search-results" element={<SearchResultsRedirect />} />

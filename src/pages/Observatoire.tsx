@@ -23,7 +23,7 @@ const Observatoire = () => {
 
   const handleSearch = () => {
     if (searchQuery.trim()) {
-      navigate(`/observatoire/search-results?q=${encodeURIComponent(searchQuery)}`);
+      navigate(`/observatoire/recherche/search-results?q=${encodeURIComponent(searchQuery)}`);
     }
   };
 
