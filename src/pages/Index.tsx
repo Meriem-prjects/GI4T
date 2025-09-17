@@ -18,14 +18,14 @@ const Index = () => {
       <div className="min-h-screen flex flex-col">
         <HomeHeader />
 
-        {/* Main Content - Split Screen */}
-        <div className="flex-1 flex flex-col md:flex-row">
+        {/* Main Content - Split Screen - Enlarged sections */}
+        <div className="flex-grow flex flex-col md:flex-row" style={{ minHeight: 'calc(100vh - 200px)' }}>
           <ObservatoireSection />
           <AccesAuxDroitsSection />
         </div>
 
-        {/* Spacer */}
-        <div className="py-8"></div>
+        {/* Reduced Spacer */}
+        <div className="py-4"></div>
 
         <HomeFooter />
       </div>
