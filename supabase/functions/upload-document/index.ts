@@ -63,14 +63,11 @@ serve(async (req) => {
 
     console.log('File uploaded successfully:', uploadData.path);
 
-    // Get file content for parsing - handle binary files properly
-    let fileContent;
-    if (file.type === 'application/pdf' || file.name.toLowerCase().endsWith('.pdf')) {
-      // For PDFs, read as ArrayBuffer and convert to base64
-      const arrayBuffer = await file.arrayBuffer();
-      fileContent = btoa(String.fromCharCode(...new Uint8Array(arrayBuffer)));
-    } else {
-      // For text files, read as text
+    // Get file content for parsing - skip content reading for PDFs to avoid memory issues
+    let fileContent = '';
+    
+    // Only read content for non-PDF files
+    if (file.type !== 'application/pdf' && !file.name.toLowerCase().endsWith('.pdf')) {
       fileContent = await file.text();
     }
     
