@@ -30,18 +30,20 @@ serve(async (req) => {
     const detectedLanguage = language || 'ar'; // Default to Arabic
 
     const systemPrompt = `Tu es un assistant spécialisé dans l'analyse de documents juridiques et administratifs. 
-    Tu dois extraire le titre principal et créer un résumé du document fourni.
+    Tu dois extraire le titre principal, créer un résumé et identifier les mots-clés du document fourni.
     
     Instructions:
     1. Extrait le titre principal du document (le plus pertinent et descriptif)
     2. Crée un résumé concis en ${detectedLanguage === 'ar' ? 'arabe' : 'français'} (max 200 mots)
-    3. Respecte la langue du document original
-    4. Focusse sur les points clés et les informations importantes
+    3. Extrait les mots-clés les plus importants (entre 8-15 mots-clés)
+    4. Respecte la langue du document original pour les mots-clés et le résumé
+    5. Focusse sur les termes juridiques, concepts clés et thématiques principales
     
     Réponds UNIQUEMENT en format JSON avec cette structure:
     {
       "title": "titre extrait",
       "summary": "résumé du document",
+      "keywords": ["mot-clé1", "mot-clé2", "mot-clé3"],
       "language": "code langue détectée (ar/fr/en)"
     }`;
 
@@ -83,6 +85,7 @@ serve(async (req) => {
       analysis = {
         title: "Document sans titre",
         summary: "Résumé non disponible - erreur de traitement",
+        keywords: [],
         language: detectedLanguage
       };
     }

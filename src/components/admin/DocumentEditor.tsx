@@ -12,6 +12,7 @@ interface DocumentData {
   content: string;
   title: string;
   summary: string;
+  keywords: string[];
   language: string;
   originalFileName: string;
 }
@@ -148,9 +149,30 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
                   value={editedData.summary}
                   onChange={(e) => setEditedData({ ...editedData, summary: e.target.value })}
                   placeholder="Résumé du document"
-                  rows={6}
+                  rows={4}
                   className="mt-1"
                 />
+              </div>
+              
+              <div>
+                <Label htmlFor="keywords">Mots-clés</Label>
+                <Textarea
+                  id="keywords"
+                  value={editedData.keywords.join(' - ')}
+                  onChange={(e) => setEditedData({ 
+                    ...editedData, 
+                    keywords: e.target.value.split(' - ').map(k => k.trim()).filter(k => k.length > 0)
+                  })}
+                  placeholder="Mot-clé1 - Mot-clé2 - Mot-clé3"
+                  rows={3}
+                  className="mt-1"
+                  style={{ 
+                    direction: editedData.language === 'ar' ? 'rtl' : 'ltr' 
+                  }}
+                />
+                <p className="text-xs text-muted-foreground mt-1">
+                  Séparez les mots-clés par " - "
+                </p>
               </div>
             </div>
           </Card>
@@ -177,6 +199,26 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
                   <div className="bg-primary/10 p-3 rounded-md mb-4">
                     <h4 className="font-semibold mb-2">Résumé:</h4>
                     <p className="text-sm">{editedData.summary}</p>
+                  </div>
+                )}
+                
+                {editedData.keywords && editedData.keywords.length > 0 && (
+                  <div className="bg-secondary/10 p-3 rounded-md mb-4">
+                    <h4 className="font-semibold mb-2">الكلمات المفاتيح - Mots-clés:</h4>
+                    <div className="flex flex-wrap gap-2">
+                      {editedData.keywords.map((keyword, index) => (
+                        <Badge 
+                          key={index} 
+                          variant="secondary" 
+                          className="text-xs"
+                          style={{ 
+                            direction: editedData.language === 'ar' ? 'rtl' : 'ltr' 
+                          }}
+                        >
+                          {keyword}
+                        </Badge>
+                      ))}
+                    </div>
                   </div>
                 )}
                 

@@ -9,6 +9,7 @@ interface DocumentData {
   content: string;
   title: string;
   summary: string;
+  keywords: string[];
   language: string;
   originalFileName: string;
 }
