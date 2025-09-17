@@ -63,7 +63,13 @@ const BatchDocumentUploader: React.FC<BatchDocumentUploaderProps> = ({ onDocumen
     
     if (error) {
       console.error('Error loading categories:', error);
+      toast({
+        title: "Erreur de chargement",
+        description: "Impossible de charger les catégories.",
+        variant: "destructive"
+      });
     } else {
+      console.log('Categories loaded:', data);
       setCategories(data || []);
     }
   };
@@ -76,7 +82,13 @@ const BatchDocumentUploader: React.FC<BatchDocumentUploaderProps> = ({ onDocumen
     
     if (error) {
       console.error('Error loading document types:', error);
+      toast({
+        title: "Erreur de chargement",
+        description: "Impossible de charger les types de documents.",
+        variant: "destructive"
+      });
     } else {
+      console.log('Document types loaded:', data);
       setDocumentTypes(data || []);
     }
   };
