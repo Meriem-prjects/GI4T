@@ -6,14 +6,14 @@ import { Link } from "react-router-dom";
 const AccesAuxDroitsSection = () => {
   return (
     <Link to="/acces-aux-droits" className="w-full h-1/2 md:w-1/2 md:h-full bg-gradient-to-b md:bg-gradient-to-l from-yellow-50 to-yellow-100 flex flex-col relative cursor-pointer">
-      <div className="flex flex-col items-center justify-between px-4 sm:px-8 py-8 sm:py-12 h-full">
+      <div className="flex flex-col items-center justify-between px-4 sm:px-8 py-12 sm:py-16 h-full">
         {/* Header Section - Logo & Title */}
-        <div className="flex flex-col items-center space-y-4 sm:space-y-6">
-          <div className="mb-2 sm:mb-3">
+        <div className="flex flex-col items-center space-y-6 sm:space-y-8">
+          <div className="mb-4 sm:mb-6">
             <img 
               src="/Feelinx_upload/logo-acces-aux-droits.png" 
               alt="Accès aux Droits" 
-              className="h-4 sm:h-6 md:h-8 w-auto object-contain max-w-full"
+              className="h-6 sm:h-8 md:h-10 w-auto object-contain max-w-full"
             />
           </div>
           
@@ -23,13 +23,13 @@ const AccesAuxDroitsSection = () => {
         </div>
 
         {/* Center Section - Quick Access Cards */}
-        <div className="w-full max-w-sm sm:max-w-md space-y-4">
-          <div className="grid grid-cols-2 gap-4 sm:gap-6">
-            <Card className="bg-white/90 backdrop-blur-sm rounded-lg shadow-lg border-0 h-24 sm:h-28">
+        <div className="w-full max-w-sm sm:max-w-md space-y-6 sm:space-y-8">
+          <div className="grid grid-cols-2 gap-6 sm:gap-8">
+            <Card className="bg-white/90 backdrop-blur-sm rounded-lg shadow-lg border-0 h-28 sm:h-32">
               <CardContent className="p-4 sm:p-6 h-full">
-                <div className="flex flex-col items-center justify-center text-center h-full space-y-2">
-                  <div className="w-6 h-6 sm:w-8 sm:h-8 bg-orange-500 rounded-lg flex items-center justify-center">
-                    <BookOpen className="w-3 h-3 sm:w-4 sm:h-4 text-white" />
+                <div className="flex flex-col items-center justify-center text-center h-full space-y-3">
+                  <div className="w-7 h-7 sm:w-9 sm:h-9 bg-orange-500 rounded-lg flex items-center justify-center">
+                    <BookOpen className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
                   </div>
                   <div>
                     <h3 className="font-semibold text-sm sm:text-base text-card-foreground">Guides</h3>
@@ -39,10 +39,10 @@ const AccesAuxDroitsSection = () => {
               </CardContent>
             </Card>
 
-            <Card className="bg-white/90 backdrop-blur-sm rounded-lg shadow-lg border-0 h-24 sm:h-28">
+            <Card className="bg-white/90 backdrop-blur-sm rounded-lg shadow-lg border-0 h-28 sm:h-32">
               <CardContent className="p-4 sm:p-6 h-full">
-                <div className="flex flex-col items-center justify-center text-center h-full space-y-2">
-                  <MapPin className="w-6 h-6 sm:w-8 sm:h-8 text-primary" />
+                <div className="flex flex-col items-center justify-center text-center h-full space-y-3">
+                  <MapPin className="w-7 h-7 sm:w-9 sm:h-9 text-primary" />
                   <div>
                     <h3 className="font-semibold text-sm sm:text-base text-card-foreground">Services</h3>
                     <p className="text-xs sm:text-sm text-muted-foreground">Proximité</p>
@@ -55,9 +55,9 @@ const AccesAuxDroitsSection = () => {
         
         {/* Bottom Section - Interactive Map */}
         <div className="w-full max-w-sm sm:max-w-md">
-          <Button className="w-full h-12 sm:h-14 bg-white text-foreground border border-border rounded-xl shadow-sm flex items-center justify-center gap-3">
+          <Button className="w-full h-14 sm:h-16 bg-white text-foreground border border-border rounded-xl shadow-sm flex items-center justify-center gap-3">
             <Map className="w-5 h-5 sm:w-6 sm:h-6" />
-            <span className="font-semibold text-sm sm:text-base">Carte interactive</span>
+            <span className="font-semibold text-base sm:text-lg">Carte interactive</span>
           </Button>
         </div>
       </div>
