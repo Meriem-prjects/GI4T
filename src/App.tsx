@@ -24,6 +24,9 @@ import InformationLayout from "./layouts/InformationLayout";
 import QuiSommesNous from "./pages/QuiSommesNous";
 import InformationActualites from "./pages/InformationActualites";
 import FAQChatbot from "./pages/FAQChatbot";
+import AdminMain from "./pages/admin/AdminMain";
+import AdminObservatoire from "./pages/admin/AdminObservatoire";
+import AdminAccesAuxDroits from "./pages/admin/AdminAccesAuxDroits";
 
 const queryClient = new QueryClient();
 
@@ -66,6 +69,11 @@ const App = () => (
             <Route path="/information/actualites" element={<InformationActualites />} />
             <Route path="/information/faq-chatbot" element={<FAQChatbot />} />
           </Route>
+          
+          {/* Admin interface */}
+          <Route path="/admin" element={<AdminMain />} />
+          <Route path="/admin/observatoire/*" element={<AdminObservatoire />} />
+          <Route path="/admin/acces-aux-droits/*" element={<AdminAccesAuxDroits />} />
           
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />

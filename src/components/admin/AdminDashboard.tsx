@@ -1,0 +1,227 @@
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { 
+  FileText, 
+  Clock, 
+  XCircle, 
+  Users, 
+  AlertTriangle,
+  Plus,
+  UserPlus,
+  Edit,
+  Eye
+} from "lucide-react";
+
+interface AdminDashboardProps {
+  type: "observatoire" | "acces-aux-droits";
+}
+
+const AdminDashboard = ({ type }: AdminDashboardProps) => {
+  const themeColors = type === "observatoire" 
+    ? {
+        primary: "text-[hsl(var(--justclic-blue))]",
+        bg: "bg-[hsl(var(--justclic-blue-light))]",
+        badge: "bg-[hsl(var(--justclic-blue))]"
+      }
+    : {
+        primary: "text-[hsl(var(--accent))]",
+        bg: "bg-[hsl(var(--justclic-yellow-light))]",
+        badge: "bg-[hsl(var(--accent))]"
+      };
+
+  const sectionTitle = type === "observatoire" ? "Observatoire des Droits" : "Accès aux Droits";
+
+  // Mock data - à remplacer par de vraies données plus tard
+  const stats = {
+    published: 156,
+    pending: 23,
+    rejected: 8,
+    activeUsers: 42
+  };
+
+  const recentActions = [
+    {
+      user: "Marie Dubois",
+      action: "Contenu publié",
+      content: "Guide juridique 2025",
+      time: "Il y a 2 heures"
+    },
+    {
+      user: "Jean Martin",
+      action: "Contenu rejeté",
+      content: "Article fiscalité",
+      time: "Il y a 4 heures"
+    },
+    {
+      user: "Sophie Laurent",
+      action: "Utilisateur créé",
+      content: "",
+      time: "Il y a 6 heures"
+    }
+  ];
+
+  return (
+    <div className="p-6 space-y-6">
+      {/* Header */}
+      <div>
+        <h1 className="text-3xl font-bold text-foreground">Vue d'ensemble</h1>
+        <p className="text-muted-foreground">
+          Accès rapide aux statistiques et actions clés - {sectionTitle}
+        </p>
+      </div>
+
+      {/* Statistics Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Contenus publiés</CardTitle>
+            <FileText className={`w-4 h-4 ${themeColors.primary}`} />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{stats.published}</div>
+            <p className="text-xs text-muted-foreground">
+              +12% par rapport au mois dernier
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">En attente</CardTitle>
+            <Clock className="w-4 h-4 text-orange-500" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{stats.pending}</div>
+            <p className="text-xs text-muted-foreground">
+              Nécessitent une validation
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Rejetés</CardTitle>
+            <XCircle className="w-4 h-4 text-red-500" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{stats.rejected}</div>
+            <p className="text-xs text-muted-foreground">
+              À corriger et resoumetter
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Utilisateurs actifs</CardTitle>
+            <Users className={`w-4 h-4 ${themeColors.primary}`} />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{stats.activeUsers}</div>
+            <p className="text-xs text-muted-foreground">
+              Connectés ce mois-ci
+            </p>
+          </CardContent>
+        </Card>
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Alerts */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center">
+              <AlertTriangle className="w-5 h-5 text-orange-500 mr-2" />
+              Alertes
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className={`${themeColors.bg} p-4 rounded-lg border-l-4 border-orange-500`}>
+              <div className="flex items-start justify-between">
+                <div>
+                  <h4 className="font-medium">Contenus bloqués pour indexation</h4>
+                  <p className="text-sm text-muted-foreground mt-1">
+                    5 contenus nécessitent des métadonnées complètes
+                  </p>
+                </div>
+                <Button size="sm" variant="outline">
+                  Voir détails
+                </Button>
+              </div>
+            </div>
+
+            <div className={`${themeColors.bg} p-4 rounded-lg border-l-4 border-blue-500`}>
+              <div className="flex items-start justify-between">
+                <div>
+                  <h4 className="font-medium">Comptes inactifs</h4>
+                  <p className="text-sm text-muted-foreground mt-1">
+                    3 utilisateurs inactifs depuis plus de 6 mois
+                  </p>
+                </div>
+                <Button size="sm" variant="outline">
+                  Gérer
+                </Button>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Quick Actions */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Raccourcis</CardTitle>
+            <CardDescription>Actions rapides les plus utilisées</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            <Button className={`w-full justify-start ${themeColors.badge} text-white hover:opacity-90`}>
+              <Plus className="w-4 h-4 mr-2" />
+              Créer contenu
+            </Button>
+            <Button variant="outline" className="w-full justify-start">
+              <UserPlus className="w-4 h-4 mr-2" />
+              Ajouter utilisateur
+            </Button>
+            <Button variant="outline" className="w-full justify-start">
+              <Eye className="w-4 h-4 mr-2" />
+              Contenus en attente
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Recent Actions */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Dernières actions</CardTitle>
+          <CardDescription>Activité récente des utilisateurs</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-4">
+            {recentActions.map((action, index) => (
+              <div key={index} className="flex items-center justify-between p-3 rounded-lg border">
+                <div className="flex items-center space-x-3">
+                  <div className="w-8 h-8 bg-muted rounded-full flex items-center justify-center">
+                    <span className="text-sm font-medium">
+                      {action.user.split(' ').map(n => n[0]).join('')}
+                    </span>
+                  </div>
+                  <div>
+                    <p className="font-medium">{action.user}</p>
+                    <p className="text-sm text-muted-foreground">
+                      {action.action} {action.content && `• ${action.content}`}
+                    </p>
+                  </div>
+                </div>
+                <div className="text-right text-sm text-muted-foreground">
+                  {action.time}
+                </div>
+              </div>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+  );
+};
+
+export default AdminDashboard;
