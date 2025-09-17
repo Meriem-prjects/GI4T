@@ -32,6 +32,8 @@ import ChatbotFAQ from "./pages/ChatbotFAQ";
 import ReseauxSociaux from "./pages/ReseauxSociaux";
 import CGUCookies from "./pages/CGUCookies";
 import AccesAuxDroitsLayout from "./layouts/AccesAuxDroitsLayout";
+import ObservatoireLayout from "./layouts/ObservatoireLayout";
+import Recherche from "./pages/Recherche";
 
 const queryClient = new QueryClient();
 
@@ -46,9 +48,15 @@ const App = () => (
           <Route path="/observatoire" element={<Observatoire />} />
           <Route path="/search-results" element={<SearchResults />} />
           <Route path="/decision/:id" element={<DecisionDetail />} />
-          <Route path="/textes-fondamentaux" element={<TextesFondamentaux />} />
-          <Route path="/analyses-opinions" element={<AnalysesOpinions />} />
-          <Route path="/actualites" element={<Actualites />} />
+          
+          {/* Observatoire interface */}
+          <Route element={<ObservatoireLayout />}>
+            <Route path="/recherche" element={<Recherche />} />
+            <Route path="/textes-fondamentaux" element={<TextesFondamentaux />} />
+            <Route path="/analyses-opinions" element={<AnalysesOpinions />} />
+            <Route path="/actualites" element={<Actualites />} />
+          </Route>
+          
           <Route path="/odf-partenaires" element={<ODFPartenaires />} />
           <Route path="/contact" element={<Contact />} />
           
