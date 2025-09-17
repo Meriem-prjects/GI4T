@@ -78,9 +78,9 @@ const SearchResults = () => {
   ];
 
   return (
-    <div className="container mx-auto px-4 py-6 animate-fade-in">
+    <div className="container mx-auto px-4 py-6">
       {/* Breadcrumb */}
-      <Breadcrumb className="mb-6 animate-slide-in-right">
+      <Breadcrumb className="mb-6">
         <BreadcrumbList>
           <BreadcrumbItem>
             <BreadcrumbLink asChild>
@@ -101,7 +101,7 @@ const SearchResults = () => {
       </Breadcrumb>
 
       {/* Search Bar */}
-      <div className="max-w-4xl mx-auto mb-6 animate-fade-in" style={{animationDelay: '100ms'}}>
+      <div className="max-w-4xl mx-auto mb-6">
         <div className="relative">
           <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-muted-foreground" size={20} />
           <Input
@@ -113,10 +113,10 @@ const SearchResults = () => {
                 window.location.href = `/observatoire/search-results?q=${encodeURIComponent(searchQuery)}`;
               }
             }}
-            className="pl-12 pr-32 py-4 text-base bg-background rounded-lg border transition-all duration-300 hover:shadow-lg focus:shadow-lg"
+            className="pl-12 pr-32 py-4 text-base bg-background rounded-lg border"
           />
           <Button 
-            className="absolute right-2 top-1/2 transform -translate-y-1/2 px-6 transition-all duration-300 hover:scale-105"
+            className="absolute right-2 top-1/2 transform -translate-y-1/2 px-6"
             onClick={() => window.location.href = `/observatoire/search-results?q=${encodeURIComponent(searchQuery)}`}
           >
             Rechercher
@@ -125,29 +125,28 @@ const SearchResults = () => {
       </div>
 
       {/* Active Filters */}
-      <div className="flex flex-wrap gap-2 mb-6 justify-center animate-fade-in" style={{animationDelay: '200ms'}}>
-        {activeFilters.map((filter, index) => (
+      <div className="flex flex-wrap gap-2 mb-6 justify-center">
+        {activeFilters.map((filter) => (
           <Badge 
             key={filter} 
             variant="secondary" 
-            className="px-3 py-1 animate-fade-in" 
-            style={{animationDelay: `${300 + index * 50}ms`}}
+            className="px-3 py-1"
           >
             {filter}
           </Badge>
         ))}
       </div>
 
-      <div className="flex flex-col lg:flex-row gap-6 animate-fade-in">
+      <div className="flex flex-col lg:flex-row gap-6">
         {/* Left Sidebar - Filters */}
-        <div className="w-full lg:w-80 space-y-6 animate-slide-in-right">
+        <div className="w-full lg:w-80 space-y-6">
           <Card>
             <CardHeader className="pb-4">
               <CardTitle className="text-lg flex items-center gap-2">
                 <Filter className="w-5 h-5" />
                 Filtres Avancés
               </CardTitle>
-              <Button variant="outline" size="sm" className="text-primary hover:bg-primary hover:text-primary-foreground transition-colors">
+              <Button variant="outline" size="sm" className="text-primary hover:bg-primary hover:text-primary-foreground">
                 Réinitialiser
               </Button>
             </CardHeader>
@@ -230,7 +229,7 @@ const SearchResults = () => {
         {/* Main Content */}
         <div className="flex-1">
           {/* Results Header */}
-          <div className="flex items-center justify-between mb-6 animate-fade-in" style={{animationDelay: '400ms'}}>
+          <div className="flex items-center justify-between mb-6">
             <div className="flex items-center gap-4">
               <span className="text-sm text-muted-foreground">
                 1,247 décisions trouvées 
@@ -269,10 +268,10 @@ const SearchResults = () => {
           </div>
 
           {/* Search Results */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8 animate-fade-in">
-            {searchResults.map((result, index) => (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+            {searchResults.map((result) => (
               <Link key={result.id} to={`/decision/${result.id}`} className="block">
-                <Card className="hover:shadow-lg transition-all duration-300 cursor-pointer hover:scale-105" style={{animationDelay: `${index * 100}ms`}}>
+                <Card className="hover:shadow-lg cursor-pointer">
                   <CardHeader className="pb-4">
                     <div className="flex items-center justify-between mb-2">
                       <span className="text-sm text-muted-foreground">
@@ -282,7 +281,7 @@ const SearchResults = () => {
                         {result.importance}
                       </span>
                     </div>
-                    <CardTitle className="text-lg hover:text-primary transition-colors">
+                    <CardTitle className="text-lg hover:text-primary">
                       Arrêt n° {result.number} - {result.title}
                     </CardTitle>
                     <CardDescription className="text-sm">
@@ -298,7 +297,7 @@ const SearchResults = () => {
                           </Badge>
                         ))}
                       </div>
-                      <Button variant="outline" size="sm" className="hover:bg-primary hover:text-primary-foreground transition-colors">
+                      <Button variant="outline" size="sm" className="hover:bg-primary hover:text-primary-foreground">
                         Consulter
                       </Button>
                     </div>
