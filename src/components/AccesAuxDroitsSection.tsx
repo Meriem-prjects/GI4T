@@ -13,7 +13,7 @@ const AccesAuxDroitsSection = () => {
             <img 
               src="/Feelinx_upload/logo-acces-aux-droits.png" 
               alt="Accès aux Droits" 
-              className="h-6 sm:h-8 md:h-10 w-auto object-contain max-w-full"
+              className="h-10 sm:h-14 w-auto object-contain max-w-full"
             />
           </div>
           
@@ -22,8 +22,16 @@ const AccesAuxDroitsSection = () => {
           </h2>
         </div>
 
-        {/* Center Section - Quick Access Cards */}
-        <div className="w-full max-w-sm sm:max-w-md space-y-6 sm:space-y-8">
+        {/* Center Section - Primary CTA (matches Observatoire) */}
+        <div className="w-full max-w-sm sm:max-w-md my-8 sm:my-12">
+          <Button className="w-full h-14 sm:h-16 bg-accent text-accent-foreground rounded-xl shadow-lg border-0 flex items-center justify-center gap-3">
+            <Map className="w-5 h-5 sm:w-6 sm:h-6" />
+            <span className="font-semibold text-base sm:text-lg">Carte interactive</span>
+          </Button>
+        </div>
+
+        {/* Bottom Section - Quick Access Cards (aligned like Observatoire) */}
+        <div className="w-full max-w-sm sm:max-w-md">
           <div className="grid grid-cols-2 gap-6 sm:gap-8">
             <Card className="bg-white/90 backdrop-blur-sm rounded-lg shadow-lg border-0 h-28 sm:h-32">
               <CardContent className="p-4 sm:p-6 h-full">
@@ -51,14 +59,6 @@ const AccesAuxDroitsSection = () => {
               </CardContent>
             </Card>
           </div>
-        </div>
-        
-        {/* Bottom Section - Interactive Map */}
-        <div className="w-full max-w-sm sm:max-w-md">
-          <Button className="w-full h-14 sm:h-16 bg-white text-foreground border border-border rounded-xl shadow-sm flex items-center justify-center gap-3">
-            <Map className="w-5 h-5 sm:w-6 sm:h-6" />
-            <span className="font-semibold text-base sm:text-lg">Carte interactive</span>
-          </Button>
         </div>
       </div>
     </Link>
