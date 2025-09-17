@@ -5,7 +5,6 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Index from "./pages/Index";
 import Observatoire from "./pages/Observatoire";
-import SearchResults from "./pages/SearchResults";
 import SearchResultsRedirect from "./components/SearchResultsRedirect";
 import DecisionDetail from "./pages/DecisionDetail";
 import NotFound from "./pages/NotFound";
@@ -46,9 +45,7 @@ const App = () => (
         <Routes>
           <Route path="/" element={<Index />} />
           <Route path="/observatoire/*" element={<Observatoire />} />
-          <Route element={<ObservatoireLayout />}>
-            <Route path="/observatoire/recherche/search-results" element={<SearchResults />} />
-          </Route>
+          <Route path="/observatoire/recherche" element={<Observatoire />} />
           {/* Legacy redirect for old search-results URL */}
           <Route path="/search-results" element={<SearchResultsRedirect />} />
           <Route path="/decision/:id" element={<DecisionDetail />} />
