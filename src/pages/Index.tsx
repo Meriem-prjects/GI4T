@@ -15,11 +15,11 @@ const Index = () => {
         rel="stylesheet" 
       />
       
-      <div className="w-full h-screen flex flex-col">
+      <div className="w-full min-h-screen flex flex-col">
         <HomeHeader />
 
         {/* Main Content - Split Screen */}
-        <div className="flex-1 flex flex-col md:flex-row">
+        <div className="flex-1 flex flex-col md:flex-row mb-8">
           <ObservatoireSection />
           <AccesAuxDroitsSection />
         </div>
