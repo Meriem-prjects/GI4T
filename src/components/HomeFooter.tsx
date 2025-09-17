@@ -28,7 +28,7 @@ const HomeFooter = () => {
           {/* Middle section - Navigation Links & Social */}
           <div className="space-y-4">
             <h3 className="text-lg font-semibold text-white">Navigation</h3>
-            <div className="flex flex-wrap gap-4 text-sm text-gray-300">
+            <div className="flex flex-col space-y-2 text-sm text-gray-300">
               <a href="#" className="hover:text-white transition-colors">Contactez-nous</a>
               <a href="#" className="hover:text-white transition-colors">Mentions légales</a>
               <a href="#" className="hover:text-white transition-colors">Plan du site</a>
@@ -62,13 +62,6 @@ const HomeFooter = () => {
 
         {/* Bottom section */}
         <div className="border-t border-gray-700 mt-8 pt-6">
-          <div className="flex flex-wrap justify-center gap-6 text-sm text-gray-400 mb-4">
-            <a href="#" className="hover:text-white transition-colors">Contactez-nous</a>
-            <a href="#" className="hover:text-white transition-colors">Mentions légales</a>
-            <a href="#" className="hover:text-white transition-colors">Plan du site</a>
-            <a href="#" className="hover:text-white transition-colors">Réseaux sociaux</a>
-            <a href="#" className="hover:text-white transition-colors">CGU / cookies</a>
-          </div>
           <div className="text-center text-sm text-gray-400 space-y-2">
             <p>© 2024 JustClic.tn. Tous droits réservés | Privacy Policy</p>
             <p>
