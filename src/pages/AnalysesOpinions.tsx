@@ -78,6 +78,12 @@ const AnalysesOpinions = () => {
             </BreadcrumbItem>
             <BreadcrumbSeparator />
             <BreadcrumbItem>
+              <BreadcrumbLink asChild>
+                <Link to="/observatoire">Observatoire</Link>
+              </BreadcrumbLink>
+            </BreadcrumbItem>
+            <BreadcrumbSeparator />
+            <BreadcrumbItem>
               <BreadcrumbPage>Analyses & Opinions</BreadcrumbPage>
             </BreadcrumbItem>
           </BreadcrumbList>

@@ -48,6 +48,9 @@ const App = () => (
           <Route path="/observatoire/*" element={<Observatoire />} />
           <Route element={<ObservatoireLayout />}>
             <Route path="/observatoire/search-results" element={<SearchResults />} />
+            <Route path="/observatoire/textes-fondamentaux" element={<TextesFondamentaux />} />
+            <Route path="/observatoire/analyses-opinions" element={<AnalysesOpinions />} />
+            <Route path="/observatoire/actualites" element={<Actualites />} />
           </Route>
           {/* Legacy redirect for old search-results URL */}
           <Route path="/search-results" element={<SearchResultsRedirect />} />

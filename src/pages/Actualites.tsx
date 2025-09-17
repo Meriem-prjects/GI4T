@@ -78,6 +78,12 @@ const Actualites = () => {
             </BreadcrumbItem>
             <BreadcrumbSeparator />
             <BreadcrumbItem>
+              <BreadcrumbLink asChild>
+                <Link to="/observatoire">Observatoire</Link>
+              </BreadcrumbLink>
+            </BreadcrumbItem>
+            <BreadcrumbSeparator />
+            <BreadcrumbItem>
               <BreadcrumbPage>Actualités</BreadcrumbPage>
             </BreadcrumbItem>
           </BreadcrumbList>

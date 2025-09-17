@@ -72,6 +72,12 @@ const TextesFondamentaux = () => {
             </BreadcrumbItem>
             <BreadcrumbSeparator />
             <BreadcrumbItem>
+              <BreadcrumbLink asChild>
+                <Link to="/observatoire">Observatoire</Link>
+              </BreadcrumbLink>
+            </BreadcrumbItem>
+            <BreadcrumbSeparator />
+            <BreadcrumbItem>
               <BreadcrumbPage>Textes fondamentaux</BreadcrumbPage>
             </BreadcrumbItem>
           </BreadcrumbList>
