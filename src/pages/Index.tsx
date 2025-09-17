@@ -15,14 +15,17 @@ const Index = () => {
         rel="stylesheet" 
       />
       
-      <div className="w-full min-h-screen flex flex-col">
+      <div className="min-h-screen flex flex-col">
         <HomeHeader />
 
         {/* Main Content - Split Screen */}
-        <div className="flex-1 flex flex-col md:flex-row mb-8">
+        <div className="flex-1 flex flex-col md:flex-row">
           <ObservatoireSection />
           <AccesAuxDroitsSection />
         </div>
+
+        {/* Spacer */}
+        <div className="py-8"></div>
 
         <HomeFooter />
       </div>
