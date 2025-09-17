@@ -47,7 +47,10 @@ const BatchDocumentUploader: React.FC<BatchDocumentUploaderProps> = ({ onDocumen
   const [selectedDocumentType, setSelectedDocumentType] = useState<string>('');
   const [newCategoryName, setNewCategoryName] = useState('');
   const [newCategoryNameAr, setNewCategoryNameAr] = useState('');
+  const [newDocumentTypeName, setNewDocumentTypeName] = useState('');
+  const [newDocumentTypeNameAr, setNewDocumentTypeNameAr] = useState('');
   const [showNewCategory, setShowNewCategory] = useState(false);
+  const [showNewDocumentType, setShowNewDocumentType] = useState(false);
 
   // Load categories and document types
   React.useEffect(() => {
@@ -123,6 +126,38 @@ const BatchDocumentUploader: React.FC<BatchDocumentUploaderProps> = ({ onDocumen
         description: "Catégorie créée avec succès.",
       });
     }
+  };
+
+  const createDocumentType = async () => {
+    if (!newDocumentTypeName.trim()) return;
+
+    const { data, error } = await supabase
+      .from('document_types')
+      .insert({
+        name: newDocumentTypeName,
+        name_ar: newDocumentTypeNameAr || null,
+        description: `Type de document: ${newDocumentTypeName}`
+      })
+      .select()
+      .single();
+
+    if (error) {
+      toast({
+        title: "Erreur",
+        description: "Impossible de créer le type de document.",
+        variant: "destructive",
+      });
+    } else {
+      setDocumentTypes([...documentTypes, data]);
+      setSelectedDocumentType(data.id);
+      setNewDocumentTypeName('');
+      setNewDocumentTypeNameAr('');
+      setShowNewDocumentType(false);
+      toast({
+        title: "Succès",
+        description: "Type de document créé avec succès.",
+      });
+     }
   };
 
   const handleDrag = useCallback((e: React.DragEvent) => {
