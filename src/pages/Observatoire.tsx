@@ -9,9 +9,6 @@ import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import ObservatoireNav from "@/components/ObservatoireNav";
 import Footer from "@/components/Footer";
 import SearchResults from "@/pages/SearchResults";
-import TextesFondamentaux from "@/pages/TextesFondamentaux";
-import AnalysesOpinions from "@/pages/AnalysesOpinions";
-import Actualites from "@/pages/Actualites";
 
 const Observatoire = () => {
   const navigate = useNavigate();
@@ -101,10 +98,6 @@ const Observatoire = () => {
                     <nav className="flex flex-col space-y-2 mt-4 px-4">
                       <Link to="/" className="text-base hover:text-primary p-2 rounded-lg hover:bg-muted">Accueil</Link>
                       <a href="#" className="text-base text-primary p-2 rounded-lg bg-muted font-medium">Observatoire</a>
-                      <Link to="/qui-sommes-nous" className="text-base hover:text-primary p-2 rounded-lg hover:bg-muted">Qui sommes-nous</Link>
-                      <Link to="/observatoire/analyses-opinions" className="text-base hover:text-primary p-2 rounded-lg hover:bg-muted">Analyses & Opinions</Link>
-                      <Link to="/observatoire/actualites" className="text-base hover:text-primary p-2 rounded-lg hover:bg-muted">Actualités</Link>
-                      <Link to="/methodologie" className="text-base hover:text-primary p-2 rounded-lg hover:bg-muted">Méthodologie</Link>
                       <div className="border-t pt-4 mt-4">
                         <Link to="/acces-aux-droits" className="text-base hover:text-primary p-2 rounded-lg hover:bg-muted flex items-center">
                           <span>→ Accès aux Droits</span>
@@ -125,9 +118,6 @@ const Observatoire = () => {
       {/* Route Content */}
       <Routes>
         <Route path="search-results" element={<SearchResults />} />
-        <Route path="textes-fondamentaux" element={<TextesFondamentaux />} />
-        <Route path="analyses-opinions" element={<AnalysesOpinions />} />
-        <Route path="actualites" element={<Actualites />} />
         <Route path="/" element={
           <>
             {/* Hero Section with Search */}
