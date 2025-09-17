@@ -26,7 +26,7 @@ const HomeFooter = () => {
           </div>
 
           {/* Middle section - Navigation Links & Social */}
-          <div className="space-y-4">
+          <div className="space-y-4 text-center">
             <h3 className="text-lg font-semibold text-white">Navigation</h3>
             <div className="flex flex-col space-y-2 text-sm text-gray-300">
               <a href="#" className="hover:text-white transition-colors">Contactez-nous</a>
@@ -35,7 +35,7 @@ const HomeFooter = () => {
               <a href="#" className="hover:text-white transition-colors">Réseaux sociaux</a>
               <a href="#" className="hover:text-white transition-colors">CGU / cookies</a>
             </div>
-            <div className="flex space-x-3 pt-2">
+            <div className="flex justify-center space-x-3 pt-2">
               <Button size="sm" variant="outline" className="border-gray-600 text-gray-300 hover:text-white hover:border-white">
                 <Facebook className="h-4 w-4" />
               </Button>
