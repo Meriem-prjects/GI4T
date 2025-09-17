@@ -8,7 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import ObservatoireNav from "@/components/ObservatoireNav";
 import Footer from "@/components/Footer";
-import Recherche from "@/pages/Recherche";
+import SearchResults from "@/pages/SearchResults";
 import TextesFondamentaux from "@/pages/TextesFondamentaux";
 import AnalysesOpinions from "@/pages/AnalysesOpinions";
 import Actualites from "@/pages/Actualites";
@@ -23,7 +23,7 @@ const Observatoire = () => {
 
   const handleSearch = () => {
     if (searchQuery.trim()) {
-      navigate(`/search-results?q=${encodeURIComponent(searchQuery)}`);
+      navigate(`/observatoire/search-results?q=${encodeURIComponent(searchQuery)}`);
     }
   };
 
@@ -124,7 +124,7 @@ const Observatoire = () => {
 
       {/* Route Content */}
       <Routes>
-        <Route path="recherche" element={<Recherche />} />
+        <Route path="search-results" element={<SearchResults />} />
         <Route path="textes-fondamentaux" element={<TextesFondamentaux />} />
         <Route path="analyses-opinions" element={<AnalysesOpinions />} />
         <Route path="actualites" element={<Actualites />} />

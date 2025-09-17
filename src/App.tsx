@@ -34,7 +34,6 @@ import ReseauxSociaux from "./pages/ReseauxSociaux";
 import CGUCookies from "./pages/CGUCookies";
 import AccesAuxDroitsLayout from "./layouts/AccesAuxDroitsLayout";
 import ObservatoireLayout from "./layouts/ObservatoireLayout";
-import Recherche from "./pages/Recherche";
 
 const queryClient = new QueryClient();
 
