@@ -7,6 +7,21 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
+// Function to sanitize filename for storage
+function sanitizeFilename(filename: string): string {
+  const lastDotIndex = filename.lastIndexOf('.');
+  const name = lastDotIndex !== -1 ? filename.slice(0, lastDotIndex) : filename;
+  const extension = lastDotIndex !== -1 ? filename.slice(lastDotIndex) : '';
+  
+  // Replace special characters with underscores and remove consecutive underscores
+  const sanitizedName = name
+    .replace(/[^a-zA-Z0-9\-_]/g, '_')
+    .replace(/_+/g, '_')
+    .replace(/^_|_$/g, '');
+    
+  return sanitizedName + extension;
+}
+
 // Initialize Supabase client with service role key for admin access
 const supabaseAdmin = createClient(
   Deno.env.get('SUPABASE_URL') ?? '',
@@ -34,7 +49,9 @@ serve(async (req) => {
     console.log(`Processing file: ${file.name}, size: ${file.size}`);
 
     // Upload file to Supabase Storage
-    const fileName = `${Date.now()}-${file.name}`;
+    const sanitizedName = sanitizeFilename(file.name);
+    const fileName = `${Date.now()}-${sanitizedName}`;
+    console.log(`Sanitized filename: ${sanitizedName} -> ${fileName}`);
     const { data: uploadData, error: uploadError } = await supabaseAdmin.storage
       .from('documents')
       .upload(fileName, file);
