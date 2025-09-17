@@ -8,43 +8,43 @@ const AccesAuxDroitsNav = () => {
 
   const navItems = [
     {
-      path: "/guides-pratiques",
+      path: "/acces-aux-droits/guides-pratiques",
       label: "Guides",
       icon: BookOpen,
       description: "Guides step-by-step"
     },
     {
-      path: "/ressources-pratiques", 
+      path: "/acces-aux-droits/ressources-pratiques", 
       label: "Ressources pratiques",
       icon: FileText,
       description: "Modèles et formulaires"
     },
     {
-      path: "/carte-interactive",
+      path: "/acces-aux-droits/carte-interactive",
       label: "Carte interactive", 
       icon: MapPin,
       description: "Campagne d'information"
     },
     {
-      path: "/publications",
+      path: "/acces-aux-droits/publications",
       label: "Publications",
       icon: BookOpen,
       description: "Documents officiels"
     },
     {
-      path: "/liens-utiles",
+      path: "/acces-aux-droits/liens-utiles",
       label: "Liens utiles",
       icon: ExternalLink,
       description: "Sites externes"
     },
     {
-      path: "/mediatheque",
+      path: "/acces-aux-droits/mediatheque",
       label: "Médiathèque",
       icon: Video,
       description: "Vidéos et témoignages"
     },
     {
-      path: "/albums-photos",
+      path: "/acces-aux-droits/albums-photos",
       label: "Albums photos",
       icon: Camera,
       description: "Galerie événements"

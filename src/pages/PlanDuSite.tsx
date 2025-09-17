@@ -20,10 +20,10 @@ const PlanDuSite = () => {
       icon: <BookOpen className="h-5 w-5" />,
       pages: [
         { title: "Accueil Accès aux droits", path: "/acces-aux-droits", description: "Hub principal pour les citoyens" },
-        { title: "Guides pratiques", path: "/guides-pratiques", description: "Guides step-by-step pour exercer ses droits" },
-        { title: "Ressources pratiques", path: "/ressources-pratiques", description: "Modèles, formulaires et documents" },
-        { title: "Carte interactive", path: "/carte-interactive", description: "Localisation des services d'aide" },
-        { title: "Médiathèque", path: "/mediatheque", description: "Vidéos, audios et contenus pédagogiques" }
+        { title: "Guides pratiques", path: "/acces-aux-droits/guides-pratiques", description: "Guides step-by-step pour exercer ses droits" },
+        { title: "Ressources pratiques", path: "/acces-aux-droits/ressources-pratiques", description: "Modèles, formulaires et documents" },
+        { title: "Carte interactive", path: "/acces-aux-droits/carte-interactive", description: "Localisation des services d'aide" },
+        { title: "Médiathèque", path: "/acces-aux-droits/mediatheque", description: "Vidéos, audios et contenus pédagogiques" }
       ]
     },
     {

@@ -47,13 +47,13 @@ const AccesAuxDroits = () => {
                     <nav className="flex flex-col space-y-2 mt-4 px-4">
                       <Link to="/" className="text-base hover:text-primary p-2 rounded-lg hover:bg-muted">Accueil</Link>
                       <a href="#" className="text-base text-primary p-2 rounded-lg bg-muted font-medium">Accès aux Droits</a>
-                      <Link to="/guides-pratiques" className="text-base hover:text-primary p-2 rounded-lg hover:bg-muted">Guides pratiques</Link>
-                      <Link to="/ressources-pratiques" className="text-base hover:text-primary p-2 rounded-lg hover:bg-muted">Ressources pratiques</Link>
-                      <Link to="/carte-interactive" className="text-base hover:text-primary p-2 rounded-lg hover:bg-muted">Carte interactive</Link>
-                      <Link to="/mediatheque" className="text-base hover:text-primary p-2 rounded-lg hover:bg-muted">Médiathèque</Link>
-                      <Link to="/publications" className="text-base hover:text-primary p-2 rounded-lg hover:bg-muted">Publications</Link>
-                      <Link to="/liens-utiles" className="text-base hover:text-primary p-2 rounded-lg hover:bg-muted">Liens utiles</Link>
-                      <Link to="/albums-photos" className="text-base hover:text-primary p-2 rounded-lg hover:bg-muted">Albums photos</Link>
+                      <Link to="/acces-aux-droits/guides-pratiques" className="text-base hover:text-primary p-2 rounded-lg hover:bg-muted">Guides pratiques</Link>
+                      <Link to="/acces-aux-droits/ressources-pratiques" className="text-base hover:text-primary p-2 rounded-lg hover:bg-muted">Ressources pratiques</Link>
+                      <Link to="/acces-aux-droits/carte-interactive" className="text-base hover:text-primary p-2 rounded-lg hover:bg-muted">Carte interactive</Link>
+                      <Link to="/acces-aux-droits/mediatheque" className="text-base hover:text-primary p-2 rounded-lg hover:bg-muted">Médiathèque</Link>
+                      <Link to="/acces-aux-droits/publications" className="text-base hover:text-primary p-2 rounded-lg hover:bg-muted">Publications</Link>
+                      <Link to="/acces-aux-droits/liens-utiles" className="text-base hover:text-primary p-2 rounded-lg hover:bg-muted">Liens utiles</Link>
+                      <Link to="/acces-aux-droits/albums-photos" className="text-base hover:text-primary p-2 rounded-lg hover:bg-muted">Albums photos</Link>
                       <Link to="/partenaires" className="text-base hover:text-primary p-2 rounded-lg hover:bg-muted">Partenaires</Link>
                       <Link to="/chatbot-faq" className="text-base hover:text-primary p-2 rounded-lg hover:bg-muted">FAQ</Link>
                       <Link to="/contact" className="text-base hover:text-primary p-2 rounded-lg hover:bg-muted">Contact</Link>
@@ -80,7 +80,7 @@ const AccesAuxDroits = () => {
         <div className="container mx-auto px-4">
           <h3 className="text-xl sm:text-2xl font-bold text-center mb-8 sm:mb-12">Accès rapide</h3>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
-            <Link to="/guides-pratiques">
+            <Link to="/acces-aux-droits/guides-pratiques">
               <Card className="hover:shadow-lg transition-shadow cursor-pointer">
                 <CardHeader className="text-center">
                   <BookOpen className="h-12 w-12 text-primary mx-auto mb-4" />
@@ -92,7 +92,7 @@ const AccesAuxDroits = () => {
               </Card>
             </Link>
 
-            <Link to="/ressources-pratiques">
+            <Link to="/acces-aux-droits/ressources-pratiques">
               <Card className="hover:shadow-lg transition-shadow cursor-pointer">
                 <CardHeader className="text-center">
                   <FileText className="h-12 w-12 text-primary mx-auto mb-4" />
@@ -104,7 +104,7 @@ const AccesAuxDroits = () => {
               </Card>
             </Link>
 
-            <Link to="/carte-interactive">
+            <Link to="/acces-aux-droits/carte-interactive">
               <Card className="hover:shadow-lg transition-shadow cursor-pointer">
                 <CardHeader className="text-center">
                   <Map className="h-12 w-12 text-primary mx-auto mb-4" />
@@ -116,7 +116,7 @@ const AccesAuxDroits = () => {
               </Card>
             </Link>
 
-            <Link to="/mediatheque">
+            <Link to="/acces-aux-droits/mediatheque">
               <Card className="hover:shadow-lg transition-shadow cursor-pointer">
                 <CardHeader className="text-center">
                   <Video className="h-12 w-12 text-primary mx-auto mb-4" />

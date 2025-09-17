@@ -69,19 +69,19 @@ const ChatbotFAQ = () => {
     {
       title: "Trouver un service près de moi",
       description: "Localiser les services d'aide juridique",
-      action: "/carte-interactive",
+      action: "/acces-aux-droits/carte-interactive",
       icon: "🗺️"
     },
     {
       title: "Télécharger un formulaire",
       description: "Modèles et documents utiles",
-      action: "/ressources-pratiques",
+      action: "/acces-aux-droits/ressources-pratiques",
       icon: "📄"
     },
     {
       title: "Consulter un guide",
       description: "Guides pratiques step-by-step",
-      action: "/guides-pratiques", 
+      action: "/acces-aux-droits/guides-pratiques",
       icon: "📖"
     },
     {

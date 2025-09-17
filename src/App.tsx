@@ -61,13 +61,13 @@ const App = () => (
           {/* Accès aux droits interface */}
           <Route path="/acces-aux-droits" element={<AccesAuxDroits />} />
           <Route element={<AccesAuxDroitsLayout />}>
-            <Route path="/guides-pratiques" element={<GuidesPratiques />} />
-            <Route path="/ressources-pratiques" element={<RessourcesPratiques />} />
-            <Route path="/carte-interactive" element={<CarteInteractive />} />
-            <Route path="/mediatheque" element={<Mediatheque />} />
-            <Route path="/publications" element={<Publications />} />
-            <Route path="/liens-utiles" element={<LiensUtiles />} />
-            <Route path="/albums-photos" element={<AlbumsPhotos />} />
+            <Route path="/acces-aux-droits/guides-pratiques" element={<GuidesPratiques />} />
+            <Route path="/acces-aux-droits/ressources-pratiques" element={<RessourcesPratiques />} />
+            <Route path="/acces-aux-droits/carte-interactive" element={<CarteInteractive />} />
+            <Route path="/acces-aux-droits/mediatheque" element={<Mediatheque />} />
+            <Route path="/acces-aux-droits/publications" element={<Publications />} />
+            <Route path="/acces-aux-droits/liens-utiles" element={<LiensUtiles />} />
+            <Route path="/acces-aux-droits/albums-photos" element={<AlbumsPhotos />} />
           </Route>
           <Route path="/partenaires" element={<Partenaires />} />
           <Route path="/chatbot-faq" element={<ChatbotFAQ />} />
