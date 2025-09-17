@@ -9,10 +9,12 @@ const AccesAuxDroitsSection = () => {
       <div className="flex flex-col items-center justify-between px-4 sm:px-8 py-8 sm:py-12 h-full">
         {/* Header Section - Logo & Title */}
         <div className="flex flex-col items-center space-y-4 sm:space-y-6">
-          <div className="mb-2">
-            <div className="w-12 h-12 sm:w-16 sm:h-16 bg-primary rounded-full flex items-center justify-center">
-              <div className="w-6 h-6 sm:w-8 sm:h-8 bg-white rounded-full"></div>
-            </div>
+          <div className="mb-2 sm:mb-3">
+            <img 
+              src="/Feelinx_upload/logo-acces-aux-droits.png" 
+              alt="Accès aux Droits" 
+              className="h-4 sm:h-6 md:h-8 w-auto object-contain max-w-full"
+            />
           </div>
           
           <h2 className="text-primary text-xl sm:text-2xl md:text-3xl font-spartan font-bold text-center max-w-md leading-tight">
@@ -21,28 +23,28 @@ const AccesAuxDroitsSection = () => {
         </div>
 
         {/* Center Section - Quick Access Cards */}
-        <div className="w-full max-w-sm sm:max-w-md">
+        <div className="w-full max-w-sm sm:max-w-md space-y-4">
           <div className="grid grid-cols-2 gap-4 sm:gap-6">
-            <Card className="bg-white/90 backdrop-blur-sm rounded-lg shadow-lg border-0">
-              <CardContent className="p-4 sm:p-6">
-                <div className="flex flex-col items-center text-center space-y-3">
-                  <div className="w-10 h-10 sm:w-12 sm:h-12 bg-orange-500 rounded-lg flex items-center justify-center">
-                    <BookOpen className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
+            <Card className="bg-white/90 backdrop-blur-sm rounded-lg shadow-lg border-0 h-24 sm:h-28">
+              <CardContent className="p-4 sm:p-6 h-full">
+                <div className="flex flex-col items-center justify-center text-center h-full space-y-2">
+                  <div className="w-6 h-6 sm:w-8 sm:h-8 bg-orange-500 rounded-lg flex items-center justify-center">
+                    <BookOpen className="w-3 h-3 sm:w-4 sm:h-4 text-white" />
                   </div>
                   <div>
-                    <h3 className="font-semibold text-sm sm:text-base text-card-foreground mb-1">Guides</h3>
+                    <h3 className="font-semibold text-sm sm:text-base text-card-foreground">Guides</h3>
                     <p className="text-xs sm:text-sm text-muted-foreground">Pratiques</p>
                   </div>
                 </div>
               </CardContent>
             </Card>
 
-            <Card className="bg-white/90 backdrop-blur-sm rounded-lg shadow-lg border-0">
-              <CardContent className="p-4 sm:p-6">
-                <div className="flex flex-col items-center text-center space-y-3">
-                  <MapPin className="w-10 h-10 sm:w-12 sm:h-12 text-primary" />
+            <Card className="bg-white/90 backdrop-blur-sm rounded-lg shadow-lg border-0 h-24 sm:h-28">
+              <CardContent className="p-4 sm:p-6 h-full">
+                <div className="flex flex-col items-center justify-center text-center h-full space-y-2">
+                  <MapPin className="w-6 h-6 sm:w-8 sm:h-8 text-primary" />
                   <div>
-                    <h3 className="font-semibold text-sm sm:text-base text-card-foreground mb-1">Services</h3>
+                    <h3 className="font-semibold text-sm sm:text-base text-card-foreground">Services</h3>
                     <p className="text-xs sm:text-sm text-muted-foreground">Proximité</p>
                   </div>
                 </div>
