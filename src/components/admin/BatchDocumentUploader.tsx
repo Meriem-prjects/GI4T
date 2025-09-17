@@ -251,92 +251,33 @@ const BatchDocumentUploader: React.FC<BatchDocumentUploaderProps> = ({ onDocumen
         ));
 
         try {
-          // Use document--parse_document tool for comprehensive extraction
-          let parseResult;
-          
-          // Create a temporary file path for parsing
-          const tempFileName = `temp_${uploadFile.id}_${uploadFile.file.name}`;
-          
-          // For now, we'll extract text content manually
-          // In a real implementation, you'd use document--parse_document
-          const fileText = await uploadFile.file.text().catch(() => '');
-          
-          parseResult = {
-            content: fileText || 'Contenu non disponible - format non supporté pour l\'extraction de texte',
-            pages: 1,
-            images: [],
-            metadata: {
-              fileName: uploadFile.file.name,
-              fileSize: uploadFile.file.size,
-              fileType: uploadFile.file.type
-            }
-          };
+          // Use new upload-document function for processing
+          const formData = new FormData();
+          formData.append('file', uploadFile.file);
+          formData.append('categoryId', selectedCategory);
+          formData.append('documentTypeId', selectedDocumentType);
 
           // Update progress
           setUploadFiles(prev => prev.map(f => 
             f.id === uploadFile.id ? { ...f, progress: 30 } : f
           ));
 
-          // Update progress
-          setUploadFiles(prev => prev.map(f => 
-            f.id === uploadFile.id ? { ...f, progress: 60 } : f
-          ));
-
-          // Analyze with AI
-          const { data: analysisResult, error: analysisError } = await supabase.functions.invoke('document-analysis', {
-            body: {
-              content: parseResult.content,
-              language: 'auto'
-            }
+          const { data: uploadResult, error: uploadError } = await supabase.functions.invoke('upload-document', {
+            body: formData
           });
 
-          if (analysisError) {
-            throw new Error(`Analysis failed: ${analysisError.message}`);
+          if (uploadError) {
+            throw new Error(`Upload failed: ${uploadError.message}`);
           }
 
-          // Update progress
-          setUploadFiles(prev => prev.map(f => 
-            f.id === uploadFile.id ? { ...f, progress: 80 } : f
-          ));
-
-          // Upload original file to storage
-          const { data: { user } } = await supabase.auth.getUser();
-          if (!user) throw new Error('User not authenticated');
-
-          const fileName = `${user.id}/${Date.now()}_${uploadFile.file.name}`;
-          const { data: uploadData, error: uploadError } = await supabase.storage
-            .from('documents')
-            .upload(fileName, uploadFile.file);
-
-          if (uploadError) throw uploadError;
+          if (!uploadResult.success) {
+            throw new Error(uploadResult.error || 'Upload failed');
+          }
 
           // Update progress
           setUploadFiles(prev => prev.map(f => 
             f.id === uploadFile.id ? { ...f, progress: 90 } : f
           ));
-
-          // Save to database
-          const { data: documentData, error: saveError } = await supabase
-            .from('documents')
-            .insert({
-              user_id: user.id,
-              title: analysisResult.title || uploadFile.file.name,
-              summary: analysisResult.summary || '',
-              content: parseResult.content,
-              keywords: analysisResult.keywords || [],
-              language: analysisResult.language || 'fr',
-              category_id: selectedCategory,
-              document_type_id: selectedDocumentType,
-              original_filename: uploadFile.file.name,
-              file_url: uploadData.path,
-              file_size: uploadFile.file.size,
-              page_count: parseResult.pages || 1,
-              status: 'processed'
-            })
-            .select()
-            .single();
-
-          if (saveError) throw saveError;
 
           // Update status to completed
           setUploadFiles(prev => prev.map(f => 
@@ -344,11 +285,11 @@ const BatchDocumentUploader: React.FC<BatchDocumentUploaderProps> = ({ onDocumen
               ...f, 
               status: 'completed', 
               progress: 100, 
-              result: { ...documentData, ...analysisResult, fullContent: parseResult.content }
+              result: uploadResult.document
             } : f
           ));
 
-          processedDocuments.push({ ...documentData, ...analysisResult, fullContent: parseResult.content });
+          processedDocuments.push(uploadResult.document);
 
         } catch (error) {
           console.error(`Error processing ${uploadFile.file.name}:`, error);
