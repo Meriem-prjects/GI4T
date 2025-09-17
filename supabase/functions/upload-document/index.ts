@@ -63,24 +63,44 @@ serve(async (req) => {
 
     console.log('File uploaded successfully:', uploadData.path);
 
-    // Get file content for parsing
-    const fileContent = await file.text();
+    // Get file content for parsing - handle binary files properly
+    let fileContent;
+    if (file.type === 'application/pdf' || file.name.toLowerCase().endsWith('.pdf')) {
+      // For PDFs, read as ArrayBuffer and convert to base64
+      const arrayBuffer = await file.arrayBuffer();
+      fileContent = btoa(String.fromCharCode(...new Uint8Array(arrayBuffer)));
+    } else {
+      // For text files, read as text
+      fileContent = await file.text();
+    }
     
-    // Call document-analysis function for AI processing
-    console.log('Calling document analysis...');
-    const { data: analysisData, error: analysisError } = await supabaseAdmin.functions.invoke('document-analysis', {
-      body: {
-        content: fileContent,
-        language: 'auto'
-      }
-    });
+    // Call document-analysis function for AI processing (skip for binary files)
+    let analysisData = {
+      title: file.name,
+      summary: 'Document uploadé',
+      keywords: [],
+      language: 'fr'
+    };
+    
+    if (file.type !== 'application/pdf' && !file.name.toLowerCase().endsWith('.pdf')) {
+      console.log('Calling document analysis...');
+      const { data, error: analysisError } = await supabaseAdmin.functions.invoke('document-analysis', {
+        body: {
+          content: fileContent,
+          language: 'auto'
+        }
+      });
 
-    if (analysisError) {
-      console.error('Analysis error:', analysisError);
-      throw analysisError;
+      if (analysisError) {
+        console.error('Analysis error:', analysisError);
+      } else {
+        analysisData = data;
+      }
+    } else {
+      console.log('Skipping analysis for PDF file');
     }
 
-    console.log('Document analysis completed');
+    console.log('Document processing completed');
 
     // Get public URL for the uploaded file
     const { data: { publicUrl } } = supabaseAdmin.storage
@@ -95,7 +115,7 @@ serve(async (req) => {
       title_ar: analysisData.title_ar || null,
       summary: analysisData.summary || '',
       summary_ar: analysisData.summary_ar || null,
-      content: fileContent,
+      content: (file.type === 'application/pdf' || file.name.toLowerCase().endsWith('.pdf')) ? '' : fileContent, // Don't store PDF content
       keywords: analysisData.keywords || [],
       keywords_ar: analysisData.keywords_ar || [],
       language: analysisData.language || 'fr',
