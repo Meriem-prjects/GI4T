@@ -56,11 +56,39 @@ serve(async (req) => {
       body: JSON.stringify({
         model: 'gpt-4o-mini',
         messages: [
-          { role: 'system', content: systemPrompt },
-          { role: 'user', content: `Analyse ce document:\n\n${content}` }
+          {
+            role: 'system',
+            content: `Tu es un assistant spécialisé dans l'analyse de documents juridiques. 
+            Analyse le contenu fourni et extraits les informations suivantes en JSON :
+            - title: Un titre descriptif et précis du document (maximum 100 caractères)
+            - summary: Un résumé concis et informatif du contenu (2-4 phrases, maximum 300 caractères)
+            - keywords: Une liste de mots-clés juridiques pertinents extraits du texte (8-15 mots-clés spécifiques)
+            - language: La langue détectée du document (fr, ar, en, etc.)
+            
+            INSTRUCTIONS SPÉCIALES POUR LES MOTS-CLÉS:
+            - Extrais UNIQUEMENT les mots-clés qui apparaissent réellement dans le texte
+            - Privilégie les termes juridiques spécifiques, les références légales, les concepts de droit
+            - Inclus les noms des juridictions, numéros d'arrêts, articles de loi mentionnés
+            - Évite les mots génériques comme "droit", "loi", "article" sauf s'ils sont accompagnés de précisions
+            - Formate les références légales (ex: "Article 123 du Code civil", "Cour de cassation")
+            
+            Réponds uniquement avec un objet JSON valide, sans texte supplémentaire.
+            
+            Format de réponse attendu:
+            {
+              "title": "Titre du document",
+              "summary": "Résumé du contenu",
+              "keywords": ["terme juridique 1", "Article 123", "Cour de cassation", "concept spécifique"],
+              "language": "fr"
+            }`
+          },
+          {
+            role: 'user',
+            content: `Analyse ce document juridique et extrais les métadonnées. Assure-toi d'identifier et d'extraire tous les mots-clés juridiques spécifiques présents dans le texte :\n\n${content.substring(0, 8000)}`
+          }
         ],
-        temperature: 0.3,
-        max_tokens: 1000,
+        max_tokens: 800,
+        temperature: 0.2
       }),
     });
 

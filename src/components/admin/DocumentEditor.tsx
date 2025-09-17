@@ -1,20 +1,42 @@
 import React, { useState, useEffect } from 'react';
+import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { Card } from '@/components/ui/card';
-import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
-import { Save, Eye, FileText, Globe } from 'lucide-react';
-import { useToast } from '@/components/ui/use-toast';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Label } from '@/components/ui/label';
+import { Save, Eye, EyeOff, X, AlertTriangle, FileText } from 'lucide-react';
+import { useToast } from '@/hooks/use-toast';
+import { supabase } from '@/integrations/supabase/client';
+import PDFViewer from './PDFViewer';
 
 interface DocumentData {
+  id?: string;
   content: string;
   title: string;
   summary: string;
   keywords: string[];
   language: string;
   originalFileName: string;
+  category_id?: string;
+  document_type_id?: string;
+  file_url?: string;
+  pdf_url?: string;
+  fullContent?: string;
+}
+
+interface Category {
+  id: string;
+  name: string;
+  name_ar?: string;
+  color: string;
+}
+
+interface DocumentType {
+  id: string;
+  name: string;
+  name_ar?: string;
 }
 
 interface DocumentEditorProps {
@@ -23,28 +45,94 @@ interface DocumentEditorProps {
 }
 
 const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave }) => {
+  const { toast } = useToast();
   const [editedData, setEditedData] = useState<DocumentData>(documentData);
   const [showPreview, setShowPreview] = useState(false);
   const [hasChanges, setHasChanges] = useState(false);
-  const { toast } = useToast();
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [documentTypes, setDocumentTypes] = useState<DocumentType[]>([]);
+  const [newKeyword, setNewKeyword] = useState('');
+  const [currentView, setCurrentView] = useState<'editor' | 'pdf'>('editor');
 
   useEffect(() => {
     setEditedData(documentData);
     setHasChanges(false);
+    loadCategories();
+    loadDocumentTypes();
   }, [documentData]);
 
   useEffect(() => {
-    const isChanged = JSON.stringify(editedData) !== JSON.stringify(documentData);
-    setHasChanges(isChanged);
+    const hasChanged = JSON.stringify(editedData) !== JSON.stringify(documentData);
+    setHasChanges(hasChanged);
   }, [editedData, documentData]);
 
-  const handleSave = () => {
-    onSave(editedData);
-    setHasChanges(false);
-    toast({
-      title: "Document sauvegardé",
-      description: "Les modifications ont été enregistrées avec succès.",
-    });
+  const loadCategories = async () => {
+    const { data } = await supabase
+      .from('categories')
+      .select('*')
+      .order('name');
+    
+    if (data) setCategories(data);
+  };
+
+  const loadDocumentTypes = async () => {
+    const { data } = await supabase
+      .from('document_types')
+      .select('*')
+      .order('name');
+    
+    if (data) setDocumentTypes(data);
+  };
+
+  const handleSave = async () => {
+    try {
+      if (editedData.id) {
+        // Update existing document
+        const { error } = await supabase
+          .from('documents')
+          .update({
+            title: editedData.title,
+            summary: editedData.summary,
+            content: editedData.content,
+            keywords: editedData.keywords,
+            category_id: editedData.category_id,
+            document_type_id: editedData.document_type_id,
+            language: editedData.language
+          })
+          .eq('id', editedData.id);
+
+        if (error) throw error;
+      }
+
+      onSave(editedData);
+      toast({
+        title: "Document sauvegardé",
+        description: "Les modifications ont été enregistrées avec succès.",
+      });
+    } catch (error) {
+      toast({
+        title: "Erreur de sauvegarde",
+        description: "Impossible de sauvegarder le document.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const addKeyword = () => {
+    if (newKeyword.trim() && !editedData.keywords.includes(newKeyword.trim())) {
+      setEditedData(prev => ({
+        ...prev,
+        keywords: [...prev.keywords, newKeyword.trim()]
+      }));
+      setNewKeyword('');
+    }
+  };
+
+  const removeKeyword = (keyword: string) => {
+    setEditedData(prev => ({
+      ...prev,
+      keywords: prev.keywords.filter(k => k !== keyword)
+    }));
   };
 
   const getLanguageLabel = (lang: string) => {
@@ -57,7 +145,6 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
   };
 
   const formatContent = (content: string) => {
-    // Simple formatting to preserve structure
     return content
       .split('\n')
       .map(line => line.trim())
@@ -65,188 +152,277 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
       .join('\n\n');
   };
 
+  const getStorageUrl = (path: string) => {
+    const { data } = supabase.storage.from('documents').getPublicUrl(path);
+    return data.publicUrl;
+  };
+
   return (
     <div className="space-y-6">
       {/* Header */}
-      <Card className="p-4">
-        <div className="flex items-center justify-between flex-wrap gap-4">
-          <div className="flex items-center space-x-3">
-            <FileText className="h-6 w-6 text-primary" />
-            <div>
-              <h2 className="text-xl font-semibold text-foreground">
-                Éditeur de Document
-              </h2>
-              <p className="text-sm text-muted-foreground">
-                Fichier source: {editedData.originalFileName}
-              </p>
-            </div>
-          </div>
-          
-          <div className="flex items-center space-x-2">
-            <Badge variant="outline" className="flex items-center space-x-1">
-              <Globe className="h-3 w-3" />
-              <span>{getLanguageLabel(editedData.language)}</span>
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 className="text-2xl font-bold text-foreground">
+            Éditeur de Document
+          </h2>
+          <div className="flex items-center space-x-4 mt-2">
+            <p className="text-sm text-muted-foreground">
+              Source: {editedData.originalFileName}
+            </p>
+            <Badge variant="outline">
+              {getLanguageLabel(editedData.language)}
             </Badge>
-            
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setShowPreview(!showPreview)}
-            >
-              <Eye className="h-4 w-4 mr-2" />
-              {showPreview ? 'Édition' : 'Aperçu'}
-            </Button>
-            
-            <Button
-              onClick={handleSave}
-              disabled={!hasChanges}
-              className="bg-primary hover:bg-primary/90"
-            >
-              <Save className="h-4 w-4 mr-2" />
-              Sauvegarder
-            </Button>
           </div>
         </div>
-      </Card>
-
-      {/* Content */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Metadata */}
-        <div className="space-y-4">
-          <Card className="p-4">
-            <h3 className="font-semibold text-foreground mb-4">Métadonnées</h3>
-            
-            <div className="space-y-4">
-              <div>
-                <Label htmlFor="title">Titre</Label>
-                <Input
-                  id="title"
-                  value={editedData.title}
-                  onChange={(e) => setEditedData({ ...editedData, title: e.target.value })}
-                  placeholder="Titre du document"
-                  className="mt-1"
-                />
-              </div>
-              
-              <div>
-                <Label htmlFor="language">Langue</Label>
-                <select
-                  id="language"
-                  value={editedData.language}
-                  onChange={(e) => setEditedData({ ...editedData, language: e.target.value })}
-                  className="mt-1 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-                >
-                  <option value="ar">العربية (Arabe)</option>
-                  <option value="fr">Français</option>
-                  <option value="en">English</option>
-                </select>
-              </div>
-              
-              <div>
-                <Label htmlFor="summary">Résumé</Label>
-                <Textarea
-                  id="summary"
-                  value={editedData.summary}
-                  onChange={(e) => setEditedData({ ...editedData, summary: e.target.value })}
-                  placeholder="Résumé du document"
-                  rows={4}
-                  className="mt-1"
-                />
-              </div>
-              
-              <div>
-                <Label htmlFor="keywords">Mots-clés</Label>
-                <Textarea
-                  id="keywords"
-                  value={editedData.keywords.join(' - ')}
-                  onChange={(e) => setEditedData({ 
-                    ...editedData, 
-                    keywords: e.target.value.split(' - ').map(k => k.trim()).filter(k => k.length > 0)
-                  })}
-                  placeholder="Mot-clé1 - Mot-clé2 - Mot-clé3"
-                  rows={3}
-                  className="mt-1"
-                  style={{ 
-                    direction: editedData.language === 'ar' ? 'rtl' : 'ltr' 
-                  }}
-                />
-                <p className="text-xs text-muted-foreground mt-1">
-                  Séparez les mots-clés par " - "
-                </p>
-              </div>
-            </div>
-          </Card>
-        </div>
-
-        {/* Main Content */}
-        <div className="lg:col-span-2">
-          <Card className="p-4">
-            <h3 className="font-semibold text-foreground mb-4">
-              {showPreview ? 'Aperçu du contenu' : 'Contenu du document'}
-            </h3>
-            
-            {showPreview ? (
-              <div 
-                className="prose prose-sm max-w-none bg-muted/30 p-4 rounded-lg min-h-[400px] overflow-y-auto"
-                style={{ 
-                  direction: editedData.language === 'ar' ? 'rtl' : 'ltr',
-                  textAlign: editedData.language === 'ar' ? 'right' : 'left'
-                }}
-              >
-                <h1>{editedData.title}</h1>
-                
-                {editedData.summary && (
-                  <div className="bg-primary/10 p-3 rounded-md mb-4">
-                    <h4 className="font-semibold mb-2">Résumé:</h4>
-                    <p className="text-sm">{editedData.summary}</p>
-                  </div>
-                )}
-                
-                {editedData.keywords && editedData.keywords.length > 0 && (
-                  <div className="bg-secondary/10 p-3 rounded-md mb-4">
-                    <h4 className="font-semibold mb-2">الكلمات المفاتيح - Mots-clés:</h4>
-                    <div className="flex flex-wrap gap-2">
-                      {editedData.keywords.map((keyword, index) => (
-                        <Badge 
-                          key={index} 
-                          variant="secondary" 
-                          className="text-xs"
-                          style={{ 
-                            direction: editedData.language === 'ar' ? 'rtl' : 'ltr' 
-                          }}
-                        >
-                          {keyword}
-                        </Badge>
-                      ))}
-                    </div>
-                  </div>
-                )}
-                
-                <div className="whitespace-pre-wrap">
-                  {formatContent(editedData.content)}
-                </div>
-              </div>
+        
+        <div className="flex items-center space-x-2">
+          <Button
+            variant="outline"
+            onClick={() => setCurrentView(currentView === 'editor' ? 'pdf' : 'editor')}
+            disabled={!editedData.file_url}
+          >
+            {currentView === 'editor' ? (
+              <>
+                <FileText className="mr-2 h-4 w-4" />
+                PDF
+              </>
             ) : (
-              <Textarea
-                value={editedData.content}
-                onChange={(e) => setEditedData({ ...editedData, content: e.target.value })}
-                placeholder="Contenu du document..."
-                className="min-h-[400px] font-mono text-sm"
-                style={{ 
-                  direction: editedData.language === 'ar' ? 'rtl' : 'ltr' 
-                }}
-              />
+              <>
+                <Eye className="mr-2 h-4 w-4" />
+                Éditeur
+              </>
             )}
-          </Card>
+          </Button>
+          
+          <Button
+            variant="outline"
+            onClick={() => setShowPreview(!showPreview)}
+          >
+            {showPreview ? (
+              <>
+                <EyeOff className="mr-2 h-4 w-4" />
+                Édition
+              </>
+            ) : (
+              <>
+                <Eye className="mr-2 h-4 w-4" />
+                Aperçu
+              </>
+            )}
+          </Button>
+          
+          <Button onClick={handleSave} disabled={!hasChanges}>
+            <Save className="mr-2 h-4 w-4" />
+            Sauvegarder
+          </Button>
         </div>
       </div>
 
+      {/* Main Content */}
+      {currentView === 'pdf' && editedData.file_url ? (
+        <PDFViewer 
+          fileUrl={getStorageUrl(editedData.file_url)} 
+          title={editedData.title}
+        />
+      ) : (
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          {/* Metadata Column */}
+          <div className="space-y-6">
+            <Card className="p-6">
+              <h3 className="text-lg font-semibold mb-4">Métadonnées</h3>
+              
+              <div className="space-y-4">
+                <div>
+                  <Label className="text-sm font-medium">Titre</Label>
+                  <Input
+                    value={editedData.title}
+                    onChange={(e) => setEditedData(prev => ({
+                      ...prev,
+                      title: e.target.value
+                    }))}
+                    className="mt-1"
+                  />
+                </div>
+
+                <div>
+                  <Label className="text-sm font-medium">Catégorie</Label>
+                  <Select
+                    value={editedData.category_id || ''}
+                    onValueChange={(value) => setEditedData(prev => ({
+                      ...prev,
+                      category_id: value
+                    }))}
+                  >
+                    <SelectTrigger className="mt-1">
+                      <SelectValue placeholder="Sélectionner une catégorie" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {categories.map((category) => (
+                        <SelectItem key={category.id} value={category.id}>
+                          <div className="flex items-center gap-2">
+                            <div 
+                              className="w-3 h-3 rounded-full" 
+                              style={{ backgroundColor: category.color }}
+                            />
+                            {category.name}
+                          </div>
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div>
+                  <Label className="text-sm font-medium">Type de document</Label>
+                  <Select
+                    value={editedData.document_type_id || ''}
+                    onValueChange={(value) => setEditedData(prev => ({
+                      ...prev,
+                      document_type_id: value
+                    }))}
+                  >
+                    <SelectTrigger className="mt-1">
+                      <SelectValue placeholder="Sélectionner un type" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {documentTypes.map((type) => (
+                        <SelectItem key={type.id} value={type.id}>
+                          {type.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div>
+                  <Label className="text-sm font-medium">Langue</Label>
+                  <Select
+                    value={editedData.language}
+                    onValueChange={(value) => setEditedData(prev => ({
+                      ...prev,
+                      language: value
+                    }))}
+                  >
+                    <SelectTrigger className="mt-1">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="fr">Français</SelectItem>
+                      <SelectItem value="ar">العربية</SelectItem>
+                      <SelectItem value="en">English</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div>
+                  <Label className="text-sm font-medium">Résumé</Label>
+                  <Textarea
+                    value={editedData.summary}
+                    onChange={(e) => setEditedData(prev => ({
+                      ...prev,
+                      summary: e.target.value
+                    }))}
+                    className="mt-1"
+                    rows={4}
+                    dir={editedData.language === 'ar' ? 'rtl' : 'ltr'}
+                  />
+                </div>
+
+                <div>
+                  <Label className="text-sm font-medium">Mots-clés</Label>
+                  <div className="flex gap-2 mt-2">
+                    <Input
+                      value={newKeyword}
+                      onChange={(e) => setNewKeyword(e.target.value)}
+                      placeholder="Nouveau mot-clé"
+                      onKeyPress={(e) => {
+                        if (e.key === 'Enter') {
+                          e.preventDefault();
+                          addKeyword();
+                        }
+                      }}
+                    />
+                    <Button onClick={addKeyword} disabled={!newKeyword.trim()}>
+                      +
+                    </Button>
+                  </div>
+                  <div className="flex flex-wrap gap-2 mt-2 p-2 border rounded min-h-[40px]">
+                    {editedData.keywords.map((keyword, index) => (
+                      <Badge key={index} variant="secondary" className="flex items-center gap-1">
+                        {keyword}
+                        <button
+                          onClick={() => removeKeyword(keyword)}
+                          className="ml-1 hover:text-destructive"
+                        >
+                          <X className="h-3 w-3" />
+                        </button>
+                      </Badge>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </Card>
+          </div>
+
+          {/* Content Column */}
+          <div className="lg:col-span-2 space-y-6">
+            <Card className="p-6">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-lg font-semibold">Contenu du document</h3>
+                <Button
+                  variant="outline"
+                  onClick={() => setShowPreview(!showPreview)}
+                >
+                  {showPreview ? (
+                    <>
+                      <EyeOff className="mr-2 h-4 w-4" />
+                      Édition
+                    </>
+                  ) : (
+                    <>
+                      <Eye className="mr-2 h-4 w-4" />
+                      Aperçu
+                    </>
+                  )}
+                </Button>
+              </div>
+              
+              {showPreview ? (
+                <div 
+                  className="prose prose-sm max-w-none p-4 border rounded bg-muted/30 max-h-[600px] overflow-y-auto"
+                  dir={editedData.language === 'ar' ? 'rtl' : 'ltr'}
+                >
+                  <h4 className="font-semibold text-base">{editedData.title}</h4>
+                  <div className="whitespace-pre-wrap text-sm leading-relaxed">
+                    {formatContent(editedData.fullContent || editedData.content)}
+                  </div>
+                </div>
+              ) : (
+                <Textarea
+                  value={editedData.fullContent || editedData.content}
+                  onChange={(e) => setEditedData(prev => ({
+                    ...prev,
+                    content: e.target.value,
+                    fullContent: e.target.value
+                  }))}
+                  className="min-h-[600px] font-mono text-sm"
+                  dir={editedData.language === 'ar' ? 'rtl' : 'ltr'}
+                />
+              )}
+            </Card>
+          </div>
+        </div>
+      )}
+
       {/* Status */}
       {hasChanges && (
-        <Card className="p-3 bg-orange-50 border-orange-200">
-          <p className="text-sm text-orange-800">
-            ⚠️ Vous avez des modifications non sauvegardées
-          </p>
+        <Card className="p-3 bg-orange-50 border-orange-200 dark:bg-orange-950 dark:border-orange-800">
+          <div className="flex items-center space-x-2">
+            <AlertTriangle className="h-4 w-4 text-orange-600" />
+            <p className="text-sm text-orange-800 dark:text-orange-200">
+              Vous avez des modifications non sauvegardées
+            </p>
+          </div>
         </Card>
       )}
     </div>
