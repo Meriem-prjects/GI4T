@@ -25,23 +25,17 @@ const HomeFooter = () => {
             </p>
           </div>
 
-          {/* Middle section - Contact Us */}
+          {/* Middle section - Navigation Links & Social */}
           <div className="space-y-4">
-            <h3 className="text-lg font-semibold text-white">Contact Us</h3>
-            <p className="text-gray-300 text-sm">
-              N'hésitez pas à nous contacter
-            </p>
-            <div className="space-y-2 text-sm text-gray-300">
-              <p>contact@justclic.tn</p>
-              <p>+216 XX XX XX XX</p>
-              <p>Tunis, Tunisie</p>
+            <h3 className="text-lg font-semibold text-white">Navigation</h3>
+            <div className="flex flex-wrap gap-4 text-sm text-gray-300">
+              <a href="#" className="hover:text-white transition-colors">Contactez-nous</a>
+              <a href="#" className="hover:text-white transition-colors">Mentions légales</a>
+              <a href="#" className="hover:text-white transition-colors">Plan du site</a>
+              <a href="#" className="hover:text-white transition-colors">Réseaux sociaux</a>
+              <a href="#" className="hover:text-white transition-colors">CGU / cookies</a>
             </div>
-          </div>
-
-          {/* Right section - Stay Updated */}
-          <div className="space-y-4">
-            <h3 className="text-lg font-semibold text-white">Restez informés</h3>
-            <div className="flex space-x-3 mb-4">
+            <div className="flex space-x-3 pt-2">
               <Button size="sm" variant="outline" className="border-gray-600 text-gray-300 hover:text-white hover:border-white">
                 <Facebook className="h-4 w-4" />
               </Button>
@@ -49,6 +43,11 @@ const HomeFooter = () => {
                 <Mail className="h-4 w-4" />
               </Button>
             </div>
+          </div>
+
+          {/* Right section - Stay Updated */}
+          <div className="space-y-4">
+            <h3 className="text-lg font-semibold text-white">Restez informés</h3>
             <div className="space-y-3">
               <Input 
                 placeholder="Votre email" 

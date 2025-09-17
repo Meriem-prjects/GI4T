@@ -15,7 +15,7 @@ const Index = () => {
         rel="stylesheet" 
       />
       
-      <div className="w-full h-screen flex flex-col">
+      <div className="min-h-screen flex flex-col">
         <HomeHeader />
 
         {/* Main Content - Split Screen */}
@@ -23,6 +23,9 @@ const Index = () => {
           <ObservatoireSection />
           <AccesAuxDroitsSection />
         </div>
+
+        {/* Spacer */}
+        <div className="py-8"></div>
 
         <HomeFooter />
       </div>
