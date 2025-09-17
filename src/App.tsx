@@ -45,17 +45,11 @@ const App = () => (
       <BrowserRouter>
         <Routes>
           <Route path="/" element={<Index />} />
-          <Route path="/observatoire" element={<Observatoire />} />
+          <Route path="/observatoire/*" element={<Observatoire />} />
           <Route path="/search-results" element={<SearchResults />} />
           <Route path="/decision/:id" element={<DecisionDetail />} />
           
-          {/* Observatoire interface */}
-          <Route element={<ObservatoireLayout />}>
-            <Route path="/recherche" element={<Recherche />} />
-            <Route path="/textes-fondamentaux" element={<TextesFondamentaux />} />
-            <Route path="/analyses-opinions" element={<AnalysesOpinions />} />
-            <Route path="/actualites" element={<Actualites />} />
-          </Route>
+          {/* Standalone observatoire pages - moved to nested structure */}
           
           <Route path="/odf-partenaires" element={<ODFPartenaires />} />
           <Route path="/contact" element={<Contact />} />

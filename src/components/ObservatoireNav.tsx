@@ -8,25 +8,25 @@ const ObservatoireNav = () => {
 
   const navItems = [
     {
-      path: "/recherche",
+      path: "/observatoire/recherche",
       label: "Recherche",
       icon: Search,
       description: "Recherche avancée"
     },
     {
-      path: "/textes-fondamentaux", 
+      path: "/observatoire/textes-fondamentaux", 
       label: "Textes fondamentaux",
       icon: BookOpen,
       description: "Textes de référence"
     },
     {
-      path: "/analyses-opinions",
+      path: "/observatoire/analyses-opinions",
       label: "Analyses & Opinions",
       icon: FileText,
       description: "Analyses juridiques"
     },
     {
-      path: "/actualites",
+      path: "/observatoire/actualites",
       label: "Actualités",
       icon: Newspaper,
       description: "Dernières nouvelles"

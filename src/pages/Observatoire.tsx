@@ -1,12 +1,17 @@
 import { useState } from "react";
 import { Search, Filter, Calendar, FileText, Scale, Users, Database, Mic, Briefcase, Heart, Menu, X } from "lucide-react";
-import { useNavigate, Link } from "react-router-dom";
+import { useNavigate, Link, Routes, Route } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import ObservatoireNav from "@/components/ObservatoireNav";
 import Footer from "@/components/Footer";
+import Recherche from "@/pages/Recherche";
+import TextesFondamentaux from "@/pages/TextesFondamentaux";
+import AnalysesOpinions from "@/pages/AnalysesOpinions";
+import Actualites from "@/pages/Actualites";
 
 const Observatoire = () => {
   const navigate = useNavigate();
@@ -97,8 +102,8 @@ const Observatoire = () => {
                       <Link to="/" className="text-base hover:text-primary p-2 rounded-lg hover:bg-muted">Accueil</Link>
                       <a href="#" className="text-base text-primary p-2 rounded-lg bg-muted font-medium">Observatoire</a>
                       <Link to="/qui-sommes-nous" className="text-base hover:text-primary p-2 rounded-lg hover:bg-muted">Qui sommes-nous</Link>
-                      <Link to="/analyses-opinions" className="text-base hover:text-primary p-2 rounded-lg hover:bg-muted">Analyses & Opinions</Link>
-                      <Link to="/actualites" className="text-base hover:text-primary p-2 rounded-lg hover:bg-muted">Actualités</Link>
+                      <Link to="/observatoire/analyses-opinions" className="text-base hover:text-primary p-2 rounded-lg hover:bg-muted">Analyses & Opinions</Link>
+                      <Link to="/observatoire/actualites" className="text-base hover:text-primary p-2 rounded-lg hover:bg-muted">Actualités</Link>
                       <Link to="/methodologie" className="text-base hover:text-primary p-2 rounded-lg hover:bg-muted">Méthodologie</Link>
                       <div className="border-t pt-4 mt-4">
                         <Link to="/acces-aux-droits" className="text-base hover:text-primary p-2 rounded-lg hover:bg-muted flex items-center">
@@ -114,7 +119,18 @@ const Observatoire = () => {
         </div>
       </header>
 
-      {/* Hero Section with Search */}
+      {/* Secondary Navigation */}
+      <ObservatoireNav />
+
+      {/* Route Content */}
+      <Routes>
+        <Route path="recherche" element={<Recherche />} />
+        <Route path="textes-fondamentaux" element={<TextesFondamentaux />} />
+        <Route path="analyses-opinions" element={<AnalysesOpinions />} />
+        <Route path="actualites" element={<Actualites />} />
+        <Route path="/" element={
+          <>
+            {/* Hero Section with Search */}
       <section className="bg-gradient-to-br from-primary to-primary-foreground text-primary-foreground py-4 sm:py-8 md:py-16">
         <div className="container mx-auto px-4 text-center">
           <p className="text-sm sm:text-base md:text-lg lg:text-xl mb-6 sm:mb-8 md:mb-12 max-w-3xl mx-auto opacity-90 px-2 sm:px-4 leading-relaxed">
@@ -300,8 +316,11 @@ const Observatoire = () => {
         </div>
       </section>
 
-      {/* Footer */}
-      <Footer />
+            {/* Footer */}
+            <Footer />
+          </>
+        } />
+      </Routes>
     </div>
   );
 };
