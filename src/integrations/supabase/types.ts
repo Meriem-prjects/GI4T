@@ -14,6 +14,33 @@ export type Database = {
   }
   public: {
     Tables: {
+      activity_logs: {
+        Row: {
+          action: string
+          created_at: string
+          details: Json | null
+          entity_id: string
+          entity_type: string
+          id: string
+        }
+        Insert: {
+          action: string
+          created_at?: string
+          details?: Json | null
+          entity_id: string
+          entity_type: string
+          id?: string
+        }
+        Update: {
+          action?: string
+          created_at?: string
+          details?: Json | null
+          entity_id?: string
+          entity_type?: string
+          id?: string
+        }
+        Relationships: []
+      }
       categories: {
         Row: {
           color: string | null
@@ -87,6 +114,8 @@ export type Database = {
       }
       documents: {
         Row: {
+          archival_features: Json | null
+          archival_metadata: Json | null
           case_numbers: string[] | null
           category_id: string | null
           content: string
@@ -109,6 +138,9 @@ export type Database = {
           page_contents: Json | null
           page_count: number | null
           pdf_url: string | null
+          pdfa_compliance: boolean | null
+          pdfa_conformance_level: string | null
+          pdfa_version: string | null
           processed_pages: number | null
           status: string | null
           summary: string | null
@@ -120,6 +152,8 @@ export type Database = {
           user_id: string | null
         }
         Insert: {
+          archival_features?: Json | null
+          archival_metadata?: Json | null
           case_numbers?: string[] | null
           category_id?: string | null
           content: string
@@ -142,6 +176,9 @@ export type Database = {
           page_contents?: Json | null
           page_count?: number | null
           pdf_url?: string | null
+          pdfa_compliance?: boolean | null
+          pdfa_conformance_level?: string | null
+          pdfa_version?: string | null
           processed_pages?: number | null
           status?: string | null
           summary?: string | null
@@ -153,6 +190,8 @@ export type Database = {
           user_id?: string | null
         }
         Update: {
+          archival_features?: Json | null
+          archival_metadata?: Json | null
           case_numbers?: string[] | null
           category_id?: string | null
           content?: string
@@ -175,6 +214,9 @@ export type Database = {
           page_contents?: Json | null
           page_count?: number | null
           pdf_url?: string | null
+          pdfa_compliance?: boolean | null
+          pdfa_conformance_level?: string | null
+          pdfa_version?: string | null
           processed_pages?: number | null
           status?: string | null
           summary?: string | null
@@ -207,7 +249,15 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      get_pdfa_statistics: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          pdfa_documents: number
+          pdfa_percentage: number
+          pdfa_versions: Json
+          total_documents: number
+        }[]
+      }
     }
     Enums: {
       [_ in never]: never
