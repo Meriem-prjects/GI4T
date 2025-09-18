@@ -55,15 +55,35 @@ async function convertPdfWithPdfRest(pdfBuffer: ArrayBuffer): Promise<Conversion
     }
 
     const result = await response.json();
-    console.log('pdfRest response:', result);
+    console.log('pdfRest response:', JSON.stringify(result, null, 2));
 
-    // pdfRest returns resource IDs, not direct URLs
-    if (!result.outputId && !result.outputIds) {
-      throw new Error('No output IDs returned from pdfRest');
+    // Debug: Log all response keys
+    console.log('Response keys:', Object.keys(result));
+    
+    // Try different possible response formats
+    let resourceIds = [];
+    
+    if (result.outputFiles && Array.isArray(result.outputFiles)) {
+      // If outputFiles is an array of objects with IDs
+      resourceIds = result.outputFiles.map(file => file.id || file);
+      console.log('Found outputFiles array:', resourceIds);
+    } else if (result.outputIds && Array.isArray(result.outputIds)) {
+      resourceIds = result.outputIds;
+      console.log('Found outputIds array:', resourceIds);
+    } else if (result.outputId) {
+      resourceIds = [result.outputId];
+      console.log('Found single outputId:', result.outputId);
+    } else if (result.files && Array.isArray(result.files)) {
+      resourceIds = result.files.map(file => file.id || file);
+      console.log('Found files array:', resourceIds);
+    } else {
+      console.error('Could not find resource IDs in response. Available keys:', Object.keys(result));
+      throw new Error('No output IDs found in pdfRest response');
     }
 
-    // Handle both single ID and multiple IDs
-    const resourceIds = result.outputIds || [result.outputId];
+    if (resourceIds.length === 0) {
+      throw new Error('No resource IDs extracted from pdfRest response');
+    }
     const images: PageImage[] = [];
 
     // Download each image using resource ID and convert to base64
