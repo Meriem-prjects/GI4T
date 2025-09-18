@@ -15,8 +15,6 @@ interface DocumentData {
   keywords: string[];
   language: string;
   originalFileName: string;
-  pages?: string[];
-  pageCount?: number;
 }
 
 interface DocumentEditorProps {
@@ -59,50 +57,12 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
   };
 
   const formatContent = (content: string) => {
-    // Enhanced formatting to preserve structure and handle multi-page content
+    // Simple formatting to preserve structure
     return content
       .split('\n')
       .map(line => line.trim())
       .filter(line => line.length > 0)
       .join('\n\n');
-  };
-
-  const renderPageContent = () => {
-    console.log('Rendering pages:', editedData.pages?.length, 'Page count:', editedData.pageCount);
-    
-    if (editedData.pages && editedData.pages.length > 1) {
-      return editedData.pages.map((page, index) => (
-        <div key={index} className="mb-8 border-b border-border pb-6 last:border-b-0">
-          <div className="flex items-center mb-3">
-            <div className="text-sm font-medium text-primary bg-primary/10 px-3 py-1 rounded-full">
-              Page {index + 1} sur {editedData.pages!.length}
-            </div>
-          </div>
-          <div 
-            className="whitespace-pre-wrap text-sm leading-relaxed prose prose-sm max-w-none"
-            style={{ 
-              direction: editedData.language === 'ar' ? 'rtl' : 'ltr',
-              textAlign: editedData.language === 'ar' ? 'right' : 'left'
-            }}
-          >
-            {formatContent(page)}
-          </div>
-        </div>
-      ));
-    }
-    
-    // Single page or combined content
-    return (
-      <div 
-        className="whitespace-pre-wrap prose prose-sm max-w-none"
-        style={{ 
-          direction: editedData.language === 'ar' ? 'rtl' : 'ltr',
-          textAlign: editedData.language === 'ar' ? 'right' : 'left'
-        }}
-      >
-        {formatContent(editedData.content)}
-      </div>
-    );
   };
 
   return (
@@ -118,9 +78,6 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
               </h2>
               <p className="text-sm text-muted-foreground">
                 Fichier source: {editedData.originalFileName}
-                {editedData.pageCount && editedData.pageCount > 1 && (
-                  <span className="ml-2 text-primary">• {editedData.pageCount} pages</span>
-                )}
               </p>
             </div>
           </div>
@@ -265,7 +222,9 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
                   </div>
                 )}
                 
-                {renderPageContent()}
+                <div className="whitespace-pre-wrap">
+                  {formatContent(editedData.content)}
+                </div>
               </div>
             ) : (
               <Textarea
