@@ -67,42 +67,41 @@ serve(async (req) => {
     let fileContent = '';
     let extractionSuccess = false;
     
-    // Handle PDF files with page-by-page OpenAI parser
+    // Handle PDF files with simple OCR
     if (file.type === 'application/pdf' || file.name.toLowerCase().endsWith('.pdf')) {
-      console.log('Processing PDF file with page-by-page OpenAI parser...');
+      console.log('Processing PDF file with OCR...');
       
-      // Call PDF page parser function
+      // Call simple PDF OCR function
       const pdfFormData = new FormData();
       pdfFormData.append('file', file);
-      pdfFormData.append('maxPages', '1'); // Traitement uniquement de la 1ère page
       
       try {
-        const { data: pdfData, error: pdfError } = await supabaseAdmin.functions.invoke('pdf-page-parser', {
+        const { data: pdfData, error: pdfError } = await supabaseAdmin.functions.invoke('pdf-ocr', {
           body: pdfFormData
         });
 
-        console.log('PDF page parser response:', pdfData);
+        console.log('PDF OCR response:', pdfData);
 
         if (pdfError) {
-          console.error('PDF parsing error:', pdfError);
+          console.error('PDF OCR error:', pdfError);
           fileContent = `Erreur PDF: ${pdfError.message}`;
-        } else if (pdfData?.success && pdfData?.fullText && pdfData.fullText.length > 20) {
-          fileContent = pdfData.fullText;
+        } else if (pdfData?.success && pdfData?.content && pdfData.content.length > 20) {
+          fileContent = pdfData.content;
           extractionSuccess = true;
-          console.log(`PDF extraction successful: ${pdfData.processedPages}/${pdfData.totalPages} pages, content length: ${fileContent.length}`);
+          console.log(`PDF OCR successful: content length: ${fileContent.length}`);
           
           // Store page-specific data for later use
           if (pdfData.pages && pdfData.pages.length > 0) {
             analysisData.page_contents = pdfData.pages;
-            analysisData.total_pages = pdfData.totalPages;
-            analysisData.processed_pages = pdfData.processedPages;
+            analysisData.total_pages = pdfData.totalPages || 1;
+            analysisData.processed_pages = pdfData.processedPages || 1;
           }
         } else {
-          console.warn('PDF parser returned insufficient content:', pdfData);
+          console.warn('PDF OCR returned insufficient content:', pdfData);
           fileContent = 'Contenu PDF non extractible - format nécessitant traitement manuel';
         }
       } catch (pdfException) {
-        console.error('PDF processing exception:', pdfException);
+        console.error('PDF OCR exception:', pdfException);
         fileContent = `Exception PDF: ${pdfException.message}`;
       }
     } else {
