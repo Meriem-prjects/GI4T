@@ -235,7 +235,24 @@ const BatchDocumentUploader: React.FC<BatchDocumentUploaderProps> = ({ onDocumen
       });
     }
 
-    setUploadFiles(prev => [...prev, ...newFiles]);
+    setUploadFiles(prev => {
+      const updated = [...prev, ...newFiles];
+      // Auto-process when configuration is already selected
+      if (selectedCategory && selectedDocumentType && newFiles.length > 0) {
+        const processedDocs: any[] = [];
+        (async () => {
+          setIsProcessing(true);
+          try {
+            for (const nf of newFiles) {
+              await processFile(nf, selectedCategory, selectedDocumentType, processedDocs);
+            }
+          } finally {
+            setIsProcessing(false);
+          }
+        })();
+      }
+      return updated;
+    });
   };
 
   const removeFile = (id: string) => {
@@ -508,25 +525,6 @@ const BatchDocumentUploader: React.FC<BatchDocumentUploaderProps> = ({ onDocumen
           </div>
         )}
 
-        {/* Process Button */}
-        {uploadFiles.length > 0 && (
-          <div className="mt-6 flex justify-center">
-            <Button
-              onClick={processAllFiles}
-              disabled={isProcessing || !selectedCategory || !selectedDocumentType}
-              className="w-full max-w-md"
-            >
-              {isProcessing ? (
-                <>
-                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                  Traitement en cours...
-                </>
-              ) : (
-                `Traiter tous les fichiers (${uploadFiles.filter(f => f.status === 'pending').length})`
-              )}
-            </Button>
-          </div>
-        )}
       </Card>
 
       {/* Configuration Section - Now Second */}
@@ -661,6 +659,26 @@ const BatchDocumentUploader: React.FC<BatchDocumentUploaderProps> = ({ onDocumen
               </Button>
             </div>
           </Card>
+        )}
+
+        {/* Process Button - placed after configuration */}
+        {uploadFiles.length > 0 && (
+          <div className="mt-6 flex justify-center">
+            <Button
+              onClick={processAllFiles}
+              disabled={isProcessing || !selectedCategory || !selectedDocumentType}
+              className="w-full max-w-md"
+            >
+              {isProcessing ? (
+                <>
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  Traitement en cours...
+                </>
+              ) : (
+                `Traiter tous les fichiers (${uploadFiles.filter(f => f.status === 'pending').length})`
+              )}
+            </Button>
+          </div>
         )}
       </Card>
     </div>

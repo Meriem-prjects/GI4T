@@ -5,6 +5,7 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.57.4';
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  'Access-Control-Allow-Methods': 'POST, OPTIONS',
 };
 
 // Initialize Supabase client for progress tracking
@@ -12,6 +13,16 @@ const supabaseAdmin = createClient(
   Deno.env.get('SUPABASE_URL') ?? '',
   Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
 );
+
+// Detect password-protected PDFs by scanning header for encryption flags
+function checkIfPasswordProtected(pdfBytes: Uint8Array): boolean {
+  try {
+    const head = new TextDecoder('latin1').decode(pdfBytes.slice(0, 2048));
+    return head.includes('/Encrypt') || head.includes('/Filter/Standard');
+  } catch {
+    return false;
+  }
+}
 
 interface PageContent {
   pageNumber: number;
