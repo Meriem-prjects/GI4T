@@ -8,9 +8,9 @@ const corsHeaders = {
 
 const openAIApiKey = Deno.env.get('OPENAI_API_KEY');
 
-// Configuration for page processing
-const MAX_PAGES_PER_BATCH = 5; // Process 5 pages at a time
-const MAX_TOTAL_PAGES = 20; // Maximum total pages to process
+// Configuration for page processing - optimized to avoid CPU timeout
+const MAX_PAGES_PER_BATCH = 3; // Reduced to 3 pages per batch
+const MAX_TOTAL_PAGES = 8; // Reduced maximum to 8 pages for faster processing
 
 interface PageContent {
   pageNumber: number;
@@ -31,7 +31,7 @@ interface ParseResult {
 async function extractPDFPagesText(pdfBuffer: ArrayBuffer, maxPages: number): Promise<{ pages: { pageNumber: number, rawText: string }[], totalPages: number }> {
   try {
     const uint8Array = new Uint8Array(pdfBuffer);
-    const pdfString = new TextDecoder('latin1', { fatal: false }).decode(uint8Array);
+    const pdfString = new TextDecoder('latin1', { fatal: false }).decode(uint8Array.slice(0, Math.min(uint8Array.length, 100000))); // Limit initial processing
     
     console.log('PDF size:', uint8Array.length, 'bytes');
     
@@ -244,9 +244,9 @@ async function processPagesInBatches(pageTexts: { pageNumber: number, rawText: s
       const batchResults = await Promise.all(batchPromises);
       results.push(...batchResults);
       
-      // Small delay between batches to respect rate limits
+      // Small delay between batches to respect rate limits and avoid CPU timeout
       if (i + MAX_PAGES_PER_BATCH < pageTexts.length) {
-        await new Promise(resolve => setTimeout(resolve, 2000));
+        await new Promise(resolve => setTimeout(resolve, 3000)); // Increased delay to 3 seconds
       }
     } catch (error) {
       console.error(`Error processing batch starting at page ${batch[0]?.pageNumber}:`, error);
@@ -279,7 +279,7 @@ serve(async (req) => {
 
     const formData = await req.formData();
     const file = formData.get('file') as File;
-    const maxPages = parseInt(formData.get('maxPages') as string) || MAX_TOTAL_PAGES;
+    const maxPages = parseInt(formData.get('maxPages') as string) || 8; // Default to 8 pages
 
     if (!file) {
       throw new Error('No file provided');

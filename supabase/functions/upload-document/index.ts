@@ -74,7 +74,7 @@ serve(async (req) => {
       // Call PDF page parser function
       const pdfFormData = new FormData();
       pdfFormData.append('file', file);
-      pdfFormData.append('maxPages', '15'); // Limit to 15 pages for performance
+      pdfFormData.append('maxPages', '8'); // Reduced to 8 pages for better performance
       
       try {
         const { data: pdfData, error: pdfError } = await supabaseAdmin.functions.invoke('pdf-page-parser', {

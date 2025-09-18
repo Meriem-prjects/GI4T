@@ -87,68 +87,101 @@ export type Database = {
       }
       documents: {
         Row: {
+          case_numbers: string[] | null
           category_id: string | null
           content: string
           created_at: string
+          dates: string[] | null
+          document_type: string | null
           document_type_id: string | null
+          entities: string[] | null
           file_size: number | null
           file_url: string | null
           id: string
+          jurisdiction: string | null
           keywords: string[] | null
           keywords_ar: string[] | null
           language: string | null
+          legal_domains: string[] | null
+          legal_references: string[] | null
+          main_topics: string[] | null
           original_filename: string
+          page_contents: Json | null
           page_count: number | null
           pdf_url: string | null
+          processed_pages: number | null
           status: string | null
           summary: string | null
           summary_ar: string | null
           title: string
           title_ar: string | null
+          total_pages: number | null
           updated_at: string
           user_id: string | null
         }
         Insert: {
+          case_numbers?: string[] | null
           category_id?: string | null
           content: string
           created_at?: string
+          dates?: string[] | null
+          document_type?: string | null
           document_type_id?: string | null
+          entities?: string[] | null
           file_size?: number | null
           file_url?: string | null
           id?: string
+          jurisdiction?: string | null
           keywords?: string[] | null
           keywords_ar?: string[] | null
           language?: string | null
+          legal_domains?: string[] | null
+          legal_references?: string[] | null
+          main_topics?: string[] | null
           original_filename: string
+          page_contents?: Json | null
           page_count?: number | null
           pdf_url?: string | null
+          processed_pages?: number | null
           status?: string | null
           summary?: string | null
           summary_ar?: string | null
           title: string
           title_ar?: string | null
+          total_pages?: number | null
           updated_at?: string
           user_id?: string | null
         }
         Update: {
+          case_numbers?: string[] | null
           category_id?: string | null
           content?: string
           created_at?: string
+          dates?: string[] | null
+          document_type?: string | null
           document_type_id?: string | null
+          entities?: string[] | null
           file_size?: number | null
           file_url?: string | null
           id?: string
+          jurisdiction?: string | null
           keywords?: string[] | null
           keywords_ar?: string[] | null
           language?: string | null
+          legal_domains?: string[] | null
+          legal_references?: string[] | null
+          main_topics?: string[] | null
           original_filename?: string
+          page_contents?: Json | null
           page_count?: number | null
           pdf_url?: string | null
+          processed_pages?: number | null
           status?: string | null
           summary?: string | null
           summary_ar?: string | null
           title?: string
           title_ar?: string | null
+          total_pages?: number | null
           updated_at?: string
           user_id?: string | null
         }
