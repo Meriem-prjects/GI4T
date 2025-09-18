@@ -15,7 +15,10 @@ function sanitizeFilename(filename: string): string {
   const extension = lastDotIndex !== -1 ? filename.slice(lastDotIndex) : '';
   
   // Replace special characters with underscores and remove consecutive underscores
+  // Also handle Unicode characters properly
   const sanitizedName = name
+    .normalize('NFD') // Normalize Unicode
+    .replace(/[\u0300-\u036f]/g, '') // Remove diacritics
     .replace(/[^a-zA-Z0-9\-_]/g, '_')
     .replace(/_+/g, '_')
     .replace(/^_|_$/g, '');
@@ -159,11 +162,26 @@ serve(async (req) => {
         
         // Trigger PDF OCR processing asynchronously (don't wait for completion)
         console.log('Triggering PDF OCR batch processing asynchronously...');
-        supabaseAdmin.functions.invoke('pdf-ocr-batch', {
-          body: pdfFormData
-        }).catch(error => {
-          console.error('Background PDF OCR failed:', error);
-        });
+        
+        // Use EdgeRuntime.waitUntil for proper background processing
+        try {
+          EdgeRuntime.waitUntil(
+            supabaseAdmin.functions.invoke('pdf-ocr-batch', {
+              body: pdfFormData
+            }).then(() => {
+              console.log('Background PDF OCR completed successfully');
+            }).catch(error => {
+              console.error('Background PDF OCR failed:', error);
+            })
+          );
+        } catch (e) {
+          // Fallback if EdgeRuntime.waitUntil is not available
+          supabaseAdmin.functions.invoke('pdf-ocr-batch', {
+            body: pdfFormData
+          }).catch(error => {
+            console.error('Background PDF OCR failed:', error);
+          });
+        }
         
         // Set default values for immediate return
         fileContent = 'Document PDF en cours de traitement...';
