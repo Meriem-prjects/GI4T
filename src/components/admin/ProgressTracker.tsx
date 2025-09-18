@@ -22,6 +22,7 @@ interface ProgressTrackerProps {
   fileName: string;
   onComplete?: (result: any) => void;
   onError?: (error: string) => void;
+  onCancel?: () => void;
   pdfUrl?: string; // For resume functionality
 }
 
@@ -30,6 +31,7 @@ const ProgressTracker: React.FC<ProgressTrackerProps> = ({
   fileName,
   onComplete,
   onError,
+  onCancel,
   pdfUrl
 }) => {
   const [job, setJob] = useState<ProcessingJob | null>(null);
@@ -38,6 +40,7 @@ const ProgressTracker: React.FC<ProgressTrackerProps> = ({
   const [lastProgressUpdate, setLastProgressUpdate] = useState<number>(Date.now());
   const [showResumeButton, setShowResumeButton] = useState(false);
   const [isResuming, setIsResuming] = useState(false);
+  const [isCancelling, setIsCancelling] = useState(false);
 
   useEffect(() => {
     if (!jobId) return;
@@ -206,6 +209,31 @@ const ProgressTracker: React.FC<ProgressTrackerProps> = ({
     }
   };
 
+  // Cancel processing
+  const handleCancel = async () => {
+    if (!jobId || isCancelling) return;
+
+    setIsCancelling(true);
+
+    try {
+      // Update job status to cancelled in database
+      const { error } = await supabase
+        .from('processing_jobs')
+        .update({ status: 'cancelled', error_message: 'Cancelled by user' })
+        .eq('id', jobId);
+
+      if (error) {
+        console.error('Cancel failed:', error);
+      } else {
+        onCancel?.();
+      }
+    } catch (error) {
+      console.error('Cancel error:', error);
+    } finally {
+      setIsCancelling(false);
+    }
+  };
+
   const getStepDescription = (step: string | null): string => {
     if (!step) return 'Initialisation...';
     
@@ -277,12 +305,22 @@ const ProgressTracker: React.FC<ProgressTrackerProps> = ({
   if (!jobId) {
     return (
       <div className="flex items-center space-x-3 p-3 border rounded-lg">
-        <FileText className="h-4 w-4 text-gray-500" />
+        <Loader2 className="h-4 w-4 animate-spin text-blue-600" />
         <div className="flex-1 min-w-0">
           <p className="text-sm font-medium truncate">{fileName}</p>
-          <p className="text-xs text-muted-foreground">En attente...</p>
+          <p className="text-xs text-muted-foreground">Initialisation du traitement...</p>
         </div>
-        <Badge variant="outline">Pas de suivi</Badge>
+        <div className="flex gap-2">
+          <Badge variant="secondary">En cours</Badge>
+          {onCancel && (
+            <button
+              onClick={onCancel}
+              className="px-2 py-1 text-xs text-red-600 hover:text-red-800 hover:bg-red-50 rounded"
+            >
+              Annuler
+            </button>
+          )}
+        </div>
       </div>
     );
   }
@@ -313,44 +351,64 @@ const ProgressTracker: React.FC<ProgressTrackerProps> = ({
 
       {job && job.status === 'processing' && (
         <div className="px-3 space-y-2">
-          <div className="flex justify-between text-xs text-muted-foreground mb-1">
-            <span>Progression</span>
-            <span>{job.progress}%</span>
-          </div>
-          <Progress value={job.progress} className="h-2" />
-          
           {(() => {
             const savedInfo = getSavedPagesInfo();
             if (savedInfo && savedInfo.total > 0) {
+              const percentage = Math.round((savedInfo.saved / savedInfo.total) * 100);
               return (
-                <div className="flex justify-between text-xs text-muted-foreground">
-                  <span>Pages sauvegardées</span>
-                  <span className="font-medium text-green-600">{savedInfo.saved}/{savedInfo.total}</span>
-                </div>
+                <>
+                  <div className="flex justify-between text-xs text-muted-foreground mb-1">
+                    <span>Page {savedInfo.saved}/{savedInfo.total}</span>
+                    <span>{percentage}%</span>
+                  </div>
+                  <Progress value={percentage} className="h-2" />
+                </>
               );
             }
             if (job.processed_pages && job.total_pages) {
+              const percentage = Math.round((job.processed_pages / job.total_pages) * 100);
               return (
-                <div className="flex justify-between text-xs text-muted-foreground">
-                  <span>Pages traitées</span>
-                  <span>{job.processed_pages}/{job.total_pages}</span>
-                </div>
+                <>
+                  <div className="flex justify-between text-xs text-muted-foreground mb-1">
+                    <span>Page {job.processed_pages}/{job.total_pages}</span>
+                    <span>{percentage}%</span>
+                  </div>
+                  <Progress value={percentage} className="h-2" />
+                </>
               );
             }
-            return null;
+            // Fallback to basic progress
+            return (
+              <>
+                <div className="flex justify-between text-xs text-muted-foreground mb-1">
+                  <span>Progression</span>
+                  <span>{job.progress}%</span>
+                </div>
+                <Progress value={job.progress} className="h-2" />
+              </>
+            );
           })()}
 
-          {showResumeButton && pdfUrl && (
-            <div className="pt-2">
+          <div className="flex gap-2 pt-2">
+            {showResumeButton && pdfUrl && (
               <button
                 onClick={handleResume}
                 disabled={isResuming}
-                className="w-full px-3 py-1.5 text-xs bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="flex-1 px-3 py-1.5 text-xs bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {isResuming ? 'Reprise en cours...' : 'Reprendre le traitement'}
               </button>
-            </div>
-          )}
+            )}
+            {onCancel && (
+              <button
+                onClick={handleCancel}
+                disabled={isCancelling}
+                className="px-3 py-1.5 text-xs text-red-600 hover:text-red-800 hover:bg-red-50 rounded disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {isCancelling ? 'Annulation...' : 'Annuler'}
+              </button>
+            )}
+          </div>
         </div>
       )}
 

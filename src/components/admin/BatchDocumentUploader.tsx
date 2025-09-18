@@ -354,9 +354,9 @@ const BatchDocumentUploader: React.FC<BatchDocumentUploaderProps> = ({ onDocumen
   };
 
   const processFile = async (uploadFile: UploadFile, categoryId: string, documentTypeId: string, processedDocuments: any[]) => {
-    // Update status to processing
+    // Update status to processing immediately
     setUploadFiles(prev => prev.map(f => 
-      f.id === uploadFile.id ? { ...f, status: 'processing', progress: 10 } : f
+      f.id === uploadFile.id ? { ...f, status: 'processing' } : f
     ));
 
     // Use upload-document function with progress tracking
@@ -364,11 +364,6 @@ const BatchDocumentUploader: React.FC<BatchDocumentUploaderProps> = ({ onDocumen
     formData.append('file', uploadFile.file);
     formData.append('categoryId', categoryId);
     formData.append('documentTypeId', documentTypeId);
-
-    // Update progress
-    setUploadFiles(prev => prev.map(f => 
-      f.id === uploadFile.id ? { ...f, progress: 30 } : f
-    ));
 
     const { data: uploadResult, error: uploadError } = await supabase.functions.invoke('upload-document', {
       body: formData
@@ -386,12 +381,11 @@ const BatchDocumentUploader: React.FC<BatchDocumentUploaderProps> = ({ onDocumen
     const jobId = uploadResult.jobId;
     
     if (jobId) {
-      // Update file with job ID for progress tracking
+      // Update file with job ID for progress tracking - background processing will continue
       setUploadFiles(prev => prev.map(f => 
         f.id === uploadFile.id ? { 
           ...f, 
           jobId: jobId,
-          progress: 40,
           status: 'processing'
         } : f
       ));
@@ -401,7 +395,6 @@ const BatchDocumentUploader: React.FC<BatchDocumentUploaderProps> = ({ onDocumen
         f.id === uploadFile.id ? { 
           ...f, 
           status: 'completed', 
-          progress: 100, 
           result: uploadResult.document
         } : f
       ));
@@ -497,18 +490,8 @@ const BatchDocumentUploader: React.FC<BatchDocumentUploaderProps> = ({ onDocumen
                   </Button>
                 </div>
                 
-                {uploadFile.status === 'processing' && !uploadFile.jobId && (
-                  <div className="space-y-2">
-                    <Progress value={uploadFile.progress} className="h-2" />
-                    <div className="flex justify-between text-xs text-muted-foreground">
-                      <span>Progression</span>
-                      <span>{uploadFile.progress}%</span>
-                    </div>
-                  </div>
-                )}
-
-                {/* Progress Tracker for files with job ID */}
-                {uploadFile.jobId && uploadFile.status === 'processing' && (
+                {/* Unified Progress Tracker for all processing files */}
+                {uploadFile.status === 'processing' && (
                   <div className="mt-3">
                      <ProgressTracker 
                        jobId={uploadFile.jobId}
@@ -518,6 +501,7 @@ const BatchDocumentUploader: React.FC<BatchDocumentUploaderProps> = ({ onDocumen
                        onError={(error) => setUploadFiles(prev => prev.map(f => 
                          f.id === uploadFile.id ? { ...f, status: 'error', error } : f
                        ))}
+                       onCancel={() => removeFile(uploadFile.id)}
                      />
                   </div>
                 )}
