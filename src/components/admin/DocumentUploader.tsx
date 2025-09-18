@@ -4,6 +4,10 @@ import { Card } from '@/components/ui/card';
 import { Upload, FileText, Loader2, X } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
 import { supabase } from '@/integrations/supabase/client';
+import * as pdfjsLib from 'pdfjs-dist';
+
+// Configure PDF.js worker
+pdfjsLib.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.js`;
 
 interface DocumentUploaderProps {
   onDocumentProcessed: (data: {
@@ -62,14 +66,51 @@ const DocumentUploader: React.FC<DocumentUploaderProps> = ({ onDocumentProcessed
       if (file.type === 'text/plain') {
         extractedContent = await file.text();
         pages = [extractedContent];
-      } else {
-        // For PDF and Word files, use the upload-document function
+      } else if (file.type === 'application/pdf') {
+        // Client-side PDF extraction with pdfjs-dist
         try {
-          // Create FormData to upload file
+          const fileReader = new FileReader();
+          
+          const pdfData = await new Promise<ArrayBuffer>((resolve, reject) => {
+            fileReader.onload = () => resolve(fileReader.result as ArrayBuffer);
+            fileReader.onerror = reject;
+            fileReader.readAsArrayBuffer(file);
+          });
+
+          const typedArray = new Uint8Array(pdfData);
+          const pdf = await pdfjsLib.getDocument(typedArray).promise;
+          pageCount = pdf.numPages;
+          
+          console.log('PDF loaded successfully. Pages:', pageCount);
+          
+          // Extract text from each page
+          for (let i = 1; i <= pdf.numPages; i++) {
+            const page = await pdf.getPage(i);
+            const textContent = await page.getTextContent();
+            const pageText = textContent.items
+              .map((item: any) => item.str)
+              .join(' ')
+              .trim();
+            
+            if (pageText) {
+              pages.push(pageText);
+              extractedContent += pageText + '\n\n';
+            }
+          }
+          
+          extractedContent = extractedContent.trim();
+          console.log('PDF extraction completed. Content length:', extractedContent.length, 'Pages:', pages.length);
+          
+        } catch (error) {
+          console.error('PDF extraction error:', error);
+          throw new Error('Erreur lors de l\'extraction du PDF. Veuillez vérifier que le fichier n\'est pas corrompu.');
+        }
+      } else {
+        // For Word files, use the upload-document function as fallback
+        try {
           const formData = new FormData();
           formData.append('file', file);
           
-          // Upload file using Supabase function
           const { data: uploadData, error: uploadError } = await supabase.functions.invoke('upload-document', {
             body: formData
           });
@@ -79,45 +120,16 @@ const DocumentUploader: React.FC<DocumentUploaderProps> = ({ onDocumentProcessed
             extractedContent = parseResult.document?.content || '';
             pages = parseResult.pages || [extractedContent];
             pageCount = parseResult.pageCount || parseResult.document?.page_count || pages.length;
-            console.log('Document processed successfully. Pages:', pages.length, 'Content length:', extractedContent.length);
             
-            // Make sure we have valid pages
             if (pages.length === 0 && extractedContent) {
               pages = [extractedContent];
             }
           } else {
-            console.error('Upload error:', uploadError);
-            throw new Error(uploadError?.message || 'Erreur lors du traitement du document');
+            throw new Error(uploadError?.message || 'Erreur lors du traitement du document Word');
           }
         } catch (error) {
-          console.error('Error processing document:', error);
-          // Enhanced fallback with sample Arabic legal content
-          extractedContent = `المستند: ${file.name}
-
-النص القانوني حول الحق النقابي:
-
-إن الحق في التنظيم النقابي حق أساسي من حقوق الإنسان، مكفول بموجب الدساتير الوطنية والمواثيق الدولية. ويشمل هذا الحق حرية تكوين النقابات والانضمام إليها، وحق التفاوض الجماعي، وحق الإضراب في إطار القانون.
-
-الكلمات المفاتيح الأساسية:
-- استمرارية المرفق العام
-- إضراب  
-- الإعلان العالمي لحقوق الإنسان
-- اقتطاع من الأجر
-- تسخير
-- تعددية نقابية
-- حالة الطوارئ
-- حق التفاوض
-- العهد الدولي الخاص بالحقوق الاقتصادية والاجتماعية والثقافية
-- مجلة الشغل
-- مرفق عام
-- مساواة
-- معلوم الانخراط
-- ممثل نقابي
-- منشور
-- نقابة
-- وظيفة عمومية`;
-          pages = [extractedContent];
-          pageCount = 1;
+          console.error('Word document processing error:', error);
+          throw new Error('Erreur lors du traitement du document Word. Veuillez réessayer.');
         }
       }
 
