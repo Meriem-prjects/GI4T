@@ -456,7 +456,7 @@ async function processPdfWithOCR(pdfBuffer: ArrayBuffer, openaiApiKey: string, j
 }
 
 serve(async (req) => {
-  console.log('PDF OCR batch function called');
+  console.log('PDF OCR batch function called - v2.0 with fixed fallback');
 
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
