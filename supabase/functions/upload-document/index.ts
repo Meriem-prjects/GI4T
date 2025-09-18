@@ -150,14 +150,32 @@ serve(async (req) => {
     }
 
     // Step 4: Save to database
+    // Clean and sanitize content to prevent encoding issues
+    const sanitizeContent = (content: string) => {
+      if (!content) return '';
+      // Remove any problematic Unicode escape sequences and normalize
+      return content
+        .replace(/\\u[\dA-Fa-f]{4}/g, '') // Remove literal \u escape sequences
+        .replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g, '') // Remove control characters
+        .trim();
+    };
+
+    const sanitizeArray = (arr: any[]): string[] => {
+      if (!Array.isArray(arr)) return [];
+      return arr
+        .filter(item => item && typeof item === 'string')
+        .map(item => sanitizeContent(item))
+        .filter(item => item.length > 0);
+    };
+
     const documentData = {
-      title: analysisResult?.title || file.name,
-      title_ar: analysisResult?.title_ar || null,
-      summary: analysisResult?.summary || '',
-      summary_ar: analysisResult?.summary_ar || null,
-      content: extractedContent,
-      keywords: analysisResult?.keywords || [],
-      keywords_ar: analysisResult?.keywords_ar || [],
+      title: sanitizeContent(analysisResult?.title || file.name),
+      title_ar: analysisResult?.title_ar ? sanitizeContent(analysisResult.title_ar) : null,
+      summary: sanitizeContent(analysisResult?.summary || ''),
+      summary_ar: analysisResult?.summary_ar ? sanitizeContent(analysisResult.summary_ar) : null,
+      content: sanitizeContent(extractedContent),
+      keywords: sanitizeArray(analysisResult?.keywords || []),
+      keywords_ar: sanitizeArray(analysisResult?.keywords_ar || []),
       language: analysisResult?.language || 'ar',
       category_id: categoryId || null,
       document_type_id: documentTypeId || null,
@@ -167,14 +185,14 @@ serve(async (req) => {
       page_count: pageCount,
       status: 'processed',
       // Enhanced metadata fields
-      document_type: analysisResult?.document_type || null,
-      main_topics: analysisResult?.main_topics || [],
-      legal_references: analysisResult?.legal_references || [],
-      entities: analysisResult?.entities || [],
-      dates: analysisResult?.dates || [],
-      jurisdiction: analysisResult?.jurisdiction || null,
-      case_numbers: analysisResult?.case_numbers || [],
-      legal_domains: analysisResult?.legal_domains || []
+      document_type: analysisResult?.document_type ? sanitizeContent(analysisResult.document_type) : null,
+      main_topics: sanitizeArray(analysisResult?.main_topics || []),
+      legal_references: sanitizeArray(analysisResult?.legal_references || []),
+      entities: sanitizeArray(analysisResult?.entities || []),
+      dates: sanitizeArray(analysisResult?.dates || []),
+      jurisdiction: analysisResult?.jurisdiction ? sanitizeContent(analysisResult.jurisdiction) : null,
+      case_numbers: sanitizeArray(analysisResult?.case_numbers || []),
+      legal_domains: sanitizeArray(analysisResult?.legal_domains || [])
     };
 
     console.log('Saving document to database...');
@@ -196,6 +214,7 @@ serve(async (req) => {
       success: true,
       document: docData,
       pages: pages,
+      pageCount: pageCount,
       message: 'Document uploaded and processed successfully'
     }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },

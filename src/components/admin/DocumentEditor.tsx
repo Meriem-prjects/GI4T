@@ -68,22 +68,38 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
   };
 
   const renderPageContent = () => {
+    console.log('Rendering pages:', editedData.pages?.length, 'Page count:', editedData.pageCount);
+    
     if (editedData.pages && editedData.pages.length > 1) {
       return editedData.pages.map((page, index) => (
-        <div key={index} className="mb-8 border-b border-border pb-6">
+        <div key={index} className="mb-8 border-b border-border pb-6 last:border-b-0">
           <div className="flex items-center mb-3">
-            <div className="text-sm font-medium text-primary bg-primary/10 px-2 py-1 rounded">
-              Page {index + 1}
+            <div className="text-sm font-medium text-primary bg-primary/10 px-3 py-1 rounded-full">
+              Page {index + 1} sur {editedData.pages!.length}
             </div>
           </div>
-          <div className="whitespace-pre-wrap text-sm leading-relaxed">
+          <div 
+            className="whitespace-pre-wrap text-sm leading-relaxed prose prose-sm max-w-none"
+            style={{ 
+              direction: editedData.language === 'ar' ? 'rtl' : 'ltr',
+              textAlign: editedData.language === 'ar' ? 'right' : 'left'
+            }}
+          >
             {formatContent(page)}
           </div>
         </div>
       ));
     }
+    
+    // Single page or combined content
     return (
-      <div className="whitespace-pre-wrap">
+      <div 
+        className="whitespace-pre-wrap prose prose-sm max-w-none"
+        style={{ 
+          direction: editedData.language === 'ar' ? 'rtl' : 'ltr',
+          textAlign: editedData.language === 'ar' ? 'right' : 'left'
+        }}
+      >
         {formatContent(editedData.content)}
       </div>
     );

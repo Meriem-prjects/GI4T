@@ -78,8 +78,13 @@ const DocumentUploader: React.FC<DocumentUploaderProps> = ({ onDocumentProcessed
             const parseResult = uploadData;
             extractedContent = parseResult.document?.content || '';
             pages = parseResult.pages || [extractedContent];
-            pageCount = parseResult.document?.page_count || pages.length;
-            console.log('Document processed successfully. Pages:', pages.length);
+            pageCount = parseResult.pageCount || parseResult.document?.page_count || pages.length;
+            console.log('Document processed successfully. Pages:', pages.length, 'Content length:', extractedContent.length);
+            
+            // Make sure we have valid pages
+            if (pages.length === 0 && extractedContent) {
+              pages = [extractedContent];
+            }
           } else {
             console.error('Upload error:', uploadError);
             throw new Error(uploadError?.message || 'Erreur lors du traitement du document');
