@@ -9,14 +9,20 @@ import { Progress } from '@/components/ui/progress';
 import { Upload, FileText, X, Plus, Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
+import PdfToImages from './PdfToImages';
 
 interface UploadFile {
   file: File;
   id: string;
-  status: 'pending' | 'processing' | 'completed' | 'error';
+  status: 'pending' | 'converting' | 'processing' | 'completed' | 'error';
   progress: number;
   result?: any;
   error?: string;
+  images?: string[];
+  isPdf?: boolean;
+  onPdfComplete?: (images: string[]) => void;
+  onPdfError?: (error: string) => void;
+  onPdfProgress?: (progress: number) => void;
 }
 
 interface Category {
@@ -228,7 +234,8 @@ const BatchDocumentUploader: React.FC<BatchDocumentUploaderProps> = ({ onDocumen
         file,
         id: Math.random().toString(36).substring(7),
         status: 'pending',
-        progress: 0
+        progress: 0,
+        isPdf: file.type === 'application/pdf'
       });
     }
 
@@ -256,52 +263,14 @@ const BatchDocumentUploader: React.FC<BatchDocumentUploaderProps> = ({ onDocumen
       for (const uploadFile of uploadFiles) {
         if (uploadFile.status !== 'pending') continue;
 
-        // Update status to processing
-        setUploadFiles(prev => prev.map(f => 
-          f.id === uploadFile.id ? { ...f, status: 'processing', progress: 10 } : f
-        ));
-
         try {
-          // Use new upload-document function for processing
-          const formData = new FormData();
-          formData.append('file', uploadFile.file);
-          formData.append('categoryId', selectedCategory);
-          formData.append('documentTypeId', selectedDocumentType);
-
-          // Update progress
-          setUploadFiles(prev => prev.map(f => 
-            f.id === uploadFile.id ? { ...f, progress: 30 } : f
-          ));
-
-          const { data: uploadResult, error: uploadError } = await supabase.functions.invoke('upload-document', {
-            body: formData
-          });
-
-          if (uploadError) {
-            throw new Error(`Upload failed: ${uploadError.message}`);
+          if (uploadFile.isPdf) {
+            // Traitement PDF : conversion en images d'abord
+            await processPdfFile(uploadFile, selectedCategory, selectedDocumentType, processedDocuments);
+          } else {
+            // Traitement normal pour les autres fichiers
+            await processRegularFile(uploadFile, selectedCategory, selectedDocumentType, processedDocuments);
           }
-
-          if (!uploadResult.success) {
-            throw new Error(uploadResult.error || 'Upload failed');
-          }
-
-          // Update progress
-          setUploadFiles(prev => prev.map(f => 
-            f.id === uploadFile.id ? { ...f, progress: 90 } : f
-          ));
-
-          // Update status to completed
-          setUploadFiles(prev => prev.map(f => 
-            f.id === uploadFile.id ? { 
-              ...f, 
-              status: 'completed', 
-              progress: 100, 
-              result: uploadResult.document
-            } : f
-          ));
-
-          processedDocuments.push(uploadResult.document);
-
         } catch (error) {
           console.error(`Error processing ${uploadFile.file.name}:`, error);
           setUploadFiles(prev => prev.map(f => 
@@ -335,8 +304,184 @@ const BatchDocumentUploader: React.FC<BatchDocumentUploaderProps> = ({ onDocumen
     return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
   };
 
+  const processPdfFile = async (uploadFile: UploadFile, categoryId: string, documentTypeId: string, processedDocuments: any[]) => {
+    // Étape 1: Conversion PDF → Images
+    setUploadFiles(prev => prev.map(f => 
+      f.id === uploadFile.id ? { ...f, status: 'converting', progress: 5 } : f
+    ));
+
+    return new Promise<void>((resolve, reject) => {
+      const handlePdfConversion = async (images: string[]) => {
+        try {
+          // Sauvegarder les images dans l'uploadFile
+          setUploadFiles(prev => prev.map(f => 
+            f.id === uploadFile.id ? { ...f, images, progress: 20 } : f
+          ));
+
+          // Étape 2: OCR de chaque image
+          setUploadFiles(prev => prev.map(f => 
+            f.id === uploadFile.id ? { ...f, status: 'processing', progress: 25 } : f
+          ));
+
+          const ocrResults = [];
+          let combinedContent = '';
+          let detectedLanguage = 'fr';
+
+          for (let i = 0; i < images.length; i++) {
+            const image = images[i];
+            
+            // Update progress for current page
+            const pageProgress = 25 + ((i / images.length) * 60);
+            setUploadFiles(prev => prev.map(f => 
+              f.id === uploadFile.id ? { ...f, progress: pageProgress } : f
+            ));
+
+            try {
+              // Convertir base64 en blob pour l'OCR
+              const response = await fetch(image);
+              const blob = await response.blob();
+              
+              const formData = new FormData();
+              formData.append('file', blob, `page-${i + 1}.png`);
+
+              const { data: ocrResult, error: ocrError } = await supabase.functions.invoke('image-ocr', {
+                body: formData
+              });
+
+              if (ocrError) {
+                console.error(`OCR error for page ${i + 1}:`, ocrError);
+                continue;
+              }
+
+              if (ocrResult.success) {
+                ocrResults.push({
+                  page: i + 1,
+                  content: ocrResult.text,
+                  language: ocrResult.language,
+                  confidence: ocrResult.confidence
+                });
+                
+                combinedContent += `\n\n--- Page ${i + 1} ---\n${ocrResult.text}`;
+                
+                if (i === 0) {
+                  detectedLanguage = ocrResult.language;
+                }
+              }
+            } catch (pageError) {
+              console.error(`Error processing page ${i + 1}:`, pageError);
+            }
+          }
+
+          // Étape 3: Créer le document final
+          setUploadFiles(prev => prev.map(f => 
+            f.id === uploadFile.id ? { ...f, progress: 90 } : f
+          ));
+
+          const documentData = {
+            title: uploadFile.file.name.replace('.pdf', ''),
+            content: combinedContent.trim(),
+            summary: combinedContent.substring(0, 500) + '...',
+            keywords: [],
+            language: detectedLanguage,
+            originalFileName: uploadFile.file.name,
+            category_id: categoryId,
+            document_type_id: documentTypeId,
+            fullContent: combinedContent.trim(),
+            page_contents: ocrResults
+          };
+
+          // Update status to completed
+          setUploadFiles(prev => prev.map(f => 
+            f.id === uploadFile.id ? { 
+              ...f, 
+              status: 'completed', 
+              progress: 100, 
+              result: documentData
+            } : f
+          ));
+
+          processedDocuments.push(documentData);
+          resolve();
+
+        } catch (error) {
+          reject(error);
+        }
+      };
+
+      const handlePdfError = (error: string) => {
+        reject(new Error(error));
+      };
+
+      const handlePdfProgress = (progress: number) => {
+        const adjustedProgress = 5 + (progress * 0.15); // 5% to 20%
+        setUploadFiles(prev => prev.map(f => 
+          f.id === uploadFile.id ? { ...f, progress: adjustedProgress } : f
+        ));
+      };
+
+      // Déclencher la conversion (le composant PdfToImages sera rendu dans l'UI)
+      setUploadFiles(prev => prev.map(f => 
+        f.id === uploadFile.id ? { 
+          ...f, 
+          onPdfComplete: handlePdfConversion,
+          onPdfError: handlePdfError,
+          onPdfProgress: handlePdfProgress
+        } : f
+      ));
+    });
+  };
+
+  const processRegularFile = async (uploadFile: UploadFile, categoryId: string, documentTypeId: string, processedDocuments: any[]) => {
+    // Update status to processing
+    setUploadFiles(prev => prev.map(f => 
+      f.id === uploadFile.id ? { ...f, status: 'processing', progress: 10 } : f
+    ));
+
+    // Use upload-document function for regular processing
+    const formData = new FormData();
+    formData.append('file', uploadFile.file);
+    formData.append('categoryId', categoryId);
+    formData.append('documentTypeId', documentTypeId);
+
+    // Update progress
+    setUploadFiles(prev => prev.map(f => 
+      f.id === uploadFile.id ? { ...f, progress: 30 } : f
+    ));
+
+    const { data: uploadResult, error: uploadError } = await supabase.functions.invoke('upload-document', {
+      body: formData
+    });
+
+    if (uploadError) {
+      throw new Error(`Upload failed: ${uploadError.message}`);
+    }
+
+    if (!uploadResult.success) {
+      throw new Error(uploadResult.error || 'Upload failed');
+    }
+
+    // Update progress
+    setUploadFiles(prev => prev.map(f => 
+      f.id === uploadFile.id ? { ...f, progress: 90 } : f
+    ));
+
+    // Update status to completed
+    setUploadFiles(prev => prev.map(f => 
+      f.id === uploadFile.id ? { 
+        ...f, 
+        status: 'completed', 
+        progress: 100, 
+        result: uploadResult.document
+      } : f
+    ));
+
+    processedDocuments.push(uploadResult.document);
+  };
+
   const getStatusIcon = (status: string) => {
     switch (status) {
+      case 'converting':
+        return <Loader2 className="h-4 w-4 animate-spin text-blue-500" />;
       case 'processing':
         return <Loader2 className="h-4 w-4 animate-spin" />;
       case 'completed':
@@ -345,6 +490,21 @@ const BatchDocumentUploader: React.FC<BatchDocumentUploaderProps> = ({ onDocumen
         return <div className="h-4 w-4 rounded-full bg-red-500" />;
       default:
         return <FileText className="h-4 w-4" />;
+    }
+  };
+
+  const getStatusText = (status: string) => {
+    switch (status) {
+      case 'converting':
+        return 'Conversion PDF...';
+      case 'processing':
+        return 'Traitement OCR...';
+      case 'completed':
+        return 'Terminé';
+      case 'error':
+        return 'Erreur';
+      default:
+        return 'En attente';
     }
   };
 
@@ -500,42 +660,52 @@ const BatchDocumentUploader: React.FC<BatchDocumentUploaderProps> = ({ onDocumen
 
           <div className="space-y-3">
             {uploadFiles.map((uploadFile) => (
-              <div key={uploadFile.id} className="flex items-center justify-between p-3 border rounded-lg">
-                <div className="flex items-center space-x-3 flex-1">
-                  {getStatusIcon(uploadFile.status)}
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium truncate">
-                      {uploadFile.file.name}
-                    </p>
-                    <p className="text-xs text-muted-foreground">
-                      {formatFileSize(uploadFile.file.size)}
-                    </p>
-                    {uploadFile.status === 'processing' && (
-                      <Progress value={uploadFile.progress} className="w-full mt-2" />
-                    )}
-                    {uploadFile.error && (
-                      <p className="text-xs text-red-500 mt-1">{uploadFile.error}</p>
-                    )}
+              <div key={uploadFile.id} className="space-y-3">
+                <div className="flex items-center justify-between p-3 border rounded-lg">
+                  <div className="flex items-center space-x-3 flex-1">
+                    {getStatusIcon(uploadFile.status)}
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium truncate">
+                        {uploadFile.file.name}
+                      </p>
+                      <p className="text-xs text-muted-foreground">
+                        {formatFileSize(uploadFile.file.size)}
+                      </p>
+                      {(uploadFile.status === 'processing' || uploadFile.status === 'converting') && (
+                        <Progress value={uploadFile.progress} className="w-full mt-2" />
+                      )}
+                      {uploadFile.error && (
+                        <p className="text-xs text-red-500 mt-1">{uploadFile.error}</p>
+                      )}
+                    </div>
+                    <Badge variant={
+                      uploadFile.status === 'completed' ? 'default' :
+                      uploadFile.status === 'error' ? 'destructive' :
+                      (uploadFile.status === 'processing' || uploadFile.status === 'converting') ? 'secondary' : 'outline'
+                    }>
+                      {getStatusText(uploadFile.status)}
+                    </Badge>
                   </div>
-                  <Badge variant={
-                    uploadFile.status === 'completed' ? 'default' :
-                    uploadFile.status === 'error' ? 'destructive' :
-                    uploadFile.status === 'processing' ? 'secondary' : 'outline'
-                  }>
-                    {uploadFile.status === 'pending' ? 'En attente' :
-                     uploadFile.status === 'processing' ? 'Traitement' :
-                     uploadFile.status === 'completed' ? 'Terminé' : 'Erreur'}
-                  </Badge>
+                  
+                  {uploadFile.status === 'pending' && (
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => removeFile(uploadFile.id)}
+                    >
+                      <X className="h-4 w-4" />
+                    </Button>
+                  )}
                 </div>
-                
-                {uploadFile.status === 'pending' && (
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => removeFile(uploadFile.id)}
-                  >
-                    <X className="h-4 w-4" />
-                  </Button>
+
+                {/* PDF Converter Component */}
+                {uploadFile.isPdf && uploadFile.status === 'converting' && uploadFile.onPdfComplete && (
+                  <PdfToImages
+                    file={uploadFile.file}
+                    onComplete={uploadFile.onPdfComplete}
+                    onProgress={uploadFile.onPdfProgress || (() => {})}
+                    onError={uploadFile.onPdfError || (() => {})}
+                  />
                 )}
               </div>
             ))}
