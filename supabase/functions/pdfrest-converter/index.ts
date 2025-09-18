@@ -28,111 +28,148 @@ async function convertPdfWithPdfRest(pdfBuffer: ArrayBuffer): Promise<Conversion
   }
 
   try {
-    console.log('Converting PDF with pdfRest API...');
+    console.log('Starting async PDF conversion with pdfRest API...');
     
-    // Create form data with the PDF using correct pdfRest parameters
+    // Step 1: Submit PDF for conversion (async)
     const formData = new FormData();
     const pdfBlob = new Blob([pdfBuffer], { type: 'application/pdf' });
     formData.append('file', pdfBlob, 'document.pdf');
-    formData.append('pages', '1-last'); // pdfRest format for all pages
-    formData.append('resolution', '300'); // High resolution for better OCR
-    formData.append('color_model', 'rgb'); // Color model
-    formData.append('output', 'prefix'); // Output format
+    formData.append('pages', '1-last');
+    formData.append('resolution', '300');
+    formData.append('color_model', 'rgb');
 
-    // Call correct pdfRest API endpoint
-    const response = await fetch('https://api.pdfrest.com/png', {
+    // Use /jpg endpoint for async processing
+    const submitResponse = await fetch('https://api.pdfrest.com/jpg', {
       method: 'POST',
       headers: {
         'Api-Key': pdfRestApiKey,
+        'Response-Type': 'requestId'
       },
       body: formData
     });
 
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error('pdfRest API error:', response.status, errorText);
-      throw new Error(`pdfRest API error: ${response.status} - ${errorText}`);
+    if (!submitResponse.ok) {
+      const errorText = await submitResponse.text();
+      console.error('pdfRest submit error:', submitResponse.status, errorText);
+      throw new Error(`pdfRest submit error: ${submitResponse.status} - ${errorText}`);
     }
 
-    const result = await response.json();
-    console.log('pdfRest response:', JSON.stringify(result, null, 2));
+    const submitResult = await submitResponse.json();
+    console.log('pdfRest submit response:', JSON.stringify(submitResult, null, 2));
 
-    // Debug: Log all response keys
-    console.log('Response keys:', Object.keys(result));
+    const requestId = submitResult.requestId;
+    if (!requestId) {
+      throw new Error('No requestId received from pdfRest');
+    }
+
+    console.log(`Request submitted with ID: ${requestId}, polling for completion...`);
+
+    // Step 2: Poll for completion
+    const maxWaitTime = 60000; // 60 seconds max
+    const pollInterval = 2000; // Check every 2 seconds
+    const startTime = Date.now();
     
-    // Try different possible response formats
-    let resourceIds = [];
-    
-    if (result.outputFiles && Array.isArray(result.outputFiles)) {
-      // If outputFiles is an array of objects with IDs
-      resourceIds = result.outputFiles.map(file => file.id || file);
-      console.log('Found outputFiles array:', resourceIds);
-    } else if (result.outputIds && Array.isArray(result.outputIds)) {
-      resourceIds = result.outputIds;
-      console.log('Found outputIds array:', resourceIds);
-    } else if (result.outputId) {
-      resourceIds = [result.outputId];
-      console.log('Found single outputId:', result.outputId);
-    } else if (result.files && Array.isArray(result.files)) {
-      resourceIds = result.files.map(file => file.id || file);
-      console.log('Found files array:', resourceIds);
-    } else {
-      console.error('Could not find resource IDs in response. Available keys:', Object.keys(result));
-      throw new Error('No output IDs found in pdfRest response');
-    }
-
-    if (resourceIds.length === 0) {
-      throw new Error('No resource IDs extracted from pdfRest response');
-    }
-    const images: PageImage[] = [];
-
-    // Download each image using resource ID and convert to base64
-    for (let i = 0; i < resourceIds.length; i++) {
-      const resourceId = resourceIds[i];
-      console.log(`Downloading image ${i + 1}/${resourceIds.length}: ${resourceId}`);
+    while (Date.now() - startTime < maxWaitTime) {
+      console.log(`Polling request status for ${requestId}...`);
       
-      // Use pdfRest resource endpoint
-      const imageResponse = await fetch(`https://api.pdfrest.com/resource/${resourceId}`, {
+      const statusResponse = await fetch(`https://api.pdfrest.com/request-status/${requestId}`, {
         method: 'GET',
         headers: {
           'Api-Key': pdfRestApiKey,
         }
       });
-      
-      if (!imageResponse.ok) {
-        console.error(`Failed to download image ${i + 1}:`, imageResponse.status);
+
+      if (!statusResponse.ok) {
+        console.error('Status check failed:', statusResponse.status);
+        await new Promise(resolve => setTimeout(resolve, pollInterval));
         continue;
       }
 
-      const imageBuffer = await imageResponse.arrayBuffer();
-      const uint8Array = new Uint8Array(imageBuffer);
-      
-      // Convert to base64 in chunks to avoid call stack issues
-      const chunkSize = 8192;
-      const chunks: string[] = [];
-      
-      for (let j = 0; j < uint8Array.length; j += chunkSize) {
-        const chunk = uint8Array.slice(j, j + chunkSize);
-        chunks.push(String.fromCharCode.apply(null, Array.from(chunk)));
+      const statusResult = await statusResponse.json();
+      console.log(`Status: ${JSON.stringify(statusResult, null, 2)}`);
+
+      if (statusResult.status === 'completed') {
+        console.log('Conversion completed, extracting results...');
+        
+        // Extract resource IDs from completed response
+        let resourceIds = [];
+        
+        if (statusResult.outputId && Array.isArray(statusResult.outputId)) {
+          resourceIds = statusResult.outputId;
+        } else if (statusResult.outputIds && Array.isArray(statusResult.outputIds)) {
+          resourceIds = statusResult.outputIds;
+        } else if (statusResult.outputUrl && Array.isArray(statusResult.outputUrl)) {
+          // Extract IDs from URLs like: https://api.pdfrest.com/resource/ID?format=file
+          resourceIds = statusResult.outputUrl.map((url: string) => {
+            const match = url.match(/\/resource\/([^?]+)/);
+            return match ? match[1] : null;
+          }).filter(Boolean);
+        } else {
+          console.error('No output IDs found in completed response:', Object.keys(statusResult));
+          throw new Error('No output IDs found in completed response');
+        }
+
+        console.log(`Found ${resourceIds.length} resource IDs:`, resourceIds);
+
+        // Step 3: Download images
+        const images: PageImage[] = [];
+
+        for (let i = 0; i < resourceIds.length; i++) {
+          const resourceId = resourceIds[i];
+          console.log(`Downloading image ${i + 1}/${resourceIds.length}: ${resourceId}`);
+          
+          const imageResponse = await fetch(`https://api.pdfrest.com/resource/${resourceId}`, {
+            method: 'GET',
+            headers: {
+              'Api-Key': pdfRestApiKey,
+            }
+          });
+          
+          if (!imageResponse.ok) {
+            console.error(`Failed to download image ${i + 1}:`, imageResponse.status);
+            continue;
+          }
+
+          const imageBuffer = await imageResponse.arrayBuffer();
+          const uint8Array = new Uint8Array(imageBuffer);
+          
+          // Convert to base64 in chunks
+          const chunkSize = 8192;
+          const chunks: string[] = [];
+          
+          for (let j = 0; j < uint8Array.length; j += chunkSize) {
+            const chunk = uint8Array.slice(j, j + chunkSize);
+            chunks.push(String.fromCharCode.apply(null, Array.from(chunk)));
+          }
+          
+          const base64Image = btoa(chunks.join(''));
+
+          images.push({
+            pageNumber: i + 1,
+            imageData: base64Image,
+            width: 2480,
+            height: 3508
+          });
+
+          console.log(`Page ${i + 1} converted successfully (${base64Image.length} chars)`);
+        }
+
+        return {
+          success: true,
+          totalPages: images.length,
+          images
+        };
+
+      } else if (statusResult.status === 'failed') {
+        throw new Error(`pdfRest processing failed: ${statusResult.message || 'Unknown error'}`);
+      } else {
+        // Still processing, wait and retry
+        console.log(`Status: ${statusResult.status}, waiting ${pollInterval}ms...`);
+        await new Promise(resolve => setTimeout(resolve, pollInterval));
       }
-      
-      const base64Image = btoa(chunks.join(''));
-
-      images.push({
-        pageNumber: i + 1,
-        imageData: base64Image,
-        width: 2480, // Approximate width at 300 DPI for A4
-        height: 3508 // Approximate height at 300 DPI for A4
-      });
-
-      console.log(`Page ${i + 1} converted successfully (${base64Image.length} chars)`);
     }
 
-    return {
-      success: true,
-      totalPages: images.length,
-      images
-    };
+    throw new Error('Timeout waiting for pdfRest processing to complete');
 
   } catch (error) {
     console.error('pdfRest conversion error:', error);
