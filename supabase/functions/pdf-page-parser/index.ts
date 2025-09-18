@@ -276,6 +276,7 @@ serve(async (req) => {
     // No OpenAI dependency for simple transcription
 
     const formData = await req.formData();
+    const file = formData.get('file') as File;
     const requested = parseInt(formData.get('maxPages') as string) || 1;
     const maxPages = 1; // Force 1st page only for fast transcription
 

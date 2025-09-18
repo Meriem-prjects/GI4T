@@ -167,7 +167,7 @@ serve(async (req) => {
       keywords_ar: analysisData.keywords_ar || [],
       language: analysisData.language || 'fr',
       file_size: file.size,
-      page_count: analysisData.total_pages || 1,
+      page_count: totalPagesVar || 1,
       category_id: categoryId || null,
       document_type_id: documentTypeId || null,
       user_id: null, // Public upload - no user required
@@ -182,8 +182,9 @@ serve(async (req) => {
       case_numbers: analysisData.case_numbers || [],
       legal_domains: analysisData.legal_domains || [],
       // Page-specific content for enhanced display
-      page_contents: analysisData.page_contents || null,
-      processed_pages: analysisData.processed_pages || null
+      page_contents: pageContents || null,
+      processed_pages: processedPages || null,
+      total_pages: totalPagesVar || null
     };
 
     console.log('Saving document with enhanced metadata:', {
