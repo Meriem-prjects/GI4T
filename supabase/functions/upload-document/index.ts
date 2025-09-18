@@ -90,15 +90,16 @@ serve(async (req) => {
       legal_domains: []
     };
     
-    // Shared PDF/A info across processing flow
+    // Shared variables across processing flow
     let pdfaInfo: any = null;
+    let jobData: any = null;
     
     // Handle different file types
     if (file.type === 'application/pdf' || file.name.toLowerCase().endsWith('.pdf')) {
       console.log('Processing PDF file - detecting PDF/A compliance first...');
       
       // Create processing job for progress tracking
-      const { data: jobData, error: jobError } = await supabaseAdmin
+      const { data: jobDataResult, error: jobError } = await supabaseAdmin
         .from('processing_jobs')
         .insert({
           file_name: file.name,
@@ -112,6 +113,8 @@ serve(async (req) => {
       
       if (jobError) {
         console.error('Failed to create processing job:', jobError);
+      } else {
+        jobData = jobDataResult;
       }
       
       const jobId = jobData?.id;
