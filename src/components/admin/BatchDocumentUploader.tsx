@@ -365,8 +365,8 @@ const BatchDocumentUploader: React.FC<BatchDocumentUploaderProps> = ({ onDocumen
       throw new Error(uploadResult.error || 'Upload failed');
     }
 
-    // Extract job ID from response if available
-    const jobId = uploadResult.document?.processing_job_id;
+    // Extract job ID from response
+    const jobId = uploadResult.jobId;
     
     if (jobId) {
       // Update file with job ID for progress tracking
@@ -374,7 +374,8 @@ const BatchDocumentUploader: React.FC<BatchDocumentUploaderProps> = ({ onDocumen
         f.id === uploadFile.id ? { 
           ...f, 
           jobId: jobId,
-          progress: 40 
+          progress: 40,
+          status: 'processing'
         } : f
       ));
     } else {

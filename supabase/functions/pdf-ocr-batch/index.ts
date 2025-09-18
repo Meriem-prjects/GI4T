@@ -223,7 +223,7 @@ async function processPdfWithOCR(pdfBuffer: ArrayBuffer, openaiApiKey: string, j
 
     console.log(`Batch OCR completed: ${pages.length} pages processed, ${fullText.length} chars`);
     
-    // Final progress update
+    // Final progress update and document update
     await updateJobProgress(jobId, {
       status: 'completed',
       current_step: 'completed',
@@ -235,6 +235,25 @@ async function processPdfWithOCR(pdfBuffer: ArrayBuffer, openaiApiKey: string, j
         contentLength: fullText.length
       }
     });
+    
+    // Update the document with extracted content
+    if (jobId) {
+      try {
+        await supabaseAdmin
+          .from('documents')
+          .update({
+            content: fullText,
+            language: dominantLanguage,
+            page_contents: pages,
+            processed_pages: pages.length,
+            total_pages: pages.length,
+            status: 'processed'
+          })
+          .eq('processing_job_id', jobId);
+      } catch (dbError) {
+        console.error('Failed to update document after successful OCR:', dbError);
+      }
+    }
 
     console.log(`PDF OCR batch completed successfully: ${pages.length}/${conversionResult.images.length} pages processed`);
 
@@ -306,7 +325,7 @@ async function processPdfWithOCR(pdfBuffer: ArrayBuffer, openaiApiKey: string, j
     const fullText = parsed.text || '';
     const language = parsed.language || 'fr';
 
-    // Update final progress
+    // Update final progress and document
     await updateJobProgress(jobId, {
       status: 'completed',
       current_step: 'completed',
@@ -319,6 +338,24 @@ async function processPdfWithOCR(pdfBuffer: ArrayBuffer, openaiApiKey: string, j
         contentLength: fullText.length
       }
     });
+    
+    // Update the document with extracted content
+    if (jobId) {
+      try {
+        await supabaseAdmin
+          .from('documents')
+          .update({
+            content: fullText,
+            language: language,
+            processed_pages: 1,
+            total_pages: 1,
+            status: 'processed'
+          })
+          .eq('processing_job_id', jobId);
+      } catch (dbError) {
+        console.error('Failed to update document after successful PDF OCR:', dbError);
+      }
+    }
 
     return {
       success: true,
@@ -391,6 +428,21 @@ serve(async (req) => {
         error_message: error.message,
         progress: 0
       });
+    }
+    
+    // Also update the document in database if processing failed
+    if (jobId) {
+      try {
+        await supabaseAdmin
+          .from('documents')
+          .update({
+            content: `Erreur de traitement: ${error.message}`,
+            status: 'failed'
+          })
+          .eq('processing_job_id', jobId);
+      } catch (dbError) {
+        console.error('Failed to update document after OCR error:', dbError);
+      }
     }
     
     const errorResult: BatchOCRResult = {

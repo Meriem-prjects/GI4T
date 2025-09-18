@@ -151,32 +151,22 @@ serve(async (req) => {
           pdfFormData.append('isArchival', (pdfaInfo.archivalFeatures?.isArchival || false).toString());
         }
         
-        const { data: pdfData, error: pdfError } = await supabaseAdmin.functions.invoke('pdf-ocr-batch', {
+        // Trigger PDF OCR processing asynchronously (don't wait for completion)
+        console.log('Triggering PDF OCR batch processing asynchronously...');
+        supabaseAdmin.functions.invoke('pdf-ocr-batch', {
           body: pdfFormData
+        }).catch(error => {
+          console.error('Background PDF OCR failed:', error);
         });
         
-        console.log('PDF OCR batch response:', {
-          success: pdfData?.success,
-          totalPages: pdfData?.totalPages,
-          processedPages: pdfData?.processedPages,
-          language: pdfData?.language,
-          contentLength: pdfData?.fullText?.length || 0
-        });
-        
-        if (pdfError) {
-          console.error('PDF OCR batch error:', pdfError);
-          fileContent = `Erreur PDF OCR: ${pdfError.message}`;
-        } else if (pdfData?.success && pdfData?.fullText && pdfData.fullText.length > 5) {
-          fileContent = pdfData.fullText;
-          extractionSuccess = true;
-          
-          // Update analysis data with detected language
-          if (pdfData.language) {
-            analysisData.language = pdfData.language;
-          }
-          
-          // Enhance analysis data with PDF/A metadata if available
-          if (pdfaInfo?.isPDFA) {
+        // Set default values for immediate return
+        fileContent = 'Document PDF en cours de traitement...';
+        extractionSuccess = true;
+        analysisData.language = 'fr';
+        analysisData.summary = 'Document PDF en cours de traitement par OCR';
+
+        // Enhance analysis data with PDF/A metadata if available
+        if (pdfaInfo?.isPDFA) {
             analysisData.document_type = `PDF/A Document (${pdfaInfo.pdfaVersion || 'Unknown version'})`;
             
             // Add PDF/A metadata to analysis
@@ -197,23 +187,10 @@ serve(async (req) => {
             }
           }
           
-          // Store page-specific data
-          if (pdfData.pages && pdfData.pages.length > 0) {
-            pageContents = pdfData.pages.map((page: any) => ({
-              pageNumber: page.pageNumber,
-              content: page.content,
-              confidence: page.confidence || 0.9,
-              language: page.language || 'fr'
-            }));
-          }
-          processedPages = pdfData.processedPages || 0;
-          totalPagesVar = pdfData.totalPages || 0;
-          
-          console.log(`PDF OCR extraction successful: ${processedPages}/${totalPagesVar} pages, content length: ${fileContent.length}, language: ${pdfData.language}`);
-        } else {
-          console.warn('PDF OCR returned insufficient content:', pdfData);
-          fileContent = 'PDF OCR n\'a pas pu extraire le contenu';
-        }
+        // Page contents will be populated by background OCR process
+        pageContents = null;
+        processedPages = null;
+        totalPagesVar = null;
       } catch (pdfException) {
         console.error('PDF OCR processing exception:', pdfException);
         fileContent = `Exception PDF OCR: ${pdfException.message}`;
@@ -319,8 +296,8 @@ serve(async (req) => {
       pdfa_conformance_level: pdfaInfo?.conformanceLevel || null,
       archival_metadata: pdfaInfo?.metadata || null,
       archival_features: pdfaInfo?.archivalFeatures || null,
-      // Processing job reference
-      processing_job_id: jobId || null
+      // Processing job reference for tracking
+      processing_job_id: jobData?.id || null
     };
 
     console.log('Saving document with enhanced metadata:', {
@@ -351,7 +328,8 @@ serve(async (req) => {
     return new Response(JSON.stringify({ 
       success: true, 
       document,
-      message: 'Document uploaded and processed successfully'
+      jobId: jobData?.id,
+      message: 'Document uploaded successfully. Processing in background...'
     }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });

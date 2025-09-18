@@ -87,6 +87,7 @@ verify_jwt = false
 
 [functions.pdf-ocr-batch]
 verify_jwt = false
+timeout = 300
 
 [functions.upload-document]
 verify_jwt = false
