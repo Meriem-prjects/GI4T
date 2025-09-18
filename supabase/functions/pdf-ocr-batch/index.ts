@@ -123,14 +123,23 @@ async function processPdfWithOCR(pdfBuffer: ArrayBuffer, openaiApiKey: string): 
     const pages: PageContent[] = [];
     const languages: { [key: string]: number } = {};
 
-    for (const image of conversionResult.images) {
-      try {
-        const pageContent = await ocrImage(image.imageData, image.pageNumber, openaiApiKey);
+    const batchSize = 3;
+    for (let i = 0; i < conversionResult.images.length; i += batchSize) {
+      const batch = conversionResult.images.slice(i, i + batchSize);
+      const results = await Promise.all(
+        batch.map(async (image) => {
+          try {
+            const pageContent = await ocrImage(image.imageData, image.pageNumber, openaiApiKey);
+            return pageContent;
+          } catch (error) {
+            console.error(`Error processing page ${image.pageNumber}:`, error);
+            return { pageNumber: image.pageNumber, content: '', confidence: 0, language: 'fr' } as PageContent;
+          }
+        })
+      );
+      for (const pageContent of results) {
         pages.push(pageContent);
         languages[pageContent.language] = (languages[pageContent.language] || 0) + 1;
-      } catch (error) {
-        console.error(`Error processing page ${image.pageNumber}:`, error);
-        pages.push({ pageNumber: image.pageNumber, content: '', confidence: 0, language: 'fr' });
       }
     }
 

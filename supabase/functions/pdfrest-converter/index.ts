@@ -35,7 +35,7 @@ async function convertPdfWithPdfRest(pdfBuffer: ArrayBuffer): Promise<Conversion
     const pdfBlob = new Blob([pdfBuffer], { type: 'application/pdf' });
     formData.append('file', pdfBlob, 'document.pdf');
     formData.append('pages', '1-last');
-    formData.append('resolution', '300');
+    formData.append('resolution', '200');
     formData.append('color_model', 'rgb');
 
     // Use /jpg endpoint for async processing
