@@ -188,7 +188,18 @@ const BatchDocumentUploader: React.FC<BatchDocumentUploaderProps> = ({ onDocumen
   };
 
   const handleFiles = (files: FileList) => {
-    const acceptedTypes = ['application/pdf', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', 'application/msword', 'text/plain'];
+    const acceptedTypes = [
+      'application/pdf', 
+      'application/vnd.openxmlformats-officedocument.wordprocessingml.document', 
+      'application/msword', 
+      'text/plain',
+      'image/jpeg',
+      'image/png',
+      'image/webp',
+      'image/gif',
+      'image/bmp',
+      'image/tiff'
+    ];
     
     const newFiles: UploadFile[] = [];
     
@@ -449,7 +460,7 @@ const BatchDocumentUploader: React.FC<BatchDocumentUploaderProps> = ({ onDocumen
           <Input
             type="file"
             multiple
-            accept=".pdf,.docx,.doc,.txt"
+            accept=".pdf,.docx,.doc,.txt,.jpg,.jpeg,.png,.webp,.gif,.bmp,.tiff"
             onChange={handleChange}
             className="hidden"
             id="file-upload"
@@ -460,7 +471,7 @@ const BatchDocumentUploader: React.FC<BatchDocumentUploaderProps> = ({ onDocumen
             </Button>
           </Label>
           <p className="text-sm text-muted-foreground mt-2">
-            PDF, Word, TXT - Max 20MB par fichier
+            PDF, Word, TXT, Images (JPG, PNG, WEBP) - Max 20MB par fichier
           </p>
         </div>
       </Card>

@@ -70,8 +70,9 @@ serve(async (req) => {
     let processedPages: number | null = null;
     let totalPagesVar: number | null = null;
     
-    // Handle PDF files with simple first-page extraction
+    // Handle different file types
     if (file.type === 'application/pdf' || file.name.toLowerCase().endsWith('.pdf')) {
+      // Handle PDF files with simple first-page extraction
       console.log('Processing PDF file with first-page text extractor...');
       
       // Call PDF page parser function (first page only)
@@ -107,6 +108,36 @@ serve(async (req) => {
       } catch (pdfException) {
         console.error('PDF processing exception:', pdfException);
         fileContent = `Exception PDF: ${pdfException.message}`;
+      }
+    } else if (file.type?.startsWith('image/') || /\.(jpg|jpeg|png|webp|gif|bmp|tiff)$/i.test(file.name)) {
+      // Handle image files with OCR
+      console.log('Processing image file with OCR...');
+      
+      try {
+        const imageFormData = new FormData();
+        imageFormData.append('file', file);
+        
+        const { data: ocrData, error: ocrError } = await supabaseAdmin.functions.invoke('image-ocr', {
+          body: imageFormData
+        });
+
+        console.log('Image OCR response:', ocrData);
+
+        if (ocrError) {
+          console.error('Image OCR error:', ocrError);
+          fileContent = `Erreur OCR: ${ocrError.message}`;
+        } else if (ocrData?.success && ocrData?.content && ocrData.content.length > 2) {
+          fileContent = ocrData.content;
+          extractionSuccess = true;
+          analysisData.language = ocrData.language || 'fr';
+          console.log(`Image OCR successful: ${fileContent.length} chars, language: ${analysisData.language}`);
+        } else {
+          console.warn('Image OCR returned insufficient content:', ocrData);
+          fileContent = 'Image ne contient pas de texte lisible';
+        }
+      } catch (ocrException) {
+        console.error('Image OCR exception:', ocrException);
+        fileContent = `Exception OCR: ${ocrException.message}`;
       }
     } else {
       // For text files, read as text
