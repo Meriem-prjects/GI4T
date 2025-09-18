@@ -45,84 +45,47 @@ interface ConversionResult {
   error?: string;
 }
 
-// Internal PDF-to-images conversion function using pdf.js
+// Internal PDF-to-images conversion function using the existing edge function
 async function convertPdfToImagesInternal(pdfBuffer: ArrayBuffer): Promise<ConversionResult> {
   try {
-    // Import PDF.js library
-    const pdfjsLib = await import('https://cdn.skypack.dev/pdfjs-dist@3.11.174');
-    
-    console.log('Loading PDF with internal pdf.js converter...');
-    
-    // Load the PDF document
-    const loadingTask = pdfjsLib.getDocument({
-      data: new Uint8Array(pdfBuffer),
-      verbosity: 0
-    });
-    
-    const pdf = await loadingTask.promise;
-    const totalPages = pdf.numPages;
-    
-    console.log(`PDF loaded successfully with internal converter. Total pages: ${totalPages}`);
-    
-    const images: PageImage[] = [];
-    
-    // Process each page
-    for (let pageNum = 1; pageNum <= totalPages; pageNum++) {
-      console.log(`Converting page ${pageNum}/${totalPages} to image...`);
-      
-      try {
-        const page = await pdf.getPage(pageNum);
-        const viewport = page.getViewport({ scale: 2.0 }); // Higher resolution
-        
-        // Create canvas
-        const canvas = new OffscreenCanvas(viewport.width, viewport.height);
-        const context = canvas.getContext('2d');
-        
-        if (!context) {
-          throw new Error('Failed to get canvas context');
-        }
-        
-        // Render page to canvas
-        const renderContext = {
-          canvasContext: context,
-          viewport: viewport,
-        };
-        
-        await page.render(renderContext).promise;
-        
-        // Convert canvas to base64 image
-        const blob = await canvas.convertToBlob({ type: 'image/jpeg', quality: 0.9 });
-        const arrayBuffer = await blob.arrayBuffer();
-        const base64 = btoa(String.fromCharCode(...new Uint8Array(arrayBuffer)));
-        
-        images.push({
-          pageNumber: pageNum,
-          imageData: base64,
-          width: viewport.width,
-          height: viewport.height
-        });
-        
-        console.log(`Page ${pageNum} converted successfully`);
-        
-      } catch (pageError) {
-        console.error(`Error converting page ${pageNum}:`, pageError);
-        throw pageError;
+    console.log('Converting PDF via internal pdf-to-images edge function...');
+
+    const formData = new FormData();
+    formData.append('file', new Blob([pdfBuffer], { type: 'application/pdf' }));
+
+    const headers: Record<string, string> = {};
+    const anon = Deno.env.get('SUPABASE_ANON_KEY');
+    if (anon) headers['Authorization'] = `Bearer ${anon}`;
+
+    const response = await fetch(
+      'https://qpkybrcjcoxhkifnbxei.supabase.co/functions/v1/pdf-to-images',
+      {
+        method: 'POST',
+        body: formData,
+        headers,
       }
+    );
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(`Internal pdf-to-images error ${response.status}: ${errorText}`);
     }
-    
-    return {
-      success: true,
-      totalPages: totalPages,
-      images: images
-    };
-    
+
+    const data: ConversionResult = await response.json();
+
+    if (!data.success || !data.images?.length) {
+      throw new Error(`Internal pdf-to-images returned no images: ${data.error || 'unknown error'}`);
+    }
+
+    console.log(`Internal pdf-to-images conversion successful: ${data.images.length} images`);
+    return data;
   } catch (error) {
-    console.error('Internal PDF-to-images conversion failed:', error);
+    console.error('Internal pdf-to-images conversion failed:', error);
     return {
       success: false,
       totalPages: 0,
       images: [],
-      error: error.message || 'Internal PDF conversion failed'
+      error: (error as any)?.message || 'Internal PDF conversion failed',
     };
   }
 }
@@ -580,14 +543,23 @@ serve(async (req) => {
     
     // Update job status to failed
     if (jobId) {
+      const friendlyMessage =
+        (error as any)?.message?.includes('Password-protected')
+          ? 'PDF protégé par mot de passe non supporté'
+          : ((error as any)?.message?.includes('Both pdfRest and internal PDF conversion failed') ||
+             (error as any)?.message?.toLowerCase?.().includes('usage limit') ||
+             (error as any)?.message?.toLowerCase?.().includes('pdfjs-dist') ||
+             (error as any)?.message?.toLowerCase?.().includes('pdf-to-images') ||
+             (error as any)?.message?.toLowerCase?.().includes('conversion'))
+          ? 'Le service de conversion PDF est temporairement indisponible. Réessayez plus tard.'
+          : (error as any)?.message?.includes('Invalid MIME type')
+          ? 'Fichier PDF invalide ou corrompu. Vérifiez que le fichier n\'est pas endommagé.'
+          : (error as any)?.message || 'Une erreur est survenue lors du traitement du PDF.';
+
       await updateJobProgress(jobId, {
         status: 'failed',
         progress: 0,
-        error_message: error.message.includes('Password-protected') 
-          ? 'PDF protégé par mot de passe non supporté'
-          : error.message.includes('Invalid MIME type') || error.message.includes('PDF conversion failed')
-          ? 'Fichier PDF invalide ou corrompu. Vérifiez que le fichier n\'est pas endommagé.'
-          : error.message
+        error_message: friendlyMessage,
       });
     }
 
