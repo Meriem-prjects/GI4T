@@ -163,6 +163,11 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
   };
 
   const getStorageUrl = (path: string) => {
+    if (!path) return '';
+    // If it's already a full URL, return as-is
+    if (path.startsWith('http://') || path.startsWith('https://')) {
+      return path;
+    }
     const { data } = supabase.storage.from('documents').getPublicUrl(path);
     return data.publicUrl;
   };

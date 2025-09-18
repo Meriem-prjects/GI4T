@@ -273,13 +273,11 @@ serve(async (req) => {
   }
 
   try {
-    if (!openAIApiKey) {
-      throw new Error('OpenAI API key not configured');
-    }
+    // No OpenAI dependency for simple transcription
 
     const formData = await req.formData();
-    const file = formData.get('file') as File;
-    const maxPages = parseInt(formData.get('maxPages') as string) || 8; // Default to 8 pages
+    const requested = parseInt(formData.get('maxPages') as string) || 1;
+    const maxPages = 1; // Force 1st page only for fast transcription
 
     if (!file) {
       throw new Error('No file provided');
@@ -297,13 +295,17 @@ serve(async (req) => {
     
     console.log(`Extracted raw text from ${rawPages.length} pages out of ${totalPages} total pages`);
 
-    // Process pages with OpenAI for text enhancement
-    const pageContents = await processPagesInBatches(rawPages);
+    // Build page contents without OpenAI
+    const pageContents = rawPages.map(p => ({
+      pageNumber: p.pageNumber,
+      content: (p.rawText || '').trim(),
+      confidence: (p.rawText && p.rawText.length > 0) ? 0.8 : 0.1,
+    }));
     
     // Combine all page content
     const fullText = pageContents
       .sort((a, b) => a.pageNumber - b.pageNumber)
-      .map(page => `=== Page ${page.pageNumber} ===\n${page.content}\n`)
+      .map(page => page.content)
       .join('\n');
 
     const result: ParseResult = {

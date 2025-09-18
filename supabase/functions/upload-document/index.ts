@@ -66,42 +66,46 @@ serve(async (req) => {
     // Get file content for parsing
     let fileContent = '';
     let extractionSuccess = false;
+    let pageContents: any[] | null = null;
+    let processedPages: number | null = null;
+    let totalPagesVar: number | null = null;
     
-    // Handle PDF files with simple OCR
+    // Handle PDF files with simple first-page extraction
     if (file.type === 'application/pdf' || file.name.toLowerCase().endsWith('.pdf')) {
-      console.log('Processing PDF file with OCR...');
+      console.log('Processing PDF file with first-page text extractor...');
       
-      // Call simple PDF OCR function
+      // Call PDF page parser function (first page only)
       const pdfFormData = new FormData();
       pdfFormData.append('file', file);
+      pdfFormData.append('maxPages', '1');
       
       try {
-        const { data: pdfData, error: pdfError } = await supabaseAdmin.functions.invoke('pdf-ocr', {
+        const { data: pdfData, error: pdfError } = await supabaseAdmin.functions.invoke('pdf-page-parser', {
           body: pdfFormData
         });
 
-        console.log('PDF OCR response:', pdfData);
+        console.log('PDF page parser response:', pdfData);
 
         if (pdfError) {
-          console.error('PDF OCR error:', pdfError);
+          console.error('PDF parsing error:', pdfError);
           fileContent = `Erreur PDF: ${pdfError.message}`;
-        } else if (pdfData?.success && pdfData?.content && pdfData.content.length > 20) {
-          fileContent = pdfData.content;
+        } else if (pdfData?.success && pdfData?.fullText && pdfData.fullText.length > 5) {
+          fileContent = pdfData.fullText;
           extractionSuccess = true;
-          console.log(`PDF OCR successful: content length: ${fileContent.length}`);
+          console.log(`PDF extraction successful: ${pdfData.processedPages}/${pdfData.totalPages} pages, content length: ${fileContent.length}`);
           
           // Store page-specific data for later use
           if (pdfData.pages && pdfData.pages.length > 0) {
-            analysisData.page_contents = pdfData.pages;
-            analysisData.total_pages = pdfData.totalPages || 1;
-            analysisData.processed_pages = pdfData.processedPages || 1;
+            pageContents = pdfData.pages;
+            totalPagesVar = pdfData.totalPages || 1;
+            processedPages = pdfData.processedPages || 1;
           }
         } else {
-          console.warn('PDF OCR returned insufficient content:', pdfData);
+          console.warn('PDF parser returned insufficient content:', pdfData);
           fileContent = 'Contenu PDF non extractible - format nécessitant traitement manuel';
         }
       } catch (pdfException) {
-        console.error('PDF OCR exception:', pdfException);
+        console.error('PDF processing exception:', pdfException);
         fileContent = `Exception PDF: ${pdfException.message}`;
       }
     } else {
@@ -140,36 +144,8 @@ serve(async (req) => {
       legal_domains: []
     };
     
-    // Only analyze if we have sufficient content
-    if (extractionSuccess && fileContent && fileContent.length > 50) {
-      console.log('Calling enhanced document analysis...');
-      try {
-        const { data, error: analysisError } = await supabaseAdmin.functions.invoke('document-analysis', {
-          body: {
-            content: fileContent,
-            language: 'auto'
-          }
-        });
-
-        if (analysisError) {
-          console.error('Analysis error:', analysisError);
-        } else if (data) {
-          analysisData = { ...analysisData, ...data };
-          console.log('AI analysis successful:', {
-            title: analysisData.title,
-            language: analysisData.language,
-            keywordsCount: analysisData.keywords?.length || 0,
-            summaryLength: analysisData.summary?.length || 0,
-            documentType: analysisData.document_type,
-            mainTopicsCount: analysisData.main_topics?.length || 0
-          });
-        }
-      } catch (analysisException) {
-        console.error('Analysis exception:', analysisException);
-      }
-    } else {
-      console.log('Skipping AI analysis - insufficient or failed content extraction');
-    }
+    // Skip AI analysis for now per user request (transcription only)
+    console.log('Skipping AI analysis - transcription only requested');
 
     console.log('Document processing completed');
 
