@@ -442,108 +442,17 @@ async function processPdfWithOCR(pdfBuffer: ArrayBuffer, openaiApiKey: string, j
     };
   }
 
-  // Fallback: send the raw PDF to OpenAI Vision API to extract all text at once
-  console.log('Falling back to direct PDF OCR via OpenAI Vision...');
+  // No valid conversion result - PDF processing failed
+  console.error('PDF to images conversion failed. Unable to process PDF with OCR.');
   
   await updateJobProgress(jobId, {
-    current_step: 'direct_pdf_ocr',
-    progress: 50
+    status: 'failed',
+    current_step: 'conversion_failed',
+    progress: 25,
+    error_message: 'PDF conversion failed. The PDF might be corrupted, password-protected, or in an unsupported format.'
   });
 
-  // Convert PDF buffer to base64 in chunks
-  const bytes = new Uint8Array(pdfBuffer);
-  const chunkSize = 8192;
-  const parts: string[] = [];
-  for (let i = 0; i < bytes.length; i += chunkSize) {
-    parts.push(String.fromCharCode.apply(null, Array.from(bytes.slice(i, i + chunkSize))));
-  }
-  const base64Pdf = btoa(parts.join(''));
-
-  const response = await fetch('https://api.openai.com/v1/chat/completions', {
-    method: 'POST',
-    headers: {
-      'Authorization': `Bearer ${openaiApiKey}`,
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-      model: 'gpt-4o-mini',
-      messages: [
-        { role: 'system', content: 'Tu es un expert en extraction de texte multi-pages. Extrais TOUT le texte du PDF fourni (toutes les pages), sans commentaire, et détecte la langue principale. Réponds en JSON: {"text": "...", "language": "fr|ar|en", "confidence": 0.95}.' },
-        {
-          role: 'user',
-          content: [
-            { type: 'text', text: 'Extrais et concatène le texte de toutes les pages de ce PDF:' },
-            { type: 'image_url', image_url: { url: `data:application/pdf;base64,${base64Pdf}` } },
-          ],
-        },
-      ],
-      max_tokens: 4000,
-      temperature: 0,
-      response_format: { type: 'json_object' },
-    }),
-  });
-
-  if (!response.ok) {
-    const errText = await response.text();
-    throw new Error(`OpenAI PDF OCR error: ${response.status} - ${errText}`);
-  }
-
-  const data = await response.json();
-  const content = data.choices?.[0]?.message?.content;
-
-  if (!content) {
-    throw new Error('No content returned from OpenAI PDF OCR');
-  }
-
-  try {
-    const parsed = JSON.parse(content);
-    const fullText = parsed.text || '';
-    const language = parsed.language || 'fr';
-
-    // Update final progress and document
-    await updateJobProgress(jobId, {
-      status: 'completed',
-      current_step: 'completed',
-      progress: 100,
-      processed_pages: 1,
-      total_pages: 1,
-      result_data: {
-        totalPages: 1,
-        language: language,
-        contentLength: fullText.length
-      }
-    });
-    
-    // Update the document with extracted content
-    if (jobId) {
-      try {
-        await supabaseAdmin
-          .from('documents')
-          .update({
-            content: fullText,
-            language: language,
-            processed_pages: 1,
-            total_pages: 1,
-            status: 'processed'
-          })
-          .eq('processing_job_id', jobId);
-      } catch (dbError) {
-        console.error('Failed to update document after successful PDF OCR:', dbError);
-      }
-    }
-
-    return {
-      success: true,
-      totalPages: 1,
-      processedPages: 1,
-      pages: [{ pageNumber: 1, content: fullText, confidence: parsed.confidence || 0.9, language }],
-      fullText,
-      language,
-    };
-  } catch (parseError) {
-    console.error('Failed to parse OpenAI PDF OCR response:', parseError);
-    throw new Error('Failed to parse PDF OCR response');
-  }
+  throw new Error('PDF to images conversion failed. The PDF might be corrupted, password-protected, or in an unsupported format. Please try a different PDF or contact support.');
 }
 
 serve(async (req) => {
