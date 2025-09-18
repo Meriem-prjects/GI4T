@@ -67,35 +67,35 @@ serve(async (req) => {
     let fileContent = '';
     let extractionSuccess = false;
     
-    // Handle PDF files with dedicated parser
+    // Handle PDF files with OpenAI OCR for accurate text extraction
     if (file.type === 'application/pdf' || file.name.toLowerCase().endsWith('.pdf')) {
-      console.log('Processing PDF file with enhanced parser...');
+      console.log('Processing PDF file with OpenAI OCR...');
       
-      // Call PDF parser function
-      const pdfFormData = new FormData();
-      pdfFormData.append('file', file);
+      // Call OpenAI OCR function
+      const ocrFormData = new FormData();
+      ocrFormData.append('file', file);
       
       try {
-        const { data: pdfData, error: pdfError } = await supabaseAdmin.functions.invoke('pdf-parser', {
-          body: pdfFormData
+        const { data: ocrData, error: ocrError } = await supabaseAdmin.functions.invoke('openai-ocr', {
+          body: ocrFormData
         });
 
-        console.log('PDF parser response:', pdfData);
+        console.log('OpenAI OCR response:', ocrData);
 
-        if (pdfError) {
-          console.error('PDF parsing error:', pdfError);
-          fileContent = `Erreur PDF: ${pdfError.message}`;
-        } else if (pdfData?.success && pdfData?.text && pdfData.text.length > 20) {
-          fileContent = pdfData.text;
+        if (ocrError) {
+          console.error('OpenAI OCR error:', ocrError);
+          fileContent = `Erreur OCR: ${ocrError.message}`;
+        } else if (ocrData?.success && ocrData?.text && ocrData.text.length > 20) {
+          fileContent = ocrData.text;
           extractionSuccess = true;
-          console.log('PDF extraction successful, content length:', fileContent.length);
+          console.log('OpenAI OCR extraction successful, content length:', fileContent.length);
         } else {
-          console.warn('PDF parser returned insufficient content:', pdfData);
-          fileContent = 'Contenu PDF non extractible - format nécessitant traitement manuel';
+          console.warn('OpenAI OCR returned insufficient content:', ocrData);
+          fileContent = 'Contenu PDF non extractible avec OpenAI OCR - format nécessitant traitement manuel';
         }
-      } catch (pdfException) {
-        console.error('PDF processing exception:', pdfException);
-        fileContent = `Exception PDF: ${pdfException.message}`;
+      } catch (ocrException) {
+        console.error('OpenAI OCR processing exception:', ocrException);
+        fileContent = `Exception OCR: ${ocrException.message}`;
       }
     } else {
       // For text files, read as text
