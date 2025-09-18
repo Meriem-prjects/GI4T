@@ -70,6 +70,25 @@ serve(async (req) => {
     let processedPages: number | null = null;
     let totalPagesVar: number | null = null;
     
+    // Initialize analysis data at the beginning
+    let analysisData = {
+      title: file.name,
+      title_ar: null,
+      summary: 'Document uploadé sans analyse complète',
+      summary_ar: null,
+      keywords: [],
+      keywords_ar: [],
+      language: 'fr',
+      document_type: null,
+      main_topics: [],
+      legal_references: [],
+      entities: [],
+      dates: [],
+      jurisdiction: null,
+      case_numbers: [],
+      legal_domains: []
+    };
+    
     // Handle different file types
     if (file.type === 'application/pdf' || file.name.toLowerCase().endsWith('.pdf')) {
       // Handle PDF files with simple first-page extraction
@@ -156,24 +175,11 @@ serve(async (req) => {
       preview: fileContent.substring(0, 100)
     });
     
-    // Call document-analysis function for AI processing with enhanced metadata
-    let analysisData = {
-      title: file.name,
-      title_ar: null,
-      summary: 'Document uploadé sans analyse complète',
-      summary_ar: null,
-      keywords: [],
-      keywords_ar: [],
-      language: 'fr',
-      document_type: null,
-      main_topics: [],
-      legal_references: [],
-      entities: [],
-      dates: [],
-      jurisdiction: null,
-      case_numbers: [],
-      legal_domains: []
-    };
+    // Update analysis data based on extraction results
+    if (extractionSuccess) {
+      analysisData.title = file.name.replace(/\.[^/.]+$/, ""); // Remove file extension
+      analysisData.summary = `Document traité avec succès: ${fileContent.substring(0, 100)}...`;
+    }
     
     // Skip AI analysis for now per user request (transcription only)
     console.log('Skipping AI analysis - transcription only requested');
