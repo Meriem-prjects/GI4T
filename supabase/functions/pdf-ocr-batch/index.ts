@@ -1,6 +1,8 @@
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.57.4';
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.57.4';
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.57.4';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -256,6 +258,12 @@ async function processPdfWithOCR(pdfBuffer: ArrayBuffer, openaiApiKey: string, j
     });
   }
   
+  // Initialize Supabase client for function calls
+  const supabaseAdmin = createClient(
+    Deno.env.get('SUPABASE_URL') ?? '',
+    Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
+  );
+
   // Level 1: PDF/A optimized processing (already handled in upload-document)
   console.log('Starting PDF to images conversion...');
   
@@ -268,35 +276,69 @@ async function processPdfWithOCR(pdfBuffer: ArrayBuffer, openaiApiKey: string, j
   
   let conversionResult: any = null;
   
-  // Level 2: Standard PDF to images conversion via pdfrest-converter
+  // Level 2: Standard PDF to images conversion via pdfrest-converter using Supabase function invoke
   const formData = new FormData();
-  formData.append('file', new Blob([pdfBuffer], { type: 'application/pdf' }));
+  formData.append('file', new Blob([pdfBuffer], { type: 'application/pdf' }), filename || 'document.pdf');
+  formData.append('resolution', '200');
+  formData.append('preserveMetadata', 'false');
+  formData.append('isArchival', 'false');
 
   try {
-    const headers: Record<string, string> = {};
-    const anon = Deno.env.get('SUPABASE_ANON_KEY');
-    if (anon) headers['Authorization'] = `Bearer ${anon}`;
-
-    const conversionResponse = await fetch('https://qpkybrcjcoxhkifnbxei.supabase.co/functions/v1/pdfrest-converter', {
-      method: 'POST',
-      body: formData,
-      headers,
+    console.log('Trying primary conversion service (pdfRest)...');
+    
+    const pdfRestResponse = await supabaseAdmin.functions.invoke('pdfrest-converter', {
+      body: formData
     });
 
-    if (conversionResponse.ok) {
-      conversionResult = await conversionResponse.json();
-      if (!conversionResult.success || !conversionResult.images?.length) {
-        console.warn('PDF-to-images returned no images, will try alternative methods:', conversionResult);
-        conversionResult = null;
-      } else {
-        console.log(`PDF successfully converted to ${conversionResult.images.length} images`);
-      }
+    if (pdfRestResponse.data && pdfRestResponse.data.success) {
+      conversionResult = pdfRestResponse.data;
+      console.log(`pdfRest: PDF successfully converted to ${conversionResult.images.length} images`);
     } else {
-      const errorText = await conversionResponse.text();
-      console.warn('PDF-to-images HTTP error, will try alternative methods:', errorText);
+      console.warn('pdfRest conversion failed, trying internal fallback:', pdfRestResponse.error || pdfRestResponse.data);
     }
   } catch (e) {
-    console.warn('PDF-to-images conversion failed. Trying alternative methods.', e);
+    console.warn('pdfRest conversion failed, trying internal fallback:', e);
+  }
+
+  // Level 3: Fallback to internal pdf-to-images function if pdfRest failed
+  if (!conversionResult) {
+    try {
+      console.log('Using internal pdf-to-images fallback...');
+      
+      const internalFormData = new FormData();
+      internalFormData.append('file', new Blob([pdfBuffer], { type: 'application/pdf' }), filename || 'document.pdf');
+      
+      const internalResponse = await supabaseAdmin.functions.invoke('pdf-to-images', {
+        body: internalFormData
+      });
+
+      if (internalResponse.data && internalResponse.data.success) {
+        conversionResult = internalResponse.data;
+        console.log(`Internal: PDF successfully converted to ${conversionResult.images.length} images`);
+      } else {
+        console.warn('Internal pdf-to-images conversion failed:', internalResponse.error || internalResponse.data);
+      }
+    } catch (e) {
+      console.warn('Internal pdf-to-images conversion failed:', e);
+    }
+  }
+
+  // If all conversion methods failed, provide detailed error
+  if (!conversionResult) {
+    const errorMessage = 'PDF to images conversion failed using all available methods (pdfRest + internal). The PDF might be corrupted, password-protected, or in an unsupported format. Please try a different PDF or contact support.';
+    console.error(errorMessage);
+    
+    // Update job status with detailed error
+    if (jobId) {
+      await updateJobProgress(jobId, {
+        status: 'failed',
+        error_message: errorMessage,
+        current_step: 'conversion_failed',
+        progress: 0
+      });
+    }
+    
+    throw new Error(errorMessage);
   }
 
   // If conversion succeeded, OCR all pages with progress tracking and resume support
@@ -323,8 +365,8 @@ async function processPdfWithOCR(pdfBuffer: ArrayBuffer, openaiApiKey: string, j
     const pages: PageContent[] = [];
     const languages: { [key: string]: number } = {};
 
-    // Process images with limited parallelism for better performance
-    const concurrency = Math.min(2, imagesToProcess.length); // Process 2 pages at once
+    // Process images with optimized parallelism for better performance
+    const concurrency = Math.min(3, imagesToProcess.length); // Process 3 pages at once
     const processPage = async (image: any) => {
       try {
         const pageContent = await ocrImage(image.imageData, image.pageNumber, openaiApiKey);
@@ -456,7 +498,7 @@ async function processPdfWithOCR(pdfBuffer: ArrayBuffer, openaiApiKey: string, j
 }
 
 serve(async (req) => {
-  console.log('PDF OCR batch function called - v2.0 with fixed fallback');
+  console.log('PDF OCR batch function called - v3.0 with robust fallback system');
 
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });

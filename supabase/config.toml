@@ -79,7 +79,7 @@ verify_jwt = false
 [functions.pdf-page-parser]
 verify_jwt = false
 
-[functions.pdf-ocr]
+[functions.pdf-ocr-deprecated]
 verify_jwt = false
 
 [functions.pdf-to-images]
@@ -89,6 +89,9 @@ verify_jwt = false
 verify_jwt = false
 timeout = 300
 
+[functions.pdf-ocr-disabled]
+verify_jwt = false
+
 [functions.upload-document]
 verify_jwt = false
 
@@ -96,4 +99,7 @@ verify_jwt = false
 verify_jwt = false
 
 [functions.pdfrest-converter]
+verify_jwt = false
+
+[functions.pdf-a-detector]
 verify_jwt = false
