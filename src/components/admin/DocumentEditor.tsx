@@ -6,10 +6,16 @@ import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
-import { Save, Eye, EyeOff, X, AlertTriangle, FileText } from 'lucide-react';
+import { Save, Eye, EyeOff, X, AlertTriangle, FileText, ChevronLeft, ChevronRight, BookOpen } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import PDFViewer from './PDFViewer';
+
+interface PageContent {
+  pageNumber: number;
+  content: string;
+  confidence?: number;
+}
 
 interface DocumentData {
   id?: string;
@@ -24,6 +30,9 @@ interface DocumentData {
   file_url?: string;
   pdf_url?: string;
   fullContent?: string;
+  page_contents?: PageContent[];
+  total_pages?: number;
+  processed_pages?: number;
 }
 
 interface Category {
@@ -52,7 +61,8 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
   const [categories, setCategories] = useState<Category[]>([]);
   const [documentTypes, setDocumentTypes] = useState<DocumentType[]>([]);
   const [newKeyword, setNewKeyword] = useState('');
-  const [currentView, setCurrentView] = useState<'editor' | 'pdf'>('editor');
+  const [currentView, setCurrentView] = useState<'editor' | 'pdf' | 'pages'>('editor');
+  const [currentPage, setCurrentPage] = useState(1);
 
   useEffect(() => {
     setEditedData(documentData);
@@ -176,20 +186,39 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
         </div>
         
         <div className="flex items-center space-x-2">
+          {editedData.page_contents && editedData.page_contents.length > 0 && (
+            <Button
+              variant="outline"
+              onClick={() => setCurrentView(currentView === 'pages' ? 'editor' : 'pages')}
+            >
+              {currentView === 'pages' ? (
+                <>
+                  <Eye className="mr-2 h-4 w-4" />
+                  Éditeur
+                </>
+              ) : (
+                <>
+                  <BookOpen className="mr-2 h-4 w-4" />
+                  Pages ({editedData.processed_pages}/{editedData.total_pages})
+                </>
+              )}
+            </Button>
+          )}
+          
           <Button
             variant="outline"
-            onClick={() => setCurrentView(currentView === 'editor' ? 'pdf' : 'editor')}
+            onClick={() => setCurrentView(currentView === 'pdf' ? 'editor' : 'pdf')}
             disabled={!editedData.file_url}
           >
-            {currentView === 'editor' ? (
-              <>
-                <FileText className="mr-2 h-4 w-4" />
-                PDF
-              </>
-            ) : (
+            {currentView === 'pdf' ? (
               <>
                 <Eye className="mr-2 h-4 w-4" />
                 Éditeur
+              </>
+            ) : (
+              <>
+                <FileText className="mr-2 h-4 w-4" />
+                PDF
               </>
             )}
           </Button>
@@ -224,6 +253,74 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
           fileUrl={getStorageUrl(editedData.file_url)} 
           title={editedData.title}
         />
+      ) : currentView === 'pages' && editedData.page_contents ? (
+        <Card className="p-6">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-lg font-semibold">
+              Contenu par page ({editedData.processed_pages}/{editedData.total_pages} pages traitées)
+            </h3>
+            <div className="flex items-center space-x-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
+                disabled={currentPage <= 1}
+              >
+                <ChevronLeft className="h-4 w-4" />
+              </Button>
+              <span className="text-sm px-3 py-1 bg-muted rounded">
+                Page {currentPage} / {editedData.page_contents.length}
+              </span>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setCurrentPage(Math.min(editedData.page_contents.length, currentPage + 1))}
+                disabled={currentPage >= editedData.page_contents.length}
+              >
+                <ChevronRight className="h-4 w-4" />
+              </Button>
+            </div>
+          </div>
+          
+          {editedData.page_contents.find(p => p.pageNumber === currentPage) && (
+            <div 
+              className="prose prose-sm max-w-none p-6 border rounded bg-muted/30 min-h-[500px]"
+              dir={editedData.language === 'ar' ? 'rtl' : 'ltr'}
+            >
+              <div className="flex items-center justify-between mb-4 pb-2 border-b">
+                <h4 className="font-semibold text-base m-0">
+                  Page {currentPage}
+                </h4>
+                {editedData.page_contents.find(p => p.pageNumber === currentPage)?.confidence && (
+                  <Badge variant="outline">
+                    Confiance: {Math.round((editedData.page_contents.find(p => p.pageNumber === currentPage)?.confidence || 0) * 100)}%
+                  </Badge>
+                )}
+              </div>
+              <div className="whitespace-pre-wrap text-sm leading-relaxed">
+                {editedData.page_contents.find(p => p.pageNumber === currentPage)?.content || 'Contenu non disponible'}
+              </div>
+            </div>
+          )}
+          
+          {/* Pages overview */}
+          <div className="mt-6">
+            <h4 className="text-sm font-semibold mb-3">Aperçu des pages</h4>
+            <div className="grid grid-cols-5 sm:grid-cols-10 gap-2">
+              {editedData.page_contents.map((page) => (
+                <Button
+                  key={page.pageNumber}
+                  variant={currentPage === page.pageNumber ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => setCurrentPage(page.pageNumber)}
+                  className="h-8 w-12 text-xs"
+                >
+                  {page.pageNumber}
+                </Button>
+              ))}
+            </div>
+          </div>
+        </Card>
       ) : (
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Metadata Column */}

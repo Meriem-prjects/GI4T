@@ -67,28 +67,36 @@ serve(async (req) => {
     let fileContent = '';
     let extractionSuccess = false;
     
-    // Handle PDF files with dedicated parser
+    // Handle PDF files with page-by-page OpenAI parser
     if (file.type === 'application/pdf' || file.name.toLowerCase().endsWith('.pdf')) {
-      console.log('Processing PDF file with enhanced parser...');
+      console.log('Processing PDF file with page-by-page OpenAI parser...');
       
-      // Call PDF parser function
+      // Call PDF page parser function
       const pdfFormData = new FormData();
       pdfFormData.append('file', file);
+      pdfFormData.append('maxPages', '15'); // Limit to 15 pages for performance
       
       try {
-        const { data: pdfData, error: pdfError } = await supabaseAdmin.functions.invoke('pdf-parser', {
+        const { data: pdfData, error: pdfError } = await supabaseAdmin.functions.invoke('pdf-page-parser', {
           body: pdfFormData
         });
 
-        console.log('PDF parser response:', pdfData);
+        console.log('PDF page parser response:', pdfData);
 
         if (pdfError) {
           console.error('PDF parsing error:', pdfError);
           fileContent = `Erreur PDF: ${pdfError.message}`;
-        } else if (pdfData?.success && pdfData?.text && pdfData.text.length > 20) {
-          fileContent = pdfData.text;
+        } else if (pdfData?.success && pdfData?.fullText && pdfData.fullText.length > 20) {
+          fileContent = pdfData.fullText;
           extractionSuccess = true;
-          console.log('PDF extraction successful, content length:', fileContent.length);
+          console.log(`PDF extraction successful: ${pdfData.processedPages}/${pdfData.totalPages} pages, content length: ${fileContent.length}`);
+          
+          // Store page-specific data for later use
+          if (pdfData.pages && pdfData.pages.length > 0) {
+            analysisData.page_contents = pdfData.pages;
+            analysisData.total_pages = pdfData.totalPages;
+            analysisData.processed_pages = pdfData.processedPages;
+          }
         } else {
           console.warn('PDF parser returned insufficient content:', pdfData);
           fileContent = 'Contenu PDF non extractible - format nécessitant traitement manuel';
@@ -184,7 +192,7 @@ serve(async (req) => {
       keywords_ar: analysisData.keywords_ar || [],
       language: analysisData.language || 'fr',
       file_size: file.size,
-      page_count: 1,
+      page_count: analysisData.total_pages || 1,
       category_id: categoryId || null,
       document_type_id: documentTypeId || null,
       user_id: null, // Public upload - no user required
@@ -197,7 +205,10 @@ serve(async (req) => {
       dates: analysisData.dates || [],
       jurisdiction: analysisData.jurisdiction,
       case_numbers: analysisData.case_numbers || [],
-      legal_domains: analysisData.legal_domains || []
+      legal_domains: analysisData.legal_domains || [],
+      // Page-specific content for enhanced display
+      page_contents: analysisData.page_contents || null,
+      processed_pages: analysisData.processed_pages || null
     };
 
     console.log('Saving document with enhanced metadata:', {

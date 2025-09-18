@@ -76,5 +76,8 @@ verify_jwt = false
 [functions.pdf-parser]
 verify_jwt = false
 
+[functions.pdf-page-parser]
+verify_jwt = false
+
 [functions.upload-document]
 verify_jwt = false
