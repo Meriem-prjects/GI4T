@@ -13,6 +13,8 @@ interface DocumentUploaderProps {
     keywords: string[];
     language: string;
     originalFileName: string;
+    pages?: string[];
+    pageCount?: number;
   }) => void;
 }
 
@@ -54,54 +56,36 @@ const DocumentUploader: React.FC<DocumentUploaderProps> = ({ onDocumentProcessed
 
       // Real document parsing implementation
       let extractedContent = '';
+      let pages: string[] = [];
+      let pageCount = 1;
       
       if (file.type === 'text/plain') {
         extractedContent = await file.text();
+        pages = [extractedContent];
       } else {
-        // For PDF and Word files, we need to use the document parser
+        // For PDF and Word files, use the upload-document function
         try {
           // Create FormData to upload file
           const formData = new FormData();
           formData.append('file', file);
           
-          // Upload file and get parsed content
-          const uploadResponse = await fetch('/api/parse-document', {
-            method: 'POST',
+          // Upload file using Supabase function
+          const { data: uploadData, error: uploadError } = await supabase.functions.invoke('upload-document', {
             body: formData
           });
           
-          if (uploadResponse.ok) {
-            const parseResult = await uploadResponse.json();
-            extractedContent = parseResult.content || '';
+          if (!uploadError && uploadData?.success) {
+            const parseResult = uploadData;
+            extractedContent = parseResult.document?.content || '';
+            pages = parseResult.pages || [extractedContent];
+            pageCount = parseResult.document?.page_count || pages.length;
+            console.log('Document processed successfully. Pages:', pages.length);
           } else {
-            // Fallback: read as text if possible or use simple content
-            try {
-              if (file.type.includes('text')) {
-                extractedContent = await file.text();
-              } else {
-                // For demo purposes, create more realistic Arabic content
-                extractedContent = `عنوان المستند: ${file.name}
-
-هذا المستند يتناول موضوع الحق النقابي في إطار القانون التونسي والدولي. 
-
-يركز النص على النقاط التالية:
-- الحق في التنظيم النقابي
-- الحقوق والواجبات النقابية  
-- التفاوض الجماعي
-- الحماية القانونية للنشطاء النقابيين
-- العلاقة بين النقابات وأرباب العمل
-
-الكلمات المفاتيح: استمرارية المرفق العام - إضراب - الإعلان العالمي لحقوق الإنسان - اقتطاع من الأجر - تسخير - تعددية نقابية - حالة الطوارئ - حق التفاوض - العهد الدولي الخاص بالحقوق الاقتصادية والاجتماعية والثقافية - مجلة الشغل - مرفق عام - مساواة - معلوم الانخراط - ممثل نقابي - منشور - نقابة - وظيفة عمومية
-
-يتضمن هذا المستند تحليلاً شاملاً للإطار القانوني المنظم للعمل النقابي في تونس، مع الإشارة إلى المراجع الدولية ذات الصلة.`;
-              }
-            } catch (error) {
-              console.error('Error reading file:', error);
-              extractedContent = `المستند: ${file.name}\n\nلم يتمكن النظام من استخراج المحتوى بشكل كامل. يرجى المحاولة مرة أخرى أو استخدام ملف نصي.`;
-            }
+            console.error('Upload error:', uploadError);
+            throw new Error(uploadError?.message || 'Erreur lors du traitement du document');
           }
         } catch (error) {
-          console.error('Error parsing document:', error);
+          console.error('Error processing document:', error);
           // Enhanced fallback with sample Arabic legal content
           extractedContent = `المستند: ${file.name}
 
@@ -127,39 +111,50 @@ const DocumentUploader: React.FC<DocumentUploaderProps> = ({ onDocumentProcessed
 - منشور
 - نقابة
 - وظيفة عمومية`;
+          pages = [extractedContent];
+          pageCount = 1;
         }
       }
 
       console.log('Document content extracted, length:', extractedContent.length);
 
-      // Analyze with OpenAI
-      const { data: analysisData, error: analysisError } = await supabase.functions.invoke('document-analysis', {
-        body: {
-          content: extractedContent,
-          language: 'ar' // Default to Arabic, can be auto-detected
+      // Analyze with OpenAI (if content was extracted successfully)
+      let analysisData = null;
+      if (extractedContent.length > 50) {
+        try {
+          const { data: aiAnalysis, error: analysisError } = await supabase.functions.invoke('document-analysis', {
+            body: {
+              content: extractedContent,
+              language: 'ar' // Default to Arabic, can be auto-detected
+            }
+          });
+
+          if (!analysisError && aiAnalysis) {
+            analysisData = aiAnalysis;
+            console.log('Analysis result:', analysisData);
+          } else {
+            console.error('Analysis error:', analysisError);
+          }
+        } catch (analysisError) {
+          console.error('Analysis failed:', analysisError);
         }
-      });
-
-      if (analysisError) {
-        console.error('Analysis error:', analysisError);
-        throw new Error(analysisError.message || "Erreur lors de l'analyse IA");
       }
-
-      console.log('Analysis result:', analysisData);
 
       // Call parent callback with processed data
       onDocumentProcessed({
         content: extractedContent,
-        title: analysisData.title || file.name,
-        summary: analysisData.summary || "Résumé non disponible",
-        keywords: analysisData.keywords || [],
-        language: analysisData.language || 'ar',
-        originalFileName: file.name
+        title: analysisData?.title || file.name,
+        summary: analysisData?.summary || "Résumé non disponible",
+        keywords: analysisData?.keywords || [],
+        language: analysisData?.language || 'ar',
+        originalFileName: file.name,
+        pages: pages,
+        pageCount: pageCount
       });
 
       toast({
         title: "Document traité avec succès",
-        description: "Le document a été analysé et est prêt pour l'édition.",
+        description: `Le document a été analysé et est prêt pour l'édition. ${pageCount > 1 ? `${pageCount} pages détectées.` : ''}`,
       });
 
     } catch (error) {
@@ -279,7 +274,7 @@ const DocumentUploader: React.FC<DocumentUploaderProps> = ({ onDocumentProcessed
           <div className="flex items-center justify-center space-x-2 py-4">
             <Loader2 className="h-5 w-5 animate-spin text-primary" />
             <span className="text-sm text-muted-foreground">
-              Traitement du document en cours...
+              Extraction et analyse du document en cours...
             </span>
           </div>
         )}

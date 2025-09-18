@@ -15,6 +15,8 @@ interface DocumentData {
   keywords: string[];
   language: string;
   originalFileName: string;
+  pages?: string[];
+  pageCount?: number;
 }
 
 interface DocumentEditorProps {
@@ -57,12 +59,34 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
   };
 
   const formatContent = (content: string) => {
-    // Simple formatting to preserve structure
+    // Enhanced formatting to preserve structure and handle multi-page content
     return content
       .split('\n')
       .map(line => line.trim())
       .filter(line => line.length > 0)
       .join('\n\n');
+  };
+
+  const renderPageContent = () => {
+    if (editedData.pages && editedData.pages.length > 1) {
+      return editedData.pages.map((page, index) => (
+        <div key={index} className="mb-8 border-b border-border pb-6">
+          <div className="flex items-center mb-3">
+            <div className="text-sm font-medium text-primary bg-primary/10 px-2 py-1 rounded">
+              Page {index + 1}
+            </div>
+          </div>
+          <div className="whitespace-pre-wrap text-sm leading-relaxed">
+            {formatContent(page)}
+          </div>
+        </div>
+      ));
+    }
+    return (
+      <div className="whitespace-pre-wrap">
+        {formatContent(editedData.content)}
+      </div>
+    );
   };
 
   return (
@@ -78,6 +102,9 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
               </h2>
               <p className="text-sm text-muted-foreground">
                 Fichier source: {editedData.originalFileName}
+                {editedData.pageCount && editedData.pageCount > 1 && (
+                  <span className="ml-2 text-primary">• {editedData.pageCount} pages</span>
+                )}
               </p>
             </div>
           </div>
@@ -222,9 +249,7 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
                   </div>
                 )}
                 
-                <div className="whitespace-pre-wrap">
-                  {formatContent(editedData.content)}
-                </div>
+                {renderPageContent()}
               </div>
             ) : (
               <Textarea

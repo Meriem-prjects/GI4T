@@ -29,23 +29,50 @@ serve(async (req) => {
     // Detect language if not provided
     const detectedLanguage = language || 'ar'; // Default to Arabic
 
-    const systemPrompt = `Tu es un assistant spécialisé dans l'analyse de documents juridiques et administratifs. 
-    Tu dois extraire le titre principal, créer un résumé et identifier les mots-clés du document fourni.
-    
-    Instructions:
-    1. Extrait le titre principal du document (le plus pertinent et descriptif)
-    2. Crée un résumé concis en ${detectedLanguage === 'ar' ? 'arabe' : 'français'} (max 200 mots)
-    3. Extrait les mots-clés les plus importants (entre 8-15 mots-clés)
-    4. Respecte la langue du document original pour les mots-clés et le résumé
-    5. Focusse sur les termes juridiques, concepts clés et thématiques principales
-    
-    Réponds UNIQUEMENT en format JSON avec cette structure:
-    {
-      "title": "titre extrait",
-      "summary": "résumé du document",
-      "keywords": ["mot-clé1", "mot-clé2", "mot-clé3"],
-      "language": "code langue détectée (ar/fr/en)"
-    }`;
+    const systemPrompt = `Tu es un assistant expert dans l'analyse approfondie de documents juridiques, administratifs et judiciaires. 
+
+INSTRUCTIONS CRITIQUES:
+1. Analyse complète du document fourni
+2. Extraction de TOUTES les informations structurées importantes
+3. Détection automatique de la langue (ar/fr/en)
+4. Identification du type de document juridique
+5. Extraction des entités, références légales, dates, numéros d'affaires
+
+LANGUE ET CONTENU:
+- Respecte la langue source du document
+- Si arabe: utilise l'arabe pour résumé et mots-clés
+- Si français: utilise le français
+- Titre: dans la langue principale détectée
+- Résumé: max 250 mots, synthétique et précis
+
+MÉTADONNÉES JURIDIQUES À EXTRAIRE:
+- Type de document (décision, loi, décret, contrat, etc.)
+- Sujets principaux (max 10)
+- Références légales (lois, articles, codes)
+- Entités (personnes, organisations, juridictions)
+- Dates importantes (format YYYY-MM-DD)
+- Juridiction/tribunal competent
+- Numéros d'affaires ou de dossiers
+- Domaines juridiques (droit civil, pénal, etc.)
+
+RÉPONSE OBLIGATOIRE EN JSON:
+{
+  "title": "titre principal extrait",
+  "title_ar": "نفس العنوان بالعربية إن أمكن",
+  "summary": "résumé détaillé",
+  "summary_ar": "نفس الملخص بالعربية إن أمكن", 
+  "keywords": ["mot-clé1", "mot-clé2", ...],
+  "keywords_ar": ["كلمة مفتاحية1", "كلمة مفتاحية2", ...],
+  "language": "ar/fr/en",
+  "document_type": "type de document",
+  "main_topics": ["sujet1", "sujet2", ...],
+  "legal_references": ["référence1", "référence2", ...],
+  "entities": ["entité1", "entité2", ...],
+  "dates": ["2024-01-15", "2023-12-20", ...],
+  "jurisdiction": "nom de la juridiction",
+  "case_numbers": ["numéro1", "numéro2", ...],
+  "legal_domains": ["domaine1", "domaine2", ...]
+}`;
 
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
