@@ -244,6 +244,51 @@ export type Database = {
           },
         ]
       }
+      processing_jobs: {
+        Row: {
+          created_at: string
+          current_step: string | null
+          error_message: string | null
+          file_name: string
+          file_size: number
+          id: string
+          processed_pages: number | null
+          progress: number
+          result_data: Json | null
+          status: string
+          total_pages: number | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          current_step?: string | null
+          error_message?: string | null
+          file_name: string
+          file_size: number
+          id?: string
+          processed_pages?: number | null
+          progress?: number
+          result_data?: Json | null
+          status?: string
+          total_pages?: number | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          current_step?: string | null
+          error_message?: string | null
+          file_name?: string
+          file_size?: number
+          id?: string
+          processed_pages?: number | null
+          progress?: number
+          result_data?: Json | null
+          status?: string
+          total_pages?: number | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never

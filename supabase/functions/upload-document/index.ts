@@ -93,6 +93,25 @@ serve(async (req) => {
     if (file.type === 'application/pdf' || file.name.toLowerCase().endsWith('.pdf')) {
       console.log('Processing PDF file - detecting PDF/A compliance first...');
       
+      // Create processing job for progress tracking
+      const { data: jobData, error: jobError } = await supabaseAdmin
+        .from('processing_jobs')
+        .insert({
+          file_name: file.name,
+          file_size: file.size,
+          status: 'pending',
+          progress: 0,
+          current_step: 'initializing'
+        })
+        .select()
+        .single();
+      
+      if (jobError) {
+        console.error('Failed to create processing job:', jobError);
+      }
+      
+      const jobId = jobData?.id;
+      
       // First, detect if this is a PDF/A document for optimized processing
       let pdfaInfo = null;
       try {
@@ -118,6 +137,11 @@ serve(async (req) => {
       try {
         const pdfFormData = new FormData();
         pdfFormData.append('file', file);
+        
+        // Add job ID for progress tracking
+        if (jobId) {
+          pdfFormData.append('jobId', jobId);
+        }
         
         // Add PDF/A optimization parameters if detected
         if (pdfaInfo?.recommendations) {
@@ -293,7 +317,9 @@ serve(async (req) => {
       pdfa_version: pdfaInfo?.pdfaVersion || null,
       pdfa_conformance_level: pdfaInfo?.conformanceLevel || null,
       archival_metadata: pdfaInfo?.metadata || null,
-      archival_features: pdfaInfo?.archivalFeatures || null
+      archival_features: pdfaInfo?.archivalFeatures || null,
+      // Processing job reference
+      processing_job_id: jobId || null
     };
 
     console.log('Saving document with enhanced metadata:', {

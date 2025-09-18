@@ -9,6 +9,7 @@ import { Progress } from '@/components/ui/progress';
 import { Upload, FileText, X, Plus, Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
+import ProgressTracker from './ProgressTracker';
 // PdfToImages no longer needed - using server-side pdfRest conversion
 
 interface UploadFile {
@@ -18,6 +19,7 @@ interface UploadFile {
   progress: number;
   result?: any;
   error?: string;
+  jobId?: string; // Add job ID for progress tracking
 }
 
 interface Category {
@@ -251,14 +253,13 @@ const BatchDocumentUploader: React.FC<BatchDocumentUploaderProps> = ({ onDocumen
     }
 
     setIsProcessing(true);
-    const processedDocuments = [];
+    const processedDocuments: any[] = [];
 
     try {
       for (const uploadFile of uploadFiles) {
         if (uploadFile.status !== 'pending') continue;
 
         try {
-          // All files (including PDFs) are processed server-side with pdfRest integration
           await processFile(uploadFile, selectedCategory, selectedDocumentType, processedDocuments);
         } catch (error) {
           console.error(`Error processing ${uploadFile.file.name}:`, error);
@@ -272,17 +273,59 @@ const BatchDocumentUploader: React.FC<BatchDocumentUploaderProps> = ({ onDocumen
         }
       }
 
-      if (processedDocuments.length > 0) {
-        onDocumentsProcessed(processedDocuments);
+      // Check if all files are processed (completed or have errors)
+      const allProcessed = uploadFiles.every(f => f.status === 'completed' || f.status === 'error');
+      
+      // Only call onDocumentsProcessed for files that completed successfully
+      const completedDocuments = uploadFiles
+        .filter(f => f.status === 'completed' && f.result)
+        .map(f => f.result);
+      
+      if (completedDocuments.length > 0) {
+        onDocumentsProcessed(completedDocuments);
         toast({
           title: "Documents traités",
-          description: `${processedDocuments.length} document(s) traité(s) avec succès.`,
+          description: `${completedDocuments.length} document(s) traité(s) avec succès.`,
         });
       }
 
     } finally {
       setIsProcessing(false);
     }
+  };
+
+  // Callback to handle completion from ProgressTracker
+  const handleFileCompletion = (uploadFileId: string, result: any) => {
+    console.log('File completed via progress tracker:', uploadFileId);
+    
+    // Update the upload file status
+    setUploadFiles(prev => prev.map(f => 
+      f.id === uploadFileId ? { 
+        ...f, 
+        status: 'completed', 
+        progress: 100, 
+        result: result
+      } : f
+    ));
+
+    // Check if this was the last file processing and update processed documents
+    setTimeout(() => {
+      const currentFiles = uploadFiles.find(f => f.id === uploadFileId);
+      if (currentFiles?.result) {
+        const allCompleted = uploadFiles.every(f => f.status === 'completed' || f.status === 'error');
+        const completedDocuments = uploadFiles
+          .filter(f => f.status === 'completed' && f.result)
+          .map(f => f.result);
+        
+        if (allCompleted && completedDocuments.length > 0) {
+          onDocumentsProcessed(completedDocuments);
+          toast({
+            title: "Tous les documents traités",
+            description: `${completedDocuments.length} document(s) traité(s) avec succès.`,
+          });
+        }
+      }
+    }, 100);
   };
 
   const formatFileSize = (bytes: number) => {
@@ -299,7 +342,7 @@ const BatchDocumentUploader: React.FC<BatchDocumentUploaderProps> = ({ onDocumen
       f.id === uploadFile.id ? { ...f, status: 'processing', progress: 10 } : f
     ));
 
-    // Use upload-document function with pdfRest integration for all file types
+    // Use upload-document function with progress tracking
     const formData = new FormData();
     formData.append('file', uploadFile.file);
     formData.append('categoryId', categoryId);
@@ -322,22 +365,31 @@ const BatchDocumentUploader: React.FC<BatchDocumentUploaderProps> = ({ onDocumen
       throw new Error(uploadResult.error || 'Upload failed');
     }
 
-    // Update progress
-    setUploadFiles(prev => prev.map(f => 
-      f.id === uploadFile.id ? { ...f, progress: 90 } : f
-    ));
-
-    // Update status to completed
-    setUploadFiles(prev => prev.map(f => 
-      f.id === uploadFile.id ? { 
-        ...f, 
-        status: 'completed', 
-        progress: 100, 
-        result: uploadResult.document
-      } : f
-    ));
-
-    processedDocuments.push(uploadResult.document);
+    // Extract job ID from response if available
+    const jobId = uploadResult.document?.processing_job_id;
+    
+    if (jobId) {
+      // Update file with job ID for progress tracking
+      setUploadFiles(prev => prev.map(f => 
+        f.id === uploadFile.id ? { 
+          ...f, 
+          jobId: jobId,
+          progress: 40 
+        } : f
+      ));
+    } else {
+      // No job ID - mark as completed immediately
+      setUploadFiles(prev => prev.map(f => 
+        f.id === uploadFile.id ? { 
+          ...f, 
+          status: 'completed', 
+          progress: 100, 
+          result: uploadResult.document
+        } : f
+      ));
+      
+      processedDocuments.push(uploadResult.document);
+    }
   };
 
   const getStatusIcon = (status: string) => {
@@ -518,43 +570,61 @@ const BatchDocumentUploader: React.FC<BatchDocumentUploaderProps> = ({ onDocumen
 
           <div className="space-y-3">
             {uploadFiles.map((uploadFile) => (
-              <div key={uploadFile.id} className="space-y-3">
-                <div className="flex items-center justify-between p-3 border rounded-lg">
-                  <div className="flex items-center space-x-3 flex-1">
-                    {getStatusIcon(uploadFile.status)}
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium truncate">
-                        {uploadFile.file.name}
-                      </p>
-                      <p className="text-xs text-muted-foreground">
-                        {formatFileSize(uploadFile.file.size)}
-                      </p>
-                      {(uploadFile.status === 'processing') && (
-                        <Progress value={uploadFile.progress} className="w-full mt-2" />
-                      )}
-                      {uploadFile.error && (
-                        <p className="text-xs text-red-500 mt-1">{uploadFile.error}</p>
-                      )}
+              <div key={uploadFile.id}>
+                {uploadFile.status === 'processing' && uploadFile.jobId ? (
+                  <ProgressTracker
+                    jobId={uploadFile.jobId}
+                    fileName={uploadFile.file.name}
+                    onComplete={(result) => handleFileCompletion(uploadFile.id, result)}
+                    onError={(error) => {
+                      setUploadFiles(prev => prev.map(f => 
+                        f.id === uploadFile.id ? { 
+                          ...f, 
+                          status: 'error', 
+                          error: error
+                        } : f
+                      ));
+                    }}
+                  />
+                ) : (
+                  <div className="flex items-center justify-between p-3 border rounded-lg">
+                    <div className="flex items-center space-x-3 flex-1">
+                      {getStatusIcon(uploadFile.status)}
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium truncate">
+                          {uploadFile.file.name}
+                        </p>
+                        <p className="text-xs text-muted-foreground">
+                          {formatFileSize(uploadFile.file.size)}
+                        </p>
+                        {(uploadFile.status === 'processing') && (
+                          <Progress value={uploadFile.progress} className="w-full mt-2" />
+                        )}
+                        {uploadFile.error && (
+                          <p className="text-xs text-red-500 mt-1">{uploadFile.error}</p>
+                        )}
+                      </div>
+                      <Badge variant={
+                        uploadFile.status === 'completed' ? 'default' :
+                        uploadFile.status === 'error' ? 'destructive' :
+                        uploadFile.status === 'processing' ? 'secondary' : 'outline'
+                      }>
+                        {getStatusText(uploadFile.status)}
+                      </Badge>
                     </div>
-                    <Badge variant={
-                      uploadFile.status === 'completed' ? 'default' :
-                      uploadFile.status === 'error' ? 'destructive' :
-                      uploadFile.status === 'processing' ? 'secondary' : 'outline'
-                    }>
-                      {getStatusText(uploadFile.status)}
-                    </Badge>
+                    
+                    {uploadFile.status === 'pending' && (
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => removeFile(uploadFile.id)}
+                        className="ml-2"
+                      >
+                        <X className="h-4 w-4" />
+                      </Button>
+                    )}
                   </div>
-                  
-                  {uploadFile.status === 'pending' && (
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => removeFile(uploadFile.id)}
-                    >
-                      <X className="h-4 w-4" />
-                    </Button>
-                  )}
-                </div>
+                )}
               </div>
             ))}
           </div>
