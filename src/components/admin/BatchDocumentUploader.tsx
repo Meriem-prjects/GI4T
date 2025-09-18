@@ -510,14 +510,15 @@ const BatchDocumentUploader: React.FC<BatchDocumentUploaderProps> = ({ onDocumen
                 {/* Progress Tracker for files with job ID */}
                 {uploadFile.jobId && uploadFile.status === 'processing' && (
                   <div className="mt-3">
-                    <ProgressTracker 
-                      jobId={uploadFile.jobId}
-                      fileName={uploadFile.file.name}
-                      onComplete={(result) => handleFileCompletion(uploadFile.id, result)}
-                      onError={(error) => setUploadFiles(prev => prev.map(f => 
-                        f.id === uploadFile.id ? { ...f, status: 'error', error } : f
-                      ))}
-                    />
+                     <ProgressTracker 
+                       jobId={uploadFile.jobId}
+                       fileName={uploadFile.file.name}
+                       pdfUrl={uploadFile.result?.pdf_url || uploadFile.result?.file_url}
+                       onComplete={(result) => handleFileCompletion(uploadFile.id, result)}
+                       onError={(error) => setUploadFiles(prev => prev.map(f => 
+                         f.id === uploadFile.id ? { ...f, status: 'error', error } : f
+                       ))}
+                     />
                   </div>
                 )}
               </div>

@@ -22,16 +22,22 @@ interface ProgressTrackerProps {
   fileName: string;
   onComplete?: (result: any) => void;
   onError?: (error: string) => void;
+  pdfUrl?: string; // For resume functionality
 }
 
 const ProgressTracker: React.FC<ProgressTrackerProps> = ({
   jobId,
   fileName,
   onComplete,
-  onError
+  onError,
+  pdfUrl
 }) => {
   const [job, setJob] = useState<ProcessingJob | null>(null);
   const [isListening, setIsListening] = useState(false);
+  const [document, setDocument] = useState<any>(null);
+  const [lastProgressUpdate, setLastProgressUpdate] = useState<number>(Date.now());
+  const [showResumeButton, setShowResumeButton] = useState(false);
+  const [isResuming, setIsResuming] = useState(false);
 
   useEffect(() => {
     if (!jobId) return;
@@ -53,6 +59,7 @@ const ProgressTracker: React.FC<ProgressTrackerProps> = ({
         (payload) => {
           console.log('Progress update received:', payload.new);
           setJob(payload.new as ProcessingJob);
+          setLastProgressUpdate(Date.now());
 
           // Handle completion
           if (payload.new.status === 'completed') {
@@ -75,23 +82,33 @@ const ProgressTracker: React.FC<ProgressTrackerProps> = ({
     };
   }, [jobId]);
 
-  // Helper to fetch document once job completes
-  const fetchAndEmitDocument = async (jobId: string) => {
+  // Helper to fetch document data
+  const fetchDocument = async (jobId: string) => {
     try {
       const { data: doc, error: docError } = await (supabase as any)
         .from('documents')
-        .select('id,title,summary,content,keywords,language,original_filename,file_url,pdf_url,category_id,document_type_id,page_contents,processed_pages,total_pages,created_at')
+        .select('id,title,summary,content,keywords,language,original_filename,file_url,pdf_url,category_id,document_type_id,page_contents,processed_pages,total_pages,created_at,status')
         .eq('processing_job_id', jobId)
         .order('created_at', { ascending: false })
         .limit(1)
         .single();
 
       if (doc && !docError) {
-        onComplete?.(doc);
-      } else {
-        onComplete?.(job?.result_data);
+        setDocument(doc);
+        return doc;
       }
     } catch (e) {
+      console.error('Error fetching document:', e);
+    }
+    return null;
+  };
+
+  // Helper to fetch document once job completes
+  const fetchAndEmitDocument = async (jobId: string) => {
+    const doc = await fetchDocument(jobId);
+    if (doc) {
+      onComplete?.(doc);
+    } else {
       onComplete?.(job?.result_data);
     }
   };
@@ -112,6 +129,10 @@ const ProgressTracker: React.FC<ProgressTrackerProps> = ({
       }
 
       setJob(data);
+      setLastProgressUpdate(Date.now());
+
+      // Also fetch document data
+      await fetchDocument(jobId);
 
       // Check if already completed
       if (data.status === 'completed') {
@@ -136,6 +157,54 @@ const ProgressTracker: React.FC<ProgressTrackerProps> = ({
 
     return () => window.clearInterval(interval);
   }, [jobId, job?.status]);
+
+  // Stall detection - show resume button if no progress for 2 minutes
+  useEffect(() => {
+    if (!jobId || !job || job.status !== 'processing') {
+      setShowResumeButton(false);
+      return;
+    }
+
+    const checkStall = () => {
+      const timeSinceLastUpdate = Date.now() - lastProgressUpdate;
+      const isStalled = timeSinceLastUpdate > 120000; // 2 minutes
+      setShowResumeButton(isStalled && document?.processed_pages > 0);
+    };
+
+    const stallInterval = setInterval(checkStall, 30000); // Check every 30 seconds
+    checkStall(); // Initial check
+
+    return () => clearInterval(stallInterval);
+  }, [jobId, job?.status, lastProgressUpdate, document?.processed_pages]);
+
+  // Resume OCR processing
+  const handleResume = async () => {
+    if (!jobId || !pdfUrl || isResuming) return;
+
+    setIsResuming(true);
+    setShowResumeButton(false);
+
+    try {
+      const formData = new FormData();
+      formData.append('pdfUrl', pdfUrl);
+      formData.append('jobId', jobId);
+      formData.append('filename', fileName);
+
+      const { error } = await supabase.functions.invoke('pdf-ocr-batch', {
+        body: formData
+      });
+
+      if (error) {
+        console.error('Resume failed:', error);
+        setShowResumeButton(true);
+      }
+    } catch (error) {
+      console.error('Resume error:', error);
+      setShowResumeButton(true);
+    } finally {
+      setIsResuming(false);
+    }
+  };
 
   const getStepDescription = (step: string | null): string => {
     if (!step) return 'Initialisation...';
@@ -185,9 +254,16 @@ const ProgressTracker: React.FC<ProgressTrackerProps> = ({
         return <Badge variant="destructive">Erreur</Badge>;
       case 'processing':
         return <Badge variant="secondary">En cours</Badge>;
-      default:
-        return <Badge variant="outline">En attente</Badge>;
+        default:
+          return <Badge variant="outline">En attente</Badge>;
     }
+  };
+
+  const getSavedPagesInfo = () => {
+    if (!document) return null;
+    const saved = document.processed_pages || 0;
+    const total = document.total_pages || job?.total_pages || 0;
+    return { saved, total };
   };
 
   const formatFileSize = (bytes: number) => {
@@ -236,18 +312,61 @@ const ProgressTracker: React.FC<ProgressTrackerProps> = ({
       </div>
 
       {job && job.status === 'processing' && (
-        <div className="px-3">
+        <div className="px-3 space-y-2">
           <div className="flex justify-between text-xs text-muted-foreground mb-1">
             <span>Progression</span>
             <span>{job.progress}%</span>
           </div>
           <Progress value={job.progress} className="h-2" />
-          {job.processed_pages && job.total_pages && (
-            <div className="flex justify-between text-xs text-muted-foreground mt-1">
-              <span>Pages traitées</span>
-              <span>{job.processed_pages}/{job.total_pages}</span>
+          
+          {(() => {
+            const savedInfo = getSavedPagesInfo();
+            if (savedInfo && savedInfo.total > 0) {
+              return (
+                <div className="flex justify-between text-xs text-muted-foreground">
+                  <span>Pages sauvegardées</span>
+                  <span className="font-medium text-green-600">{savedInfo.saved}/{savedInfo.total}</span>
+                </div>
+              );
+            }
+            if (job.processed_pages && job.total_pages) {
+              return (
+                <div className="flex justify-between text-xs text-muted-foreground">
+                  <span>Pages traitées</span>
+                  <span>{job.processed_pages}/{job.total_pages}</span>
+                </div>
+              );
+            }
+            return null;
+          })()}
+
+          {showResumeButton && pdfUrl && (
+            <div className="pt-2">
+              <button
+                onClick={handleResume}
+                disabled={isResuming}
+                className="w-full px-3 py-1.5 text-xs bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {isResuming ? 'Reprise en cours...' : 'Reprendre le traitement'}
+              </button>
             </div>
           )}
+        </div>
+      )}
+
+      {job && job.status === 'failed' && document?.processed_pages > 0 && pdfUrl && (
+        <div className="px-3 pt-2">
+          <div className="flex justify-between text-xs text-muted-foreground mb-2">
+            <span>Pages sauvegardées</span>
+            <span className="font-medium text-green-600">{document.processed_pages}/{document.total_pages || 'N/A'}</span>
+          </div>
+          <button
+            onClick={handleResume}
+            disabled={isResuming}
+            className="w-full px-3 py-1.5 text-xs bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {isResuming ? 'Reprise en cours...' : 'Reprendre le traitement'}
+          </button>
         </div>
       )}
     </div>

@@ -55,9 +55,92 @@ async function updateJobProgress(jobId: string, updates: any) {
   }
 }
 
-// OCR a single image using OpenAI Vision API with enhanced prompts
+// Save page to database immediately after OCR
+async function savePageToDatabase(jobId: string, pageContent: PageContent) {
+  if (!jobId) return;
+  
+  try {
+    // Get current document
+    const { data: document, error: fetchError } = await supabaseAdmin
+      .from('documents')
+      .select('page_contents, processed_pages, total_pages, content')
+      .eq('processing_job_id', jobId)
+      .single();
+
+    if (fetchError) {
+      console.error('Failed to fetch document for page save:', fetchError);
+      return;
+    }
+
+    // Update page_contents array
+    const existingPages = document.page_contents || [];
+    const updatedPages = existingPages.filter((p: any) => p.pageNumber !== pageContent.pageNumber);
+    updatedPages.push(pageContent);
+    updatedPages.sort((a: any, b: any) => a.pageNumber - b.pageNumber);
+
+    // Rebuild full content
+    const fullContent = updatedPages
+      .map((p: any) => p.content)
+      .filter((t: string) => t.trim().length > 0)
+      .join('\n\n');
+
+    // Update document with new page
+    await supabaseAdmin
+      .from('documents')
+      .update({
+        page_contents: updatedPages,
+        processed_pages: updatedPages.length,
+        content: fullContent,
+        status: 'processing'
+      })
+      .eq('processing_job_id', jobId);
+
+    console.log(`Page ${pageContent.pageNumber} saved to database. Total saved pages: ${updatedPages.length}`);
+    
+  } catch (error) {
+    console.error('Failed to save page to database:', error);
+  }
+}
+
+// Check for existing pages to support resume
+async function getExistingPages(jobId: string): Promise<number[]> {
+  if (!jobId) return [];
+  
+  try {
+    const { data: document, error } = await supabaseAdmin
+      .from('documents')
+      .select('page_contents')
+      .eq('processing_job_id', jobId)
+      .single();
+
+    if (error || !document?.page_contents) return [];
+    
+    const pageNumbers = (document.page_contents as PageContent[])
+      .map(p => p.pageNumber)
+      .sort((a, b) => a - b);
+    
+    console.log(`Found existing pages: ${pageNumbers.join(', ')}`);
+    return pageNumbers;
+    
+  } catch (error) {
+    console.error('Failed to check existing pages:', error);
+    return [];
+  }
+}
+
+// OCR a single image using OpenAI Vision API with enhanced prompts and rate limiting
 async function ocrImage(imageData: string, pageNumber: number, openaiApiKey: string, retryCount = 0): Promise<PageContent> {
   console.log(`Starting OCR for page ${pageNumber}...`);
+  
+  // Add delay to prevent rate limiting
+  if (retryCount > 0) {
+    const delay = Math.min(2000 * Math.pow(2, retryCount), 10000); // Exponential backoff, max 10s
+    console.log(`Waiting ${delay}ms before retry...`);
+    await new Promise(resolve => setTimeout(resolve, delay));
+  } else {
+    // Base delay between requests to prevent rate limiting
+    await new Promise(resolve => setTimeout(resolve, 1000));
+  }
   
   // Enhanced prompt for better OCR accuracy
   const systemPrompt = `Tu es un expert OCR spécialisé dans l'extraction de texte juridique et administratif en français et en arabe. 
@@ -99,7 +182,7 @@ async function ocrImage(imageData: string, pageNumber: number, openaiApiKey: str
         }
       ],
       max_tokens: 4000,
-      temperature: 0.1, // Slightly higher for better text recognition
+      temperature: 0.1,
       response_format: { type: "json_object" }
     }),
   });
@@ -108,11 +191,15 @@ async function ocrImage(imageData: string, pageNumber: number, openaiApiKey: str
     const errorText = await response.text();
     console.error(`OCR API error for page ${pageNumber}:`, response.status, errorText);
     
-    // Retry logic for failed OCR attempts
-    if (retryCount < 2 && (response.status === 429 || response.status >= 500)) {
+    // Enhanced retry logic with exponential backoff
+    if (retryCount < 3 && (response.status === 429 || response.status >= 500)) {
       console.log(`Retrying OCR for page ${pageNumber} (attempt ${retryCount + 1})...`);
-      await new Promise(resolve => setTimeout(resolve, (retryCount + 1) * 2000)); // Progressive delay
       return ocrImage(imageData, pageNumber, openaiApiKey, retryCount + 1);
+    }
+    
+    // For rate limiting, throw a specific error
+    if (response.status === 429) {
+      throw new Error(`Rate limit exceeded for page ${pageNumber}. Please try again later.`);
     }
     
     throw new Error(`OCR failed for page ${pageNumber}: ${response.status} - ${errorText}`);
@@ -153,8 +240,8 @@ async function ocrImage(imageData: string, pageNumber: number, openaiApiKey: str
   }
 }
 
-// Enhanced fallback processing chain for PDFs
-async function processPdfWithOCR(pdfBuffer: ArrayBuffer, openaiApiKey: string, jobId?: string, filename?: string): Promise<BatchOCRResult> {
+// Enhanced fallback processing chain for PDFs with resume support
+async function processPdfWithOCR(pdfBuffer: ArrayBuffer, openaiApiKey: string, jobId?: string, filename?: string, isResume: boolean = false): Promise<BatchOCRResult> {
   console.log('Starting enhanced PDF OCR processing with multi-level fallback...');
   
   // Check if PDF might be password-protected
@@ -212,74 +299,111 @@ async function processPdfWithOCR(pdfBuffer: ArrayBuffer, openaiApiKey: string, j
     console.warn('PDF-to-images conversion failed. Trying alternative methods.', e);
   }
 
-  // If conversion succeeded, OCR all pages with progress tracking
+  // If conversion succeeded, OCR all pages with progress tracking and resume support
   if (conversionResult) {
     console.log(`PDF converted to ${conversionResult.images.length} images. Starting batch OCR...`);
+    
+    // Check for existing pages if resume
+    const existingPageNumbers = isResume ? await getExistingPages(jobId) : [];
+    const imagesToProcess = conversionResult.images.filter(img => !existingPageNumbers.includes(img.pageNumber));
+    
+    if (existingPageNumbers.length > 0) {
+      console.log(`Resume detected: Skipping pages: ${existingPageNumbers.join(', ')}`);
+      console.log(`Processing remaining ${imagesToProcess.length} pages...`);
+    }
     
     // Update progress: OCR starting
     await updateJobProgress(jobId, {
       current_step: 'ocr_starting',
-      progress: 20,
-      total_pages: conversionResult.images.length
+      progress: Math.round((existingPageNumbers.length / conversionResult.images.length) * 90) + 5,
+      total_pages: conversionResult.images.length,
+      processed_pages: existingPageNumbers.length
     });
 
     const pages: PageContent[] = [];
     const languages: { [key: string]: number } = {};
 
-    // Process images in batches of 3 for efficiency
-    const batchSize = 3;
-    for (let i = 0; i < conversionResult.images.length; i += batchSize) {
-      const batch = conversionResult.images.slice(i, i + batchSize);
-      const results = await Promise.all(
-        batch.map(async (image) => {
-          try {
-            const pageContent = await ocrImage(image.imageData, image.pageNumber, openaiApiKey);
-            return pageContent;
-          } catch (error) {
-            console.error(`Error processing page ${image.pageNumber}:`, error);
-            return { pageNumber: image.pageNumber, content: '', confidence: 0, language: 'fr' } as PageContent;
-          }
-        })
-      );
-      
-      // Update progress for each completed batch
-      for (const pageContent of results) {
+    // Process images sequentially to prevent rate limiting (reduced from batch processing)
+    for (const image of imagesToProcess) {
+      try {
+        const pageContent = await ocrImage(image.imageData, image.pageNumber, openaiApiKey);
         pages.push(pageContent);
         languages[pageContent.language] = (languages[pageContent.language] || 0) + 1;
         
-        // Calculate progress: 20% base + 70% for OCR progress
-        const progressPercent = Math.round(20 + (pages.length / conversionResult.images.length) * 70);
+        // Save page immediately to database
+        await savePageToDatabase(jobId, pageContent);
+        
+        // Calculate progress including existing pages
+        const totalProcessed = existingPageNumbers.length + pages.length;
+        const progressPercent = Math.round(20 + (totalProcessed / conversionResult.images.length) * 70);
+        
         await updateJobProgress(jobId, {
           current_step: `ocr_page_${pageContent.pageNumber}`,
           progress: progressPercent,
-          processed_pages: pages.length
+          processed_pages: totalProcessed
+        });
+        
+      } catch (error) {
+        console.error(`Error processing page ${image.pageNumber}:`, error);
+        
+        // Save failed page as placeholder to prevent re-processing
+        const failedPage = { pageNumber: image.pageNumber, content: '', confidence: 0, language: 'fr' } as PageContent;
+        await savePageToDatabase(jobId, failedPage);
+        
+        // Continue with next page instead of stopping
+        const totalProcessed = existingPageNumbers.length + pages.length + 1;
+        await updateJobProgress(jobId, {
+          current_step: `error_page_${image.pageNumber}`,
+          progress: Math.round(20 + (totalProcessed / conversionResult.images.length) * 70),
+          processed_pages: totalProcessed
         });
       }
     }
 
-    const dominantLanguage = Object.keys(languages).reduce((a, b) => (languages[a] > languages[b] ? a : b), 'fr');
-    const fullText = pages
+    // Get final results including existing pages
+    const { data: finalDocument } = await supabaseAdmin
+      .from('documents')
+      .select('page_contents, processed_pages, total_pages, content, language')
+      .eq('processing_job_id', jobId)
+      .single();
+
+    const allPages = (finalDocument?.page_contents || []) as PageContent[];
+    const totalProcessed = allPages.length;
+    const isFullyCompleted = totalProcessed >= conversionResult.images.length;
+    
+    // Calculate language distribution from all processed pages (including existing ones)
+    for (const page of allPages) {
+      languages[page.language] = (languages[page.language] || 0) + 1;
+    }
+    const dominantLanguage = Object.keys(languages).length > 0 
+      ? Object.keys(languages).reduce((a, b) => (languages[a] > languages[b] ? a : b), 'fr')
+      : 'fr';
+
+    const fullText = allPages
       .sort((a, b) => a.pageNumber - b.pageNumber)
       .map((p) => p.content)
       .filter((t) => t.trim().length > 0)
       .join('\n\n');
 
-    console.log(`Batch OCR completed: ${pages.length} pages processed, ${fullText.length} chars`);
+    console.log(`Batch OCR completed: ${totalProcessed}/${conversionResult.images.length} pages processed, ${fullText.length} chars`);
     
     // Final progress update and document update
+    const finalStatus = isFullyCompleted ? 'completed' : 'processing';
     await updateJobProgress(jobId, {
-      status: 'completed',
-      current_step: 'completed',
-      progress: 100,
-      processed_pages: pages.length,
+      status: finalStatus,
+      current_step: isFullyCompleted ? 'completed' : 'partial_completion',
+      progress: isFullyCompleted ? 100 : Math.round((totalProcessed / conversionResult.images.length) * 90),
+      processed_pages: totalProcessed,
       result_data: {
-        totalPages: pages.length,
+        totalPages: conversionResult.images.length,
+        processedPages: totalProcessed,
         language: dominantLanguage,
-        contentLength: fullText.length
+        contentLength: fullText.length,
+        partial: !isFullyCompleted
       }
     });
     
-    // Update the document with extracted content
+    // Update the document with final content
     if (jobId) {
       try {
         await supabaseAdmin
@@ -287,24 +411,23 @@ async function processPdfWithOCR(pdfBuffer: ArrayBuffer, openaiApiKey: string, j
           .update({
             content: fullText,
             language: dominantLanguage,
-            page_contents: pages,
-            processed_pages: pages.length,
-            total_pages: pages.length,
-            status: 'processed'
+            processed_pages: totalProcessed,
+            total_pages: conversionResult.images.length,
+            status: isFullyCompleted ? 'processed' : 'processing'
           })
           .eq('processing_job_id', jobId);
       } catch (dbError) {
-        console.error('Failed to update document after successful OCR:', dbError);
+        console.error('Failed to update document after OCR:', dbError);
       }
     }
 
-    console.log(`PDF OCR batch completed successfully: ${pages.length}/${conversionResult.images.length} pages processed`);
+    console.log(`PDF OCR batch completed successfully: ${totalProcessed}/${conversionResult.images.length} pages processed`);
 
     return {
       success: true,
-      totalPages: conversionResult.totalPages,
-      processedPages: pages.length,
-      pages: pages.sort((a, b) => a.pageNumber - b.pageNumber),
+      totalPages: conversionResult.images.length,
+      processedPages: totalProcessed,
+      pages: allPages.sort((a, b) => a.pageNumber - b.pageNumber),
       fullText,
       language: dominantLanguage,
     };
@@ -431,31 +554,55 @@ serve(async (req) => {
 
     const formData = await req.formData();
     const file = formData.get('file') as File;
+    const pdfUrl = formData.get('pdfUrl') as string;
     jobId = formData.get('jobId') as string;
     const filename = formData.get('filename') as string || file?.name || 'unknown.pdf';
 
-    if (!file) {
-      throw new Error('No file provided');
-    }
+    let pdfBuffer: ArrayBuffer;
+    let isResume = false;
 
-    if (file.type !== 'application/pdf' && !file.name.toLowerCase().endsWith('.pdf')) {
-      throw new Error('File is not a PDF');
+    // Support both file upload and PDF URL for resume functionality
+    if (file) {
+      if (file.type !== 'application/pdf' && !file.name.toLowerCase().endsWith('.pdf')) {
+        throw new Error('File is not a PDF');
+      }
+      pdfBuffer = await file.arrayBuffer();
+      console.log(`Processing PDF: ${filename} (${file.size} bytes) with enhanced multi-level OCR fallback`);
+    } else if (pdfUrl) {
+      // Resume mode: fetch PDF from URL
+      console.log(`Resume mode: Fetching PDF from URL: ${pdfUrl}`);
+      isResume = true;
+      
+      const pdfResponse = await fetch(pdfUrl);
+      if (!pdfResponse.ok) {
+        throw new Error('Failed to fetch PDF from URL');
+      }
+      pdfBuffer = await pdfResponse.arrayBuffer();
+      console.log(`PDF fetched for resume: ${filename} (${pdfBuffer.byteLength} bytes)`);
+    } else {
+      throw new Error('No file or PDF URL provided');
     }
-
-    console.log(`Processing PDF: ${filename} (${file.size} bytes) with enhanced multi-level OCR fallback`);
 
     // Enhanced file size limit (50MB) with better error messages
-    if (file.size > 50 * 1024 * 1024) {
+    if (pdfBuffer.byteLength > 50 * 1024 * 1024) {
       throw new Error('PDF trop volumineux. Limite : 50MB. Veuillez compresser le fichier ou le diviser en plusieurs parties.');
     }
 
     // Check for corrupted files
-    if (file.size < 100) {
+    if (pdfBuffer.byteLength < 100) {
       throw new Error('Fichier PDF trop petit ou corrompu');
     }
 
-    const pdfBuffer = await file.arrayBuffer();
-    const result = await processPdfWithOCR(pdfBuffer, openaiApiKey, jobId, filename);
+    // Update job status to processing if resuming
+    if (isResume && jobId) {
+      await updateJobProgress(jobId, {
+        status: 'processing',
+        current_step: 'resuming',
+        error_message: null
+      });
+    }
+
+    const result = await processPdfWithOCR(pdfBuffer, openaiApiKey, jobId, filename, isResume);
 
     if (!result.success) {
       throw new Error(result.error || 'Failed to process PDF with OCR');
@@ -480,23 +627,40 @@ serve(async (req) => {
       errorMessage = 'Fichier PDF invalide ou corrompu. Vérifiez que le fichier n\'est pas endommagé.';
     }
     
-    // Update job status to failed if jobId provided
+    // Update job status to failed only if no pages were processed
     if (jobId) {
+      // Check if any pages were processed before marking as failed
+      const { data: document } = await supabaseAdmin
+        .from('documents')
+        .select('processed_pages')
+        .eq('processing_job_id', jobId)
+        .single();
+      
+      const hasProcessedPages = document?.processed_pages > 0;
+      
       await updateJobProgress(jobId, {
-        status: 'failed',
+        status: hasProcessedPages ? 'processing' : 'failed',
         error_message: errorMessage,
-        progress: 0
+        progress: hasProcessedPages ? undefined : 0
       });
     }
     
-    // Also update the document in database if processing failed
+    // Also update the document status but preserve content if pages were processed
     if (jobId) {
       try {
+        const { data: document } = await supabaseAdmin
+          .from('documents')
+          .select('processed_pages, content')
+          .eq('processing_job_id', jobId)
+          .single();
+        
+        const hasContent = document?.processed_pages > 0;
+        
         await supabaseAdmin
           .from('documents')
           .update({
-            content: `Erreur de traitement: ${errorMessage}`,
-            status: 'failed'
+            content: hasContent ? document.content : `Erreur de traitement: ${errorMessage}`,
+            status: hasContent ? 'processing' : 'failed'
           })
           .eq('processing_job_id', jobId);
       } catch (dbError) {
