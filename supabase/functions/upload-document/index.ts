@@ -123,7 +123,7 @@ serve(async (req) => {
         if (pdfaInfo?.recommendations) {
           pdfFormData.append('optimizedResolution', pdfaInfo.recommendations.optimizedResolution.toString());
           pdfFormData.append('preserveMetadata', pdfaInfo.recommendations.preserveMetadata.toString());
-          pdfFormData.append('isArchival', pdfaInfo.archivalFeatures.isArchival.toString());
+          pdfFormData.append('isArchival', (pdfaInfo.archivalFeatures?.isArchival || false).toString());
         }
         
         const { data: pdfData, error: pdfError } = await supabaseAdmin.functions.invoke('pdf-ocr-batch', {
