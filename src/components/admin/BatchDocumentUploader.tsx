@@ -311,7 +311,7 @@ const BatchDocumentUploader: React.FC<BatchDocumentUploaderProps> = ({ onDocumen
     }
   };
 
-  // Callback to handle completion from ProgressTracker with success actions
+  // Callback to handle completion from ProgressTracker
   const handleFileCompletion = (uploadFileId: string, result: any) => {
     console.log('File completed via progress tracker:', uploadFileId);
     
@@ -325,32 +325,22 @@ const BatchDocumentUploader: React.FC<BatchDocumentUploaderProps> = ({ onDocumen
       } : f
     ));
 
-    // Show success toast with action
-    toast({
-      title: "Document traité avec succès!",
-      description: result?.title || "Le document a été traité et sauvegardé.",
-      action: (
-        <Button
-          size="sm"
-          onClick={() => {
-            // Auto-select document for editing
-            onDocumentsProcessed([result]);
-          }}
-        >
-          Éditer
-        </Button>
-      ),
-    });
-
-    // Check if this was the last file processing
+    // Check if this was the last file processing and update processed documents
     setTimeout(() => {
-      const allCompleted = uploadFiles.every(f => f.status === 'completed' || f.status === 'error');
-      const completedDocuments = uploadFiles
-        .filter(f => f.status === 'completed' && f.result)
-        .map(f => f.result);
-      
-      if (allCompleted && completedDocuments.length > 1) {
-        onDocumentsProcessed(completedDocuments);
+      const currentFiles = uploadFiles.find(f => f.id === uploadFileId);
+      if (currentFiles?.result) {
+        const allCompleted = uploadFiles.every(f => f.status === 'completed' || f.status === 'error');
+        const completedDocuments = uploadFiles
+          .filter(f => f.status === 'completed' && f.result)
+          .map(f => f.result);
+        
+        if (allCompleted && completedDocuments.length > 0) {
+          onDocumentsProcessed(completedDocuments);
+          toast({
+            title: "Tous les documents traités",
+            description: `${completedDocuments.length} document(s) traité(s) avec succès.`,
+          });
+        }
       }
     }, 100);
   };
@@ -364,9 +354,9 @@ const BatchDocumentUploader: React.FC<BatchDocumentUploaderProps> = ({ onDocumen
   };
 
   const processFile = async (uploadFile: UploadFile, categoryId: string, documentTypeId: string, processedDocuments: any[]) => {
-    // Direct transition to OCR processing - no fake upload progress
+    // Update status to processing
     setUploadFiles(prev => prev.map(f => 
-      f.id === uploadFile.id ? { ...f, status: 'processing' } : f
+      f.id === uploadFile.id ? { ...f, status: 'processing', progress: 10 } : f
     ));
 
     // Use upload-document function with progress tracking
@@ -374,6 +364,11 @@ const BatchDocumentUploader: React.FC<BatchDocumentUploaderProps> = ({ onDocumen
     formData.append('file', uploadFile.file);
     formData.append('categoryId', categoryId);
     formData.append('documentTypeId', documentTypeId);
+
+    // Update progress
+    setUploadFiles(prev => prev.map(f => 
+      f.id === uploadFile.id ? { ...f, progress: 30 } : f
+    ));
 
     const { data: uploadResult, error: uploadError } = await supabase.functions.invoke('upload-document', {
       body: formData
@@ -391,13 +386,13 @@ const BatchDocumentUploader: React.FC<BatchDocumentUploaderProps> = ({ onDocumen
     const jobId = uploadResult.jobId;
     
     if (jobId) {
-      // Update file with job ID for immediate OCR tracking
+      // Update file with job ID for progress tracking
       setUploadFiles(prev => prev.map(f => 
         f.id === uploadFile.id ? { 
           ...f, 
           jobId: jobId,
-          status: 'processing',
-          result: uploadResult.document
+          progress: 40,
+          status: 'processing'
         } : f
       ));
     } else {
@@ -502,6 +497,16 @@ const BatchDocumentUploader: React.FC<BatchDocumentUploaderProps> = ({ onDocumen
                   </Button>
                 </div>
                 
+                {uploadFile.status === 'processing' && !uploadFile.jobId && (
+                  <div className="space-y-2">
+                    <Progress value={uploadFile.progress} className="h-2" />
+                    <div className="flex justify-between text-xs text-muted-foreground">
+                      <span>Progression</span>
+                      <span>{uploadFile.progress}%</span>
+                    </div>
+                  </div>
+                )}
+
                 {/* Progress Tracker for files with job ID */}
                 {uploadFile.jobId && uploadFile.status === 'processing' && (
                   <div className="mt-3">

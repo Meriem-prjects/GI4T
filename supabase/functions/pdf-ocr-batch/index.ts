@@ -1,8 +1,6 @@
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.57.4';
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.57.4';
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.57.4';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -140,8 +138,8 @@ async function ocrImage(imageData: string, pageNumber: number, openaiApiKey: str
     console.log(`Waiting ${delay}ms before retry...`);
     await new Promise(resolve => setTimeout(resolve, delay));
   } else {
-    // Reduced base delay for faster processing
-    await new Promise(resolve => setTimeout(resolve, 300));
+    // Base delay between requests to prevent rate limiting
+    await new Promise(resolve => setTimeout(resolve, 1000));
   }
   
   // Enhanced prompt for better OCR accuracy
@@ -161,7 +159,7 @@ async function ocrImage(imageData: string, pageNumber: number, openaiApiKey: str
       'Content-Type': 'application/json',
     },
     body: JSON.stringify({
-      model: 'gpt-4o-mini',
+      model: 'gpt-4o',
       messages: [
         {
           role: 'system',
@@ -258,12 +256,6 @@ async function processPdfWithOCR(pdfBuffer: ArrayBuffer, openaiApiKey: string, j
     });
   }
   
-  // Initialize Supabase client for function calls
-  const supabaseAdmin = createClient(
-    Deno.env.get('SUPABASE_URL') ?? '',
-    Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
-  );
-
   // Level 1: PDF/A optimized processing (already handled in upload-document)
   console.log('Starting PDF to images conversion...');
   
@@ -276,69 +268,35 @@ async function processPdfWithOCR(pdfBuffer: ArrayBuffer, openaiApiKey: string, j
   
   let conversionResult: any = null;
   
-  // Level 2: Standard PDF to images conversion via pdfrest-converter using Supabase function invoke
+  // Level 2: Standard PDF to images conversion via pdfrest-converter
   const formData = new FormData();
-  formData.append('file', new Blob([pdfBuffer], { type: 'application/pdf' }), filename || 'document.pdf');
-  formData.append('resolution', '200');
-  formData.append('preserveMetadata', 'false');
-  formData.append('isArchival', 'false');
+  formData.append('file', new Blob([pdfBuffer], { type: 'application/pdf' }));
 
   try {
-    console.log('Trying primary conversion service (pdfRest)...');
-    
-    const pdfRestResponse = await supabaseAdmin.functions.invoke('pdfrest-converter', {
-      body: formData
+    const headers: Record<string, string> = {};
+    const anon = Deno.env.get('SUPABASE_ANON_KEY');
+    if (anon) headers['Authorization'] = `Bearer ${anon}`;
+
+    const conversionResponse = await fetch('https://qpkybrcjcoxhkifnbxei.supabase.co/functions/v1/pdfrest-converter', {
+      method: 'POST',
+      body: formData,
+      headers,
     });
 
-    if (pdfRestResponse.data && pdfRestResponse.data.success) {
-      conversionResult = pdfRestResponse.data;
-      console.log(`pdfRest: PDF successfully converted to ${conversionResult.images.length} images`);
+    if (conversionResponse.ok) {
+      conversionResult = await conversionResponse.json();
+      if (!conversionResult.success || !conversionResult.images?.length) {
+        console.warn('PDF-to-images returned no images, will try alternative methods:', conversionResult);
+        conversionResult = null;
+      } else {
+        console.log(`PDF successfully converted to ${conversionResult.images.length} images`);
+      }
     } else {
-      console.warn('pdfRest conversion failed, trying internal fallback:', pdfRestResponse.error || pdfRestResponse.data);
+      const errorText = await conversionResponse.text();
+      console.warn('PDF-to-images HTTP error, will try alternative methods:', errorText);
     }
   } catch (e) {
-    console.warn('pdfRest conversion failed, trying internal fallback:', e);
-  }
-
-  // Level 3: Fallback to internal pdf-to-images function if pdfRest failed
-  if (!conversionResult) {
-    try {
-      console.log('Using internal pdf-to-images fallback...');
-      
-      const internalFormData = new FormData();
-      internalFormData.append('file', new Blob([pdfBuffer], { type: 'application/pdf' }), filename || 'document.pdf');
-      
-      const internalResponse = await supabaseAdmin.functions.invoke('pdf-to-images', {
-        body: internalFormData
-      });
-
-      if (internalResponse.data && internalResponse.data.success) {
-        conversionResult = internalResponse.data;
-        console.log(`Internal: PDF successfully converted to ${conversionResult.images.length} images`);
-      } else {
-        console.warn('Internal pdf-to-images conversion failed:', internalResponse.error || internalResponse.data);
-      }
-    } catch (e) {
-      console.warn('Internal pdf-to-images conversion failed:', e);
-    }
-  }
-
-  // If all conversion methods failed, provide detailed error
-  if (!conversionResult) {
-    const errorMessage = 'PDF to images conversion failed using all available methods (pdfRest + internal). The PDF might be corrupted, password-protected, or in an unsupported format. Please try a different PDF or contact support.';
-    console.error(errorMessage);
-    
-    // Update job status with detailed error
-    if (jobId) {
-      await updateJobProgress(jobId, {
-        status: 'failed',
-        error_message: errorMessage,
-        current_step: 'conversion_failed',
-        progress: 0
-      });
-    }
-    
-    throw new Error(errorMessage);
+    console.warn('PDF-to-images conversion failed. Trying alternative methods.', e);
   }
 
   // If conversion succeeded, OCR all pages with progress tracking and resume support
@@ -365,9 +323,8 @@ async function processPdfWithOCR(pdfBuffer: ArrayBuffer, openaiApiKey: string, j
     const pages: PageContent[] = [];
     const languages: { [key: string]: number } = {};
 
-    // Process images with optimized parallelism for better performance
-    const concurrency = Math.min(3, imagesToProcess.length); // Process 3 pages at once
-    const processPage = async (image: any) => {
+    // Process images sequentially to prevent rate limiting (reduced from batch processing)
+    for (const image of imagesToProcess) {
       try {
         const pageContent = await ocrImage(image.imageData, image.pageNumber, openaiApiKey);
         pages.push(pageContent);
@@ -386,7 +343,6 @@ async function processPdfWithOCR(pdfBuffer: ArrayBuffer, openaiApiKey: string, j
           processed_pages: totalProcessed
         });
         
-        return pageContent;
       } catch (error) {
         console.error(`Error processing page ${image.pageNumber}:`, error);
         
@@ -401,14 +357,7 @@ async function processPdfWithOCR(pdfBuffer: ArrayBuffer, openaiApiKey: string, j
           progress: Math.round(20 + (totalProcessed / conversionResult.images.length) * 70),
           processed_pages: totalProcessed
         });
-        return failedPage;
       }
-    };
-
-    // Process pages in batches with controlled concurrency
-    for (let i = 0; i < imagesToProcess.length; i += concurrency) {
-      const batch = imagesToProcess.slice(i, i + concurrency);
-      await Promise.all(batch.map(processPage));
     }
 
     // Get final results including existing pages
@@ -484,45 +433,118 @@ async function processPdfWithOCR(pdfBuffer: ArrayBuffer, openaiApiKey: string, j
     };
   }
 
-  // No valid conversion result - PDF processing failed
-  console.error('PDF to images conversion failed. Unable to process PDF with OCR.');
+  // Fallback: send the raw PDF to OpenAI Vision API to extract all text at once
+  console.log('Falling back to direct PDF OCR via OpenAI Vision...');
   
   await updateJobProgress(jobId, {
-    status: 'failed',
-    current_step: 'conversion_failed',
-    progress: 25,
-    error_message: 'PDF conversion failed. The PDF might be corrupted, password-protected, or in an unsupported format.'
+    current_step: 'direct_pdf_ocr',
+    progress: 50
   });
 
-  throw new Error('PDF to images conversion failed. The PDF might be corrupted, password-protected, or in an unsupported format. Please try a different PDF or contact support.');
+  // Convert PDF buffer to base64 in chunks
+  const bytes = new Uint8Array(pdfBuffer);
+  const chunkSize = 8192;
+  const parts: string[] = [];
+  for (let i = 0; i < bytes.length; i += chunkSize) {
+    parts.push(String.fromCharCode.apply(null, Array.from(bytes.slice(i, i + chunkSize))));
+  }
+  const base64Pdf = btoa(parts.join(''));
+
+  const response = await fetch('https://api.openai.com/v1/chat/completions', {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${openaiApiKey}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      model: 'gpt-4o',
+      messages: [
+        { role: 'system', content: 'Tu es un expert en extraction de texte multi-pages. Extrais TOUT le texte du PDF fourni (toutes les pages), sans commentaire, et détecte la langue principale. Réponds en JSON: {"text": "...", "language": "fr|ar|en", "confidence": 0.95}.' },
+        {
+          role: 'user',
+          content: [
+            { type: 'text', text: 'Extrais et concatène le texte de toutes les pages de ce PDF:' },
+            { type: 'image_url', image_url: { url: `data:application/pdf;base64,${base64Pdf}` } },
+          ],
+        },
+      ],
+      max_tokens: 4000,
+      temperature: 0,
+      response_format: { type: 'json_object' },
+    }),
+  });
+
+  if (!response.ok) {
+    const errText = await response.text();
+    throw new Error(`OpenAI PDF OCR error: ${response.status} - ${errText}`);
+  }
+
+  const data = await response.json();
+  const content = data.choices?.[0]?.message?.content;
+
+  if (!content) {
+    throw new Error('No content returned from OpenAI PDF OCR');
+  }
+
+  try {
+    const parsed = JSON.parse(content);
+    const fullText = parsed.text || '';
+    const language = parsed.language || 'fr';
+
+    // Update final progress and document
+    await updateJobProgress(jobId, {
+      status: 'completed',
+      current_step: 'completed',
+      progress: 100,
+      processed_pages: 1,
+      total_pages: 1,
+      result_data: {
+        totalPages: 1,
+        language: language,
+        contentLength: fullText.length
+      }
+    });
+    
+    // Update the document with extracted content
+    if (jobId) {
+      try {
+        await supabaseAdmin
+          .from('documents')
+          .update({
+            content: fullText,
+            language: language,
+            processed_pages: 1,
+            total_pages: 1,
+            status: 'processed'
+          })
+          .eq('processing_job_id', jobId);
+      } catch (dbError) {
+        console.error('Failed to update document after successful PDF OCR:', dbError);
+      }
+    }
+
+    return {
+      success: true,
+      totalPages: 1,
+      processedPages: 1,
+      pages: [{ pageNumber: 1, content: fullText, confidence: parsed.confidence || 0.9, language }],
+      fullText,
+      language,
+    };
+  } catch (parseError) {
+    console.error('Failed to parse OpenAI PDF OCR response:', parseError);
+    throw new Error('Failed to parse PDF OCR response');
+  }
 }
 
 serve(async (req) => {
-  console.log('PDF OCR batch function called - v3.0 with robust fallback system');
+  console.log('PDF OCR batch function called');
 
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
 
   let jobId: string | null = null;
-  
-  // Define background task for processing continuation
-  const backgroundProcessing = async (pdfBuffer: ArrayBuffer, openaiApiKey: string, jobId: string, filename: string, isResume: boolean) => {
-    try {
-      const result = await processPdfWithOCR(pdfBuffer, openaiApiKey, jobId, filename, isResume);
-      console.log(`Background PDF OCR completed successfully`);
-      return result;
-    } catch (error) {
-      console.error('Background PDF OCR failed:', error);
-      if (jobId) {
-        await updateJobProgress(jobId, {
-          status: 'failed',
-          error_message: error.message
-        });
-      }
-      throw error;
-    }
-  };
   
   try {
     const openaiApiKey = Deno.env.get('OPENAI_API_KEY');
@@ -580,25 +602,15 @@ serve(async (req) => {
       });
     }
 
-    // Start background processing task
-    const backgroundTask = backgroundProcessing(pdfBuffer, openaiApiKey, jobId!, filename, isResume);
-    
-    // Use EdgeRuntime.waitUntil for true background processing
-    if (typeof EdgeRuntime !== 'undefined' && EdgeRuntime.waitUntil) {
-      EdgeRuntime.waitUntil(backgroundTask);
-    } else {
-      // Fallback: continue processing without blocking response
-      backgroundTask.catch(error => {
-        console.error('Background processing failed:', error);
-      });
+    const result = await processPdfWithOCR(pdfBuffer, openaiApiKey, jobId, filename, isResume);
+
+    if (!result.success) {
+      throw new Error(result.error || 'Failed to process PDF with OCR');
     }
 
-    // Return immediate response to allow background processing
-    return new Response(JSON.stringify({
-      success: true,
-      message: 'OCR processing started in background',
-      jobId: jobId
-    }), {
+    console.log(`PDF OCR batch completed successfully: ${result.processedPages}/${result.totalPages} pages processed`);
+
+    return new Response(JSON.stringify(result), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
 
