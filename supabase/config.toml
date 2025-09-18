@@ -73,9 +73,6 @@ gw_port = 54329
 [functions.document-analysis]
 verify_jwt = false
 
-[functions.openai-ocr]
-verify_jwt = false
-
 [functions.pdf-parser]
 verify_jwt = false
 
