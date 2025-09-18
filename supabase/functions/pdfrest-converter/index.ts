@@ -30,16 +30,17 @@ async function convertPdfWithPdfRest(pdfBuffer: ArrayBuffer): Promise<Conversion
   try {
     console.log('Converting PDF with pdfRest API...');
     
-    // Create form data with the PDF
+    // Create form data with the PDF using correct pdfRest parameters
     const formData = new FormData();
     const pdfBlob = new Blob([pdfBuffer], { type: 'application/pdf' });
     formData.append('file', pdfBlob, 'document.pdf');
-    formData.append('pages', 'all');
+    formData.append('pages', '1-last'); // pdfRest format for all pages
     formData.append('resolution', '300'); // High resolution for better OCR
-    formData.append('format', 'png'); // PNG format for quality
+    formData.append('color_model', 'rgb'); // Color model
+    formData.append('output', 'prefix'); // Output format
 
-    // Call pdfRest API
-    const response = await fetch('https://api.pdfrest.com/pdf-to-images', {
+    // Call correct pdfRest API endpoint
+    const response = await fetch('https://api.pdfrest.com/png', {
       method: 'POST',
       headers: {
         'Api-Key': pdfRestApiKey,
@@ -56,21 +57,28 @@ async function convertPdfWithPdfRest(pdfBuffer: ArrayBuffer): Promise<Conversion
     const result = await response.json();
     console.log('pdfRest response:', result);
 
-    // Check if the conversion was successful
-    if (!result.outputUrl && !result.outputUrls) {
-      throw new Error('No output URLs returned from pdfRest');
+    // pdfRest returns resource IDs, not direct URLs
+    if (!result.outputId && !result.outputIds) {
+      throw new Error('No output IDs returned from pdfRest');
     }
 
-    // Handle both single URL and multiple URLs
-    const imageUrls = result.outputUrls || [result.outputUrl];
+    // Handle both single ID and multiple IDs
+    const resourceIds = result.outputIds || [result.outputId];
     const images: PageImage[] = [];
 
-    // Download each image and convert to base64
-    for (let i = 0; i < imageUrls.length; i++) {
-      const imageUrl = imageUrls[i];
-      console.log(`Downloading image ${i + 1}/${imageUrls.length}: ${imageUrl}`);
+    // Download each image using resource ID and convert to base64
+    for (let i = 0; i < resourceIds.length; i++) {
+      const resourceId = resourceIds[i];
+      console.log(`Downloading image ${i + 1}/${resourceIds.length}: ${resourceId}`);
       
-      const imageResponse = await fetch(imageUrl);
+      // Use pdfRest resource endpoint
+      const imageResponse = await fetch(`https://api.pdfrest.com/resource/${resourceId}`, {
+        method: 'GET',
+        headers: {
+          'Api-Key': pdfRestApiKey,
+        }
+      });
+      
       if (!imageResponse.ok) {
         console.error(`Failed to download image ${i + 1}:`, imageResponse.status);
         continue;
