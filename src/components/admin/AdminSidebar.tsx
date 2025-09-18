@@ -9,7 +9,8 @@ import {
   History, 
   Folder, 
   Settings,
-  ChevronLeft
+  ChevronLeft,
+  Archive
 } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
 
@@ -47,6 +48,12 @@ const AdminSidebar = ({ type, isCollapsed = false, onToggle }: AdminSidebarProps
       icon: Edit,
       href: `${basePath}/editeur`,
       description: "Créer du contenu"
+    },
+    {
+      title: "Optimiseur PDF/A",
+      icon: Archive,
+      href: `${basePath}/pdfa-optimizer`,
+      description: "Optimisation PDF/A"
     },
     {
       title: "Validation",
