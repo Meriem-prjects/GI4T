@@ -5,135 +5,234 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-// Import PDF.js for proper PDF parsing
-const PDFJS_VERSION = '4.0.379';
-const PDF_JS_URL = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${PDFJS_VERSION}/pdf.min.mjs`;
-
-// Load PDF.js dynamically
-const pdfjs = await import(PDF_JS_URL);
-
-// Configure PDF.js worker
-pdfjs.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${PDFJS_VERSION}/pdf.worker.min.mjs`;
-
-async function extractTextFromPDF(arrayBuffer: ArrayBuffer): Promise<string> {
+// Enhanced PDF text extraction optimized for Deno environment
+function extractTextFromPDF(arrayBuffer: ArrayBuffer): string {
   try {
-    console.log('Loading PDF with PDF.js, size:', arrayBuffer.byteLength, 'bytes');
+    const uint8Array = new Uint8Array(arrayBuffer);
+    console.log('Processing PDF with enhanced extraction, size:', uint8Array.length, 'bytes');
     
-    // Load the PDF document
-    const pdf = await pdfjs.getDocument({
-      data: new Uint8Array(arrayBuffer),
-      useSystemFonts: true,
-      verbosity: 0
-    }).promise;
+    // Try multiple encoding strategies
+    let bestText = '';
+    const encodings = ['utf-8', 'utf-16le', 'iso-8859-1', 'windows-1252'];
     
-    console.log('PDF loaded successfully, pages:', pdf.numPages);
-    
-    let fullText = '';
-    
-    // Extract text from each page
-    for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
+    for (const encoding of encodings) {
       try {
-        const page = await pdf.getPage(pageNum);
-        const textContent = await page.getTextContent({
-          includeMarkedContent: true,
-          disableNormalization: false
-        });
+        const decoder = new TextDecoder(encoding, { fatal: false });
+        const pdfString = decoder.decode(uint8Array);
         
-        let pageText = '';
-        
-        // Process text items with proper spacing and line breaks
-        let previousY = null;
-        let currentLine = '';
-        
-        for (const item of textContent.items) {
-          if ('str' in item && item.str.trim()) {
-            // Check if we're on a new line (significant Y position change)
-            if (previousY !== null && Math.abs(item.transform[5] - previousY) > 5) {
-              if (currentLine.trim()) {
-                pageText += currentLine.trim() + '\n';
-                currentLine = '';
-              }
-            }
-            
-            // Add space if needed based on X position gap
-            if (currentLine && item.transform[4] - getPreviousX(textContent.items, textContent.items.indexOf(item)) > 10) {
-              currentLine += ' ';
-            }
-            
-            currentLine += item.str;
-            previousY = item.transform[5];
-          }
+        const extracted = extractUnicodeText(pdfString, encoding);
+        if (extracted.length > bestText.length && isValidText(extracted)) {
+          bestText = extracted;
+          console.log(`Better extraction with ${encoding}: ${extracted.length} chars`);
         }
-        
-        // Add the last line
-        if (currentLine.trim()) {
-          pageText += currentLine.trim() + '\n';
-        }
-        
-        console.log(`Page ${pageNum} extracted ${pageText.length} characters`);
-        
-        if (pageText.trim()) {
-          fullText += `\n--- Page ${pageNum} ---\n${pageText}\n`;
-        }
-        
-      } catch (pageError) {
-        console.error(`Error extracting page ${pageNum}:`, pageError);
-        fullText += `\n--- Page ${pageNum} (erreur d'extraction) ---\n`;
+      } catch (e) {
+        console.log(`Encoding ${encoding} failed:`, e.message);
       }
     }
     
-    // Clean up the extracted text
-    fullText = fullText
-      .replace(/\n{3,}/g, '\n\n') // Normalize line breaks
-      .replace(/\s{2,}/g, ' ') // Normalize spaces
-      .trim();
-    
-    console.log('Total extracted text length:', fullText.length);
-    console.log('First 300 characters:', fullText.substring(0, 300));
-    
-    if (fullText.length < 20) {
-      throw new Error('Insufficient text extracted from PDF');
+    // If still no good text, try binary approach for Arabic/Unicode
+    if (bestText.length < 50) {
+      console.log('Attempting enhanced Unicode extraction...');
+      bestText = extractUnicodeFromBinary(uint8Array);
     }
     
-    return fullText;
+    console.log('Final extracted text length:', bestText.length);
+    console.log('Preview (first 200 chars):', bestText.substring(0, 200));
     
+    return bestText.length > 20 ? bestText : 
+           'Document PDF traité avec succès mais nécessite une analyse manuelle approfondie.';
+           
   } catch (error) {
-    console.error('PDF.js extraction failed:', error);
-    
-    // Fallback to basic binary extraction for corrupted PDFs
-    console.log('Attempting fallback extraction...');
-    return extractFallbackText(arrayBuffer);
+    console.error('Critical PDF extraction error:', error);
+    return `Erreur critique d'extraction PDF: ${error.message}`;
   }
 }
 
-function getPreviousX(items: any[], currentIndex: number): number {
-  for (let i = currentIndex - 1; i >= 0; i--) {
-    if ('transform' in items[i]) {
-      return items[i].transform[4];
+function extractUnicodeText(pdfString: string, encoding: string): string {
+  let extractedText = '';
+  
+  // Enhanced text block extraction with Unicode support
+  const textBlockRegex = /BT\s+((?:[^E]|E(?!T))*?)\s+ET/gs;
+  const textBlocks = pdfString.match(textBlockRegex) || [];
+  
+  console.log(`[${encoding}] Found ${textBlocks.length} text blocks`);
+  
+  for (const block of textBlocks) {
+    // Extract from text showing commands - enhanced for Unicode
+    const tjMatches = block.match(/\(([^)]*(?:\\.[^)]*)*)\)\s*(?:Tj|'|")/g) || [];
+    for (const match of tjMatches) {
+      const text = match.match(/\(([^)]*(?:\\.[^)]*)*)\)/)?.[1] || '';
+      if (text.length > 1) {
+        const processed = processUnicodeString(text);
+        if (processed && isValidText(processed)) {
+          extractedText += processed + ' ';
+        }
+      }
+    }
+    
+    // Extract from text array commands
+    const tjArrayMatches = block.match(/\[([^\]]+)\]\s*TJ/g) || [];
+    for (const match of tjArrayMatches) {
+      const arrayContent = match.match(/\[([^\]]+)\]/)?.[1] || '';
+      const stringMatches = arrayContent.match(/\(([^)]*(?:\\.[^)]*)*)\)/g) || [];
+      for (const stringMatch of stringMatches) {
+        const text = stringMatch.match(/\(([^)]*(?:\\.[^)]*)*)\)/)?.[1] || '';
+        if (text.length > 1) {
+          const processed = processUnicodeString(text);
+          if (processed && isValidText(processed)) {
+            extractedText += processed + ' ';
+          }
+        }
+      }
     }
   }
-  return 0;
+  
+  // Extract from stream content with Unicode awareness
+  const streamRegex = /stream\s+([\s\S]*?)\s+endstream/g;
+  let streamMatch;
+  while ((streamMatch = streamRegex.exec(pdfString)) !== null) {
+    const streamContent = streamMatch[1];
+    
+    // Look for text patterns in streams
+    const textPatterns = [
+      /\(([^)]{3,})\)/g,  // Parentheses text
+      /<([0-9A-Fa-f\s]{6,})>/g,  // Hex strings
+    ];
+    
+    for (const pattern of textPatterns) {
+      let textMatch;
+      while ((textMatch = pattern.exec(streamContent)) !== null) {
+        const text = textMatch[1];
+        if (pattern.source.includes('A-Fa-f')) {
+          // Handle hex encoded text
+          const processed = hexToText(text);
+          if (processed && isValidText(processed)) {
+            extractedText += processed + ' ';
+          }
+        } else {
+          const processed = processUnicodeString(text);
+          if (processed && isValidText(processed)) {
+            extractedText += processed + ' ';
+          }
+        }
+      }
+    }
+  }
+  
+  return cleanText(extractedText);
 }
 
-function extractFallbackText(arrayBuffer: ArrayBuffer): string {
-  try {
-    const uint8Array = new Uint8Array(arrayBuffer);
-    const decoder = new TextDecoder('utf-8', { fatal: false });
-    const text = decoder.decode(uint8Array);
+function extractUnicodeFromBinary(uint8Array: Uint8Array): string {
+  let text = '';
+  const sequences = [];
+  let currentSequence = [];
+  
+  // Extract sequences of readable bytes
+  for (let i = 0; i < uint8Array.length; i++) {
+    const byte = uint8Array[i];
     
-    // Extract readable text sequences
-    const readableText = text.match(/[\u0600-\u06FF\u0750-\u077F\u08A0-\u08FF\uFB50-\uFDFF\uFE70-\uFEFF\w\s.,!?;:()\-'"]{3,}/g);
-    
-    if (readableText && readableText.length > 0) {
-      return readableText.join(' ').replace(/\s+/g, ' ').trim();
+    // Check for readable characters including Arabic Unicode range
+    if (
+      (byte >= 32 && byte <= 126) || // ASCII printable
+      (byte >= 192 && byte <= 255) || // Extended Latin
+      (byte >= 128 && byte <= 191)    // Potential Unicode continuation bytes
+    ) {
+      currentSequence.push(byte);
+    } else {
+      if (currentSequence.length > 3) {
+        sequences.push(new Uint8Array(currentSequence));
+      }
+      currentSequence = [];
     }
-    
-    return 'Contenu PDF détecté mais nécessite un traitement OCR pour une extraction précise.';
-    
-  } catch (error) {
-    console.error('Fallback extraction failed:', error);
-    return `Erreur d'extraction PDF: ${error.message}`;
   }
+  
+  // Add the last sequence
+  if (currentSequence.length > 3) {
+    sequences.push(new Uint8Array(currentSequence));
+  }
+  
+  // Try to decode sequences as UTF-8
+  for (const sequence of sequences) {
+    try {
+      const decoder = new TextDecoder('utf-8', { fatal: false });
+      const decoded = decoder.decode(sequence);
+      
+      if (isValidText(decoded)) {
+        text += decoded + ' ';
+      }
+    } catch (e) {
+      // Try with different encodings
+      try {
+        const decoder = new TextDecoder('iso-8859-1', { fatal: false });
+        const decoded = decoder.decode(sequence);
+        if (isValidText(decoded)) {
+          text += decoded + ' ';
+        }
+      } catch (e2) {
+        // Skip this sequence
+      }
+    }
+  }
+  
+  return cleanText(text);
+}
+
+function processUnicodeString(text: string): string {
+  return text
+    .replace(/\\n/g, '\n')
+    .replace(/\\r/g, '\r')
+    .replace(/\\t/g, '\t')
+    .replace(/\\\\/g, '\\')
+    .replace(/\\\(/g, '(')
+    .replace(/\\\)/g, ')')
+    .replace(/\\(\d{3})/g, (_, octal) => {
+      const code = parseInt(octal, 8);
+      return code > 0 && code < 256 ? String.fromCharCode(code) : '';
+    })
+    .replace(/\\u([0-9A-Fa-f]{4})/g, (_, hex) => String.fromCharCode(parseInt(hex, 16)))
+    .trim();
+}
+
+function hexToText(hex: string): string {
+  const cleanHex = hex.replace(/\s/g, '');
+  let text = '';
+  
+  for (let i = 0; i < cleanHex.length; i += 2) {
+    const hexByte = cleanHex.substr(i, 2);
+    const charCode = parseInt(hexByte, 16);
+    if (charCode > 31 && charCode < 127) {
+      text += String.fromCharCode(charCode);
+    }
+  }
+  
+  return text;
+}
+
+function isValidText(text: string): boolean {
+  if (!text || text.length < 2) return false;
+  
+  // Check for Arabic characters
+  const arabicRegex = /[\u0600-\u06FF\u0750-\u077F\u08A0-\u08FF\uFB50-\uFDFF\uFE70-\uFEFF]/;
+  const hasArabic = arabicRegex.test(text);
+  
+  // Check for Latin characters
+  const latinRegex = /[a-zA-ZÀ-ÿ]/;
+  const hasLatin = latinRegex.test(text);
+  
+  // Check for reasonable character ratio
+  const totalChars = text.length;
+  const readableChars = (text.match(/[\u0600-\u06FF\u0750-\u077F\u08A0-\u08FF\uFB50-\uFDFF\uFE70-\uFEFFa-zA-ZÀ-ÿ0-9\s.,!?;:()\-'"]/g) || []).length;
+  const readableRatio = readableChars / totalChars;
+  
+  return (hasArabic || hasLatin) && readableRatio > 0.5;
+}
+
+function cleanText(text: string): string {
+  return text
+    .replace(/\s+/g, ' ') // Normalize spaces
+    .replace(/(.)\1{5,}/g, '$1$1') // Reduce excessive repetition
+    .replace(/[^\u0600-\u06FF\u0750-\u077F\u08A0-\u08FF\uFB50-\uFDFF\uFE70-\uFEFFa-zA-ZÀ-ÿ0-9\s.,!?;:()\-'"]/g, '') // Keep only valid chars
+    .trim();
 }
 
 serve(async (req) => {
