@@ -1,5 +1,6 @@
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import * as pdfjsLib from "https://esm.sh/pdfjs-dist@4.7.76";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -15,6 +16,15 @@ interface PdfParseResult {
     title?: string;
   };
   error?: string;
+}
+
+// Utility to normalize extracted text (handles odd spaces and null chars)
+function normalizeText(input: string) {
+  return input
+    .replace(/\u0000/g, '')
+    .replace(/\uFFFD/g, '')
+    .replace(/\s{2,}/g, ' ')
+    .trim();
 }
 
 serve(async (req) => {
@@ -33,143 +43,121 @@ serve(async (req) => {
       );
     }
 
-    console.log('Processing PDF file:', file.name, 'Size:', file.size);
+    console.log('Processing PDF file (pdfjs):', file.name, 'Size:', file.size);
 
     const fileBuffer = await file.arrayBuffer();
     const uint8Array = new Uint8Array(fileBuffer);
 
-    // Multiple extraction methods for robust PDF parsing
     let extractedText = '';
     let pages: string[] = [];
+    let pageCount = 0;
 
+    // Primary extraction using PDF.js (robust + per-page)
     try {
-      // Method 1: Simple text extraction using regex patterns
-      const pdfString = new TextDecoder('latin1').decode(uint8Array);
-      
-      // Look for text between stream objects
-      const streamRegex = /stream\s*(.*?)\s*endstream/gs;
-      const matches = pdfString.match(streamRegex) || [];
-      
-      let allText = '';
-      for (const match of matches) {
-        const streamContent = match.replace(/^stream\s*/, '').replace(/\s*endstream$/, '');
-        
-        // Try to extract readable text
-        const textMatches = streamContent.match(/\(([^)]+)\)/g) || [];
-        for (const textMatch of textMatches) {
-          const text = textMatch.slice(1, -1); // Remove parentheses
-          if (text.length > 1 && /[\u0600-\u06FF\u0750-\u077F\u08A0-\u08FF\uFB50-\uFDFF\uFE70-\uFEFF\u0041-\u007A]/.test(text)) {
-            allText += text + ' ';
+      // Use PDF.js in no-worker mode (Edge Functions do not support web workers)
+      // @ts-ignore - VerbosityLevel exists in pdfjs
+      const loadingTask = (pdfjsLib as any).getDocument({
+        data: uint8Array,
+        disableWorker: true,
+        disableRange: true,
+        disableStream: true,
+        disableAutoFetch: true,
+        isEvalSupported: false,
+        disableFontFace: true,
+        // @ts-ignore - VerbosityLevel exists in pdfjs
+        verbosity: (pdfjsLib as any).VerbosityLevel?.ERRORS ?? 0,
+      });
+
+      const pdf = await (loadingTask as any).promise;
+      pageCount = pdf.numPages || 0;
+      console.log('PDF loaded with pages:', pageCount);
+
+      for (let i = 1; i <= pageCount; i++) {
+        const page = await pdf.getPage(i);
+        const textContent = await page.getTextContent({ includeMarkedContent: true });
+
+        const parts: string[] = [];
+        for (const item of (textContent.items || []) as any[]) {
+          // TextItem has a `str` property
+          const s = (item && typeof item.str === 'string') ? item.str : '';
+          if (s) parts.push(s);
+        }
+
+        let pageText = parts.join(' ');
+        pageText = normalizeText(pageText);
+
+        // Avoid empty pages when possible
+        if (pageText.length < 3) {
+          // Light attempt to preserve newlines when items declare end-of-line
+          const partsWithEOL: string[] = [];
+          for (const item of (textContent.items || []) as any[]) {
+            const s = (item && typeof item.str === 'string') ? item.str : '';
+            if (!s) continue;
+            partsWithEOL.push(s);
+            if ((item as any).hasEOL) partsWithEOL.push('\n');
+          }
+          pageText = normalizeText(partsWithEOL.join(' '));
+        }
+
+        pages.push(pageText);
+      }
+
+      // Join all pages with clear separation for the `text` field
+      extractedText = normalizeText(pages.join('\n\n'));
+
+      console.log('PDF.js extraction done. Pages:', pages.length, 'Total text length:', extractedText.length);
+    } catch (pdfjsError) {
+      console.error('PDF.js extraction failed, falling back to basic parser:', pdfjsError);
+
+      try {
+        // Fallback (very basic) – last resort if PDF.js fails
+        const pdfString = new TextDecoder('latin1').decode(uint8Array);
+        const streamRegex = /stream\s*(.*?)\s*endstream/gs;
+        const matches = pdfString.match(streamRegex) || [];
+        let allText = '';
+        for (const match of matches) {
+          const streamContent = match.replace(/^stream\s*/, '').replace(/\s*endstream$/, '');
+          const textMatches = streamContent.match(/\(([^)]+)\)/g) || [];
+          for (const textMatch of textMatches) {
+            const text = textMatch.slice(1, -1);
+            if (text.length > 1) allText += text + ' ';
           }
         }
+        extractedText = normalizeText(allText);
+        if (extractedText) pages = [extractedText];
+      } catch (fallbackErr) {
+        console.error('Fallback parser failed:', fallbackErr);
       }
-
-      // Method 2: Look for Tj operators (text showing operators in PDF)
-      const tjRegex = /\[(.*?)\]\s*TJ/gs;
-      const tjMatches = pdfString.match(tjRegex) || [];
-      for (const match of tjMatches) {
-        const content = match.replace(/\[(.*?)\]\s*TJ/, '$1');
-        if (content.length > 1) {
-          allText += content + ' ';
-        }
-      }
-
-      // Method 3: Look for simple text patterns
-      const simpleTextRegex = /\(([^\)]{3,})\)/g;
-      const simpleMatches = pdfString.match(simpleTextRegex) || [];
-      for (const match of simpleMatches) {
-        const text = match.slice(1, -1);
-        if (/[\u0600-\u06FF\u0750-\u077F\u08A0-\u08FF\uFB50-\uFDFF\uFE70-\uFEFF\u0041-\u007A]/.test(text)) {
-          allText += text + ' ';
-        }
-      }
-
-      // Clean and normalize the extracted text
-      extractedText = allText
-        .replace(/\\n/g, '\n')
-        .replace(/\\r/g, '\r')
-        .replace(/\\t/g, '\t')
-        .replace(/\s+/g, ' ')
-        .trim();
-
-      console.log('Extracted text length:', extractedText.length);
-
-      // Try to split into pages based on common page break patterns
-      if (extractedText.length > 0) {
-        // Look for page numbers or form feed characters
-        const pageBreakRegex = /(?:\f|\n\s*\d+\s*\n|\n\s*Page\s*\d+|\n\s*صفحة\s*\d+)/gi;
-        pages = extractedText.split(pageBreakRegex).filter(page => page.trim().length > 50);
-        
-        if (pages.length === 0) {
-          // If no clear page breaks, split by length
-          const pageSize = 2000;
-          for (let i = 0; i < extractedText.length; i += pageSize) {
-            pages.push(extractedText.substring(i, i + pageSize));
-          }
-        }
-      }
-
-      // If extraction failed, try different encoding
-      if (extractedText.length < 50) {
-        console.log('Trying UTF-8 encoding...');
-        const utf8String = new TextDecoder('utf-8').decode(uint8Array);
-        const utf8TextMatches = utf8String.match(/\(([^\)]{3,})\)/g) || [];
-        let utf8Text = '';
-        for (const match of utf8TextMatches) {
-          const text = match.slice(1, -1);
-          if (/[\u0600-\u06FF\u0750-\u077F\u0041-\u007A]/.test(text)) {
-            utf8Text += text + ' ';
-          }
-        }
-        if (utf8Text.length > extractedText.length) {
-          extractedText = utf8Text.trim();
-          pages = [extractedText];
-        }
-      }
-
-    } catch (error) {
-      console.error('PDF parsing error:', error);
     }
 
-    // If still no text extracted, provide a fallback
-    if (extractedText.length < 10) {
-      extractedText = `المستند: ${file.name}
-
-هذا ملف PDF تم رفعه للمعالجة. لم يتمكن النظام من استخراج النص بشكل مباشر، ولكن يمكن متابعة المعالجة مع البيانات الوصفية المتاحة.
-
-تفاصيل الملف:
-- اسم الملف: ${file.name}
-- حجم الملف: ${(file.size / 1024).toFixed(1)} KB
-- نوع الملف: PDF
-
-يمكنك إضافة المحتوى يدوياً في المحرر أو إعادة المحاولة بملف آخر.`;
-      
-      pages = [extractedText];
+    if (!extractedText || extractedText.length < 5) {
+      const placeholder = `المستند: ${file.name}\n\nلم يتمكن النظام من استخراج النص بشكل مباشر. حاول ملفاً آخر أو استخدم التحرير اليدوي.`;
+      extractedText = placeholder;
+      pages = [placeholder];
+      pageCount = 1;
     }
 
     const result: PdfParseResult = {
       success: true,
       text: extractedText,
-      pages: pages,
+      pages,
       metadata: {
-        pageCount: pages.length,
+        pageCount: pageCount || pages.length,
         title: file.name.replace(/\.[^/.]+$/, '')
       }
     };
-
-    console.log('PDF parsing completed. Pages:', pages.length, 'Total text length:', extractedText.length);
 
     return new Response(JSON.stringify(result), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
 
-  } catch (error) {
+  } catch (error: any) {
     console.error('Error in pdf-parser function:', error);
     return new Response(
       JSON.stringify({ 
         success: false, 
         error: 'Erreur lors du parsing PDF',
-        details: error.message 
+        details: error?.message || String(error)
       }),
       { 
         status: 500, 
