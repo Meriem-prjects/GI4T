@@ -6,113 +6,163 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-// Enhanced PDF text extraction using multiple approaches
+// Enhanced PDF text extraction with multiple robust approaches
 function extractTextFromPDF(arrayBuffer: ArrayBuffer): string {
   try {
     const uint8Array = new Uint8Array(arrayBuffer);
-    const decoder = new TextDecoder('latin1');
-    const pdfText = decoder.decode(uint8Array);
+    console.log('PDF file size:', uint8Array.length, 'bytes');
     
-    console.log('PDF file size:', uint8Array.length);
+    // Try multiple encoding approaches
+    const encodings = ['utf-8', 'latin1', 'windows-1252'];
+    let bestExtraction = '';
     
-    let extractedText = '';
-    
-    // Method 1: Extract text from Tj and TJ commands
-    const textRegex = /BT\s+(.*?)\s+ET/gs;
-    const textMatches = pdfText.match(textRegex) || [];
-    
-    console.log('Found', textMatches.length, 'text blocks');
-    
-    for (const match of textMatches) {
-      // Extract text from Tj commands
-      const tjRegex = /\((.*?)\)\s*Tj/g;
-      let tjMatch;
-      while ((tjMatch = tjRegex.exec(match)) !== null) {
-        extractedText += tjMatch[1] + ' ';
-      }
-      
-      // Extract text from TJ commands (array format)
-      const tjArrayRegex = /\[(.*?)\]\s*TJ/g;
-      let tjArrayMatch;
-      while ((tjArrayMatch = tjArrayRegex.exec(match)) !== null) {
-        const textArray = tjArrayMatch[1];
-        // Extract strings from array
-        const stringRegex = /\((.*?)\)/g;
-        let stringMatch;
-        while ((stringMatch = stringRegex.exec(textArray)) !== null) {
-          extractedText += stringMatch[1] + ' ';
+    for (const encoding of encodings) {
+      try {
+        const decoder = new TextDecoder(encoding);
+        const pdfText = decoder.decode(uint8Array);
+        const extracted = extractTextWithEncoding(pdfText, encoding);
+        
+        if (extracted.length > bestExtraction.length) {
+          bestExtraction = extracted;
+          console.log(`Better extraction with ${encoding}: ${extracted.length} chars`);
         }
+      } catch (e) {
+        console.log(`Failed with encoding ${encoding}:`, e.message);
       }
     }
     
-    // Method 2: Extract from stream objects
-    const streamRegex = /stream\s+(.*?)\s+endstream/gs;
-    const streamMatches = pdfText.match(streamRegex) || [];
-    
-    console.log('Found', streamMatches.length, 'streams');
-    
-    for (const stream of streamMatches) {
-      // Look for text patterns in streams
-      const textInStream = stream.match(/\((.*?)\)/g) || [];
-      for (const text of textInStream) {
-        const cleanText = text.replace(/[()]/g, '');
-        if (cleanText.length > 1 && /[a-zA-ZÀ-ÿ]/.test(cleanText)) {
-          extractedText += cleanText + ' ';
-        }
-      }
+    // If still no good extraction, try binary approach
+    if (bestExtraction.length < 50) {
+      console.log('Trying binary extraction approach...');
+      bestExtraction = extractTextFromBinary(uint8Array);
     }
     
-    // Method 3: Direct text search for common patterns
-    const directTextRegex = /\([^)]{2,100}\)/g;
-    const directMatches = pdfText.match(directTextRegex) || [];
+    console.log('Final extracted text length:', bestExtraction.length);
+    console.log('First 300 chars:', bestExtraction.substring(0, 300));
     
-    console.log('Found', directMatches.length, 'direct text matches');
-    
-    for (const match of directMatches) {
-      const cleanText = match.replace(/[()]/g, '');
-      if (cleanText.length > 2 && /[a-zA-ZÀ-ÿ0-9]/.test(cleanText)) {
-        extractedText += cleanText + ' ';
-      }
-    }
-    
-    // Clean up the extracted text
-    extractedText = extractedText
-      .replace(/\\n/g, '\n')
-      .replace(/\\r/g, '\r')
-      .replace(/\\t/g, '\t')
-      .replace(/\\\\/g, '\\')
-      .replace(/\\\(/g, '(')
-      .replace(/\\\)/g, ')')
-      .replace(/\s+/g, ' ')
-      .replace(/[^\w\s\u00C0-\u017F.,!?;:()\-]/g, '') // Keep only readable characters
-      .trim();
-    
-    console.log('Extracted text length:', extractedText.length);
-    console.log('First 200 chars:', extractedText.substring(0, 200));
-    
-    // If we didn't extract much text, try a different approach
-    if (extractedText.length < 50) {
-      console.log('Trying alternative extraction method...');
-      
-      // Alternative: look for any readable text patterns
-      const alternativeRegex = /[A-Za-zÀ-ÿ][A-Za-zÀ-ÿ0-9\s.,!?;:()\-]{5,}/g;
-      const alternativeMatches = pdfText.match(alternativeRegex) || [];
-      
-      for (const match of alternativeMatches) {
-        if (match.trim().length > 5) {
-          extractedText += match.trim() + ' ';
-        }
-      }
-      
-      extractedText = extractedText.replace(/\s+/g, ' ').trim();
-      console.log('Alternative extraction result length:', extractedText.length);
-    }
-    
-    return extractedText.length > 10 ? extractedText : 'Le contenu de ce PDF nécessite un traitement plus avancé pour être extrait correctement.';
+    return bestExtraction.length > 20 ? bestExtraction : 
+           'Contenu PDF détecté mais l\'extraction automatique nécessite un traitement manuel. Veuillez vérifier le fichier PDF.';
+           
   } catch (error) {
-    console.error('Error extracting PDF text:', error);
-    return 'Erreur lors de l\'extraction du contenu PDF: ' + error.message;
+    console.error('Critical error in PDF extraction:', error);
+    return `Erreur critique lors de l'extraction PDF: ${error.message}`;
   }
+}
+
+function extractTextWithEncoding(pdfText: string, encoding: string): string {
+  let extractedText = '';
+  
+  // Method 1: Enhanced text command extraction
+  const textBlockRegex = /BT\s+((?:[^E]|E(?!T))*?)\s+ET/gs;
+  const textBlocks = pdfText.match(textBlockRegex) || [];
+  
+  console.log(`[${encoding}] Found ${textBlocks.length} text blocks`);
+  
+  for (const block of textBlocks) {
+    // Extract from Tj commands with better handling
+    const tjMatches = block.match(/\(([^)]*(?:\\.[^)]*)*)\)\s*Tj/g) || [];
+    for (const match of tjMatches) {
+      const text = match.match(/\(([^)]*(?:\\.[^)]*)*)\)/)?.[1] || '';
+      if (text.length > 1) {
+        extractedText += processTextString(text) + ' ';
+      }
+    }
+    
+    // Extract from TJ array commands
+    const tjArrayMatches = block.match(/\[([^\]]+)\]\s*TJ/g) || [];
+    for (const match of tjArrayMatches) {
+      const arrayContent = match.match(/\[([^\]]+)\]/)?.[1] || '';
+      const stringMatches = arrayContent.match(/\(([^)]*(?:\\.[^)]*)*)\)/g) || [];
+      for (const stringMatch of stringMatches) {
+        const text = stringMatch.match(/\(([^)]*(?:\\.[^)]*)*)\)/)?.[1] || '';
+        if (text.length > 1) {
+          extractedText += processTextString(text) + ' ';
+        }
+      }
+    }
+  }
+  
+  // Method 2: Stream content extraction
+  const streamRegex = /stream\s+([\s\S]*?)\s+endstream/g;
+  let streamMatch;
+  while ((streamMatch = streamRegex.exec(pdfText)) !== null) {
+    const streamContent = streamMatch[1];
+    const textInStream = streamContent.match(/\(([^)]{2,})\)/g) || [];
+    for (const text of textInStream) {
+      const cleanText = text.replace(/[()]/g, '');
+      if (isReadableText(cleanText)) {
+        extractedText += processTextString(cleanText) + ' ';
+      }
+    }
+  }
+  
+  // Method 3: Font and text positioning extraction
+  const fontTextRegex = /\/F\d+\s+[\d.]+\s+Tf\s+[^(]*\(([^)]+)\)/g;
+  let fontMatch;
+  while ((fontMatch = fontTextRegex.exec(pdfText)) !== null) {
+    const text = fontMatch[1];
+    if (isReadableText(text)) {
+      extractedText += processTextString(text) + ' ';
+    }
+  }
+  
+  return cleanExtractedText(extractedText);
+}
+
+function extractTextFromBinary(uint8Array: Uint8Array): string {
+  let text = '';
+  const chars = [];
+  
+  // Look for readable ASCII sequences
+  for (let i = 0; i < uint8Array.length - 3; i++) {
+    const byte = uint8Array[i];
+    
+    // Check for printable ASCII characters (32-126) and common extended chars
+    if ((byte >= 32 && byte <= 126) || (byte >= 128 && byte <= 255)) {
+      chars.push(String.fromCharCode(byte));
+    } else if (chars.length > 3) {
+      // Found a sequence of readable characters
+      const sequence = chars.join('');
+      if (isReadableText(sequence)) {
+        text += sequence + ' ';
+      }
+      chars.length = 0;
+    } else {
+      chars.length = 0;
+    }
+  }
+  
+  return cleanExtractedText(text);
+}
+
+function processTextString(text: string): string {
+  return text
+    .replace(/\\n/g, '\n')
+    .replace(/\\r/g, '\r') 
+    .replace(/\\t/g, '\t')
+    .replace(/\\\\/g, '\\')
+    .replace(/\\\(/g, '(')
+    .replace(/\\\)/g, ')')
+    .replace(/\\(\d{3})/g, (_, octal) => String.fromCharCode(parseInt(octal, 8)))
+    .trim();
+}
+
+function isReadableText(text: string): boolean {
+  if (text.length < 2) return false;
+  
+  // Check if text contains readable characters (letters, numbers, common punctuation)
+  const readableChars = text.match(/[a-zA-ZÀ-ÿ0-9\s.,!?;:()\-'"]/g) || [];
+  const readableRatio = readableChars.length / text.length;
+  
+  return readableRatio > 0.6 && /[a-zA-ZÀ-ÿ]/.test(text);
+}
+
+function cleanExtractedText(text: string): string {
+  return text
+    .replace(/\s+/g, ' ')
+    .replace(/[^\w\s\u00C0-\u017F.,!?;:()\-'"]/g, '')
+    .replace(/(.)\1{4,}/g, '$1') // Remove repeated characters
+    .trim();
 }
 
 serve(async (req) => {

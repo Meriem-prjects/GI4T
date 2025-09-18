@@ -65,54 +65,103 @@ serve(async (req) => {
 
     // Get file content for parsing
     let fileContent = '';
+    let extractionSuccess = false;
     
     // Handle PDF files with dedicated parser
     if (file.type === 'application/pdf' || file.name.toLowerCase().endsWith('.pdf')) {
-      console.log('Processing PDF file...');
+      console.log('Processing PDF file with enhanced parser...');
       
       // Call PDF parser function
       const pdfFormData = new FormData();
       pdfFormData.append('file', file);
       
-      const { data: pdfData, error: pdfError } = await supabaseAdmin.functions.invoke('pdf-parser', {
-        body: pdfFormData
-      });
+      try {
+        const { data: pdfData, error: pdfError } = await supabaseAdmin.functions.invoke('pdf-parser', {
+          body: pdfFormData
+        });
 
-      if (pdfError) {
-        console.error('PDF parsing error:', pdfError);
-        fileContent = 'Erreur lors de l\'extraction du contenu PDF';
-      } else {
-        fileContent = pdfData.text || 'Contenu PDF extrait';
+        console.log('PDF parser response:', pdfData);
+
+        if (pdfError) {
+          console.error('PDF parsing error:', pdfError);
+          fileContent = `Erreur PDF: ${pdfError.message}`;
+        } else if (pdfData?.success && pdfData?.text && pdfData.text.length > 20) {
+          fileContent = pdfData.text;
+          extractionSuccess = true;
+          console.log('PDF extraction successful, content length:', fileContent.length);
+        } else {
+          console.warn('PDF parser returned insufficient content:', pdfData);
+          fileContent = 'Contenu PDF non extractible - format nécessitant traitement manuel';
+        }
+      } catch (pdfException) {
+        console.error('PDF processing exception:', pdfException);
+        fileContent = `Exception PDF: ${pdfException.message}`;
       }
     } else {
       // For text files, read as text
-      fileContent = await file.text();
+      try {
+        fileContent = await file.text();
+        extractionSuccess = fileContent.length > 10;
+      } catch (textError) {
+        console.error('Text reading error:', textError);
+        fileContent = 'Erreur lors de la lecture du fichier';
+      }
     }
     
-    // Call document-analysis function for AI processing
+    console.log('File content extraction completed:', {
+      success: extractionSuccess,
+      contentLength: fileContent.length,
+      preview: fileContent.substring(0, 100)
+    });
+    
+    // Call document-analysis function for AI processing with enhanced metadata
     let analysisData = {
       title: file.name,
-      summary: 'Document uploadé',
+      title_ar: null,
+      summary: 'Document uploadé sans analyse complète',
+      summary_ar: null,
       keywords: [],
-      language: 'fr'
+      keywords_ar: [],
+      language: 'fr',
+      document_type: null,
+      main_topics: [],
+      legal_references: [],
+      entities: [],
+      dates: [],
+      jurisdiction: null,
+      case_numbers: [],
+      legal_domains: []
     };
     
-    if (fileContent && fileContent.length > 10) {
-      console.log('Calling document analysis...');
-      const { data, error: analysisError } = await supabaseAdmin.functions.invoke('document-analysis', {
-        body: {
-          content: fileContent,
-          language: 'auto'
-        }
-      });
+    // Only analyze if we have sufficient content
+    if (extractionSuccess && fileContent && fileContent.length > 50) {
+      console.log('Calling enhanced document analysis...');
+      try {
+        const { data, error: analysisError } = await supabaseAdmin.functions.invoke('document-analysis', {
+          body: {
+            content: fileContent,
+            language: 'auto'
+          }
+        });
 
-      if (analysisError) {
-        console.error('Analysis error:', analysisError);
-      } else {
-        analysisData = data;
+        if (analysisError) {
+          console.error('Analysis error:', analysisError);
+        } else if (data) {
+          analysisData = { ...analysisData, ...data };
+          console.log('AI analysis successful:', {
+            title: analysisData.title,
+            language: analysisData.language,
+            keywordsCount: analysisData.keywords?.length || 0,
+            summaryLength: analysisData.summary?.length || 0,
+            documentType: analysisData.document_type,
+            mainTopicsCount: analysisData.main_topics?.length || 0
+          });
+        }
+      } catch (analysisException) {
+        console.error('Analysis exception:', analysisException);
       }
     } else {
-      console.log('Skipping analysis - insufficient content');
+      console.log('Skipping AI analysis - insufficient or failed content extraction');
     }
 
     console.log('Document processing completed');
@@ -139,7 +188,16 @@ serve(async (req) => {
       category_id: categoryId || null,
       document_type_id: documentTypeId || null,
       user_id: null, // Public upload - no user required
-      status: 'processed'
+      status: 'processed',
+      // Enhanced metadata fields
+      document_type: analysisData.document_type,
+      main_topics: analysisData.main_topics || [],
+      legal_references: analysisData.legal_references || [],
+      entities: analysisData.entities || [],
+      dates: analysisData.dates || [],
+      jurisdiction: analysisData.jurisdiction,
+      case_numbers: analysisData.case_numbers || [],
+      legal_domains: analysisData.legal_domains || []
     };
 
     console.log('Saving document with enhanced metadata:', {
@@ -147,7 +205,11 @@ serve(async (req) => {
       language: documentData.language,
       keywords_count: documentData.keywords.length,
       content_length: documentData.content.length,
-      summary_length: documentData.summary.length
+      summary_length: documentData.summary.length,
+      document_type: documentData.document_type,
+      main_topics_count: documentData.main_topics.length,
+      legal_references_count: documentData.legal_references.length,
+      entities_count: documentData.entities.length
     });
 
     const { data: document, error: dbError } = await supabaseAdmin
