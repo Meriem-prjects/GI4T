@@ -124,6 +124,19 @@ const ProgressTracker: React.FC<ProgressTrackerProps> = ({
     }
   };
 
+  // Fallback polling in case realtime updates are not received
+  useEffect(() => {
+    if (!jobId) return;
+    // Stop polling once job is done
+    if (job?.status === 'completed' || job?.status === 'failed') return;
+
+    const interval = window.setInterval(() => {
+      fetchJob();
+    }, 3000);
+
+    return () => window.clearInterval(interval);
+  }, [jobId, job?.status]);
+
   const getStepDescription = (step: string | null): string => {
     if (!step) return 'Initialisation...';
     

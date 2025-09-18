@@ -497,7 +497,7 @@ const BatchDocumentUploader: React.FC<BatchDocumentUploaderProps> = ({ onDocumen
                   </Button>
                 </div>
                 
-                {uploadFile.status === 'processing' && (
+                {uploadFile.status === 'processing' && !uploadFile.jobId && (
                   <div className="space-y-2">
                     <Progress value={uploadFile.progress} className="h-2" />
                     <div className="flex justify-between text-xs text-muted-foreground">
