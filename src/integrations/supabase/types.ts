@@ -142,6 +142,7 @@ export type Database = {
           pdfa_conformance_level: string | null
           pdfa_version: string | null
           processed_pages: number | null
+          processing_job_id: string | null
           status: string | null
           summary: string | null
           summary_ar: string | null
@@ -180,6 +181,7 @@ export type Database = {
           pdfa_conformance_level?: string | null
           pdfa_version?: string | null
           processed_pages?: number | null
+          processing_job_id?: string | null
           status?: string | null
           summary?: string | null
           summary_ar?: string | null
@@ -218,6 +220,7 @@ export type Database = {
           pdfa_conformance_level?: string | null
           pdfa_version?: string | null
           processed_pages?: number | null
+          processing_job_id?: string | null
           status?: string | null
           summary?: string | null
           summary_ar?: string | null
@@ -240,6 +243,13 @@ export type Database = {
             columns: ["document_type_id"]
             isOneToOne: false
             referencedRelation: "document_types"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "documents_processing_job_id_fkey"
+            columns: ["processing_job_id"]
+            isOneToOne: false
+            referencedRelation: "processing_jobs"
             referencedColumns: ["id"]
           },
         ]
