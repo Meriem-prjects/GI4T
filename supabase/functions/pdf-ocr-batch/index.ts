@@ -138,8 +138,8 @@ async function ocrImage(imageData: string, pageNumber: number, openaiApiKey: str
     console.log(`Waiting ${delay}ms before retry...`);
     await new Promise(resolve => setTimeout(resolve, delay));
   } else {
-    // Base delay between requests to prevent rate limiting
-    await new Promise(resolve => setTimeout(resolve, 1000));
+    // Reduced base delay for faster processing
+    await new Promise(resolve => setTimeout(resolve, 300));
   }
   
   // Enhanced prompt for better OCR accuracy
@@ -159,7 +159,7 @@ async function ocrImage(imageData: string, pageNumber: number, openaiApiKey: str
       'Content-Type': 'application/json',
     },
     body: JSON.stringify({
-      model: 'gpt-4o',
+      model: 'gpt-4o-mini',
       messages: [
         {
           role: 'system',
@@ -323,8 +323,9 @@ async function processPdfWithOCR(pdfBuffer: ArrayBuffer, openaiApiKey: string, j
     const pages: PageContent[] = [];
     const languages: { [key: string]: number } = {};
 
-    // Process images sequentially to prevent rate limiting (reduced from batch processing)
-    for (const image of imagesToProcess) {
+    // Process images with limited parallelism for better performance
+    const concurrency = Math.min(2, imagesToProcess.length); // Process 2 pages at once
+    const processPage = async (image: any) => {
       try {
         const pageContent = await ocrImage(image.imageData, image.pageNumber, openaiApiKey);
         pages.push(pageContent);
@@ -343,6 +344,7 @@ async function processPdfWithOCR(pdfBuffer: ArrayBuffer, openaiApiKey: string, j
           processed_pages: totalProcessed
         });
         
+        return pageContent;
       } catch (error) {
         console.error(`Error processing page ${image.pageNumber}:`, error);
         
@@ -357,7 +359,14 @@ async function processPdfWithOCR(pdfBuffer: ArrayBuffer, openaiApiKey: string, j
           progress: Math.round(20 + (totalProcessed / conversionResult.images.length) * 70),
           processed_pages: totalProcessed
         });
+        return failedPage;
       }
+    };
+
+    // Process pages in batches with controlled concurrency
+    for (let i = 0; i < imagesToProcess.length; i += concurrency) {
+      const batch = imagesToProcess.slice(i, i + concurrency);
+      await Promise.all(batch.map(processPage));
     }
 
     // Get final results including existing pages
@@ -457,7 +466,7 @@ async function processPdfWithOCR(pdfBuffer: ArrayBuffer, openaiApiKey: string, j
       'Content-Type': 'application/json',
     },
     body: JSON.stringify({
-      model: 'gpt-4o',
+      model: 'gpt-4o-mini',
       messages: [
         { role: 'system', content: 'Tu es un expert en extraction de texte multi-pages. Extrais TOUT le texte du PDF fourni (toutes les pages), sans commentaire, et détecte la langue principale. Réponds en JSON: {"text": "...", "language": "fr|ar|en", "confidence": 0.95}.' },
         {
@@ -546,6 +555,24 @@ serve(async (req) => {
 
   let jobId: string | null = null;
   
+  // Define background task for processing continuation
+  const backgroundProcessing = async (pdfBuffer: ArrayBuffer, openaiApiKey: string, jobId: string, filename: string, isResume: boolean) => {
+    try {
+      const result = await processPdfWithOCR(pdfBuffer, openaiApiKey, jobId, filename, isResume);
+      console.log(`Background PDF OCR completed successfully`);
+      return result;
+    } catch (error) {
+      console.error('Background PDF OCR failed:', error);
+      if (jobId) {
+        await updateJobProgress(jobId, {
+          status: 'failed',
+          error_message: error.message
+        });
+      }
+      throw error;
+    }
+  };
+  
   try {
     const openaiApiKey = Deno.env.get('OPENAI_API_KEY');
     if (!openaiApiKey) {
@@ -602,15 +629,25 @@ serve(async (req) => {
       });
     }
 
-    const result = await processPdfWithOCR(pdfBuffer, openaiApiKey, jobId, filename, isResume);
-
-    if (!result.success) {
-      throw new Error(result.error || 'Failed to process PDF with OCR');
+    // Start background processing task
+    const backgroundTask = backgroundProcessing(pdfBuffer, openaiApiKey, jobId!, filename, isResume);
+    
+    // Use EdgeRuntime.waitUntil for true background processing
+    if (typeof EdgeRuntime !== 'undefined' && EdgeRuntime.waitUntil) {
+      EdgeRuntime.waitUntil(backgroundTask);
+    } else {
+      // Fallback: continue processing without blocking response
+      backgroundTask.catch(error => {
+        console.error('Background processing failed:', error);
+      });
     }
 
-    console.log(`PDF OCR batch completed successfully: ${result.processedPages}/${result.totalPages} pages processed`);
-
-    return new Response(JSON.stringify(result), {
+    // Return immediate response to allow background processing
+    return new Response(JSON.stringify({
+      success: true,
+      message: 'OCR processing started in background',
+      jobId: jobId
+    }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
 

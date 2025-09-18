@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
 import { Loader2, CheckCircle, XCircle, FileText } from 'lucide-react';
 
@@ -223,7 +224,7 @@ const ProgressTracker: React.FC<ProgressTrackerProps> = ({
       default:
         if (step.startsWith('ocr_page_')) {
           const pageNum = step.replace('ocr_page_', '');
-          return `OCR page ${pageNum}${job?.total_pages ? `/${job.total_pages}` : ''}...`;
+          return `Traitement page ${pageNum}${job?.total_pages ? `/${job.total_pages}` : ''}...`;
         }
         return step;
     }
@@ -314,7 +315,7 @@ const ProgressTracker: React.FC<ProgressTrackerProps> = ({
       {job && job.status === 'processing' && (
         <div className="px-3 space-y-2">
           <div className="flex justify-between text-xs text-muted-foreground mb-1">
-            <span>Progression</span>
+            <span>Progression globale</span>
             <span>{job.progress}%</span>
           </div>
           <Progress value={job.progress} className="h-2" />
@@ -323,17 +324,19 @@ const ProgressTracker: React.FC<ProgressTrackerProps> = ({
             const savedInfo = getSavedPagesInfo();
             if (savedInfo && savedInfo.total > 0) {
               return (
-                <div className="flex justify-between text-xs text-muted-foreground">
-                  <span>Pages sauvegardées</span>
-                  <span className="font-medium text-green-600">{savedInfo.saved}/{savedInfo.total}</span>
+                <div className="space-y-1">
+                  <div className="flex justify-between text-xs text-muted-foreground">
+                    <span>Processing page {job.processed_pages || 0}/{savedInfo.total}</span>
+                    <span className="font-medium text-green-600">Saved: {savedInfo.saved}/{savedInfo.total}</span>
+                  </div>
                 </div>
               );
             }
             if (job.processed_pages && job.total_pages) {
               return (
                 <div className="flex justify-between text-xs text-muted-foreground">
-                  <span>Pages traitées</span>
-                  <span>{job.processed_pages}/{job.total_pages}</span>
+                  <span>Processing page {job.processed_pages}/{job.total_pages}</span>
+                  <span>Pages saved: {job.processed_pages}/{job.total_pages}</span>
                 </div>
               );
             }
@@ -351,6 +354,31 @@ const ProgressTracker: React.FC<ProgressTrackerProps> = ({
               </button>
             </div>
           )}
+        </div>
+      )}
+
+      {job && job.status === 'completed' && (
+        <div className="px-3 space-y-2 pt-2">
+          <div className="flex items-center justify-center space-x-2 text-green-600">
+            <CheckCircle className="h-4 w-4" />
+            <span className="text-sm font-medium">Traitement terminé!</span>
+          </div>
+          <div className="flex space-x-2">
+            <Button
+              size="sm"
+              onClick={() => onComplete?.(document || job?.result_data)}
+              className="flex-1"
+            >
+              Éditer le document
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => window.location.reload()}
+            >
+              Nouveau fichier
+            </Button>
+          </div>
         </div>
       )}
 
