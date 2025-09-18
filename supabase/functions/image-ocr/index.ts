@@ -28,10 +28,34 @@ serve(async (req) => {
 
     console.log(`Processing image: ${file.name} (${file.size} bytes)`);
 
-    // Convert image to base64
-    const arrayBuffer = await file.arrayBuffer();
-    const base64Image = btoa(String.fromCharCode(...new Uint8Array(arrayBuffer)));
+    // Check file size limit (10MB)
+    if (file.size > 10 * 1024 * 1024) {
+      throw new Error('Image trop volumineuse. Limite : 10MB');
+    }
+
+    // Convert image to base64 safely
+    let base64Image: string;
+    try {
+      const arrayBuffer = await file.arrayBuffer();
+      const bytes = new Uint8Array(arrayBuffer);
+      
+      // Convert in chunks to avoid call stack issues
+      const chunkSize = 8192;
+      const chunks: string[] = [];
+      
+      for (let i = 0; i < bytes.length; i += chunkSize) {
+        const chunk = bytes.slice(i, i + chunkSize);
+        chunks.push(String.fromCharCode.apply(null, Array.from(chunk)));
+      }
+      
+      base64Image = btoa(chunks.join(''));
+    } catch (conversionError) {
+      console.error('Base64 conversion error:', conversionError);
+      throw new Error('Erreur de conversion de l\'image');
+    }
+
     const mimeType = file.type || 'image/jpeg';
+    console.log(`Image converted successfully, MIME type: ${mimeType}`);
 
     console.log('Sending to OpenAI Vision API for OCR and language detection...');
 
