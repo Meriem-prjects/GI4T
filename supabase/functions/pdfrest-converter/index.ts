@@ -20,7 +20,8 @@ interface ConversionResult {
   error?: string;
 }
 
-async function convertPdfWithPdfRest(pdfBuffer: ArrayBuffer): Promise<ConversionResult> {
+// Convert PDF to images using pdfRest API with PDF/A optimization
+async function convertPdfWithPdfRest(pdfBuffer: ArrayBuffer, optimizedResolution?: number, preserveMetadata?: boolean): Promise<ConversionResult> {
   const pdfRestApiKey = Deno.env.get('PDFREST_API_KEY');
   
   if (!pdfRestApiKey) {
@@ -35,7 +36,9 @@ async function convertPdfWithPdfRest(pdfBuffer: ArrayBuffer): Promise<Conversion
     const pdfBlob = new Blob([pdfBuffer], { type: 'application/pdf' });
     formData.append('file', pdfBlob, 'document.pdf');
     formData.append('pages', '1-last');
-    formData.append('resolution', '200');
+    // Use optimized resolution for PDF/A documents (higher quality for archival)
+    const resolution = optimizedResolution || 200;
+    formData.append('resolution', resolution.toString());
     formData.append('color_model', 'rgb');
 
     // Use /jpg endpoint for async processing
@@ -192,6 +195,17 @@ serve(async (req) => {
   try {
     const formData = await req.formData();
     const file = formData.get('file') as File;
+    
+    // Get PDF/A optimization parameters
+    const optimizedResolution = parseInt(formData.get('optimizedResolution') as string) || 200;
+    const preserveMetadata = (formData.get('preserveMetadata') as string) === 'true';
+    const isArchival = (formData.get('isArchival') as string) === 'true';
+    
+    console.log('PDF conversion with optimization:', {
+      resolution: optimizedResolution,
+      preserveMetadata,
+      isArchival
+    });
 
     if (!file) {
       throw new Error('No file provided');
@@ -209,7 +223,7 @@ serve(async (req) => {
     }
 
     const pdfBuffer = await file.arrayBuffer();
-    const result = await convertPdfWithPdfRest(pdfBuffer);
+    const result = await convertPdfWithPdfRest(pdfBuffer, optimizedResolution, preserveMetadata);
 
     if (!result.success) {
       throw new Error(result.error || 'Failed to convert PDF with pdfRest');

@@ -91,11 +91,40 @@ serve(async (req) => {
     
     // Handle different file types
     if (file.type === 'application/pdf' || file.name.toLowerCase().endsWith('.pdf')) {
-      console.log('Processing PDF file with pdfRest + OCR (all pages)...');
+      console.log('Processing PDF file - detecting PDF/A compliance first...');
+      
+      // First, detect if this is a PDF/A document for optimized processing
+      let pdfaInfo = null;
+      try {
+        const pdfaFormData = new FormData();
+        pdfaFormData.append('file', file);
+        
+        const { data: pdfaData, error: pdfaError } = await supabaseAdmin.functions.invoke('pdf-a-detector', {
+          body: pdfaFormData
+        });
+        
+        if (!pdfaError && pdfaData) {
+          pdfaInfo = pdfaData;
+          console.log('PDF/A detection result:', {
+            isPDFA: pdfaInfo.isPDFA,
+            version: pdfaInfo.pdfaVersion,
+            useNative: pdfaInfo.recommendations?.useNativeConversion
+          });
+        }
+      } catch (pdfaException) {
+        console.warn('PDF/A detection failed, continuing with standard processing:', pdfaException);
+      }
       
       try {
         const pdfFormData = new FormData();
         pdfFormData.append('file', file);
+        
+        // Add PDF/A optimization parameters if detected
+        if (pdfaInfo?.recommendations) {
+          pdfFormData.append('optimizedResolution', pdfaInfo.recommendations.optimizedResolution.toString());
+          pdfFormData.append('preserveMetadata', pdfaInfo.recommendations.preserveMetadata.toString());
+          pdfFormData.append('isArchival', pdfaInfo.archivalFeatures.isArchival.toString());
+        }
         
         const { data: pdfData, error: pdfError } = await supabaseAdmin.functions.invoke('pdf-ocr-batch', {
           body: pdfFormData
@@ -119,6 +148,28 @@ serve(async (req) => {
           // Update analysis data with detected language
           if (pdfData.language) {
             analysisData.language = pdfData.language;
+          }
+          
+          // Enhance analysis data with PDF/A metadata if available
+          if (pdfaInfo?.isPDFA) {
+            analysisData.document_type = `PDF/A Document (${pdfaInfo.pdfaVersion || 'Unknown version'})`;
+            
+            // Add PDF/A metadata to analysis
+            if (pdfaInfo.metadata?.title) {
+              analysisData.title = pdfaInfo.metadata.title;
+            }
+            if (pdfaInfo.metadata?.keywords) {
+              analysisData.keywords = pdfaInfo.metadata.keywords.split(',').map(k => k.trim()).filter(Boolean);
+            }
+            if (pdfaInfo.metadata?.subject) {
+              analysisData.summary = `Document d'archivage PDF/A: ${pdfaInfo.metadata.subject}`;
+            }
+            
+            // Add archival information to legal domains
+            analysisData.legal_domains = ['Document d\'archivage', 'PDF/A Standard'];
+            if (pdfaInfo.conformanceLevel) {
+              analysisData.legal_domains.push(`Conformité niveau ${pdfaInfo.conformanceLevel}`);
+            }
           }
           
           // Store page-specific data
@@ -236,7 +287,13 @@ serve(async (req) => {
       // Page-specific content for enhanced display
       page_contents: pageContents || null,
       processed_pages: processedPages || null,
-      total_pages: totalPagesVar || null
+      total_pages: totalPagesVar || null,
+      // PDF/A specific metadata
+      pdfa_compliance: pdfaInfo?.isPDFA || false,
+      pdfa_version: pdfaInfo?.pdfaVersion || null,
+      pdfa_conformance_level: pdfaInfo?.conformanceLevel || null,
+      archival_metadata: pdfaInfo?.metadata || null,
+      archival_features: pdfaInfo?.archivalFeatures || null
     };
 
     console.log('Saving document with enhanced metadata:', {
