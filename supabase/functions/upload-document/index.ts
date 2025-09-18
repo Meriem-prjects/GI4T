@@ -270,7 +270,6 @@ serve(async (req) => {
         
         // Defer OCR triggering until after document is saved to DB
         console.log('Deferring PDF OCR batch trigger until document record exists...');
-        }
         
         // Set default values for immediate return
         fileContent = 'Document PDF en cours de traitement...';
