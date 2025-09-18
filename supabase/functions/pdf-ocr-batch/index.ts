@@ -44,10 +44,20 @@ async function updateJobProgress(jobId: string, updates: any) {
   }
 }
 
-// OCR a single image using OpenAI Vision API
-async function ocrImage(imageData: string, pageNumber: number, openaiApiKey: string): Promise<PageContent> {
+// OCR a single image using OpenAI Vision API with enhanced prompts
+async function ocrImage(imageData: string, pageNumber: number, openaiApiKey: string, retryCount = 0): Promise<PageContent> {
   console.log(`Starting OCR for page ${pageNumber}...`);
   
+  // Enhanced prompt for better OCR accuracy
+  const systemPrompt = `Tu es un expert OCR spécialisé dans l'extraction de texte juridique et administratif en français et en arabe. 
+  INSTRUCTIONS CRITIQUES:
+  - Extrais TOUT le texte visible avec une précision maximale
+  - Préserve la mise en forme, les paragraphes et la structure
+  - Identifie correctement les textes bilingues français/arabe
+  - Pour les documents scannés de faible qualité, fais de ton mieux pour déchiffrer le texte
+  - Ignore les filigranes et les marques d'eau
+  - Réponds au format JSON strict: {"text": "texte complet extrait", "language": "fr|ar|mixed", "confidence": 0.XX}`;
+
   const response = await fetch('https://api.openai.com/v1/chat/completions', {
     method: 'POST',
     headers: {
@@ -59,14 +69,14 @@ async function ocrImage(imageData: string, pageNumber: number, openaiApiKey: str
       messages: [
         {
           role: 'system',
-          content: 'Tu es un expert en extraction de texte et détection de langue. Extrais tout le texte visible dans cette image et détecte la langue principale du texte. Réponds au format JSON: {"text": "texte extrait", "language": "code langue (fr/ar/en)", "confidence": 0.95}'
+          content: systemPrompt
         },
         {
           role: 'user',
           content: [
             {
               type: 'text',
-              text: 'Extrais le texte de cette image et détecte sa langue principale:'
+              text: `Page ${pageNumber}: Extrais tout le texte de cette image de document. Si c'est un document scanné ou de faible qualité, fais de ton mieux pour lire le texte même s'il est flou ou déformé.`
             },
             {
               type: 'image_url',
@@ -78,7 +88,7 @@ async function ocrImage(imageData: string, pageNumber: number, openaiApiKey: str
         }
       ],
       max_tokens: 4000,
-      temperature: 0,
+      temperature: 0.1, // Slightly higher for better text recognition
       response_format: { type: "json_object" }
     }),
   });
@@ -86,7 +96,15 @@ async function ocrImage(imageData: string, pageNumber: number, openaiApiKey: str
   if (!response.ok) {
     const errorText = await response.text();
     console.error(`OCR API error for page ${pageNumber}:`, response.status, errorText);
-    throw new Error(`OCR failed for page ${pageNumber}: ${response.status}`);
+    
+    // Retry logic for failed OCR attempts
+    if (retryCount < 2 && (response.status === 429 || response.status >= 500)) {
+      console.log(`Retrying OCR for page ${pageNumber} (attempt ${retryCount + 1})...`);
+      await new Promise(resolve => setTimeout(resolve, (retryCount + 1) * 2000)); // Progressive delay
+      return ocrImage(imageData, pageNumber, openaiApiKey, retryCount + 1);
+    }
+    
+    throw new Error(`OCR failed for page ${pageNumber}: ${response.status} - ${errorText}`);
   }
 
   const data = await response.json();
@@ -124,11 +142,23 @@ async function ocrImage(imageData: string, pageNumber: number, openaiApiKey: str
   }
 }
 
-// Process PDF with OCR (batch processing with real-time progress tracking)
-async function processPdfWithOCR(pdfBuffer: ArrayBuffer, openaiApiKey: string, jobId?: string): Promise<BatchOCRResult> {
-  console.log('Starting PDF OCR processing with progress tracking...');
+// Enhanced fallback processing chain for PDFs
+async function processPdfWithOCR(pdfBuffer: ArrayBuffer, openaiApiKey: string, jobId?: string, filename?: string): Promise<BatchOCRResult> {
+  console.log('Starting enhanced PDF OCR processing with multi-level fallback...');
   
-  // Step 1: Convert PDF to images
+  // Check if PDF might be password-protected
+  const pdfBytes = new Uint8Array(pdfBuffer);
+  const isPasswordProtected = checkIfPasswordProtected(pdfBytes);
+  
+  if (isPasswordProtected) {
+    console.warn('PDF appears to be password-protected, attempting basic processing...');
+    await updateJobProgress(jobId, {
+      current_step: 'password_detected',
+      progress: 5
+    });
+  }
+  
+  // Level 1: PDF/A optimized processing (already handled in upload-document)
   console.log('Starting PDF to images conversion...');
   
   // Update progress: PDF conversion starting
@@ -140,7 +170,7 @@ async function processPdfWithOCR(pdfBuffer: ArrayBuffer, openaiApiKey: string, j
   
   let conversionResult: any = null;
   
-  // Call pdfrest-converter with the PDF
+  // Level 2: Standard PDF to images conversion via pdfrest-converter
   const formData = new FormData();
   formData.append('file', new Blob([pdfBuffer], { type: 'application/pdf' }));
 
@@ -158,15 +188,17 @@ async function processPdfWithOCR(pdfBuffer: ArrayBuffer, openaiApiKey: string, j
     if (conversionResponse.ok) {
       conversionResult = await conversionResponse.json();
       if (!conversionResult.success || !conversionResult.images?.length) {
-        console.warn('PDF-to-images returned no images, will fallback to direct PDF OCR:', conversionResult);
+        console.warn('PDF-to-images returned no images, will try alternative methods:', conversionResult);
         conversionResult = null;
+      } else {
+        console.log(`PDF successfully converted to ${conversionResult.images.length} images`);
       }
     } else {
       const errorText = await conversionResponse.text();
-      console.warn('PDF-to-images HTTP error, will fallback to direct PDF OCR:', errorText);
+      console.warn('PDF-to-images HTTP error, will try alternative methods:', errorText);
     }
   } catch (e) {
-    console.warn('PDF-to-images failed (likely unsupported package in Edge runtime). Fallback to direct PDF OCR.', e);
+    console.warn('PDF-to-images conversion failed. Trying alternative methods.', e);
   }
 
   // If conversion succeeded, OCR all pages with progress tracking
@@ -388,7 +420,8 @@ serve(async (req) => {
 
     const formData = await req.formData();
     const file = formData.get('file') as File;
-    jobId = formData.get('jobId') as string; // Get job ID for progress tracking
+    jobId = formData.get('jobId') as string;
+    const filename = formData.get('filename') as string || file?.name || 'unknown.pdf';
 
     if (!file) {
       throw new Error('No file provided');
@@ -398,15 +431,20 @@ serve(async (req) => {
       throw new Error('File is not a PDF');
     }
 
-    console.log(`Processing PDF: ${file.name} (${file.size} bytes) with full OCR`);
+    console.log(`Processing PDF: ${filename} (${file.size} bytes) with enhanced multi-level OCR fallback`);
 
-    // Check file size limit (50MB)
+    // Enhanced file size limit (50MB) with better error messages
     if (file.size > 50 * 1024 * 1024) {
-      throw new Error('PDF trop volumineux. Limite : 50MB');
+      throw new Error('PDF trop volumineux. Limite : 50MB. Veuillez compresser le fichier ou le diviser en plusieurs parties.');
+    }
+
+    // Check for corrupted files
+    if (file.size < 100) {
+      throw new Error('Fichier PDF trop petit ou corrompu');
     }
 
     const pdfBuffer = await file.arrayBuffer();
-    const result = await processPdfWithOCR(pdfBuffer, openaiApiKey, jobId);
+    const result = await processPdfWithOCR(pdfBuffer, openaiApiKey, jobId, filename);
 
     if (!result.success) {
       throw new Error(result.error || 'Failed to process PDF with OCR');
@@ -421,11 +459,21 @@ serve(async (req) => {
   } catch (error) {
     console.error('Error in pdf-ocr-batch function:', error);
     
+    // Enhanced error handling with specific error types
+    let errorMessage = error.message;
+    if (error.message.includes('rate limit')) {
+      errorMessage = 'Limite de débit API atteinte. Veuillez réessayer dans quelques minutes.';
+    } else if (error.message.includes('timeout')) {
+      errorMessage = 'Temps d\'attente dépassé. Le document est peut-être trop complexe.';
+    } else if (error.message.includes('invalid') || error.message.includes('corrupt')) {
+      errorMessage = 'Fichier PDF invalide ou corrompu. Vérifiez que le fichier n\'est pas endommagé.';
+    }
+    
     // Update job status to failed if jobId provided
     if (jobId) {
       await updateJobProgress(jobId, {
         status: 'failed',
-        error_message: error.message,
+        error_message: errorMessage,
         progress: 0
       });
     }
@@ -436,7 +484,7 @@ serve(async (req) => {
         await supabaseAdmin
           .from('documents')
           .update({
-            content: `Erreur de traitement: ${error.message}`,
+            content: `Erreur de traitement: ${errorMessage}`,
             status: 'failed'
           })
           .eq('processing_job_id', jobId);
@@ -452,7 +500,7 @@ serve(async (req) => {
       pages: [],
       fullText: '',
       language: 'fr',
-      error: error.message
+      error: errorMessage
     };
 
     return new Response(JSON.stringify(errorResult), {

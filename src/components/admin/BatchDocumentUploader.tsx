@@ -421,7 +421,115 @@ const BatchDocumentUploader: React.FC<BatchDocumentUploaderProps> = ({ onDocumen
 
   return (
     <div className="space-y-6">
-      {/* Configuration Section */}
+      {/* Fichiers à traiter Section - Now First */}
+      <Card className="p-6">
+        <h3 className="text-lg font-semibold mb-4">Fichiers à traiter ({uploadFiles.length})</h3>
+        
+        {/* File Upload Area */}
+        <div
+          className={`relative border-2 border-dashed rounded-lg p-8 text-center transition-colors ${
+            dragActive ? 'border-primary bg-primary/5' : 'border-gray-300 hover:border-gray-400'
+          }`}
+          onDragEnter={handleDrag}
+          onDragLeave={handleDrag}
+          onDragOver={handleDrag}
+          onDrop={handleDrop}
+        >
+          <input
+            type="file"
+            multiple
+            accept=".pdf,.docx,.doc,.txt,.jpg,.jpeg,.png,.webp,.gif,.bmp,.tiff"
+            onChange={handleChange}
+            className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+          />
+          <Upload className="mx-auto h-12 w-12 text-gray-400 mb-4" />
+          <h4 className="text-lg font-medium text-gray-900 mb-2">
+            Glissez-déposez vos fichiers ici ou cliquez pour sélectionner
+          </h4>
+          <p className="text-sm text-gray-500">
+            Formats supportés: PDF, DOCX, DOC, TXT, Images (JPG, PNG, WEBP, etc.)
+          </p>
+          <p className="text-xs text-gray-400 mt-1">Taille maximum: 10MB par fichier</p>
+        </div>
+
+        {/* File List */}
+        {uploadFiles.length > 0 && (
+          <div className="mt-6 space-y-3">
+            {uploadFiles.map((uploadFile) => (
+              <div key={uploadFile.id} className="border rounded-lg p-4">
+                <div className="flex items-center justify-between mb-2">
+                  <div className="flex items-center space-x-3 flex-1">
+                    {getStatusIcon(uploadFile.status)}
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium truncate">{uploadFile.file.name}</p>
+                      <p className="text-xs text-muted-foreground">
+                        {formatFileSize(uploadFile.file.size)} • {getStatusText(uploadFile.status)}
+                      </p>
+                      {uploadFile.error && (
+                        <p className="text-xs text-red-500 mt-1">{uploadFile.error}</p>
+                      )}
+                    </div>
+                  </div>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => removeFile(uploadFile.id)}
+                    disabled={uploadFile.status === 'processing'}
+                  >
+                    <X className="h-4 w-4" />
+                  </Button>
+                </div>
+                
+                {uploadFile.status === 'processing' && (
+                  <div className="space-y-2">
+                    <Progress value={uploadFile.progress} className="h-2" />
+                    <div className="flex justify-between text-xs text-muted-foreground">
+                      <span>Progression</span>
+                      <span>{uploadFile.progress}%</span>
+                    </div>
+                  </div>
+                )}
+
+                {/* Progress Tracker for files with job ID */}
+                {uploadFile.jobId && uploadFile.status === 'processing' && (
+                  <div className="mt-3">
+                    <ProgressTracker 
+                      jobId={uploadFile.jobId}
+                      fileName={uploadFile.file.name}
+                      onComplete={(result) => handleFileCompletion(uploadFile.id, result)}
+                      onError={(error) => setUploadFiles(prev => prev.map(f => 
+                        f.id === uploadFile.id ? { ...f, status: 'error', error } : f
+                      ))}
+                    />
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+        )}
+
+        {/* Process Button */}
+        {uploadFiles.length > 0 && (
+          <div className="mt-6 flex justify-center">
+            <Button
+              onClick={processAllFiles}
+              disabled={isProcessing || !selectedCategory || !selectedDocumentType}
+              className="w-full max-w-md"
+            >
+              {isProcessing ? (
+                <>
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  Traitement en cours...
+                </>
+              ) : (
+                `Traiter tous les fichiers (${uploadFiles.filter(f => f.status === 'pending').length})`
+              )}
+            </Button>
+          </div>
+        )}
+      </Card>
+
+      {/* Configuration Section - Now Second */}
       <Card className="p-6">
         <h3 className="text-lg font-semibold mb-4">Configuration des documents</h3>
         
@@ -474,6 +582,17 @@ const BatchDocumentUploader: React.FC<BatchDocumentUploaderProps> = ({ onDocumen
           </div>
         </div>
 
+        <div className="flex gap-2 mt-4">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setShowNewDocumentType(!showNewDocumentType)}
+          >
+            <Plus className="h-4 w-4 mr-2" />
+            Nouveau type
+          </Button>
+        </div>
+
         {showNewCategory && (
           <Card className="p-4 space-y-4">
             <h4 className="font-medium">Créer une nouvelle catégorie</h4>
@@ -508,129 +627,42 @@ const BatchDocumentUploader: React.FC<BatchDocumentUploaderProps> = ({ onDocumen
             </div>
           </Card>
         )}
-      </Card>
 
-      {/* Upload Section */}
-      <Card className="p-6">
-        <div
-          className={`border-2 border-dashed rounded-lg p-8 text-center transition-colors ${
-            dragActive ? 'border-primary bg-primary/5' : 'border-muted-foreground/25'
-          }`}
-          onDragEnter={handleDrag}
-          onDragLeave={handleDrag}
-          onDragOver={handleDrag}
-          onDrop={handleDrop}
-        >
-          <Upload className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
-          <h3 className="text-lg font-semibold mb-2">
-            Glissez-déposez vos documents ici
-          </h3>
-          <p className="text-muted-foreground mb-4">
-            Ou cliquez pour sélectionner plusieurs fichiers
-          </p>
-          <Input
-            type="file"
-            multiple
-            accept=".pdf,.docx,.doc,.txt,.jpg,.jpeg,.png,.webp,.gif,.bmp,.tiff"
-            onChange={handleChange}
-            className="hidden"
-            id="file-upload"
-          />
-          <Label htmlFor="file-upload">
-            <Button variant="outline" className="cursor-pointer" asChild>
-              <span>Sélectionner des fichiers</span>
-            </Button>
-          </Label>
-          <p className="text-sm text-muted-foreground mt-2">
-            PDF, Word, TXT, Images (JPG, PNG, WEBP) - Max 10MB par fichier
-          </p>
-        </div>
-      </Card>
-
-      {/* Files List */}
-      {uploadFiles.length > 0 && (
-        <Card className="p-6">
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="text-lg font-semibold">
-              Fichiers à traiter ({uploadFiles.length})
-            </h3>
-            <Button 
-              onClick={processAllFiles}
-              disabled={isProcessing || !selectedCategory || !selectedDocumentType}
-            >
-              {isProcessing ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Traitement...
-                </>
-              ) : (
-                'Traiter tous les fichiers'
-              )}
-            </Button>
-          </div>
-
-          <div className="space-y-3">
-            {uploadFiles.map((uploadFile) => (
-              <div key={uploadFile.id}>
-                {uploadFile.status === 'processing' && uploadFile.jobId ? (
-                  <ProgressTracker
-                    jobId={uploadFile.jobId}
-                    fileName={uploadFile.file.name}
-                    onComplete={(result) => handleFileCompletion(uploadFile.id, result)}
-                    onError={(error) => {
-                      setUploadFiles(prev => prev.map(f => 
-                        f.id === uploadFile.id ? { 
-                          ...f, 
-                          status: 'error', 
-                          error: error
-                        } : f
-                      ));
-                    }}
-                  />
-                ) : (
-                  <div className="flex items-center justify-between p-3 border rounded-lg">
-                    <div className="flex items-center space-x-3 flex-1">
-                      {getStatusIcon(uploadFile.status)}
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium truncate">
-                          {uploadFile.file.name}
-                        </p>
-                        <p className="text-xs text-muted-foreground">
-                          {formatFileSize(uploadFile.file.size)}
-                        </p>
-                        {(uploadFile.status === 'processing') && (
-                          <Progress value={uploadFile.progress} className="w-full mt-2" />
-                        )}
-                        {uploadFile.error && (
-                          <p className="text-xs text-red-500 mt-1">{uploadFile.error}</p>
-                        )}
-                      </div>
-                      <Badge variant={
-                        uploadFile.status === 'completed' ? 'default' :
-                        uploadFile.status === 'error' ? 'destructive' :
-                        uploadFile.status === 'processing' ? 'secondary' : 'outline'
-                      }>
-                        {getStatusText(uploadFile.status)}
-                      </Badge>
-                    </div>
-                    
-                    {uploadFile.status === 'pending' && (
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => removeFile(uploadFile.id)}
-                        className="ml-2"
-                      >
-                        <X className="h-4 w-4" />
-                      </Button>
-                    )}
-                  </div>
-                )}
+        {showNewDocumentType && (
+          <Card className="p-4 space-y-4">
+            <h4 className="font-medium">Créer un nouveau type de document</h4>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="new-document-type-name">Nom (Français)</Label>
+                <Input
+                  id="new-document-type-name"
+                  value={newDocumentTypeName}
+                  onChange={(e) => setNewDocumentTypeName(e.target.value)}
+                  placeholder="Ex: Jurisprudence"
+                />
               </div>
-            ))}
-          </div>
-        </Card>
-      )}
+              <div className="space-y-2">
+                <Label htmlFor="new-document-type-name-ar">Nom (Arabe)</Label>
+                <Input
+                  id="new-document-type-name-ar"
+                  value={newDocumentTypeNameAr}
+                  onChange={(e) => setNewDocumentTypeNameAr(e.target.value)}
+                  placeholder="Ex: فقه القضاء"
+                  dir="rtl"
+                />
+              </div>
+            </div>
+            <div className="flex gap-2">
+              <Button onClick={createDocumentType} disabled={!newDocumentTypeName.trim()}>
+                Créer
+              </Button>
+              <Button variant="outline" onClick={() => setShowNewDocumentType(false)}>
+                Annuler
+              </Button>
+            </div>
+          </Card>
+        )}
+      </Card>
     </div>
   );
 };
