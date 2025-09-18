@@ -268,27 +268,8 @@ serve(async (req) => {
           pdfFormData.append('isArchival', (pdfaInfo.archivalFeatures?.isArchival || false).toString());
         }
         
-        // Trigger PDF OCR processing asynchronously (don't wait for completion)
-        console.log('Triggering PDF OCR batch processing asynchronously...');
-        
-        // Use EdgeRuntime.waitUntil for proper background processing
-        try {
-          EdgeRuntime.waitUntil(
-            supabaseAdmin.functions.invoke('pdf-ocr-batch', {
-              body: pdfFormData
-            }).then(() => {
-              console.log('Background PDF OCR completed successfully');
-            }).catch(error => {
-              console.error('Background PDF OCR failed:', error);
-            })
-          );
-        } catch (e) {
-          // Fallback if EdgeRuntime.waitUntil is not available
-          supabaseAdmin.functions.invoke('pdf-ocr-batch', {
-            body: pdfFormData
-          }).catch(error => {
-            console.error('Background PDF OCR failed:', error);
-          });
+        // Defer OCR triggering until after document is saved to DB
+        console.log('Deferring PDF OCR batch trigger until document record exists...');
         }
         
         // Set default values for immediate return
@@ -408,7 +389,7 @@ serve(async (req) => {
       category_id: categoryId || null,
       document_type_id: documentTypeId || null,
       user_id: null, // Public upload - no user required
-      status: 'processed',
+      status: 'processing',
       // Enhanced metadata fields
       document_type: analysisData.document_type,
       main_topics: analysisData.main_topics || [],
@@ -456,6 +437,34 @@ serve(async (req) => {
     }
 
     console.log('Document saved to database:', document.id);
+
+    // Now trigger PDF OCR batch in background (document exists and is linked by processing_job_id)
+    try {
+      const pdfFormData = new FormData();
+      pdfFormData.append('file', file);
+      if (jobData?.id) {
+        pdfFormData.append('jobId', jobData.id);
+        pdfFormData.append('filename', file.name);
+      }
+      if (pdfaInfo?.recommendations) {
+        pdfFormData.append('optimizedResolution', String(pdfaInfo.recommendations.optimizedResolution));
+        pdfFormData.append('preserveMetadata', String(pdfaInfo.recommendations.preserveMetadata));
+        pdfFormData.append('isArchival', String(pdfaInfo.archivalFeatures?.isArchival || false));
+      }
+      try {
+        EdgeRuntime.waitUntil(
+          supabaseAdmin.functions.invoke('pdf-ocr-batch', { body: pdfFormData })
+            .then(() => console.log('Background PDF OCR completed successfully'))
+            .catch((error) => console.error('Background PDF OCR failed:', error))
+        );
+      } catch {
+        // Fallback if EdgeRuntime.waitUntil is not available
+        supabaseAdmin.functions.invoke('pdf-ocr-batch', { body: pdfFormData })
+          .catch((error) => console.error('Background PDF OCR failed:', error));
+      }
+    } catch (triggerErr) {
+      console.error('Failed to trigger OCR after saving document:', triggerErr);
+    }
 
     return new Response(JSON.stringify({ 
       success: true, 
