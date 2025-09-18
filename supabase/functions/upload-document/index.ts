@@ -90,6 +90,9 @@ serve(async (req) => {
       legal_domains: []
     };
     
+    // Shared PDF/A info across processing flow
+    let pdfaInfo: any = null;
+    
     // Handle different file types
     if (file.type === 'application/pdf' || file.name.toLowerCase().endsWith('.pdf')) {
       console.log('Processing PDF file - detecting PDF/A compliance first...');
@@ -114,7 +117,7 @@ serve(async (req) => {
       const jobId = jobData?.id;
       
       // First, detect if this is a PDF/A document for optimized processing
-      let pdfaInfo = null;
+      pdfaInfo = null;
       try {
         const pdfaFormData = new FormData();
         pdfaFormData.append('file', file);
