@@ -93,3 +93,6 @@ verify_jwt = false
 
 [functions.image-ocr]
 verify_jwt = false
+
+[functions.pdfrest-converter]
+verify_jwt = false

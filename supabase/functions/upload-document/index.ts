@@ -91,7 +91,7 @@ serve(async (req) => {
     
     // Handle different file types
     if (file.type === 'application/pdf' || file.name.toLowerCase().endsWith('.pdf')) {
-      console.log('Processing PDF file with full OCR (all pages)...');
+      console.log('Processing PDF file with pdfRest + OCR (all pages)...');
       
       try {
         const pdfFormData = new FormData();
