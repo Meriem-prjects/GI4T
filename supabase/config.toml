@@ -96,6 +96,3 @@ verify_jwt = false
 
 [functions.pdfrest-converter]
 verify_jwt = false
-
-[functions.pdf-to-images-native]
-verify_jwt = false

@@ -96,7 +96,7 @@ async function processPdfWithOCR(pdfBuffer: ArrayBuffer, openaiApiKey: string): 
     const anon = Deno.env.get('SUPABASE_ANON_KEY');
     if (anon) headers['Authorization'] = `Bearer ${anon}`;
 
-    const conversionResponse = await fetch('https://qpkybrcjcoxhkifnbxei.supabase.co/functions/v1/pdf-to-images-native', {
+    const conversionResponse = await fetch('https://qpkybrcjcoxhkifnbxei.supabase.co/functions/v1/pdfrest-converter', {
       method: 'POST',
       body: formData,
       headers,
