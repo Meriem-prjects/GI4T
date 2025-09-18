@@ -55,8 +55,8 @@ const ProgressTracker: React.FC<ProgressTrackerProps> = ({
           setJob(payload.new as ProcessingJob);
 
           // Handle completion
-          if (payload.new.status === 'completed' && onComplete) {
-            onComplete(payload.new.result_data);
+          if (payload.new.status === 'completed') {
+            fetchAndEmitDocument(jobId!);
           }
 
           // Handle errors
@@ -74,6 +74,27 @@ const ProgressTracker: React.FC<ProgressTrackerProps> = ({
       supabase.removeChannel(channel);
     };
   }, [jobId]);
+
+  // Helper to fetch document once job completes
+  const fetchAndEmitDocument = async (jobId: string) => {
+    try {
+      const { data: doc, error: docError } = await (supabase as any)
+        .from('documents')
+        .select('id,title,summary,content,keywords,language,original_filename,file_url,pdf_url,category_id,document_type_id,page_contents,processed_pages,total_pages,created_at')
+        .eq('processing_job_id', jobId)
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .single();
+
+      if (doc && !docError) {
+        onComplete?.(doc);
+      } else {
+        onComplete?.(job?.result_data);
+      }
+    } catch (e) {
+      onComplete?.(job?.result_data);
+    }
+  };
 
   const fetchJob = async () => {
     if (!jobId) return;
@@ -93,8 +114,8 @@ const ProgressTracker: React.FC<ProgressTrackerProps> = ({
       setJob(data);
 
       // Check if already completed
-      if (data.status === 'completed' && onComplete) {
-        onComplete(data.result_data);
+      if (data.status === 'completed') {
+        fetchAndEmitDocument(jobId!);
       } else if (data.status === 'failed' && onError) {
         onError(data.error_message || 'Processing failed');
       }

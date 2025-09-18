@@ -218,10 +218,10 @@ const BatchDocumentUploader: React.FC<BatchDocumentUploaderProps> = ({ onDocumen
         continue;
       }
 
-      if (file.size > 20 * 1024 * 1024) { // 20MB limit
+      if (file.size > 10 * 1024 * 1024) { // 10MB limit
         toast({
           title: "Fichier trop volumineux",
-          description: `${file.name} dépasse la limite de 20MB.`,
+          description: `${file.name} dépasse la limite de 10MB.`,
           variant: "destructive",
         });
         continue;
@@ -541,7 +541,7 @@ const BatchDocumentUploader: React.FC<BatchDocumentUploaderProps> = ({ onDocumen
             </Button>
           </Label>
           <p className="text-sm text-muted-foreground mt-2">
-            PDF, Word, TXT, Images (JPG, PNG, WEBP) - Max 20MB par fichier
+            PDF, Word, TXT, Images (JPG, PNG, WEBP) - Max 10MB par fichier
           </p>
         </div>
       </Card>
