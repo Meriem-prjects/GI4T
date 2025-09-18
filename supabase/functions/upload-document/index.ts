@@ -108,6 +108,29 @@ async function extractFileContent(file: File, isPDF: boolean): Promise<{ success
   }
 }
 
+// Sanitize strings to avoid null bytes that Postgres rejects ("unsupported Unicode escape sequence")
+function sanitizeString(input: string): string {
+  try {
+    return input.replace(/\u0000/g, '');
+  } catch {
+    return input;
+  }
+}
+
+function deepSanitize(value: any): any {
+  if (value === null || value === undefined) return value;
+  if (typeof value === 'string') return sanitizeString(value);
+  if (Array.isArray(value)) return value.map((v) => deepSanitize(v));
+  if (typeof value === 'object') {
+    const result: Record<string, any> = {};
+    for (const [k, v] of Object.entries(value)) {
+      result[k] = deepSanitize(v);
+    }
+    return result;
+  }
+  return value;
+}
+
 serve(async (req) => {
   console.log('Upload document function called');
 
@@ -423,7 +446,7 @@ serve(async (req) => {
 
     const { data: document, error: dbError } = await supabaseAdmin
       .from('documents')
-      .insert(documentData)
+      .insert(deepSanitize(documentData))
       .select()
       .single();
 
