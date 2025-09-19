@@ -256,7 +256,103 @@ async function processPdfWithOCR(pdfBuffer: ArrayBuffer, openaiApiKey: string, j
     });
   }
   
-  // Level 1: PDF/A optimized processing (already handled in upload-document)
+  // Level 0: Try direct text extraction with pdf-reader first (NEW STEP)
+  console.log('Attempting direct PDF text extraction with pdf-reader...');
+  
+  await updateJobProgress(jobId, {
+    current_step: 'pdf_text_extraction',
+    progress: 15
+  });
+  
+  try {
+    const headers: Record<string, string> = {};
+    const anon = Deno.env.get('SUPABASE_ANON_KEY');
+    if (anon) headers['Authorization'] = `Bearer ${anon}`;
+
+    const readerResponse = await fetch('https://qpkybrcjcoxhkifnbxei.supabase.co/functions/v1/pdf-reader', {
+      method: 'POST',
+      body: pdfBuffer,
+      headers: { ...headers, 'Content-Type': 'application/pdf' },
+    });
+
+    if (readerResponse.ok) {
+      const readerResult = await readerResponse.json();
+      
+      if (readerResult.success && readerResult.texts && readerResult.texts.length > 0) {
+        const fullText = readerResult.texts.join('\n\n').trim();
+        const avgCharsPerPage = fullText.length / readerResult.numPages;
+        
+        console.log(`PDF text extraction successful: ${readerResult.numPages} pages, ${fullText.length} chars, avg ${Math.round(avgCharsPerPage)} chars/page`);
+        
+        // Check if text extraction is sufficient (>50 chars per page average)
+        if (avgCharsPerPage > 50 && fullText.length > 100) {
+          console.log('Direct text extraction sufficient, skipping OCR processing');
+          
+          // Create page content from extracted text
+          const pages: PageContent[] = readerResult.texts.map((text: string, index: number) => ({
+            pageNumber: index + 1,
+            content: text.trim(),
+            confidence: 1.0, // High confidence for direct text extraction
+            language: 'fr' // Will be detected later if needed
+          }));
+          
+          // Save pages to database if jobId exists
+          if (jobId) {
+            for (const page of pages) {
+              await savePageToDatabase(jobId, page);
+            }
+            
+            // Update job and document with final results
+            await updateJobProgress(jobId, {
+              status: 'completed',
+              current_step: 'text_extraction_completed',
+              progress: 100,
+              processed_pages: pages.length,
+              total_pages: pages.length,
+              result_data: {
+                totalPages: pages.length,
+                processedPages: pages.length,
+                language: 'fr',
+                contentLength: fullText.length,
+                method: 'direct_text_extraction'
+              }
+            });
+            
+            // Update document
+            await supabaseAdmin
+              .from('documents')
+              .update({
+                content: fullText,
+                language: 'fr',
+                processed_pages: pages.length,
+                total_pages: pages.length,
+                status: 'processed'
+              })
+              .eq('processing_job_id', jobId);
+          }
+          
+          return {
+            success: true,
+            totalPages: pages.length,
+            processedPages: pages.length,
+            pages,
+            fullText,
+            language: 'fr',
+          };
+        } else {
+          console.log(`Text extraction insufficient (${Math.round(avgCharsPerPage)} chars/page), falling back to OCR`);
+        }
+      } else {
+        console.log('PDF text extraction failed, falling back to OCR');
+      }
+    } else {
+      console.log('PDF-reader service unavailable, falling back to OCR');
+    }
+  } catch (readerError) {
+    console.warn('PDF text extraction error, falling back to OCR:', readerError);
+  }
+  
+  // Level 1: PDF to images conversion (existing workflow)
   console.log('Starting PDF to images conversion...');
   
   // Update progress: PDF conversion starting

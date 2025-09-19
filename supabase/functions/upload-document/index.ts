@@ -203,6 +203,7 @@ serve(async (req) => {
     // Shared variables across processing flow
     let pdfaInfo: any = null;
     let jobData: any = null;
+    let shouldUsePDFReader = false; // Track if direct text extraction was successful
     
     // Handle different file types with enhanced processing
     if (isPDF) {
@@ -252,30 +253,79 @@ serve(async (req) => {
       }
       
       try {
-        const pdfFormData = new FormData();
-        pdfFormData.append('file', file);
+        // First attempt: Direct text extraction with pdf-reader
+        console.log('Attempting direct PDF text extraction...');
         
-        // Add PDF/A optimization parameters and filename for enhanced processing
-        if (jobId) {
-          pdfFormData.append('jobId', jobId);
-          pdfFormData.append('filename', file.name); // Add filename for better logging
+        const { data: readerData, error: readerError } = await supabaseAdmin.functions.invoke('pdf-reader', {
+          body: buffer
+        });
+        
+        let shouldUsePDFReader = false;
+        
+        if (!readerError && readerData?.success && readerData?.texts?.length > 0) {
+          const extractedText = readerData.texts.join('\n\n').trim();
+          const avgCharsPerPage = extractedText.length / readerData.numPages;
+          
+          console.log(`PDF text extraction result: ${readerData.numPages} pages, ${extractedText.length} chars, avg ${Math.round(avgCharsPerPage)} chars/page`);
+          
+          // Use direct extraction if sufficient text (>50 chars per page average)
+          if (avgCharsPerPage > 50 && extractedText.length > 100) {
+            console.log('Direct text extraction sufficient, using extracted content');
+            
+            fileContent = extractedText;
+            extractionSuccess = true;
+            shouldUsePDFReader = true;
+            totalPagesVar = readerData.numPages;
+            
+            // Create page contents from extracted text
+            pageContents = readerData.texts.map((text: string, index: number) => ({
+              pageNumber: index + 1,
+              content: text.trim(),
+              confidence: 1.0,
+              language: 'fr'
+            }));
+            
+            processedPages = readerData.numPages;
+            
+            // Enhanced analysis data with extracted content
+            analysisData.title = file.name.replace(/\.[^/.]+$/, "");
+            analysisData.summary = `Document PDF traité avec extraction directe: ${extractedText.substring(0, 200)}...`;
+            analysisData.language = 'fr';
+            
+            console.log('PDF direct extraction completed successfully');
+          } else {
+            console.log(`Text extraction insufficient (${Math.round(avgCharsPerPage)} chars/page), will use OCR fallback`);
+          }
+        } else {
+          console.log('PDF text extraction failed, will use OCR fallback');
         }
         
-        // Add PDF/A optimization parameters if detected
-        if (pdfaInfo?.recommendations) {
-          pdfFormData.append('optimizedResolution', pdfaInfo.recommendations.optimizedResolution.toString());
-          pdfFormData.append('preserveMetadata', pdfaInfo.recommendations.preserveMetadata.toString());
-          pdfFormData.append('isArchival', (pdfaInfo.archivalFeatures?.isArchival || false).toString());
+        if (!shouldUsePDFReader) {
+          // Fallback to OCR processing
+          console.log('Preparing for OCR processing...');
+          
+          const pdfFormData = new FormData();
+          pdfFormData.append('file', file);
+          
+          // Add PDF/A optimization parameters and filename for enhanced processing
+          if (jobId) {
+            pdfFormData.append('jobId', jobId);
+            pdfFormData.append('filename', file.name); // Add filename for better logging
+          }
+          
+          // Add PDF/A optimization parameters if detected
+          if (pdfaInfo?.recommendations) {
+            pdfFormData.append('optimizedResolution', pdfaInfo.recommendations.optimizedResolution.toString());
+            pdfFormData.append('preserveMetadata', pdfaInfo.recommendations.preserveMetadata.toString());
+            pdfFormData.append('isArchival', (pdfaInfo.archivalFeatures?.isArchival || false).toString());
+          }
+          
+          // Set default values for OCR processing
+          fileContent = 'Document PDF en cours de traitement par OCR...';
+          extractionSuccess = true;
+          analysisData.language = 'fr';
+          analysisData.summary = 'Document PDF en cours de traitement par OCR';
         }
-        
-        // Defer OCR triggering until after document is saved to DB
-        console.log('Deferring PDF OCR batch trigger until document record exists...');
-        
-        // Set default values for immediate return
-        fileContent = 'Document PDF en cours de traitement...';
-        extractionSuccess = true;
-        analysisData.language = 'fr';
-        analysisData.summary = 'Document PDF en cours de traitement par OCR';
 
         // Enhance analysis data with PDF/A metadata if available
         if (pdfaInfo?.isPDFA) {
@@ -388,7 +438,8 @@ serve(async (req) => {
       category_id: categoryId || null,
       document_type_id: documentTypeId || null,
       user_id: null, // Public upload - no user required
-      status: 'processing',
+        // Update document status based on processing method
+        documentData.status = shouldUsePDFReader ? 'processed' : 'processing';
       // Enhanced metadata fields
       document_type: analysisData.document_type,
       main_topics: analysisData.main_topics || [],
@@ -437,32 +488,50 @@ serve(async (req) => {
 
     console.log('Document saved to database:', document.id);
 
-    // Now trigger PDF OCR batch in background (document exists and is linked by processing_job_id)
-    try {
-      const pdfFormData = new FormData();
-      pdfFormData.append('file', file);
-      if (jobData?.id) {
-        pdfFormData.append('jobId', jobData.id);
-        pdfFormData.append('filename', file.name);
-      }
-      if (pdfaInfo?.recommendations) {
-        pdfFormData.append('optimizedResolution', String(pdfaInfo.recommendations.optimizedResolution));
-        pdfFormData.append('preserveMetadata', String(pdfaInfo.recommendations.preserveMetadata));
-        pdfFormData.append('isArchival', String(pdfaInfo.archivalFeatures?.isArchival || false));
-      }
+    // Only trigger OCR in background if direct text extraction wasn't sufficient
+    if (isPDF && !shouldUsePDFReader) {
       try {
-        EdgeRuntime.waitUntil(
+        const pdfFormData = new FormData();
+        pdfFormData.append('file', file);
+        if (jobData?.id) {
+          pdfFormData.append('jobId', jobData.id);
+          pdfFormData.append('filename', file.name);
+        }
+        if (pdfaInfo?.recommendations) {
+          pdfFormData.append('optimizedResolution', String(pdfaInfo.recommendations.optimizedResolution));
+          pdfFormData.append('preserveMetadata', String(pdfaInfo.recommendations.preserveMetadata));
+          pdfFormData.append('isArchival', String(pdfaInfo.archivalFeatures?.isArchival || false));
+        }
+        
+        console.log('Triggering background OCR processing (direct extraction was insufficient)...');
+        try {
+          EdgeRuntime.waitUntil(
+            supabaseAdmin.functions.invoke('pdf-ocr-batch', { body: pdfFormData })
+              .then(() => console.log('Background PDF OCR completed successfully'))
+              .catch((error) => console.error('Background PDF OCR failed:', error))
+          );
+        } catch {
+          // Fallback if EdgeRuntime.waitUntil is not available
           supabaseAdmin.functions.invoke('pdf-ocr-batch', { body: pdfFormData })
-            .then(() => console.log('Background PDF OCR completed successfully'))
-            .catch((error) => console.error('Background PDF OCR failed:', error))
-        );
-      } catch {
-        // Fallback if EdgeRuntime.waitUntil is not available
-        supabaseAdmin.functions.invoke('pdf-ocr-batch', { body: pdfFormData })
-          .catch((error) => console.error('Background PDF OCR failed:', error));
+            .catch((error) => console.error('Background PDF OCR failed:', error));
+        }
+      } catch (triggerErr) {
+        console.error('Failed to trigger OCR after saving document:', triggerErr);
       }
-    } catch (triggerErr) {
-      console.error('Failed to trigger OCR after saving document:', triggerErr);
+    } else if (isPDF && shouldUsePDFReader) {
+      console.log('Skipping OCR processing - direct text extraction was successful');
+      
+      // Update job status to completed since no further processing needed
+      if (jobData?.id) {
+        await supabaseAdmin
+          .from('processing_jobs')
+          .update({
+            status: 'completed',
+            progress: 100,
+            current_step: 'direct_extraction_completed'
+          })
+          .eq('id', jobData.id);
+      }
     }
 
     return new Response(JSON.stringify({ 
