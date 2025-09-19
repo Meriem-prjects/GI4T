@@ -14,14 +14,27 @@ const supabaseAdmin = createClient(
   Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
 );
 
-// Detect password-protected PDFs by scanning header for encryption flags
-function checkIfPasswordProtected(pdfBytes: Uint8Array): boolean {
-  try {
-    const head = new TextDecoder('latin1').decode(pdfBytes.slice(0, 2048));
-    return head.includes('/Encrypt') || head.includes('/Filter/Standard');
-  } catch {
-    return false;
-  }
+// Detect language from text content
+function detectLanguage(text: string): string {
+  if (!text || text.length < 10) return 'fr';
+  
+  // Arabic detection - look for Arabic characters
+  const arabicPattern = /[\u0600-\u06FF\u0750-\u077F]/;
+  if (arabicPattern.test(text)) return 'ar';
+  
+  // French detection - common French words and patterns
+  const frenchWords = /\b(le|la|les|de|du|des|et|à|un|une|ce|cette|pour|avec|par|sur|dans|est|sont|que|qui|il|elle|nous|vous|ils|elles)\b/gi;
+  const frenchMatches = (text.match(frenchWords) || []).length;
+  
+  // English detection - common English words
+  const englishWords = /\b(the|and|to|of|a|in|is|it|you|that|he|was|for|on|are|as|with|his|they|i|at|be|this|have|from|or|one|had|but|word|not|what|all|were|we|when|your|can|said|there|each|which|she|do|how|their|if|will|up|other|about|out|many|then|them|these|so|some|her|would|make|like|into|him|has|two|more|go|no|way|could|my|than|first|been|call|who|oil|its|now|find|long|down|day|did|get|come|made|may|part)\b/gi;
+  const englishMatches = (text.match(englishWords) || []).length;
+  
+  // Decision based on matches
+  if (frenchMatches > englishMatches) return 'fr';
+  if (englishMatches > frenchMatches) return 'en';
+  
+  return 'fr'; // Default to French
 }
 
 interface PageContent {
@@ -433,62 +446,147 @@ async function processPdfWithOCR(pdfBuffer: ArrayBuffer, openaiApiKey: string, j
     };
   }
 
-  // Fallback: send the raw PDF to OpenAI Vision API to extract all text at once
-  console.log('Falling back to direct PDF OCR via OpenAI Vision...');
+  // Fallback Level 3: Enhanced pdf-to-images with direct text extraction
+  console.log('Trying enhanced pdf-to-images conversion...');
   
-  await updateJobProgress(jobId, {
-    current_step: 'direct_pdf_ocr',
-    progress: 50
-  });
-
-  // Convert PDF buffer to base64 in chunks
-  const bytes = new Uint8Array(pdfBuffer);
-  const chunkSize = 8192;
-  const parts: string[] = [];
-  for (let i = 0; i < bytes.length; i += chunkSize) {
-    parts.push(String.fromCharCode.apply(null, Array.from(bytes.slice(i, i + chunkSize))));
-  }
-  const base64Pdf = btoa(parts.join(''));
-
-  const response = await fetch('https://api.openai.com/v1/chat/completions', {
-    method: 'POST',
-    headers: {
-      'Authorization': `Bearer ${openaiApiKey}`,
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-      model: 'gpt-4o',
-      messages: [
-        { role: 'system', content: 'Tu es un expert en extraction de texte multi-pages. Extrais TOUT le texte du PDF fourni (toutes les pages), sans commentaire, et détecte la langue principale. Réponds en JSON: {"text": "...", "language": "fr|ar|en", "confidence": 0.95}.' },
-        {
-          role: 'user',
-          content: [
-            { type: 'text', text: 'Extrais et concatène le texte de toutes les pages de ce PDF:' },
-            { type: 'image_url', image_url: { url: `data:application/pdf;base64,${base64Pdf}` } },
-          ],
-        },
-      ],
-      max_tokens: 4000,
-      temperature: 0,
-      response_format: { type: 'json_object' },
-    }),
-  });
-
-  if (!response.ok) {
-    const errText = await response.text();
-    throw new Error(`OpenAI PDF OCR error: ${response.status} - ${errText}`);
-  }
-
-  const data = await response.json();
-  const content = data.choices?.[0]?.message?.content;
-
-  if (!content) {
-    throw new Error('No content returned from OpenAI PDF OCR');
-  }
-
   try {
-    const parsed = JSON.parse(content);
-    const fullText = parsed.text || '';
+    const headers: Record<string, string> = {};
+    const anon = Deno.env.get('SUPABASE_ANON_KEY');
+    if (anon) headers['Authorization'] = `Bearer ${anon}`;
+
+    const enhancedFormData = new FormData();
+    enhancedFormData.append('file', new Blob([pdfBuffer], { type: 'application/pdf' }));
+
+    const enhancedResponse = await fetch('https://qpkybrcjcoxhkifnbxei.supabase.co/functions/v1/pdf-to-images', {
+      method: 'POST',
+      body: enhancedFormData,
+      headers,
+    });
+
+    if (enhancedResponse.ok) {
+      const enhancedResult = await enhancedResponse.json();
+      if (enhancedResult.success && enhancedResult.images?.length) {
+        console.log(`Enhanced PDF-to-images succeeded with ${enhancedResult.images.length} images`);
+        conversionResult = enhancedResult;
+      }
+    }
+  } catch (e) {
+    console.warn('Enhanced pdf-to-images also failed:', e);
+  }
+
+  // If we still don't have images, try basic text extraction
+  if (!conversionResult) {
+    console.log('All conversion methods failed. Attempting basic text extraction...');
+    
+    try {
+      // Use pdfjs-dist to extract text directly  
+      const pdfjsLib = await import('https://esm.sh/pdfjs-dist@4.0.379');
+      
+      if (pdfjsLib.GlobalWorkerOptions) {
+        pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://esm.sh/pdfjs-dist@4.0.379/build/pdf.worker.min.js';
+      }
+      
+      const loadingTask = pdfjsLib.getDocument({
+        data: new Uint8Array(pdfBuffer),
+        verbosity: 0,
+        disableWorker: true,
+      });
+      
+      const pdf = await loadingTask.promise;
+      const totalPages = pdf.numPages;
+      
+      console.log(`Extracting text from ${totalPages} pages...`);
+      
+      const pages: PageContent[] = [];
+      
+      for (let pageNum = 1; pageNum <= totalPages; pageNum++) {
+        try {
+          const page = await pdf.getPage(pageNum);
+          const textContent = await page.getTextContent();
+          const textItems = textContent.items.map((item: any) => item.str).join(' ');
+          
+          if (textItems.trim()) {
+            const pageContent: PageContent = {
+              pageNumber: pageNum,
+              content: textItems.trim(),
+              confidence: 0.9, // High confidence for direct text extraction
+              language: detectLanguage(textItems)
+            };
+            
+            pages.push(pageContent);
+            await savePageToDatabase(jobId, pageContent);
+            
+            const progressPercent = Math.round(50 + (pageNum / totalPages) * 40);
+            await updateJobProgress(jobId, {
+              current_step: `text_extract_page_${pageNum}`,
+              progress: progressPercent,
+              processed_pages: pageNum,
+              total_pages: totalPages
+            });
+            
+            console.log(`Page ${pageNum} text extracted: ${textItems.length} chars`);
+          }
+        } catch (pageError) {
+          console.error(`Failed to extract text from page ${pageNum}:`, pageError);
+        }
+      }
+      
+      if (pages.length > 0) {
+        const languages: { [key: string]: number } = {};
+        pages.forEach(p => {
+          languages[p.language] = (languages[p.language] || 0) + 1;
+        });
+        
+        const dominantLanguage = Object.keys(languages).reduce((a, b) => 
+          (languages[a] > languages[b] ? a : b), 'fr');
+        
+        const fullText = pages
+          .sort((a, b) => a.pageNumber - b.pageNumber)
+          .map(p => p.content)
+          .join('\n\n');
+        
+        await updateJobProgress(jobId, {
+          status: 'completed',
+          current_step: 'text_extraction_completed',
+          progress: 100,
+          processed_pages: pages.length,
+          total_pages: totalPages,
+          result_data: {
+            totalPages: totalPages,
+            processedPages: pages.length,
+            language: dominantLanguage,
+            contentLength: fullText.length,
+            method: 'text_extraction'
+          }
+        });
+        
+        // Update document with extracted text
+        if (jobId) {
+          await supabaseAdmin
+            .from('documents')
+            .update({
+              content: fullText,
+              language: dominantLanguage,
+              processed_pages: pages.length,
+              total_pages: totalPages,
+              status: 'processed'
+            })
+            .eq('processing_job_id', jobId);
+        }
+        
+        return {
+          success: true,
+          totalPages: totalPages,
+          processedPages: pages.length,
+          pages,
+          fullText,
+          language: dominantLanguage,
+        };
+      }
+    } catch (textError) {
+      console.error('Basic text extraction failed:', textError);
+    }
+  }
     const language = parsed.language || 'fr';
 
     // Update final progress and document
