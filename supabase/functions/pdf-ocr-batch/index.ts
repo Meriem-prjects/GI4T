@@ -583,56 +583,10 @@ async function processPdfWithOCR(pdfBuffer: ArrayBuffer, openaiApiKey: string, j
           language: dominantLanguage,
         };
       }
-    } catch (textError) {
-      console.error('Basic text extraction failed:', textError);
-    }
   }
-    const language = parsed.language || 'fr';
-
-    // Update final progress and document
-    await updateJobProgress(jobId, {
-      status: 'completed',
-      current_step: 'completed',
-      progress: 100,
-      processed_pages: 1,
-      total_pages: 1,
-      result_data: {
-        totalPages: 1,
-        language: language,
-        contentLength: fullText.length
-      }
-    });
-    
-    // Update the document with extracted content
-    if (jobId) {
-      try {
-        await supabaseAdmin
-          .from('documents')
-          .update({
-            content: fullText,
-            language: language,
-            processed_pages: 1,
-            total_pages: 1,
-            status: 'processed'
-          })
-          .eq('processing_job_id', jobId);
-      } catch (dbError) {
-        console.error('Failed to update document after successful PDF OCR:', dbError);
-      }
-    }
-
-    return {
-      success: true,
-      totalPages: 1,
-      processedPages: 1,
-      pages: [{ pageNumber: 1, content: fullText, confidence: parsed.confidence || 0.9, language }],
-      fullText,
-      language,
-    };
-  } catch (parseError) {
-    console.error('Failed to parse OpenAI PDF OCR response:', parseError);
-    throw new Error('Failed to parse PDF OCR response');
-  }
+  
+  // If all methods failed, throw an error
+  throw new Error('Impossible d\'extraire le texte du PDF. Toutes les méthodes de conversion ont échoué.');
 }
 
 serve(async (req) => {
