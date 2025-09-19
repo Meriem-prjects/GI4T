@@ -586,7 +586,7 @@ async function processPdfWithOCR(pdfBuffer: ArrayBuffer, openaiApiKey: string, j
   }
   
   // If all methods failed, throw an error
-  throw new Error('Impossible d\'extraire le texte du PDF. Toutes les méthodes de conversion ont échoué.');
+  throw new Error("Impossible d'extraire le texte du PDF. Toutes les méthodes de conversion ont échoué.");
 }
 
 serve(async (req) => {
