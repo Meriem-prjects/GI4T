@@ -1,8 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
-import { Loader2, CheckCircle, XCircle, FileText } from 'lucide-react';
+import { Loader2, CheckCircle, XCircle, FileText, RotateCcw, X } from 'lucide-react';
 
 interface ProcessingJob {
   id: string;
@@ -41,6 +42,7 @@ const ProgressTracker: React.FC<ProgressTrackerProps> = ({
   const [showResumeButton, setShowResumeButton] = useState(false);
   const [isResuming, setIsResuming] = useState(false);
   const [isCancelling, setIsCancelling] = useState(false);
+  const [processingStats, setProcessingStats] = useState<any>(null);
 
   useEffect(() => {
     if (!jobId) return;
@@ -61,17 +63,28 @@ const ProgressTracker: React.FC<ProgressTrackerProps> = ({
         },
         (payload) => {
           console.log('Progress update received:', payload.new);
-          setJob(payload.new as ProcessingJob);
+          const updatedJob = payload.new as ProcessingJob;
+          setJob(updatedJob);
           setLastProgressUpdate(Date.now());
+          
+          // Extract processing stats if available
+          if (updatedJob.result_data) {
+            setProcessingStats(updatedJob.result_data);
+          }
 
           // Handle completion
-          if (payload.new.status === 'completed') {
+          if (updatedJob.status === 'completed') {
+            fetchAndEmitDocument(jobId!);
+          }
+          
+          // Handle partial completion
+          if (updatedJob.status === 'partial') {
             fetchAndEmitDocument(jobId!);
           }
 
           // Handle errors
-          if (payload.new.status === 'failed' && onError) {
-            onError(payload.new.error_message || 'Processing failed');
+          if (updatedJob.status === 'failed' && onError) {
+            onError(updatedJob.error_message || 'Processing failed');
           }
         }
       )
@@ -237,24 +250,32 @@ const ProgressTracker: React.FC<ProgressTrackerProps> = ({
   const getStepDescription = (step: string | null): string => {
     if (!step) return 'Initialisation...';
     
-    switch (step) {
-      case 'initializing':
-        return 'Initialisation du traitement...';
-      case 'pdf_conversion':
-        return 'Conversion PDF en images...';
-      case 'ocr_starting':
-        return 'Démarrage de l\'OCR...';
-      case 'direct_pdf_ocr':
-        return 'OCR direct du PDF...';
-      case 'completed':
-        return 'Traitement terminé';
-      default:
-        if (step.startsWith('ocr_page_')) {
-          const pageNum = step.replace('ocr_page_', '');
-          return `OCR page ${pageNum}${job?.total_pages ? `/${job.total_pages}` : ''}...`;
-        }
-        return step;
+    const stepMappings: { [key: string]: string } = {
+      'initializing': 'Initialisation du traitement...',
+      'pdfrest_conversion': 'Conversion PDF (service externe)...',
+      'internal_conversion': 'Conversion PDF (service interne)...',
+      'basic_extraction': 'Extraction de base...',
+      'starting_ocr': 'Démarrage de la reconnaissance de texte...',
+      'resuming': 'Reprise du traitement...',
+      'completed': 'Traitement terminé avec succès',
+      'partial_completion': 'Traitement partiel terminé',
+      'conversion_failed': 'Échec de conversion PDF',
+      'processing_error': 'Erreur de traitement',
+      'conversion_timeout': 'Traitement interrompu'
+    };
+    
+    // Handle dynamic processing steps
+    if (step.startsWith('processing_page_')) {
+      const pageNum = step.split('_')[2];
+      return `Analyse de la page ${pageNum}...`;
     }
+    
+    if (step.startsWith('ocr_page_')) {
+      const pageNum = step.replace('ocr_page_', '');
+      return `OCR page ${pageNum}${job?.total_pages ? `/${job.total_pages}` : ''}...`;
+    }
+    
+    return stepMappings[step] || step.replace(/_/g, ' ');
   };
 
   const getStatusIcon = () => {
@@ -262,28 +283,45 @@ const ProgressTracker: React.FC<ProgressTrackerProps> = ({
     
     switch (job.status) {
       case 'completed':
-        return <CheckCircle className="h-4 w-4 text-green-600" />;
+        return <div className="h-4 w-4 rounded-full bg-green-500 flex items-center justify-center">
+          <div className="h-2 w-2 rounded-full bg-white" />
+        </div>;
+      case 'partial':
+        return <div className="h-4 w-4 rounded-full bg-yellow-500 flex items-center justify-center">
+          <div className="h-2 w-2 rounded-full bg-white" />
+        </div>;
       case 'failed':
-        return <XCircle className="h-4 w-4 text-red-600" />;
+        return <div className="h-4 w-4 rounded-full bg-red-500 flex items-center justify-center">
+          <X className="h-2 w-2 text-white" />
+        </div>;
+      case 'stalled':
+        return <div className="h-4 w-4 rounded-full bg-orange-500 flex items-center justify-center">
+          <div className="h-2 w-2 rounded-full bg-white" />
+        </div>;
       case 'processing':
-        return <Loader2 className="h-4 w-4 animate-spin text-blue-600" />;
       default:
-        return <FileText className="h-4 w-4 text-gray-500" />;
+        return <Loader2 className="h-4 w-4 animate-spin text-blue-500" />;
     }
   };
 
   const getStatusBadge = () => {
-    if (!job) return <Badge variant="outline">En attente</Badge>;
+    if (!job) return <Badge variant="secondary">Initialisation</Badge>;
     
     switch (job.status) {
       case 'completed':
-        return <Badge variant="default" className="bg-green-600">Terminé</Badge>;
+        return <Badge variant="default" className="bg-green-500">Terminé</Badge>;
+      case 'partial':
+        return <Badge variant="default" className="bg-yellow-500">Partiel</Badge>;
       case 'failed':
-        return <Badge variant="destructive">Erreur</Badge>;
+        return <Badge variant="destructive">Échec</Badge>;
+      case 'stalled':
+        return <Badge variant="outline" className="border-orange-500 text-orange-500">Interrompu</Badge>;
       case 'processing':
         return <Badge variant="secondary">En cours</Badge>;
-        default:
-          return <Badge variant="outline">En attente</Badge>;
+      case 'pending':
+        return <Badge variant="outline">En attente</Badge>;
+      default:
+        return <Badge variant="secondary">{job.status}</Badge>;
     }
   };
 
@@ -326,107 +364,100 @@ const ProgressTracker: React.FC<ProgressTrackerProps> = ({
   }
 
   return (
-    <div className="space-y-3">
-      <div className="flex items-center justify-between p-3 border rounded-lg">
-        <div className="flex items-center space-x-3 flex-1">
+    <div className="border rounded-lg p-4 space-y-3">
+      {/* Header with file info and status */}
+      <div className="flex items-center justify-between mb-3">
+        <div className="flex items-center space-x-3">
           {getStatusIcon()}
-          <div className="flex-1 min-w-0">
-            <p className="text-sm font-medium truncate">
+          <div>
+            <p className="font-medium text-sm truncate max-w-[300px]" title={job?.file_name || fileName}>
               {job?.file_name || fileName}
             </p>
             <p className="text-xs text-muted-foreground">
               {job ? formatFileSize(job.file_size) : 'Taille inconnue'}
               {!isListening && ' • Connexion temps réel...'}
             </p>
-            <p className="text-xs text-blue-600 mt-1">
-              {getStepDescription(job?.current_step)}
-            </p>
-            {job?.error_message && (
-              <p className="text-xs text-red-500 mt-1">{job.error_message}</p>
-            )}
           </div>
+        </div>
+        <div className="flex items-center space-x-2">
           {getStatusBadge()}
         </div>
       </div>
 
-      {job && job.status === 'processing' && (
-        <div className="px-3 space-y-2">
-          {(() => {
-            const savedInfo = getSavedPagesInfo();
-            if (savedInfo && savedInfo.total > 0) {
-              const percentage = Math.round((savedInfo.saved / savedInfo.total) * 100);
-              return (
-                <>
-                  <div className="flex justify-between text-xs text-muted-foreground mb-1">
-                    <span>Page {savedInfo.saved}/{savedInfo.total}</span>
-                    <span>{percentage}%</span>
-                  </div>
-                  <Progress value={percentage} className="h-2" />
-                </>
-              );
-            }
-            if (job.processed_pages && job.total_pages) {
-              const percentage = Math.round((job.processed_pages / job.total_pages) * 100);
-              return (
-                <>
-                  <div className="flex justify-between text-xs text-muted-foreground mb-1">
-                    <span>Page {job.processed_pages}/{job.total_pages}</span>
-                    <span>{percentage}%</span>
-                  </div>
-                  <Progress value={percentage} className="h-2" />
-                </>
-              );
-            }
-            // Fallback to basic progress
-            return (
-              <>
-                <div className="flex justify-between text-xs text-muted-foreground mb-1">
-                  <span>Progression</span>
-                  <span>{job.progress}%</span>
-                </div>
-                <Progress value={job.progress} className="h-2" />
-              </>
-            );
-          })()}
+      {/* Unified Progress Display */}
+      <div className="mb-3">
+        <div className="flex items-center justify-between text-sm mb-1">
+          <span className="text-muted-foreground">
+            {getStepDescription(job?.current_step)}
+          </span>
+          <span className="font-medium">
+            {job?.progress || 0}%
+          </span>
+        </div>
+        <Progress value={job?.progress || 0} className="h-2" />
+        
+        {/* Page progress indicator */}
+        {job && job.total_pages > 0 && (
+          <div className="flex items-center justify-between text-xs text-muted-foreground mt-1">
+            <span>
+              Page {job.processed_pages || 0}/{job.total_pages}
+            </span>
+            <span>
+              {Math.round((job.processed_pages || 0) / job.total_pages * 100)}% pages
+            </span>
+          </div>
+        )}
+      </div>
 
-          <div className="flex gap-2 pt-2">
-            {showResumeButton && pdfUrl && (
-              <button
-                onClick={handleResume}
-                disabled={isResuming}
-                className="flex-1 px-3 py-1.5 text-xs bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                {isResuming ? 'Reprise en cours...' : 'Reprendre le traitement'}
-              </button>
+      {/* Processing Statistics */}
+      {processingStats && (
+        <div className="text-xs text-muted-foreground mb-3 p-2 bg-gray-50 rounded">
+          <div className="grid grid-cols-2 gap-2">
+            {processingStats.successfulPages && (
+              <div>Réussies: {processingStats.successfulPages}/{processingStats.totalPages}</div>
             )}
-            {onCancel && (
-              <button
-                onClick={handleCancel}
-                disabled={isCancelling}
-                className="px-3 py-1.5 text-xs text-red-600 hover:text-red-800 hover:bg-red-50 rounded disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                {isCancelling ? 'Annulation...' : 'Annuler'}
-              </button>
+            {processingStats.averageConfidence && (
+              <div>Confiance: {processingStats.averageConfidence}%</div>
             )}
           </div>
         </div>
       )}
 
-      {job && job.status === 'failed' && document?.processed_pages > 0 && pdfUrl && (
-        <div className="px-3 pt-2">
-          <div className="flex justify-between text-xs text-muted-foreground mb-2">
-            <span>Pages sauvegardées</span>
-            <span className="font-medium text-green-600">{document.processed_pages}/{document.total_pages || 'N/A'}</span>
-          </div>
-          <button
+      {/* Error Message */}
+      {job?.error_message && (
+        <div className="text-xs text-red-500 mb-3 p-2 bg-red-50 rounded">
+          {job.error_message}
+        </div>
+      )}
+
+      {/* Action Buttons */}
+      <div className="flex justify-between">
+        {(job?.status === 'failed' || job?.status === 'stalled' || job?.status === 'cancelled') && pdfUrl && (
+          <Button
+            size="sm"
+            variant="outline"
             onClick={handleResume}
             disabled={isResuming}
-            className="w-full px-3 py-1.5 text-xs bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="text-xs"
           >
-            {isResuming ? 'Reprise en cours...' : 'Reprendre le traitement'}
-          </button>
-        </div>
-      )}
+            <RotateCcw className="h-3 w-3 mr-1" />
+            {isResuming ? 'Reprise...' : 'Reprendre'}
+          </Button>
+        )}
+
+        {(job?.status === 'processing' || job?.status === 'pending') && onCancel && (
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={handleCancel}
+            disabled={isCancelling}
+            className="text-xs ml-auto"
+          >
+            <X className="h-3 w-3 mr-1" />
+            {isCancelling ? 'Annulation...' : 'Annuler'}
+          </Button>
+        )}
+      </div>
     </div>
   );
 };
