@@ -1,15 +1,12 @@
-import "https://deno.land/x/xhr@0.1.0/mod.ts";
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-
-// Import de pdfjs depuis un CDN compatible Deno
-import * as pdfjsLib from "https://esm.sh/pdfjs-dist@3.11.174/es5/build/pdf.js";
+// Import ESM pdf.js bundle
+import * as pdfjsLib from "https://unpkg.com/pdfjs-dist@3.11.174/build/pdf.mjs";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-serve(async (req) => {
+Deno.serve(async (req) => {
   console.log('PDF reader function called');
 
   if (req.method === 'OPTIONS') {
@@ -41,7 +38,7 @@ serve(async (req) => {
     const pdf = await loadingTask.promise;
 
     const numPages = pdf.numPages;
-    const pages: string[] = [];
+    const texts: string[] = [];
 
     console.log(`PDF loaded successfully. Total pages: ${numPages}`);
 
@@ -57,22 +54,22 @@ serve(async (req) => {
           .join(" ")
           .trim();
         
-        pages.push(text);
+        texts.push(text);
         console.log(`Page ${i} processed: ${text.length} characters`);
       } catch (pageError) {
         console.error(`Error processing page ${i}:`, pageError);
-        pages.push(""); // Add empty page to maintain index consistency
+        texts.push(""); // Add empty page to maintain index consistency
       }
     }
 
     const result = {
       success: true,
       numPages,
-      pages,
-      totalCharacters: pages.reduce((sum, page) => sum + page.length, 0)
+      texts,
+      totalCharacters: texts.reduce((sum, page) => sum + page.length, 0)
     };
 
-    console.log(`PDF processing completed: ${pages.length} pages, ${result.totalCharacters} total characters`);
+    console.log(`PDF processing completed: ${texts.length} pages, ${result.totalCharacters} total characters`);
 
     return new Response(JSON.stringify(result), {
       headers: { ...corsHeaders, "Content-Type": "application/json" }
@@ -85,7 +82,7 @@ serve(async (req) => {
       success: false,
       error: error.message,
       numPages: 0,
-      pages: []
+      texts: []
     };
 
     return new Response(JSON.stringify(errorResult), {
