@@ -97,3 +97,6 @@ verify_jwt = false
 
 [functions.pdfrest-converter]
 verify_jwt = false
+
+[functions.pdf-reader]
+verify_jwt = false
