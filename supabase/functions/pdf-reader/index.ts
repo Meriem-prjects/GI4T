@@ -1,5 +1,5 @@
-// Import ESM pdf.js bundle
-import * as pdfjsLib from "https://unpkg.com/pdfjs-dist@3.11.174/build/pdf.mjs";
+// Import pdfjs-dist using npm: prefix (modern Deno approach)
+import * as pdfjsLib from "npm:pdfjs-dist@3.11.174";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
