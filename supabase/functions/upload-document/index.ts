@@ -262,69 +262,56 @@ serve(async (req) => {
         
         let shouldUsePDFReader = false;
         
-        if (!readerError && readerData?.success && readerData?.texts?.length > 0) {
-          const extractedText = readerData.texts.join('\n\n').trim();
-          const avgCharsPerPage = extractedText.length / readerData.numPages;
+        if (!readerError && readerData?.success) {
+          // Use pdf-reader results regardless of text quantity
+          const extractedText = (readerData.texts || []).join('\n\n').trim();
+          const avgCharsPerPage = extractedText.length / (readerData.numPages || 1);
           
           console.log(`PDF text extraction result: ${readerData.numPages} pages, ${extractedText.length} chars, avg ${Math.round(avgCharsPerPage)} chars/page`);
           
-          // Use direct extraction if sufficient text (>50 chars per page average)
-          if (avgCharsPerPage > 50 && extractedText.length > 100) {
-            console.log('Direct text extraction sufficient, using extracted content');
-            
-            fileContent = extractedText;
-            extractionSuccess = true;
-            shouldUsePDFReader = true;
-            totalPagesVar = readerData.numPages;
-            
-            // Create page contents from extracted text
-            pageContents = readerData.texts.map((text: string, index: number) => ({
-              pageNumber: index + 1,
-              content: text.trim(),
-              confidence: 1.0,
-              language: 'fr'
-            }));
-            
-            processedPages = readerData.numPages;
-            
-            // Enhanced analysis data with extracted content
-            analysisData.title = file.name.replace(/\.[^/.]+$/, "");
-            analysisData.summary = `Document PDF traité avec extraction directe: ${extractedText.substring(0, 200)}...`;
-            analysisData.language = 'fr';
-            
-            console.log('PDF direct extraction completed successfully');
-          } else {
-            console.log(`Text extraction insufficient (${Math.round(avgCharsPerPage)} chars/page), will use OCR fallback`);
-          }
-        } else {
-          console.log('PDF text extraction failed, will use OCR fallback');
-        }
-        
-        if (!shouldUsePDFReader) {
-          // Fallback to OCR processing
-          console.log('Preparing for OCR processing...');
+          // Always use direct extraction - no more OCR fallback
+          console.log('Using PDF direct extraction result');
           
-          const pdfFormData = new FormData();
-          pdfFormData.append('file', file);
-          
-          // Add PDF/A optimization parameters and filename for enhanced processing
-          if (jobId) {
-            pdfFormData.append('jobId', jobId);
-            pdfFormData.append('filename', file.name); // Add filename for better logging
-          }
-          
-          // Add PDF/A optimization parameters if detected
-          if (pdfaInfo?.recommendations) {
-            pdfFormData.append('optimizedResolution', pdfaInfo.recommendations.optimizedResolution.toString());
-            pdfFormData.append('preserveMetadata', pdfaInfo.recommendations.preserveMetadata.toString());
-            pdfFormData.append('isArchival', (pdfaInfo.archivalFeatures?.isArchival || false).toString());
-          }
-          
-          // Set default values for OCR processing
-          fileContent = 'Document PDF en cours de traitement par OCR...';
+          fileContent = extractedText.length > 0 ? extractedText : 'Document PDF sans texte extractible';
           extractionSuccess = true;
+          totalPagesVar = readerData.numPages || 1;
+          
+          // Create page contents from extracted text
+          pageContents = (readerData.texts || []).map((text: string, index: number) => ({
+            pageNumber: index + 1,
+            content: text.trim(),
+            confidence: 1.0,
+            language: 'fr'
+          }));
+          
+          processedPages = readerData.numPages || 1;
+          
+          // Enhanced analysis data with extracted content
+          analysisData.title = file.name.replace(/\.[^/.]+$/, "");
+          analysisData.summary = extractedText.length > 0 
+            ? `Document PDF traité: ${extractedText.substring(0, 200)}...`
+            : 'Document PDF traité sans texte extractible';
           analysisData.language = 'fr';
-          analysisData.summary = 'Document PDF en cours de traitement par OCR';
+          
+          console.log('PDF direct extraction completed successfully');
+        } else {
+          // PDF reading failed completely - save file but mark as unprocessed
+          console.log('PDF text extraction failed completely, saving file without content');
+          
+          fileContent = 'Document PDF non lisible - fichier sauvegardé sans extraction de texte';
+          extractionSuccess = false; // Mark as failed extraction
+          totalPagesVar = 1;
+          pageContents = [{
+            pageNumber: 1,
+            content: 'Contenu non extractible',
+            confidence: 0.0,
+            language: 'fr'
+          }];
+          processedPages = 1;
+          
+          analysisData.title = file.name.replace(/\.[^/.]+$/, "");
+          analysisData.summary = 'Document PDF non lisible - extraction échouée';
+          analysisData.language = 'fr';
         }
 
         // Enhance analysis data with PDF/A metadata if available
@@ -349,10 +336,8 @@ serve(async (req) => {
             }
           }
           
-        // Page contents will be populated by background OCR process
-        pageContents = null;
-        processedPages = null;
-        totalPagesVar = null;
+        // Page contents populated from pdf-reader extraction
+        console.log(`PDF processing completed with ${processedPages || 0} pages`);
       } catch (pdfException) {
         console.error('PDF OCR processing exception:', pdfException);
         fileContent = `Exception PDF OCR: ${pdfException.message}`;
@@ -438,7 +423,7 @@ serve(async (req) => {
       category_id: categoryId || null,
       document_type_id: documentTypeId || null,
       user_id: null, // Public upload - no user required
-      status: shouldUsePDFReader ? 'processed' : 'processing',
+      status: extractionSuccess ? 'processed' : 'failed',
       // Enhanced metadata fields
       document_type: analysisData.document_type,
       main_topics: analysisData.main_topics || [],
