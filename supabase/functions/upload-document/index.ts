@@ -438,8 +438,7 @@ serve(async (req) => {
       category_id: categoryId || null,
       document_type_id: documentTypeId || null,
       user_id: null, // Public upload - no user required
-        // Update document status based on processing method
-        documentData.status = shouldUsePDFReader ? 'processed' : 'processing';
+      status: shouldUsePDFReader ? 'processed' : 'processing',
       // Enhanced metadata fields
       document_type: analysisData.document_type,
       main_topics: analysisData.main_topics || [],
