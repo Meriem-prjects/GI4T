@@ -257,7 +257,7 @@ serve(async (req) => {
         console.log('Attempting direct PDF text extraction...');
         
         const { data: readerData, error: readerError } = await supabaseAdmin.functions.invoke('pdf-reader', {
-          body: buffer
+          body: file
         });
         
         let shouldUsePDFReader = false;

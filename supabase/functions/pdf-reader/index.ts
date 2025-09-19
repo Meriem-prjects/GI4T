@@ -1,5 +1,5 @@
-// Import pdfjs-dist using npm: prefix (modern Deno approach)
-import * as pdfjsLib from "npm:pdfjs-dist@3.11.174";
+// Import unpdf for serverless PDF text extraction
+import { extractText, getDocumentProxy } from "npm:unpdf@1.2.2";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -30,46 +30,26 @@ Deno.serve(async (req) => {
 
     const typedArray = new Uint8Array(arrayBuffer);
 
-    // Charger le document
-    const loadingTask = pdfjsLib.getDocument({ 
-      data: typedArray,
-      verbosity: 0 // Reduce logging
-    });
-    const pdf = await loadingTask.promise;
+    // Load PDF document using unpdf
+    console.log('Loading PDF document with unpdf...');
+    const pdf = await getDocumentProxy(typedArray);
+    
+    console.log(`PDF loaded successfully. Total pages: ${pdf.numPages}`);
 
-    const numPages = pdf.numPages;
-    const texts: string[] = [];
+    // Extract text from all pages
+    const { totalPages, text, pages } = await extractText(pdf, { mergePages: false });
+    
+    // Convert pages array to texts array for backward compatibility
+    const texts = pages.map(page => page.text);
 
-    console.log(`PDF loaded successfully. Total pages: ${numPages}`);
-
-    // Extraire texte de chaque page
-    for (let i = 1; i <= numPages; i++) {
-      console.log(`Processing page ${i}/${numPages}...`);
-      
-      try {
-        const page = await pdf.getPage(i);
-        const textContent = await page.getTextContent();
-        const text = textContent.items
-          .map((item: any) => item.str)
-          .join(" ")
-          .trim();
-        
-        texts.push(text);
-        console.log(`Page ${i} processed: ${text.length} characters`);
-      } catch (pageError) {
-        console.error(`Error processing page ${i}:`, pageError);
-        texts.push(""); // Add empty page to maintain index consistency
-      }
-    }
+    console.log(`PDF text extraction completed: ${totalPages} pages, ${texts.reduce((sum, page) => sum + page.length, 0)} total characters`);
 
     const result = {
       success: true,
-      numPages,
+      numPages: totalPages,
       texts,
       totalCharacters: texts.reduce((sum, page) => sum + page.length, 0)
     };
-
-    console.log(`PDF processing completed: ${texts.length} pages, ${result.totalCharacters} total characters`);
 
     return new Response(JSON.stringify(result), {
       headers: { ...corsHeaders, "Content-Type": "application/json" }
