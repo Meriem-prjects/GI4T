@@ -77,21 +77,49 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
   }, [editedData, documentData]);
 
   const loadCategories = async () => {
-    const { data } = await supabase
-      .from('categories')
-      .select('*')
-      .order('name');
-    
-    if (data) setCategories(data);
+    try {
+      const { data, error } = await supabase
+        .from('categories')
+        .select('*')
+        .order('name');
+      
+      if (error) {
+        console.error('Error loading categories:', error);
+        toast({
+          title: "Erreur de chargement",
+          description: "Impossible de charger les catégories.",
+          variant: "destructive"
+        });
+      } else {
+        console.log('Categories loaded in DocumentEditor:', data);
+        setCategories(data || []);
+      }
+    } catch (error) {
+      console.error('Categories loading error:', error);
+    }
   };
 
   const loadDocumentTypes = async () => {
-    const { data } = await supabase
-      .from('document_types')
-      .select('*')
-      .order('name');
-    
-    if (data) setDocumentTypes(data);
+    try {
+      const { data, error } = await supabase
+        .from('document_types')
+        .select('*')
+        .order('name');
+      
+      if (error) {
+        console.error('Error loading document types:', error);
+        toast({
+          title: "Erreur de chargement",
+          description: "Impossible de charger les types de documents.",
+          variant: "destructive"
+        });
+      } else {
+        console.log('Document types loaded in DocumentEditor:', data);
+        setDocumentTypes(data || []);
+      }
+    } catch (error) {
+      console.error('Document types loading error:', error);
+    }
   };
 
   const handleSave = async () => {

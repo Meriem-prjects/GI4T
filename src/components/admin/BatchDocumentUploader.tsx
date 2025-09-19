@@ -354,9 +354,9 @@ const BatchDocumentUploader: React.FC<BatchDocumentUploaderProps> = ({ onDocumen
   };
 
   const processFile = async (uploadFile: UploadFile, categoryId: string, documentTypeId: string, processedDocuments: any[]) => {
-    // Update status to processing
+    // Update status to processing - start at 0%
     setUploadFiles(prev => prev.map(f => 
-      f.id === uploadFile.id ? { ...f, status: 'processing', progress: 10 } : f
+      f.id === uploadFile.id ? { ...f, status: 'processing', progress: 0 } : f
     ));
 
     // Use upload-document function with progress tracking
@@ -365,9 +365,9 @@ const BatchDocumentUploader: React.FC<BatchDocumentUploaderProps> = ({ onDocumen
     formData.append('categoryId', categoryId);
     formData.append('documentTypeId', documentTypeId);
 
-    // Update progress
+    // Update progress to show uploading
     setUploadFiles(prev => prev.map(f => 
-      f.id === uploadFile.id ? { ...f, progress: 30 } : f
+      f.id === uploadFile.id ? { ...f, progress: 10 } : f
     ));
 
     const { data: uploadResult, error: uploadError } = await supabase.functions.invoke('upload-document', {
@@ -391,7 +391,7 @@ const BatchDocumentUploader: React.FC<BatchDocumentUploaderProps> = ({ onDocumen
         f.id === uploadFile.id ? { 
           ...f, 
           jobId: jobId,
-          progress: 40,
+          progress: 20,
           status: 'processing'
         } : f
       ));
