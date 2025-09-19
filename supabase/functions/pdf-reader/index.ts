@@ -63,8 +63,10 @@ Deno.serve(async (req) => {
       if (extractionResult && typeof extractionResult === 'object') {
         totalPages = extractionResult.totalPages || pdf.numPages || 0;
         
-        // Handle different possible return formats from unpdf
-        if (extractionResult.pages && Array.isArray(extractionResult.pages)) {
+        // Handle the actual format returned by unpdf
+        if (extractionResult.text && Array.isArray(extractionResult.text)) {
+          texts = extractionResult.text.map(pageText => String(pageText || ''));
+        } else if (extractionResult.pages && Array.isArray(extractionResult.pages)) {
           texts = extractionResult.pages.map(page => 
             (page && typeof page === 'object' && page.text) ? page.text : String(page || '')
           );
