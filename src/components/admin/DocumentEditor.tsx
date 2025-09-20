@@ -78,7 +78,7 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
     // Set default tab based on document language - force refresh
     const docLang = documentData.language || 'fr';
     setCurrentLanguage(docLang === 'ar' ? 'ar' : 'fr');
-    console.log('DocumentEditor loaded with language:', docLang);
+    console.log('DocumentEditor loaded with language:', docLang, 'Setting currentLanguage to:', docLang === 'ar' ? 'ar' : 'fr');
     loadCategories();
     loadDocumentTypes();
   }, [documentData]);
@@ -304,7 +304,7 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6" dir={editedData.language === 'ar' ? 'rtl' : 'ltr'}>
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
@@ -480,28 +480,48 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
               <div className="space-y-4">
                 <Tabs value={currentLanguage} onValueChange={(value) => setCurrentLanguage(value as 'fr' | 'ar')}>
                   <TabsList className="grid w-full grid-cols-2">
-                    <TabsTrigger value="fr" className={editedData.language === 'fr' ? 'font-bold' : ''}>
-                      Français {editedData.language === 'fr' && '(Principal)'}
-                    </TabsTrigger>
-                    <TabsTrigger value="ar" className={editedData.language === 'ar' ? 'font-bold' : ''}>
-                      العربية {editedData.language === 'ar' && '(أساسي)'}
-                    </TabsTrigger>
+                    {editedData.language === 'ar' ? (
+                      <>
+                        <TabsTrigger value="ar" className="font-bold">
+                          العربية (أساسي)
+                        </TabsTrigger>
+                        <TabsTrigger value="fr">
+                          Français (ترجمة)
+                        </TabsTrigger>
+                      </>
+                    ) : (
+                      <>
+                        <TabsTrigger value="fr" className="font-bold">
+                          Français (Principal)
+                        </TabsTrigger>
+                        <TabsTrigger value="ar">
+                          العربية (traduction)
+                        </TabsTrigger>
+                      </>
+                    )}
                   </TabsList>
                   
                   <TabsContent value="fr" className="space-y-4">
                     <div>
-                      <Label className="text-sm font-medium">Titre</Label>
+                      <Label className="text-sm font-medium">
+                        Titre
+                        {editedData.language === 'fr' && <span className="text-red-500 ml-1">*</span>}
+                        {editedData.language !== 'fr' && <span className="text-xs text-muted-foreground ml-2">(traduction)</span>}
+                      </Label>
                       <Input
                         value={editedData.title || ''}
                         onChange={(e) => setEditedData(prev => ({ ...prev, title: e.target.value }))}
                         placeholder="Titre du document"
                         className="mt-1"
+                        required={editedData.language === 'fr'}
                       />
                     </div>
 
                     <div>
                       <Label className="text-sm font-medium">
                         Résumé
+                        {editedData.language === 'fr' && <span className="text-red-500 ml-1">*</span>}
+                        {editedData.language !== 'fr' && <span className="text-xs text-muted-foreground ml-2">(traduction)</span>}
                         {translatedByAI.fr && (
                           <span className="text-xs text-muted-foreground ml-2">(traduction faite par l'IA)</span>
                         )}
@@ -512,6 +532,7 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
                         placeholder="Résumé du document"
                         rows={3}
                         className="mt-1"
+                        required={editedData.language === 'fr'}
                       />
                     </div>
 
@@ -549,19 +570,26 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
 
                   <TabsContent value="ar" className="space-y-4">
                     <div>
-                      <Label className="text-sm font-medium">العنوان</Label>
+                      <Label className="text-sm font-medium">
+                        العنوان
+                        {editedData.language === 'ar' && <span className="text-red-500 ml-1">*</span>}
+                        {editedData.language !== 'ar' && <span className="text-xs text-muted-foreground ml-2">(ترجمة)</span>}
+                      </Label>
                       <Input
                         value={editedData.title_ar || ''}
                         onChange={(e) => setEditedData(prev => ({ ...prev, title_ar: e.target.value }))}
                         placeholder="عنوان الوثيقة"
                         dir="rtl"
                         className="mt-1"
+                        required={editedData.language === 'ar'}
                       />
                     </div>
 
                     <div>
                       <Label className="text-sm font-medium">
                         الملخص
+                        {editedData.language === 'ar' && <span className="text-red-500 ml-1">*</span>}
+                        {editedData.language !== 'ar' && <span className="text-xs text-muted-foreground ml-2">(ترجمة)</span>}
                         {translatedByAI.ar && (
                           <span className="text-xs text-muted-foreground ml-2">(ترجمة بواسطة الذكاء الاصطناعي)</span>
                         )}
@@ -573,6 +601,7 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
                         rows={3}
                         dir="rtl"
                         className="mt-1"
+                        required={editedData.language === 'ar'}
                       />
                     </div>
 
