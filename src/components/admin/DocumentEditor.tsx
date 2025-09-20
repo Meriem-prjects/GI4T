@@ -75,6 +75,8 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
   useEffect(() => {
     setEditedData(documentData);
     setHasChanges(false);
+    // Set default tab based on document language
+    setCurrentLanguage(documentData.language === 'ar' ? 'ar' : 'fr');
     loadCategories();
     loadDocumentTypes();
   }, [documentData]);
@@ -476,8 +478,12 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
               <div className="space-y-4">
                 <Tabs value={currentLanguage} onValueChange={(value) => setCurrentLanguage(value as 'fr' | 'ar')}>
                   <TabsList className="grid w-full grid-cols-2">
-                    <TabsTrigger value="fr">Français</TabsTrigger>
-                    <TabsTrigger value="ar">العربية</TabsTrigger>
+                    <TabsTrigger value="fr" className={editedData.language === 'fr' ? 'font-bold' : ''}>
+                      Français {editedData.language === 'fr' && '(Principal)'}
+                    </TabsTrigger>
+                    <TabsTrigger value="ar" className={editedData.language === 'ar' ? 'font-bold' : ''}>
+                      العربية {editedData.language === 'ar' && '(أساسي)'}
+                    </TabsTrigger>
                   </TabsList>
                   
                   <TabsContent value="fr" className="space-y-4">
@@ -622,7 +628,16 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
                               className="w-3 h-3 rounded-full" 
                               style={{ backgroundColor: category.color }}
                             />
-                            {category.name}
+                            {editedData.language === 'ar' && category.name_ar 
+                              ? category.name_ar 
+                              : category.name
+                            }
+                            {editedData.language === 'ar' && category.name_ar && category.name && (
+                              <span className="text-xs text-muted-foreground">/ {category.name}</span>
+                            )}
+                            {editedData.language === 'fr' && category.name_ar && (
+                              <span className="text-xs text-muted-foreground">/ {category.name_ar}</span>
+                            )}
                           </div>
                         </SelectItem>
                       ))}
@@ -645,7 +660,16 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
                     <SelectContent>
                       {documentTypes.map((type) => (
                         <SelectItem key={type.id} value={type.id}>
-                          {type.name}
+                          {editedData.language === 'ar' && type.name_ar 
+                            ? type.name_ar 
+                            : type.name
+                          }
+                          {editedData.language === 'ar' && type.name_ar && type.name && (
+                            <span className="text-xs text-muted-foreground ml-2">/ {type.name}</span>
+                          )}
+                          {editedData.language === 'fr' && type.name_ar && (
+                            <span className="text-xs text-muted-foreground ml-2">/ {type.name_ar}</span>
+                          )}
                         </SelectItem>
                       ))}
                     </SelectContent>
