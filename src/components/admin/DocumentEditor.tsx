@@ -711,10 +711,15 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
                   <Label className="text-sm font-medium">Langue principale</Label>
                   <Select
                     value={editedData.language}
-                    onValueChange={(value) => setEditedData(prev => ({
-                      ...prev,
-                      language: value
-                    }))}
+                    onValueChange={(value) => {
+                      setEditedData(prev => ({
+                        ...prev,
+                        language: value
+                      }));
+                      // Switch to the new primary language tab automatically
+                      setCurrentLanguage(value as 'fr' | 'ar');
+                      console.log('Primary language changed to:', value, 'Switching to tab:', value);
+                    }}
                   >
                     <SelectTrigger className="mt-1">
                       <SelectValue />
