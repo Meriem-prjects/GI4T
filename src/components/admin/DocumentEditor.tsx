@@ -75,8 +75,10 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
   useEffect(() => {
     setEditedData(documentData);
     setHasChanges(false);
-    // Set default tab based on document language
-    setCurrentLanguage(documentData.language === 'ar' ? 'ar' : 'fr');
+    // Set default tab based on document language - force refresh
+    const docLang = documentData.language || 'fr';
+    setCurrentLanguage(docLang === 'ar' ? 'ar' : 'fr');
+    console.log('DocumentEditor loaded with language:', docLang);
     loadCategories();
     loadDocumentTypes();
   }, [documentData]);
@@ -727,8 +729,10 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
                   className="prose prose-sm max-w-none p-4 border rounded bg-muted/30 max-h-[600px] overflow-y-auto"
                   dir={editedData.language === 'ar' ? 'rtl' : 'ltr'}
                 >
-                  <h4 className="font-semibold text-base">{editedData.title}</h4>
-                  <div className="whitespace-pre-wrap text-sm leading-relaxed">
+                  <h4 className="font-semibold text-base" dir={editedData.language === 'ar' ? 'rtl' : 'ltr'}>
+                    {editedData.language === 'ar' && editedData.title_ar ? editedData.title_ar : editedData.title}
+                  </h4>
+                  <div className="whitespace-pre-wrap text-sm leading-relaxed" dir={editedData.language === 'ar' ? 'rtl' : 'ltr'}>
                     {formatContent(editedData.fullContent || editedData.content)}
                   </div>
                 </div>
