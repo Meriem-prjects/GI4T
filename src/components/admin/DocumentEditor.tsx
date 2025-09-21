@@ -168,6 +168,8 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
             title: analysis.translatedTitle || prev.title,
             summary_ar: analysis.summary || prev.summary_ar,
             summary: analysis.translatedSummary || prev.summary,
+            content: analysis.translatedContent || prev.content, // Set French translated content
+            fullContent: analysis.translatedContent || prev.fullContent,
             keywords_ar: [
               ...new Set([
                 ...(prev.keywords_ar || []),
@@ -182,6 +184,8 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
               ])
             ]
           }));
+          // Switch to French tab to show translated content
+          setCurrentLanguage('fr');
         } else {
           // French is primary - analysis result goes to French fields, translation to Arabic
           setEditedData(prev => ({
@@ -334,11 +338,8 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
   };
 
   const formatContent = (content: string) => {
-    return content
-      .split('\n')
-      .map(line => line.trim())
-      .filter(line => line.length > 0)
-      .join('\n\n');
+    // Only normalize CRLF to LF, preserve line breaks
+    return content.replace(/\r\n/g, '\n');
   };
 
   const getStorageUrl = (path: string) => {

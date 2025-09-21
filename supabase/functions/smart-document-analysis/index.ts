@@ -31,29 +31,21 @@ serve(async (req) => {
     
     Analyse ce document et extrait les informations suivantes avec précision :
 
-    1. TITRE : Identifie le titre principal qui apparaît généralement après le nom de l'auteur
-    2. SOUS-TITRE : Le sous-titre ou contexte (ex: "فقه القضاء الإداري لسنة 2010")  
-    3. DROIT ASSIGNÉ : Le droit spécifique mentionné (ex: "الحق في الصحة")
-    4. RÉSUMÉ : Génère un résumé en exactement 4 phrases qui capture l'essentiel
-    5. MOTS-CLÉS EXISTANTS : Extrait les mots-clés qui suivent "الكلمات المفاتيح" ou équivalent
-    6. MOTS-CLÉS SUGGÉRÉS : Propose 5-8 mots-clés pertinents supplémentaires
-    7. TRADUCTION : Traduis tout le contenu en ${targetLanguage}
-    8. LANGUE DÉTECTÉE : Confirme la langue principale du document
+    IMPORTANT: 
+    - Tous les champs principaux (title, subtitle, assignedRight, summary, existingKeywords, suggestedKeywords) doivent être en ${sourceLanguage}
+    - Tous les champs traduits (translatedTitle, translatedSummary, translatedKeywords, translatedContent) doivent être en ${targetLanguage}
+    - Le champ translatedContent doit préserver EXACTEMENT la structure et les sauts de ligne du document original
 
-    Réponds uniquement en JSON valide avec cette structure exacte :
-    {
-      "title": "titre extrait",
-      "subtitle": "sous-titre extrait",
-      "assignedRight": "droit assigné extrait",
-      "summary": "résumé en 4 phrases",
-      "language": "${sourceLanguage}",
-      "existingKeywords": ["mot1", "mot2"],
-      "suggestedKeywords": ["nouveau1", "nouveau2"],
-      "translatedContent": "contenu traduit complet",
-      "translatedTitle": "titre traduit",
-      "translatedSummary": "résumé traduit",
-      "translatedKeywords": ["mots-clés traduits"]
-    }`;
+    1. TITRE : Identifie le titre principal en ${sourceLanguage}
+    2. SOUS-TITRE : Le sous-titre ou contexte en ${sourceLanguage}
+    3. DROIT ASSIGNÉ : Le droit spécifique mentionné en ${sourceLanguage}
+    4. RÉSUMÉ : Génère un résumé en exactement 4 phrases en ${sourceLanguage}
+    5. MOTS-CLÉS EXISTANTS : Extrait les mots-clés existants en ${sourceLanguage}
+    6. MOTS-CLÉS SUGGÉRÉS : Propose 5-8 mots-clés pertinents en ${sourceLanguage}
+    7. TRADUCTION COMPLÈTE : Traduis tout le contenu en ${targetLanguage} en préservant les sauts de ligne
+    8. LANGUE DÉTECTÉE : Confirme "${sourceLanguage}"
+
+    Réponds uniquement en JSON valide :`;
 
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
@@ -67,6 +59,7 @@ serve(async (req) => {
           { role: 'system', content: systemPrompt },
           { role: 'user', content: `Analyse ce document:\n\n${content}` }
         ],
+        response_format: { type: "json_object" },
         temperature: 0.3,
         max_tokens: 4000,
       }),
@@ -85,13 +78,8 @@ serve(async (req) => {
 
     let analysisResult;
     try {
-      // Clean the response to extract JSON
-      const jsonMatch = aiResponse.match(/\{[\s\S]*\}/);
-      if (jsonMatch) {
-        analysisResult = JSON.parse(jsonMatch[0]);
-      } else {
-        analysisResult = JSON.parse(aiResponse);
-      }
+      // Parse the JSON response directly (since we forced json_object format)
+      analysisResult = JSON.parse(aiResponse);
     } catch (parseError) {
       console.error('JSON parsing error:', parseError);
       console.error('Raw AI response:', aiResponse);
