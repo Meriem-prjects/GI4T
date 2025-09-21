@@ -144,8 +144,7 @@ serve(async (req) => {
     const file = formData.get('file') as File;
     const categoryId = formData.get('categoryId') as string;
     const documentTypeId = formData.get('documentTypeId') as string;
-    const languageParam = (formData.get('language') as string) || 'fr';
-    const selectedLanguage = ['fr','ar','en'].includes(languageParam) ? languageParam : 'fr';
+    const language = formData.get('language') as string || 'fr';
 
     if (!file) {
       throw new Error('No file provided');
@@ -183,7 +182,7 @@ serve(async (req) => {
     let processedPages: number | null = null;
     let totalPagesVar: number | null = null;
     
-    // Initialize analysis data at the beginning
+          // Initialize analysis data at the beginning
     let analysisData = {
       title: file.name,
       title_ar: null,
@@ -191,7 +190,7 @@ serve(async (req) => {
       summary_ar: null,
       keywords: [],
       keywords_ar: [],
-      language: selectedLanguage,
+      language: language, // Use the provided language
       document_type: null,
       main_topics: [],
       legal_references: [],
@@ -283,17 +282,17 @@ serve(async (req) => {
             pageNumber: index + 1,
             content: text.trim(),
             confidence: 1.0,
-            language: selectedLanguage
+            language: language // Use the provided language
           }));
           
           processedPages = readerData.numPages || 1;
           
-          // Enhanced analysis data with extracted content
+            // Enhanced analysis data with extracted content
           analysisData.title = file.name.replace(/\.[^/.]+$/, "");
           analysisData.summary = extractedText.length > 0 
             ? `Document PDF traité: ${extractedText.substring(0, 200)}...`
             : 'Document PDF traité sans texte extractible';
-          analysisData.language = selectedLanguage;
+          analysisData.language = language; // Use the provided language
           
           console.log('PDF direct extraction completed successfully');
         } else {
@@ -307,13 +306,13 @@ serve(async (req) => {
             pageNumber: 1,
             content: 'Contenu non extractible',
             confidence: 0.0,
-            language: selectedLanguage
+            language: language // Use the provided language
           }];
           processedPages = 1;
           
           analysisData.title = file.name.replace(/\.[^/.]+$/, "");
           analysisData.summary = 'Document PDF non lisible - extraction échouée';
-          analysisData.language = selectedLanguage;
+          analysisData.language = language; // Use the provided language
         }
 
         // Enhance analysis data with PDF/A metadata if available
@@ -365,7 +364,7 @@ serve(async (req) => {
         } else if (ocrData?.success && ocrData?.content && ocrData.content.length > 2) {
           fileContent = ocrData.content;
           extractionSuccess = true;
-          analysisData.language = selectedLanguage || ocrData.language || 'fr';
+          analysisData.language = ocrData.language || 'fr';
           console.log(`Image OCR successful: ${fileContent.length} chars, language: ${analysisData.language}`);
         } else {
           console.warn('Image OCR returned insufficient content:', ocrData);
@@ -419,7 +418,7 @@ serve(async (req) => {
       content: fileContent, // Store extracted content for all file types
       keywords: analysisData.keywords || [],
       keywords_ar: analysisData.keywords_ar || [],
-      language: analysisData.language || 'fr',
+      language: language, // Use the provided language
       file_size: file.size,
       page_count: totalPagesVar || 1,
       category_id: categoryId || null,

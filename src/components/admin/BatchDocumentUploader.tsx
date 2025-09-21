@@ -239,7 +239,7 @@ const BatchDocumentUploader: React.FC<BatchDocumentUploaderProps> = ({ onDocumen
     setUploadFiles(prev => {
       const updated = [...prev, ...newFiles];
       // Auto-process when configuration is already selected
-      if (selectedCategory && selectedDocumentType && newFiles.length > 0) {
+      if (selectedCategory && selectedDocumentType && selectedLanguage && newFiles.length > 0) {
         const processedDocs: any[] = [];
         (async () => {
           setIsProcessing(true);
@@ -261,10 +261,10 @@ const BatchDocumentUploader: React.FC<BatchDocumentUploaderProps> = ({ onDocumen
   };
 
   const processAllFiles = async () => {
-    if (!selectedCategory || !selectedDocumentType) {
+    if (!selectedCategory || !selectedDocumentType || !selectedLanguage) {
       toast({
         title: "Configuration manquante",
-        description: "Veuillez sélectionner une catégorie et un type de document.",
+        description: "Veuillez sélectionner une langue, une catégorie et un type de document.",
         variant: "destructive",
       });
       return;
@@ -534,7 +534,21 @@ const BatchDocumentUploader: React.FC<BatchDocumentUploaderProps> = ({ onDocumen
       <Card className="p-6">
         <h3 className="text-lg font-semibold mb-4">Configuration des documents</h3>
         
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+          <div className="space-y-2">
+            <Label htmlFor="document-language">Langue du document</Label>
+            <Select value={selectedLanguage} onValueChange={setSelectedLanguage}>
+              <SelectTrigger>
+                <SelectValue placeholder="Sélectionner une langue" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="fr">Français</SelectItem>
+                <SelectItem value="ar">العربية</SelectItem>
+                <SelectItem value="en">English</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          
           <div className="space-y-2">
             <Label htmlFor="document-type">Type de document</Label>
             <Select value={selectedDocumentType} onValueChange={setSelectedDocumentType}>
@@ -544,7 +558,12 @@ const BatchDocumentUploader: React.FC<BatchDocumentUploaderProps> = ({ onDocumen
               <SelectContent>
                 {documentTypes.map((type) => (
                   <SelectItem key={type.id} value={type.id}>
-                    {type.name} {type.name_ar && `/ ${type.name_ar}`}
+                    {selectedLanguage === 'ar' && type.name_ar 
+                      ? type.name_ar 
+                      : type.name
+                    }
+                    {selectedLanguage === 'ar' && type.name_ar && type.name && ` / ${type.name}`}
+                    {selectedLanguage === 'fr' && type.name_ar && ` / ${type.name_ar}`}
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -566,7 +585,12 @@ const BatchDocumentUploader: React.FC<BatchDocumentUploaderProps> = ({ onDocumen
                           className="w-3 h-3 rounded-full" 
                           style={{ backgroundColor: category.color }}
                         />
-                        {category.name} {category.name_ar && `/ ${category.name_ar}`}
+                        {selectedLanguage === 'ar' && category.name_ar 
+                          ? category.name_ar 
+                          : category.name
+                        }
+                        {selectedLanguage === 'ar' && category.name_ar && category.name && ` / ${category.name}`}
+                        {selectedLanguage === 'fr' && category.name_ar && ` / ${category.name_ar}`}
                       </div>
                     </SelectItem>
                   ))}
@@ -580,23 +604,6 @@ const BatchDocumentUploader: React.FC<BatchDocumentUploaderProps> = ({ onDocumen
                 <Plus className="h-4 w-4" />
               </Button>
             </div>
-          </div>
-        </div>
-
-        {/* Langue principale */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-          <div className="space-y-2">
-            <Label htmlFor="language">Langue principale</Label>
-            <Select value={selectedLanguage} onValueChange={setSelectedLanguage}>
-              <SelectTrigger>
-                <SelectValue placeholder="Sélectionner la langue" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="fr">Français</SelectItem>
-                <SelectItem value="ar">العربية</SelectItem>
-                <SelectItem value="en">English</SelectItem>
-              </SelectContent>
-            </Select>
           </div>
         </div>
 
@@ -686,7 +693,7 @@ const BatchDocumentUploader: React.FC<BatchDocumentUploaderProps> = ({ onDocumen
           <div className="mt-6 flex justify-center">
             <Button
               onClick={processAllFiles}
-              disabled={isProcessing || !selectedCategory || !selectedDocumentType}
+              disabled={isProcessing || !selectedCategory || !selectedDocumentType || !selectedLanguage}
               className="w-full max-w-md"
             >
               {isProcessing ? (
