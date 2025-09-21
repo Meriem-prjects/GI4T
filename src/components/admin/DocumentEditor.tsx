@@ -660,6 +660,28 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
                       </Select>
                     </div>
 
+                    <div>
+                      <Label className="text-sm font-medium">Type de document</Label>
+                      <Select
+                        value={editedData.document_type_id || ''}
+                        onValueChange={(value) => setEditedData(prev => ({
+                          ...prev,
+                          document_type_id: value
+                        }))}
+                      >
+                        <SelectTrigger className="mt-1 bg-background">
+                          <SelectValue placeholder="Sélectionner un type" />
+                        </SelectTrigger>
+                        <SelectContent className="bg-background border shadow-lg z-50">
+                          {documentTypes.map((type) => (
+                            <SelectItem key={type.id} value={type.id}>
+                              {type.name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+
                     {/* Informations Juridiques - Français */}
                     <div className="mt-4 pt-4 border-t border-border">
                       <h5 className="text-sm font-semibold mb-3 text-muted-foreground">Informations Juridiques</h5>
@@ -856,6 +878,28 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
                       </Select>
                     </div>
 
+                    <div>
+                      <Label className="text-sm font-medium">نوع الوثيقة</Label>
+                      <Select
+                        value={editedData.document_type_id || ''}
+                        onValueChange={(value) => setEditedData(prev => ({
+                          ...prev,
+                          document_type_id: value
+                        }))}
+                      >
+                        <SelectTrigger className="mt-1 bg-background" dir="rtl">
+                          <SelectValue placeholder="اختر نوع" />
+                        </SelectTrigger>
+                        <SelectContent className="bg-background border shadow-lg z-50">
+                          {documentTypes.map((type) => (
+                            <SelectItem key={type.id} value={type.id}>
+                              {type.name_ar || type.name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+
                     {/* Informations Juridiques - Arabe */}
                     <div className="mt-4 pt-4 border-t border-border">
                       <h5 className="text-sm font-semibold mb-3 text-muted-foreground" dir="rtl">المعلومات القانونية</h5>
@@ -1003,37 +1047,6 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
                     </div>
                   </TabsContent>
                 </Tabs>
-
-                <div>
-                  <Label className="text-sm font-medium">Type de document</Label>
-                  <Select
-                    value={editedData.document_type_id || ''}
-                    onValueChange={(value) => setEditedData(prev => ({
-                      ...prev,
-                      document_type_id: value
-                    }))}
-                  >
-                    <SelectTrigger className="mt-1">
-                      <SelectValue placeholder="Sélectionner un type" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {documentTypes.map((type) => (
-                        <SelectItem key={type.id} value={type.id}>
-                          {editedData.language === 'ar' && type.name_ar 
-                            ? type.name_ar 
-                            : type.name
-                          }
-                          {editedData.language === 'ar' && type.name_ar && type.name && (
-                            <span className="text-xs text-muted-foreground ml-2">/ {type.name}</span>
-                          )}
-                          {editedData.language === 'fr' && type.name_ar && (
-                            <span className="text-xs text-muted-foreground ml-2">/ {type.name_ar}</span>
-                          )}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
 
                 <div>
                   <Label className="text-sm font-medium">Langue principale</Label>
