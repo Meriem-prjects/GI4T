@@ -40,6 +40,10 @@ serve(async (req) => {
     - Préserve la structure des paragraphes
     - Maintiens les retours à la ligne comme dans le document source
 
+    CONTRAINTES DE SORTIE :
+    - Réponds UNIQUEMENT avec un JSON valide
+    - AUCUNE balise de code, AUCUN ```json, AUCUN texte hors JSON
+
     Analyse ce document et extrait les informations suivantes :
 
     1. TITRE : Identifie le titre principal (en ${sourceLanguage})
@@ -79,6 +83,7 @@ serve(async (req) => {
           { role: 'system', content: systemPrompt },
           { role: 'user', content: `Analyse ce document:\n\n${content}` }
         ],
+        response_format: { type: 'json_object' },
         temperature: 0.3,
         max_tokens: 4000,
       }),
@@ -97,17 +102,18 @@ serve(async (req) => {
 
     let analysisResult;
     try {
-      // Clean the response to extract JSON
-      const jsonMatch = aiResponse.match(/\{[\s\S]*\}/);
-      if (jsonMatch) {
-        analysisResult = JSON.parse(jsonMatch[0]);
-      } else {
-        analysisResult = JSON.parse(aiResponse);
-      }
+      // With JSON mode, the content is a raw JSON string
+      analysisResult = JSON.parse(aiResponse);
     } catch (parseError) {
-      console.error('JSON parsing error:', parseError);
-      console.error('Raw AI response:', aiResponse);
-      throw new Error('Failed to parse AI response as JSON');
+      console.error('Direct JSON parse failed, attempting fallback extraction:', parseError);
+      try {
+        const jsonMatch = aiResponse.match(/\{[\s\S]*\}/);
+        analysisResult = jsonMatch ? JSON.parse(jsonMatch[0]) : undefined;
+      } catch (fallbackError) {
+        console.error('Fallback JSON extraction failed:', fallbackError);
+        console.error('Raw AI response:', aiResponse);
+        throw new Error('Failed to parse AI response as JSON');
+      }
     }
 
     // Validate required fields
