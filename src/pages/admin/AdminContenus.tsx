@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { CategoryCombobox } from '@/components/admin/CategoryCombobox';
 import { 
   Search, 
   FileText, 
@@ -264,19 +265,18 @@ const AdminContenus = () => {
                 <SelectItem value="processing">En traitement</SelectItem>
               </SelectContent>
             </Select>
-            <Select value={categoryFilter} onValueChange={setCategoryFilter}>
-              <SelectTrigger className="w-48">
-                <SelectValue placeholder="Catégorie" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Toutes les catégories</SelectItem>
-                {categories.map(category => (
-                  <SelectItem key={category.id} value={category.id}>
-                    {category.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <CategoryCombobox
+              categories={categories}
+              value={categoryFilter}
+              onValueChange={setCategoryFilter}
+              placeholder="Catégorie"
+              searchPlaceholder="Rechercher une catégorie..."
+              emptyText="Aucune catégorie trouvée."
+              showAllOption={true}
+              allOptionText="Toutes les catégories"
+              allOptionValue="all"
+              className="w-48"
+            />
           </div>
         </CardContent>
       </Card>

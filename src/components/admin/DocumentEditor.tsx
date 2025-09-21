@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { CategoryCombobox } from '@/components/admin/CategoryCombobox';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -634,30 +635,18 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
 
                     <div>
                       <Label className="text-sm font-medium">Catégorie</Label>
-                      <Select
+                      <CategoryCombobox
+                        categories={categories}
                         value={editedData.category_id || ''}
                         onValueChange={(value) => setEditedData(prev => ({
                           ...prev,
                           category_id: value
                         }))}
-                      >
-                        <SelectTrigger className="mt-1 bg-background">
-                          <SelectValue placeholder="Sélectionner une catégorie" />
-                        </SelectTrigger>
-                        <SelectContent className="bg-background border shadow-lg z-50">
-                          {categories.map((category) => (
-                            <SelectItem key={category.id} value={category.id}>
-                              <div className="flex items-center space-x-2">
-                                <div
-                                  className="w-3 h-3 rounded-full"
-                                  style={{ backgroundColor: category.color }}
-                                />
-                                <span>{category.name}</span>
-                              </div>
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
+                        placeholder="Sélectionner une catégorie"
+                        searchPlaceholder="Rechercher une catégorie..."
+                        emptyText="Aucune catégorie trouvée."
+                        className="mt-1 w-full"
+                      />
                     </div>
 
                     <div>
@@ -803,30 +792,19 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
 
                     <div>
                       <Label className="text-sm font-medium">الفئة</Label>
-                      <Select
+                      <CategoryCombobox
+                        categories={categories}
                         value={editedData.category_id || ''}
                         onValueChange={(value) => setEditedData(prev => ({
                           ...prev,
                           category_id: value
                         }))}
-                      >
-                        <SelectTrigger className="mt-1 bg-background" dir="rtl">
-                          <SelectValue placeholder="اختر فئة" />
-                        </SelectTrigger>
-                        <SelectContent className="bg-background border shadow-lg z-50">
-                          {categories.map((category) => (
-                            <SelectItem key={category.id} value={category.id}>
-                              <div className="flex items-center space-x-2">
-                                <div
-                                  className="w-3 h-3 rounded-full"
-                                  style={{ backgroundColor: category.color }}
-                                />
-                                <span>{category.name_ar || category.name}</span>
-                              </div>
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
+                        placeholder="اختر فئة"
+                        searchPlaceholder="البحث عن فئة..."
+                        emptyText="لم يتم العثور على فئة."
+                        className="mt-1 w-full"
+                        showArabic={true}
+                      />
                     </div>
 
                     <div>
