@@ -276,6 +276,27 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
     setHasChanges(true);
   };
 
+  const switchPrimaryLanguage = async (newPrimaryLanguage: string) => {
+    if (newPrimaryLanguage === editedData.language) return;
+    
+    const oldLanguage = editedData.language;
+    
+    // Update primary language
+    setEditedData(prev => ({
+      ...prev,
+      language: newPrimaryLanguage
+    }));
+    
+    // Switch to the new primary language tab
+    setCurrentLanguage(newPrimaryLanguage as 'fr' | 'ar');
+    setHasChanges(true);
+    
+    toast({
+      title: "Langue principale changée",
+      description: `${getLanguageLabel(newPrimaryLanguage)} est maintenant la langue principale`,
+    });
+  };
+
   const getLanguageLabel = (lang: string) => {
     const labels = {
       'ar': 'العربية',
@@ -304,7 +325,7 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
   };
 
   return (
-    <div className="space-y-6" dir={editedData.language === 'ar' ? 'rtl' : 'ltr'}>
+    <div className="space-y-6" dir={currentLanguage === 'ar' ? 'rtl' : 'ltr'}>
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
@@ -434,7 +455,7 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
           {editedData.page_contents.find(p => p.pageNumber === currentPage) && (
             <div 
               className="prose prose-sm max-w-none p-6 border rounded bg-muted/30 min-h-[500px]"
-              dir={editedData.language === 'ar' ? 'rtl' : 'ltr'}
+              dir={currentLanguage === 'ar' ? 'rtl' : 'ltr'}
             >
               <div className="flex items-center justify-between mb-4 pb-2 border-b">
                 <h4 className="font-semibold text-base m-0">
@@ -711,15 +732,7 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
                   <Label className="text-sm font-medium">Langue principale</Label>
                   <Select
                     value={editedData.language}
-                    onValueChange={(value) => {
-                      setEditedData(prev => ({
-                        ...prev,
-                        language: value
-                      }));
-                      // Switch to the new primary language tab automatically
-                      setCurrentLanguage(value as 'fr' | 'ar');
-                      console.log('Primary language changed to:', value, 'Switching to tab:', value);
-                    }}
+                    onValueChange={(value) => switchPrimaryLanguage(value)}
                   >
                     <SelectTrigger className="mt-1">
                       <SelectValue />
@@ -761,12 +774,12 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
               {showPreview ? (
                 <div 
                   className="prose prose-sm max-w-none p-4 border rounded bg-muted/30 max-h-[600px] overflow-y-auto"
-                  dir={editedData.language === 'ar' ? 'rtl' : 'ltr'}
+                  dir={currentLanguage === 'ar' ? 'rtl' : 'ltr'}
                 >
-                  <h4 className="font-semibold text-base" dir={editedData.language === 'ar' ? 'rtl' : 'ltr'}>
-                    {editedData.language === 'ar' && editedData.title_ar ? editedData.title_ar : editedData.title}
+                  <h4 className="font-semibold text-base" dir={currentLanguage === 'ar' ? 'rtl' : 'ltr'}>
+                    {currentLanguage === 'ar' && editedData.title_ar ? editedData.title_ar : editedData.title}
                   </h4>
-                  <div className="whitespace-pre-wrap text-sm leading-relaxed" dir={editedData.language === 'ar' ? 'rtl' : 'ltr'}>
+                  <div className="whitespace-pre-wrap text-sm leading-relaxed" dir={currentLanguage === 'ar' ? 'rtl' : 'ltr'}>
                     {formatContent(editedData.fullContent || editedData.content)}
                   </div>
                 </div>
@@ -779,7 +792,7 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
                     fullContent: e.target.value
                   }))}
                   className="min-h-[600px] font-mono text-sm"
-                  dir={editedData.language === 'ar' ? 'rtl' : 'ltr'}
+                  dir={currentLanguage === 'ar' ? 'rtl' : 'ltr'}
                 />
               )}
             </Card>

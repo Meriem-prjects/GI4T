@@ -22,9 +22,10 @@ serve(async (req) => {
       throw new Error('Content is required for analysis');
     }
 
-    const isArabic = currentLanguage === 'ar' || /[\u0600-\u06FF]/.test(content);
-    const targetLanguage = isArabic ? 'français' : 'arabe';
-    const sourceLanguage = isArabic ? 'arabe' : 'français';
+    // Use currentLanguage as absolute primary language (no auto-detection)
+    const isPrimaryArabic = currentLanguage === 'ar';
+    const targetLanguage = isPrimaryArabic ? 'français' : 'arabe';
+    const sourceLanguage = isPrimaryArabic ? 'arabe' : 'français';
 
     const systemPrompt = `Tu es un expert en analyse de documents juridiques et administratifs bilingues (français/arabe). 
     
