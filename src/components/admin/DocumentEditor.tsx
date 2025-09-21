@@ -157,39 +157,66 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
 
       if (data.success && data.analysis) {
         const analysis = data.analysis;
-        const isSourceArabic = analysis.language === 'arabe';
+        const isPrimaryArabic = editedData.language === 'ar';
         
-        // Update main language fields
-        setEditedData(prev => ({
-          ...prev,
-          title: analysis.title || prev.title,
-          summary: analysis.summary || prev.summary,
-          keywords: [
-            ...new Set([
-              ...(prev.keywords || []),
-              ...(analysis.existingKeywords || []),
-              ...(analysis.suggestedKeywords || [])
-            ])
-          ],
-          // Update translated fields
-          title_ar: isSourceArabic ? analysis.title : analysis.translatedTitle || prev.title_ar,
-          summary_ar: isSourceArabic ? analysis.summary : analysis.translatedSummary || prev.summary_ar,
-          keywords_ar: isSourceArabic 
-            ? [...new Set([...(prev.keywords_ar || []), ...(analysis.existingKeywords || []), ...(analysis.suggestedKeywords || [])])]
-            : [...new Set([...(prev.keywords_ar || []), ...(analysis.translatedKeywords || [])])]
-        }));
+        // Assign fields based on document's primary language
+        if (isPrimaryArabic) {
+          // Arabic is primary - analysis result goes to Arabic fields, translation to French
+          setEditedData(prev => ({
+            ...prev,
+            title_ar: analysis.title || prev.title_ar,
+            title: analysis.translatedTitle || prev.title,
+            summary_ar: analysis.summary || prev.summary_ar,
+            summary: analysis.translatedSummary || prev.summary,
+            keywords_ar: [
+              ...new Set([
+                ...(prev.keywords_ar || []),
+                ...(analysis.existingKeywords || []),
+                ...(analysis.suggestedKeywords || [])
+              ])
+            ],
+            keywords: [
+              ...new Set([
+                ...(prev.keywords || []),
+                ...(analysis.translatedKeywords || [])
+              ])
+            ]
+          }));
+        } else {
+          // French is primary - analysis result goes to French fields, translation to Arabic
+          setEditedData(prev => ({
+            ...prev,
+            title: analysis.title || prev.title,
+            title_ar: analysis.translatedTitle || prev.title_ar,
+            summary: analysis.summary || prev.summary,
+            summary_ar: analysis.translatedSummary || prev.summary_ar,
+            keywords: [
+              ...new Set([
+                ...(prev.keywords || []),
+                ...(analysis.existingKeywords || []),
+                ...(analysis.suggestedKeywords || [])
+              ])
+            ],
+            keywords_ar: [
+              ...new Set([
+                ...(prev.keywords_ar || []),
+                ...(analysis.translatedKeywords || [])
+              ])
+            ]
+          }));
+        }
 
         // Mark translated content
         setTranslatedByAI({
-          fr: !isSourceArabic,
-          ar: isSourceArabic
+          fr: isPrimaryArabic, // French is translated if Arabic is primary
+          ar: !isPrimaryArabic // Arabic is translated if French is primary
         });
 
         setHasChanges(true);
         
         toast({
           title: "Analyse IA terminée",
-          description: `Titre, résumé et mots-clés extraits avec traduction en ${isSourceArabic ? 'français' : 'arabe'}.`,
+          description: `Analyse et traduction terminées en ${isPrimaryArabic ? 'arabe → français' : 'français → arabe'}.`,
         });
       } else {
         throw new Error(data.error || 'Analyse échouée');
