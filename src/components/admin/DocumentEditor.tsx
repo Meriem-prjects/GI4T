@@ -168,8 +168,7 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
             title: analysis.translatedTitle || prev.title,
             summary_ar: analysis.summary || prev.summary_ar,
             summary: analysis.translatedSummary || prev.summary,
-            content: analysis.translatedContent || prev.content, // Set French translated content
-            fullContent: analysis.translatedContent || prev.fullContent,
+            // Keep original Arabic content, don't replace it
             keywords_ar: [
               ...new Set([
                 ...(prev.keywords_ar || []),
@@ -194,6 +193,7 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
             title_ar: analysis.translatedTitle || prev.title_ar,
             summary: analysis.summary || prev.summary,
             summary_ar: analysis.translatedSummary || prev.summary_ar,
+            // Keep original French content, don't replace it
             keywords: [
               ...new Set([
                 ...(prev.keywords || []),
