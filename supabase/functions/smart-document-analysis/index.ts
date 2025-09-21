@@ -27,33 +27,44 @@ serve(async (req) => {
     const targetLanguage = isPrimaryArabic ? 'français' : 'arabe';
     const sourceLanguage = isPrimaryArabic ? 'arabe' : 'français';
 
-    const systemPrompt = `Tu es un expert en analyse de documents juridiques et administratifs bilingues (français/arabe). 
-    
-    Analyse ce document et extrait les informations suivantes avec précision :
+    const systemPrompt = `Tu es un expert en analyse de documents juridiques et administratifs bilingues (français/arabe).
 
-    1. TITRE : Identifie le titre principal qui apparaît généralement après le nom de l'auteur
-    2. SOUS-TITRE : Le sous-titre ou contexte (ex: "فقه القضاء الإداري لسنة 2010")  
-    3. DROIT ASSIGNÉ : Le droit spécifique mentionné (ex: "الحق في الصحة")
-    4. RÉSUMÉ : Génère un résumé en exactement 4 phrases qui capture l'essentiel
-    5. MOTS-CLÉS EXISTANTS : Extrait les mots-clés qui suivent "الكلمات المفاتيح" ou équivalent
-    6. MOTS-CLÉS SUGGÉRÉS : Propose 5-8 mots-clés pertinents supplémentaires
-    7. TRADUCTION : Traduis tout le contenu en ${targetLanguage}
-    8. LANGUE DÉTECTÉE : Confirme la langue principale du document
+    RÈGLES CRITIQUES POUR LA LANGUE :
+    - La langue principale du document est : ${sourceLanguage}
+    - TOUS les résultats (titre, résumé, mots-clés) doivent être dans la langue ${sourceLanguage}
+    - La traduction complète sera en ${targetLanguage}
+    - Ne mélange JAMAIS les langues dans les résultats principaux
+
+    PRÉSERVATION DU FORMATAGE :
+    - Conserve EXACTEMENT tous les sauts de ligne et l'espacement du document original
+    - Préserve la structure des paragraphes
+    - Maintiens les retours à la ligne comme dans le document source
+
+    Analyse ce document et extrait les informations suivantes :
+
+    1. TITRE : Identifie le titre principal (en ${sourceLanguage})
+    2. SOUS-TITRE : Le sous-titre ou contexte (en ${sourceLanguage})
+    3. DROIT ASSIGNÉ : Le droit spécifique mentionné (en ${sourceLanguage})
+    4. RÉSUMÉ : Génère un résumé en exactement 4 phrases en ${sourceLanguage}
+    5. MOTS-CLÉS EXISTANTS : Extrait les mots-clés en ${sourceLanguage} uniquement
+    6. MOTS-CLÉS SUGGÉRÉS : Propose 5-8 mots-clés pertinents en ${sourceLanguage} uniquement
+    7. CONTENU NETTOYÉ : Le contenu original avec sauts de ligne préservés
+    8. TRADUCTION : Traduis tout le contenu en ${targetLanguage}
 
     Réponds uniquement en JSON valide avec cette structure exacte :
     {
-      "title": "titre extrait",
-      "subtitle": "sous-titre extrait", 
-      "assignedRight": "droit assigné extrait",
-      "summary": "résumé en 4 phrases",
-      "content": "contenu original nettoyé et formaté",
+      "title": "titre extrait en ${sourceLanguage}",
+      "subtitle": "sous-titre extrait en ${sourceLanguage}", 
+      "assignedRight": "droit assigné extrait en ${sourceLanguage}",
+      "summary": "résumé en 4 phrases en ${sourceLanguage}",
+      "content": "contenu original avec sauts de ligne préservés",
       "language": "${sourceLanguage}",
-      "existingKeywords": ["mot1", "mot2"],
-      "suggestedKeywords": ["nouveau1", "nouveau2"],
-      "translatedContent": "contenu traduit complet",
-      "translatedTitle": "titre traduit",
-      "translatedSummary": "résumé traduit",
-      "translatedKeywords": ["mots-clés traduits"]
+      "existingKeywords": ["mot1 en ${sourceLanguage}", "mot2 en ${sourceLanguage}"],
+      "suggestedKeywords": ["nouveau1 en ${sourceLanguage}", "nouveau2 en ${sourceLanguage}"],
+      "translatedContent": "contenu traduit complet en ${targetLanguage}",
+      "translatedTitle": "titre traduit en ${targetLanguage}",
+      "translatedSummary": "résumé traduit en ${targetLanguage}",
+      "translatedKeywords": ["mots-clés traduits en ${targetLanguage}"]
     }`;
 
     const response = await fetch('https://api.openai.com/v1/chat/completions', {

@@ -344,11 +344,9 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
   };
 
   const formatContent = (content: string) => {
-    return content
-      .split('\n')
-      .map(line => line.trim())
-      .filter(line => line.length > 0)
-      .join('\n\n');
+    if (!content) return '';
+    // Preserve all line breaks and spacing from original document
+    return content;
   };
 
   const getStorageUrl = (path: string) => {
