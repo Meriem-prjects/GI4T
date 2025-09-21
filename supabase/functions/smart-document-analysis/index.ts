@@ -42,7 +42,7 @@ serve(async (req) => {
 
     CONTRAINTES DE SORTIE :
     - Réponds UNIQUEMENT avec un JSON valide
-    - AUCUNE balise de code, AUCUN ```json, AUCUN texte hors JSON
+    - AUCUNE balise de code, AUCUN \`\`\`json, AUCUN texte hors JSON
 
     Analyse ce document et extrait les informations suivantes :
 
