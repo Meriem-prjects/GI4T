@@ -100,9 +100,3 @@ verify_jwt = false
 
 [functions.pdf-reader]
 verify_jwt = false
-
-[functions.pdf-a-detector]
-verify_jwt = false
-
-[functions.smart-document-analysis]
-verify_jwt = false

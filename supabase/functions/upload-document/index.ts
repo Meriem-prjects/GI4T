@@ -144,7 +144,6 @@ serve(async (req) => {
     const file = formData.get('file') as File;
     const categoryId = formData.get('categoryId') as string;
     const documentTypeId = formData.get('documentTypeId') as string;
-    const language = formData.get('language') as string || 'fr';
 
     if (!file) {
       throw new Error('No file provided');
@@ -182,7 +181,7 @@ serve(async (req) => {
     let processedPages: number | null = null;
     let totalPagesVar: number | null = null;
     
-          // Initialize analysis data at the beginning
+    // Initialize analysis data at the beginning
     let analysisData = {
       title: file.name,
       title_ar: null,
@@ -190,7 +189,7 @@ serve(async (req) => {
       summary_ar: null,
       keywords: [],
       keywords_ar: [],
-      language: language, // Use the provided language
+      language: 'fr',
       document_type: null,
       main_topics: [],
       legal_references: [],
@@ -282,17 +281,17 @@ serve(async (req) => {
             pageNumber: index + 1,
             content: text.trim(),
             confidence: 1.0,
-            language: language // Use the provided language
+            language: 'fr'
           }));
           
           processedPages = readerData.numPages || 1;
           
-            // Enhanced analysis data with extracted content
+          // Enhanced analysis data with extracted content
           analysisData.title = file.name.replace(/\.[^/.]+$/, "");
           analysisData.summary = extractedText.length > 0 
             ? `Document PDF traité: ${extractedText.substring(0, 200)}...`
             : 'Document PDF traité sans texte extractible';
-          analysisData.language = language; // Use the provided language
+          analysisData.language = 'fr';
           
           console.log('PDF direct extraction completed successfully');
         } else {
@@ -306,13 +305,13 @@ serve(async (req) => {
             pageNumber: 1,
             content: 'Contenu non extractible',
             confidence: 0.0,
-            language: language // Use the provided language
+            language: 'fr'
           }];
           processedPages = 1;
           
           analysisData.title = file.name.replace(/\.[^/.]+$/, "");
           analysisData.summary = 'Document PDF non lisible - extraction échouée';
-          analysisData.language = language; // Use the provided language
+          analysisData.language = 'fr';
         }
 
         // Enhance analysis data with PDF/A metadata if available
@@ -418,7 +417,7 @@ serve(async (req) => {
       content: fileContent, // Store extracted content for all file types
       keywords: analysisData.keywords || [],
       keywords_ar: analysisData.keywords_ar || [],
-      language: language, // Use the provided language
+      language: analysisData.language || 'fr',
       file_size: file.size,
       page_count: totalPagesVar || 1,
       category_id: categoryId || null,
