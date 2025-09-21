@@ -21,6 +21,7 @@ interface PageContent {
 interface DocumentData {
   id?: string;
   content: string;
+  content_ar?: string;
   title: string;
   title_ar?: string;
   summary: string;
@@ -34,6 +35,7 @@ interface DocumentData {
   file_url?: string;
   pdf_url?: string;
   fullContent?: string;
+  fullContent_ar?: string;
   page_contents?: PageContent[];
   total_pages?: number;
   processed_pages?: number;
@@ -168,6 +170,10 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
             title: analysis.translatedTitle || prev.title,
             summary_ar: analysis.summary || prev.summary_ar,
             summary: analysis.translatedSummary || prev.summary,
+            content_ar: analysis.content || prev.content_ar,
+            content: analysis.translatedContent || prev.content,
+            fullContent_ar: analysis.content || prev.fullContent_ar,
+            fullContent: analysis.translatedContent || prev.fullContent,
             keywords_ar: [
               ...new Set([
                 ...(prev.keywords_ar || []),
@@ -190,6 +196,10 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
             title_ar: analysis.translatedTitle || prev.title_ar,
             summary: analysis.summary || prev.summary,
             summary_ar: analysis.translatedSummary || prev.summary_ar,
+            content: analysis.content || prev.content,
+            content_ar: analysis.translatedContent || prev.content_ar,
+            fullContent: analysis.content || prev.fullContent,
+            fullContent_ar: analysis.translatedContent || prev.fullContent_ar,
             keywords: [
               ...new Set([
                 ...(prev.keywords || []),
@@ -807,17 +817,36 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
                     {currentLanguage === 'ar' && editedData.title_ar ? editedData.title_ar : editedData.title}
                   </h4>
                   <div className="whitespace-pre-wrap text-sm leading-relaxed" dir={currentLanguage === 'ar' ? 'rtl' : 'ltr'}>
-                    {formatContent(editedData.fullContent || editedData.content)}
+                    {formatContent(
+                      currentLanguage === 'ar' 
+                        ? (editedData.fullContent_ar || editedData.content_ar || editedData.fullContent || editedData.content)
+                        : (editedData.fullContent || editedData.content)
+                    )}
                   </div>
                 </div>
               ) : (
                 <Textarea
-                  value={editedData.fullContent || editedData.content}
-                  onChange={(e) => setEditedData(prev => ({
-                    ...prev,
-                    content: e.target.value,
-                    fullContent: e.target.value
-                  }))}
+                  value={
+                    currentLanguage === 'ar' 
+                      ? (editedData.fullContent_ar || editedData.content_ar || editedData.fullContent || editedData.content)
+                      : (editedData.fullContent || editedData.content)
+                  }
+                  onChange={(e) => {
+                    const value = e.target.value;
+                    if (currentLanguage === 'ar') {
+                      setEditedData(prev => ({
+                        ...prev,
+                        content_ar: value,
+                        fullContent_ar: value
+                      }));
+                    } else {
+                      setEditedData(prev => ({
+                        ...prev,
+                        content: value,
+                        fullContent: value
+                      }));
+                    }
+                  }}
                   className="min-h-[600px] font-mono text-sm"
                   dir={currentLanguage === 'ar' ? 'rtl' : 'ltr'}
                 />

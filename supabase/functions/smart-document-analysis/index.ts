@@ -43,9 +43,10 @@ serve(async (req) => {
     Réponds uniquement en JSON valide avec cette structure exacte :
     {
       "title": "titre extrait",
-      "subtitle": "sous-titre extrait",
+      "subtitle": "sous-titre extrait", 
       "assignedRight": "droit assigné extrait",
       "summary": "résumé en 4 phrases",
+      "content": "contenu original nettoyé et formaté",
       "language": "${sourceLanguage}",
       "existingKeywords": ["mot1", "mot2"],
       "suggestedKeywords": ["nouveau1", "nouveau2"],
@@ -99,7 +100,7 @@ serve(async (req) => {
     }
 
     // Validate required fields
-    const requiredFields = ['title', 'summary', 'language', 'translatedContent'];
+    const requiredFields = ['title', 'summary', 'content', 'language', 'translatedContent'];
     for (const field of requiredFields) {
       if (!analysisResult[field]) {
         console.warn(`Missing required field: ${field}`);
