@@ -371,6 +371,7 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
                       title: e.target.value
                     }))}
                     className="mt-1"
+                    dir={editedData.language === 'ar' ? 'rtl' : 'ltr'}
                   />
                 </div>
 
@@ -425,7 +426,7 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
                 </div>
 
                 <div>
-                  <Label className="text-sm font-medium">Langue</Label>
+                  <Label className="text-sm font-medium">Langue principale</Label>
                   <Select
                     value={editedData.language}
                     onValueChange={(value) => setEditedData(prev => ({

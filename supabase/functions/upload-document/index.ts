@@ -144,6 +144,8 @@ serve(async (req) => {
     const file = formData.get('file') as File;
     const categoryId = formData.get('categoryId') as string;
     const documentTypeId = formData.get('documentTypeId') as string;
+    const languageParam = (formData.get('language') as string) || 'fr';
+    const selectedLanguage = ['fr','ar','en'].includes(languageParam) ? languageParam : 'fr';
 
     if (!file) {
       throw new Error('No file provided');
@@ -189,7 +191,7 @@ serve(async (req) => {
       summary_ar: null,
       keywords: [],
       keywords_ar: [],
-      language: 'fr',
+      language: selectedLanguage,
       document_type: null,
       main_topics: [],
       legal_references: [],
@@ -281,7 +283,7 @@ serve(async (req) => {
             pageNumber: index + 1,
             content: text.trim(),
             confidence: 1.0,
-            language: 'fr'
+            language: selectedLanguage
           }));
           
           processedPages = readerData.numPages || 1;
@@ -291,7 +293,7 @@ serve(async (req) => {
           analysisData.summary = extractedText.length > 0 
             ? `Document PDF traité: ${extractedText.substring(0, 200)}...`
             : 'Document PDF traité sans texte extractible';
-          analysisData.language = 'fr';
+          analysisData.language = selectedLanguage;
           
           console.log('PDF direct extraction completed successfully');
         } else {
@@ -305,13 +307,13 @@ serve(async (req) => {
             pageNumber: 1,
             content: 'Contenu non extractible',
             confidence: 0.0,
-            language: 'fr'
+            language: selectedLanguage
           }];
           processedPages = 1;
           
           analysisData.title = file.name.replace(/\.[^/.]+$/, "");
           analysisData.summary = 'Document PDF non lisible - extraction échouée';
-          analysisData.language = 'fr';
+          analysisData.language = selectedLanguage;
         }
 
         // Enhance analysis data with PDF/A metadata if available
@@ -363,7 +365,7 @@ serve(async (req) => {
         } else if (ocrData?.success && ocrData?.content && ocrData.content.length > 2) {
           fileContent = ocrData.content;
           extractionSuccess = true;
-          analysisData.language = ocrData.language || 'fr';
+          analysisData.language = selectedLanguage || ocrData.language || 'fr';
           console.log(`Image OCR successful: ${fileContent.length} chars, language: ${analysisData.language}`);
         } else {
           console.warn('Image OCR returned insufficient content:', ocrData);
