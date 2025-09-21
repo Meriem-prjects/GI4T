@@ -247,27 +247,37 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
   const handleSave = async () => {
     try {
       if (editedData.id) {
+        // Prepare and validate data
+        const updateData = {
+          title: editedData.title?.trim() || '',
+          title_ar: editedData.title_ar?.trim() || null,
+          summary: editedData.summary?.trim() || null,
+          summary_ar: editedData.summary_ar?.trim() || null,
+          content: editedData.content || '',
+          translated_content: translatedContent?.trim() || null,
+          keywords: Array.isArray(editedData.keywords) ? editedData.keywords.filter(k => k && k.trim()) : [],
+          keywords_ar: Array.isArray(editedData.keywords_ar) ? editedData.keywords_ar.filter(k => k && k.trim()) : [],
+          category_id: editedData.category_id || null,
+          document_type_id: editedData.document_type_id || null,
+          language: editedData.language || 'fr',
+          status: 'draft' // Save as draft
+          // Note: updated_at is handled automatically by database trigger
+        };
+
+        console.log('Attempting to save document with data:', updateData);
+
         // Update existing document
         const { error } = await supabase
           .from('documents')
-          .update({
-            title: editedData.title,
-            title_ar: editedData.title_ar,
-            summary: editedData.summary,
-            summary_ar: editedData.summary_ar,
-            content: editedData.content,
-            translated_content: translatedContent || null,
-            keywords: editedData.keywords,
-            keywords_ar: editedData.keywords_ar,
-            category_id: editedData.category_id,
-            document_type_id: editedData.document_type_id,
-            language: editedData.language,
-            status: 'draft', // Save as draft
-            updated_at: new Date().toISOString()
-          })
+          .update(updateData)
           .eq('id', editedData.id);
 
-        if (error) throw error;
+        if (error) {
+          console.error('Supabase update error:', error);
+          throw error;
+        }
+
+        console.log('Document successfully updated in database');
       }
 
       onSave(editedData);
@@ -281,9 +291,10 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
         window.location.href = '/admin/observatoire/contenus';
       }, 1500);
     } catch (error) {
+      console.error('Save error details:', error);
       toast({
         title: "Erreur de sauvegarde",
-        description: "Impossible de sauvegarder le document.",
+        description: `Impossible de sauvegarder le document: ${error.message || error.toString()}`,
         variant: "destructive",
       });
     }
