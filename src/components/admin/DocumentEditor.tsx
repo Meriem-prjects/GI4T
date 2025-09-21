@@ -37,6 +37,16 @@ interface DocumentData {
   page_contents?: PageContent[];
   total_pages?: number;
   processed_pages?: number;
+  author?: string;
+  author_ar?: string;
+  court?: string;
+  court_ar?: string;
+  case_number?: string;
+  year?: number;
+  plaintiff?: string;
+  plaintiff_ar?: string;
+  defendant?: string;
+  defendant_ar?: string;
 }
 
 interface Category {
@@ -266,10 +276,24 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
 
         console.log('Attempting to save document with data:', updateData);
 
-        // Update existing document
+        // Update existing document  
+        const fullUpdateData = {
+          ...updateData,
+          author: editedData.author?.trim() || null,
+          author_ar: editedData.author_ar?.trim() || null,
+          court: editedData.court?.trim() || null,
+          court_ar: editedData.court_ar?.trim() || null,
+          case_number: editedData.case_number?.trim() || null,
+          year: editedData.year || null,
+          plaintiff: editedData.plaintiff?.trim() || null,
+          plaintiff_ar: editedData.plaintiff_ar?.trim() || null,
+          defendant: editedData.defendant?.trim() || null,
+          defendant_ar: editedData.defendant_ar?.trim() || null,
+        };
+
         const { error } = await supabase
           .from('documents')
-          .update(updateData)
+          .update(fullUpdateData)
           .eq('id', editedData.id);
 
         if (error) {
@@ -805,6 +829,131 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
                       <SelectItem value="en">English</SelectItem>
                     </SelectContent>
                   </Select>
+                </div>
+
+                {/* Informations Juridiques */}
+                <div className="mt-6 pt-6 border-t border-border">
+                  <h4 className="text-md font-semibold mb-4">Informations Juridiques</h4>
+                  
+                  <Tabs value={currentLanguage} onValueChange={(value) => setCurrentLanguage(value as 'fr' | 'ar')} className="w-full">
+                    <TabsList className="grid w-full grid-cols-2">
+                      <TabsTrigger value="fr">Français</TabsTrigger>
+                      <TabsTrigger value="ar">العربية</TabsTrigger>
+                    </TabsList>
+
+                    <TabsContent value="fr" className="space-y-4 mt-4">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                          <Label className="text-sm font-medium">Auteur</Label>
+                          <Input
+                            value={editedData.author || ''}
+                            onChange={(e) => setEditedData(prev => ({ ...prev, author: e.target.value }))}
+                            placeholder="Nom de l'auteur"
+                            className="mt-1"
+                          />
+                        </div>
+
+                        <div>
+                          <Label className="text-sm font-medium">Tribunal</Label>
+                          <Input
+                            value={editedData.court || ''}
+                            onChange={(e) => setEditedData(prev => ({ ...prev, court: e.target.value }))}
+                            placeholder="Nom du tribunal"
+                            className="mt-1"
+                          />
+                        </div>
+
+                        <div>
+                          <Label className="text-sm font-medium">Numéro de l'affaire</Label>
+                          <Input
+                            value={editedData.case_number || ''}
+                            onChange={(e) => setEditedData(prev => ({ ...prev, case_number: e.target.value }))}
+                            placeholder="Numéro de l'affaire"
+                            className="mt-1"
+                          />
+                        </div>
+
+                        <div>
+                          <Label className="text-sm font-medium">Année</Label>
+                          <Input
+                            type="number"
+                            value={editedData.year?.toString() || ''}
+                            onChange={(e) => setEditedData(prev => ({ ...prev, year: e.target.value ? parseInt(e.target.value) : undefined }))}
+                            placeholder="2024"
+                            className="mt-1"
+                          />
+                        </div>
+
+                        <div>
+                          <Label className="text-sm font-medium">Demandeur / Plaignant</Label>
+                          <Input
+                            value={editedData.plaintiff || ''}
+                            onChange={(e) => setEditedData(prev => ({ ...prev, plaintiff: e.target.value }))}
+                            placeholder="Nom du demandeur"
+                            className="mt-1"
+                          />
+                        </div>
+
+                        <div>
+                          <Label className="text-sm font-medium">Défendeur</Label>
+                          <Input
+                            value={editedData.defendant || ''}
+                            onChange={(e) => setEditedData(prev => ({ ...prev, defendant: e.target.value }))}
+                            placeholder="Nom du défendeur"
+                            className="mt-1"
+                          />
+                        </div>
+                      </div>
+                    </TabsContent>
+
+                    <TabsContent value="ar" className="space-y-4 mt-4">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                          <Label className="text-sm font-medium">المؤلف</Label>
+                          <Input
+                            value={editedData.author_ar || ''}
+                            onChange={(e) => setEditedData(prev => ({ ...prev, author_ar: e.target.value }))}
+                            placeholder="اسم المؤلف"
+                            dir="rtl"
+                            className="mt-1"
+                          />
+                        </div>
+
+                        <div>
+                          <Label className="text-sm font-medium">المحكمة</Label>
+                          <Input
+                            value={editedData.court_ar || ''}
+                            onChange={(e) => setEditedData(prev => ({ ...prev, court_ar: e.target.value }))}
+                            placeholder="اسم المحكمة"
+                            dir="rtl"
+                            className="mt-1"
+                          />
+                        </div>
+
+                        <div>
+                          <Label className="text-sm font-medium">المدعي</Label>
+                          <Input
+                            value={editedData.plaintiff_ar || ''}
+                            onChange={(e) => setEditedData(prev => ({ ...prev, plaintiff_ar: e.target.value }))}
+                            placeholder="اسم المدعي"
+                            dir="rtl"
+                            className="mt-1"
+                          />
+                        </div>
+
+                        <div>
+                          <Label className="text-sm font-medium">المدعى عليه</Label>
+                          <Input
+                            value={editedData.defendant_ar || ''}
+                            onChange={(e) => setEditedData(prev => ({ ...prev, defendant_ar: e.target.value }))}
+                            placeholder="اسم المدعى عليه"
+                            dir="rtl"
+                            className="mt-1"
+                          />
+                        </div>
+                      </div>
+                    </TabsContent>
+                  </Tabs>
                 </div>
               </div>
             </Card>

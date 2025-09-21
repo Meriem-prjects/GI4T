@@ -24,6 +24,16 @@ interface DocumentData {
   file_url?: string;
   pdf_url?: string;
   fullContent?: string;
+  author?: string;
+  author_ar?: string;
+  court?: string;
+  court_ar?: string;
+  case_number?: string;
+  year?: number;
+  plaintiff?: string;
+  plaintiff_ar?: string;
+  defendant?: string;
+  defendant_ar?: string;
 }
 
 const AdminEditor = () => {
@@ -96,6 +106,16 @@ const AdminEditor = () => {
         file_url: document.file_url,
         pdf_url: document.pdf_url,
         fullContent: document.content,
+        author: document.author || '',
+        author_ar: document.author_ar || '',
+        court: document.court || '',
+        court_ar: document.court_ar || '',
+        case_number: document.case_number || '',
+        year: document.year || undefined,
+        plaintiff: document.plaintiff || '',
+        plaintiff_ar: document.plaintiff_ar || '',
+        defendant: document.defendant || '',
+        defendant_ar: document.defendant_ar || '',
       };
 
       setCurrentDocument(mappedDocument);

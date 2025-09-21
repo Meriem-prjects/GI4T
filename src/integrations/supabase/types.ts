@@ -116,11 +116,18 @@ export type Database = {
         Row: {
           archival_features: Json | null
           archival_metadata: Json | null
+          author: string | null
+          author_ar: string | null
+          case_number: string | null
           case_numbers: string[] | null
           category_id: string | null
           content: string
+          court: string | null
+          court_ar: string | null
           created_at: string
           dates: string[] | null
+          defendant: string | null
+          defendant_ar: string | null
           document_type: string | null
           document_type_id: string | null
           entities: string[] | null
@@ -141,6 +148,8 @@ export type Database = {
           pdfa_compliance: boolean | null
           pdfa_conformance_level: string | null
           pdfa_version: string | null
+          plaintiff: string | null
+          plaintiff_ar: string | null
           processed_pages: number | null
           processing_job_id: string | null
           status: string | null
@@ -152,15 +161,23 @@ export type Database = {
           translated_content: string | null
           updated_at: string
           user_id: string | null
+          year: number | null
         }
         Insert: {
           archival_features?: Json | null
           archival_metadata?: Json | null
+          author?: string | null
+          author_ar?: string | null
+          case_number?: string | null
           case_numbers?: string[] | null
           category_id?: string | null
           content: string
+          court?: string | null
+          court_ar?: string | null
           created_at?: string
           dates?: string[] | null
+          defendant?: string | null
+          defendant_ar?: string | null
           document_type?: string | null
           document_type_id?: string | null
           entities?: string[] | null
@@ -181,6 +198,8 @@ export type Database = {
           pdfa_compliance?: boolean | null
           pdfa_conformance_level?: string | null
           pdfa_version?: string | null
+          plaintiff?: string | null
+          plaintiff_ar?: string | null
           processed_pages?: number | null
           processing_job_id?: string | null
           status?: string | null
@@ -192,15 +211,23 @@ export type Database = {
           translated_content?: string | null
           updated_at?: string
           user_id?: string | null
+          year?: number | null
         }
         Update: {
           archival_features?: Json | null
           archival_metadata?: Json | null
+          author?: string | null
+          author_ar?: string | null
+          case_number?: string | null
           case_numbers?: string[] | null
           category_id?: string | null
           content?: string
+          court?: string | null
+          court_ar?: string | null
           created_at?: string
           dates?: string[] | null
+          defendant?: string | null
+          defendant_ar?: string | null
           document_type?: string | null
           document_type_id?: string | null
           entities?: string[] | null
@@ -221,6 +248,8 @@ export type Database = {
           pdfa_compliance?: boolean | null
           pdfa_conformance_level?: string | null
           pdfa_version?: string | null
+          plaintiff?: string | null
+          plaintiff_ar?: string | null
           processed_pages?: number | null
           processing_job_id?: string | null
           status?: string | null
@@ -232,6 +261,7 @@ export type Database = {
           translated_content?: string | null
           updated_at?: string
           user_id?: string | null
+          year?: number | null
         }
         Relationships: [
           {
