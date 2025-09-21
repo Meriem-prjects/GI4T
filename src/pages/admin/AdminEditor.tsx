@@ -12,8 +12,11 @@ interface DocumentData {
   id?: string;
   content: string;
   title: string;
+  title_ar?: string;
   summary: string;
+  summary_ar?: string;
   keywords: string[];
+  keywords_ar?: string[];
   language: string;
   originalFileName: string;
   category_id?: string;
@@ -81,8 +84,11 @@ const AdminEditor = () => {
         id: document.id,
         content: document.content,
         title: document.title,
+        title_ar: document.title_ar || '',
         summary: document.summary || '',
+        summary_ar: document.summary_ar || '',
         keywords: document.keywords || [],
+        keywords_ar: document.keywords_ar || [],
         language: document.language || 'fr',
         originalFileName: document.original_filename,
         category_id: document.category_id,
