@@ -3,6 +3,7 @@ import { Routes, Route } from "react-router-dom";
 import AdminSidebar from "@/components/admin/AdminSidebar";
 import AdminDashboard from "@/components/admin/AdminDashboard";
 import AdminEditor from "./AdminEditor";
+import AdminContenus from "./AdminContenus";
 import PDFAOptimizer from "@/components/admin/PDFAOptimizer";
 import { cn } from "@/lib/utils";
 
@@ -35,7 +36,7 @@ const AdminObservatoire = () => {
           <Routes>
             <Route index element={<AdminDashboard type="observatoire" />} />
             <Route path="utilisateurs" element={<div className="p-6">Utilisateurs - En développement</div>} />
-            <Route path="contenus" element={<div className="p-6">Contenus - En développement</div>} />
+            <Route path="contenus" element={<AdminContenus />} />
             <Route path="editeur" element={<AdminEditor />} />
             <Route path="pdfa-optimizer" element={<PDFAOptimizer />} />
             <Route path="validation" element={<div className="p-6">Validation - En développement</div>} />

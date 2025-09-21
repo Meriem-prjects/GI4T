@@ -149,6 +149,7 @@ export type Database = {
           title: string
           title_ar: string | null
           total_pages: number | null
+          translated_content: string | null
           updated_at: string
           user_id: string | null
         }
@@ -188,6 +189,7 @@ export type Database = {
           title: string
           title_ar?: string | null
           total_pages?: number | null
+          translated_content?: string | null
           updated_at?: string
           user_id?: string | null
         }
@@ -227,6 +229,7 @@ export type Database = {
           title?: string
           title_ar?: string | null
           total_pages?: number | null
+          translated_content?: string | null
           updated_at?: string
           user_id?: string | null
         }

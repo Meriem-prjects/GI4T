@@ -256,11 +256,14 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
             summary: editedData.summary,
             summary_ar: editedData.summary_ar,
             content: editedData.content,
+            translated_content: translatedContent || null,
             keywords: editedData.keywords,
             keywords_ar: editedData.keywords_ar,
             category_id: editedData.category_id,
             document_type_id: editedData.document_type_id,
-            language: editedData.language
+            language: editedData.language,
+            status: 'draft', // Save as draft
+            updated_at: new Date().toISOString()
           })
           .eq('id', editedData.id);
 
@@ -270,13 +273,13 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
       onSave(editedData);
       toast({
         title: "Document sauvegardé",
-        description: "Redirection vers la section contenus...",
+        description: "Le document a été sauvegardé en tant que brouillon",
       });
       
-      // Navigate to content section
+      // Navigate to content section after a short delay
       setTimeout(() => {
         window.location.href = '/admin/observatoire/contenus';
-      }, 1000);
+      }, 1500);
     } catch (error) {
       toast({
         title: "Erreur de sauvegarde",
