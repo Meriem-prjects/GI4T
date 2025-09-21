@@ -124,6 +124,10 @@ export type Database = {
           content: string
           court: string | null
           court_ar: string | null
+          court_category: string | null
+          court_category_ar: string | null
+          court_level: string | null
+          court_level_ar: string | null
           created_at: string
           dates: string[] | null
           defendant: string | null
@@ -174,6 +178,10 @@ export type Database = {
           content: string
           court?: string | null
           court_ar?: string | null
+          court_category?: string | null
+          court_category_ar?: string | null
+          court_level?: string | null
+          court_level_ar?: string | null
           created_at?: string
           dates?: string[] | null
           defendant?: string | null
@@ -224,6 +232,10 @@ export type Database = {
           content?: string
           court?: string | null
           court_ar?: string | null
+          court_category?: string | null
+          court_category_ar?: string | null
+          court_level?: string | null
+          court_level_ar?: string | null
           created_at?: string
           dates?: string[] | null
           defendant?: string | null

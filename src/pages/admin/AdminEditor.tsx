@@ -28,6 +28,10 @@ interface DocumentData {
   author_ar?: string;
   court?: string;
   court_ar?: string;
+  court_category?: string;
+  court_category_ar?: string;
+  court_level?: string;
+  court_level_ar?: string;
   case_number?: string;
   year?: number;
   plaintiff?: string;
@@ -110,6 +114,10 @@ const AdminEditor = () => {
         author_ar: document.author_ar || '',
         court: document.court || '',
         court_ar: document.court_ar || '',
+        court_category: document.court_category || '',
+        court_category_ar: document.court_category_ar || '',
+        court_level: document.court_level || '',
+        court_level_ar: document.court_level_ar || '',
         case_number: document.case_number || '',
         year: document.year || undefined,
         plaintiff: document.plaintiff || '',

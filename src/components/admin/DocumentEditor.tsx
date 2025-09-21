@@ -41,6 +41,10 @@ interface DocumentData {
   author_ar?: string;
   court?: string;
   court_ar?: string;
+  court_category?: string;
+  court_category_ar?: string;
+  court_level?: string;
+  court_level_ar?: string;
   case_number?: string;
   year?: number;
   plaintiff?: string;
@@ -283,6 +287,10 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
           author_ar: editedData.author_ar?.trim() || null,
           court: editedData.court?.trim() || null,
           court_ar: editedData.court_ar?.trim() || null,
+          court_category: editedData.court_category?.trim() || null,
+          court_category_ar: editedData.court_category_ar?.trim() || null,
+          court_level: editedData.court_level?.trim() || null,
+          court_level_ar: editedData.court_level_ar?.trim() || null,
           case_number: editedData.case_number?.trim() || null,
           year: editedData.year || null,
           plaintiff: editedData.plaintiff?.trim() || null,
@@ -639,7 +647,40 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
                         </div>
 
                         <div>
-                          <Label className="text-xs font-medium">Tribunal</Label>
+                          <Label className="text-xs font-medium">Catégorie de tribunal</Label>
+                          <Select
+                            value={editedData.court_category || ''}
+                            onValueChange={(value) => setEditedData(prev => ({ ...prev, court_category: value }))}
+                          >
+                            <SelectTrigger className="mt-1 h-8 bg-background">
+                              <SelectValue placeholder="Sélectionner une catégorie" />
+                            </SelectTrigger>
+                            <SelectContent className="bg-background border shadow-lg z-50">
+                              <SelectItem value="civil">Tribunal civil</SelectItem>
+                              <SelectItem value="administratif">Tribunal administratif</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+
+                        <div>
+                          <Label className="text-xs font-medium">Niveau de juridiction</Label>
+                          <Select
+                            value={editedData.court_level || ''}
+                            onValueChange={(value) => setEditedData(prev => ({ ...prev, court_level: value }))}
+                          >
+                            <SelectTrigger className="mt-1 h-8 bg-background">
+                              <SelectValue placeholder="Sélectionner un niveau" />
+                            </SelectTrigger>
+                            <SelectContent className="bg-background border shadow-lg z-50">
+                              <SelectItem value="premiere_instance">Tribunal de première instance</SelectItem>
+                              <SelectItem value="appel">Cour d'appel</SelectItem>
+                              <SelectItem value="cassation">Cour de cassation</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+
+                        <div>
+                          <Label className="text-xs font-medium">Nom du tribunal</Label>
                           <Input
                             value={editedData.court || ''}
                             onChange={(e) => setEditedData(prev => ({ ...prev, court: e.target.value }))}
@@ -775,11 +816,55 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
                         </div>
 
                         <div>
-                          <Label className="text-xs font-medium">المحكمة</Label>
+                          <Label className="text-xs font-medium">فئة المحكمة</Label>
+                          <Select
+                            value={editedData.court_category_ar || ''}
+                            onValueChange={(value) => setEditedData(prev => ({ ...prev, court_category_ar: value }))}
+                          >
+                            <SelectTrigger className="mt-1 h-8 bg-background" dir="rtl">
+                              <SelectValue placeholder="اختر فئة" />
+                            </SelectTrigger>
+                            <SelectContent className="bg-background border shadow-lg z-50">
+                              <SelectItem value="civil">محكمة مدنية</SelectItem>
+                              <SelectItem value="administratif">محكمة إدارية</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+
+                        <div>
+                          <Label className="text-xs font-medium">مستوى القضاء</Label>
+                          <Select
+                            value={editedData.court_level_ar || ''}
+                            onValueChange={(value) => setEditedData(prev => ({ ...prev, court_level_ar: value }))}
+                          >
+                            <SelectTrigger className="mt-1 h-8 bg-background" dir="rtl">
+                              <SelectValue placeholder="اختر المستوى" />
+                            </SelectTrigger>
+                            <SelectContent className="bg-background border shadow-lg z-50">
+                              <SelectItem value="premiere_instance">المحكمة الابتدائية</SelectItem>
+                              <SelectItem value="appel">محكمة الاستئناف</SelectItem>
+                              <SelectItem value="cassation">محكمة التعقيب</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+
+                        <div>
+                          <Label className="text-xs font-medium">اسم المحكمة</Label>
                           <Input
                             value={editedData.court_ar || ''}
                             onChange={(e) => setEditedData(prev => ({ ...prev, court_ar: e.target.value }))}
                             placeholder="اسم المحكمة"
+                            dir="rtl"
+                            className="mt-1 h-8"
+                          />
+                        </div>
+
+                        <div>
+                          <Label className="text-xs font-medium">رقم القضية</Label>
+                          <Input
+                            value={editedData.case_number || ''}
+                            onChange={(e) => setEditedData(prev => ({ ...prev, case_number: e.target.value }))}
+                            placeholder="رقم القضية"
                             dir="rtl"
                             className="mt-1 h-8"
                           />
