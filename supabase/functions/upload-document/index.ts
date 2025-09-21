@@ -261,8 +261,6 @@ serve(async (req) => {
           body: file
         });
         
-        let shouldUsePDFReader = false;
-        
         if (!readerError && readerData?.success) {
           // Use pdf-reader results regardless of text quantity
           const extractedText = (readerData.texts || []).join('\n\n').trim();
@@ -273,12 +271,13 @@ serve(async (req) => {
           // Always use direct extraction - no more OCR fallback
           console.log('Using PDF direct extraction result');
           
-          fileContent = extractedText.length > 0 ? extractedText : 'Document PDF sans texte extractible';
-          extractionSuccess = true;
-          totalPagesVar = readerData.numPages || 1;
-          
-          // Create page contents from extracted text
-          pageContents = (readerData.texts || []).map((text: string, index: number) => ({
+           fileContent = extractedText.length > 0 ? extractedText : 'Document PDF sans texte extractible';
+           extractionSuccess = true;
+           totalPagesVar = readerData.numPages || 1;
+           shouldUsePDFReader = true;
+           
+           // Create page contents from extracted text
+           pageContents = (readerData.texts || []).map((text: string, index: number) => ({
             pageNumber: index + 1,
             content: text.trim(),
             confidence: 1.0,
@@ -482,6 +481,7 @@ serve(async (req) => {
           pdfFormData.append('jobId', jobData.id);
           pdfFormData.append('filename', file.name);
         }
+        pdfFormData.append('language', language);
         if (pdfaInfo?.recommendations) {
           pdfFormData.append('optimizedResolution', String(pdfaInfo.recommendations.optimizedResolution));
           pdfFormData.append('preserveMetadata', String(pdfaInfo.recommendations.preserveMetadata));

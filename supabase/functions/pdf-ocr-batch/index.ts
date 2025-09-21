@@ -241,7 +241,7 @@ async function ocrImage(imageData: string, pageNumber: number, openaiApiKey: str
 }
 
 // Enhanced fallback processing chain for PDFs with resume support
-async function processPdfWithOCR(pdfBuffer: ArrayBuffer, openaiApiKey: string, jobId?: string, filename?: string, isResume: boolean = false): Promise<BatchOCRResult> {
+async function processPdfWithOCR(pdfBuffer: ArrayBuffer, openaiApiKey: string, jobId?: string, filename?: string, isResume: boolean = false, preservedLanguage: string = 'fr'): Promise<BatchOCRResult> {
   console.log('Starting enhanced PDF OCR processing with multi-level fallback...');
   
   // Check if PDF might be password-protected
@@ -293,7 +293,7 @@ async function processPdfWithOCR(pdfBuffer: ArrayBuffer, openaiApiKey: string, j
             pageNumber: index + 1,
             content: text.trim(),
             confidence: 1.0, // High confidence for direct text extraction
-            language: 'fr' // Will be detected later if needed
+            language: preservedLanguage
           }));
           
           // Save pages to database if jobId exists
@@ -309,13 +309,13 @@ async function processPdfWithOCR(pdfBuffer: ArrayBuffer, openaiApiKey: string, j
               progress: 100,
               processed_pages: pages.length,
               total_pages: pages.length,
-              result_data: {
-                totalPages: pages.length,
-                processedPages: pages.length,
-                language: 'fr',
-                contentLength: fullText.length,
-                method: 'direct_text_extraction'
-              }
+            result_data: {
+              totalPages: pages.length,
+              processedPages: pages.length,
+              language: preservedLanguage,
+              contentLength: fullText.length,
+              method: 'direct_text_extraction'
+            }
             });
             
             // Update document
@@ -323,7 +323,7 @@ async function processPdfWithOCR(pdfBuffer: ArrayBuffer, openaiApiKey: string, j
               .from('documents')
               .update({
                 content: fullText,
-                language: 'fr',
+                language: preservedLanguage,
                 processed_pages: pages.length,
                 total_pages: pages.length,
                 status: 'processed'
@@ -337,7 +337,7 @@ async function processPdfWithOCR(pdfBuffer: ArrayBuffer, openaiApiKey: string, j
             processedPages: pages.length,
             pages,
             fullText,
-            language: 'fr',
+            language: preservedLanguage,
           };
         } else {
           console.log(`Text extraction insufficient (${Math.round(avgCharsPerPage)} chars/page), falling back to OCR`);
@@ -443,7 +443,7 @@ async function processPdfWithOCR(pdfBuffer: ArrayBuffer, openaiApiKey: string, j
         console.error(`Error processing page ${image.pageNumber}:`, error);
         
         // Save failed page as placeholder to prevent re-processing
-        const failedPage = { pageNumber: image.pageNumber, content: '', confidence: 0, language: 'fr' } as PageContent;
+        const failedPage = { pageNumber: image.pageNumber, content: '', confidence: 0, language: preservedLanguage } as PageContent;
         await savePageToDatabase(jobId, failedPage);
         
         // Continue with next page instead of stopping
@@ -493,7 +493,7 @@ async function processPdfWithOCR(pdfBuffer: ArrayBuffer, openaiApiKey: string, j
       result_data: {
         totalPages: conversionResult.images.length,
         processedPages: totalProcessed,
-        language: dominantLanguage,
+        language: preservedLanguage,
         contentLength: fullText.length,
         partial: !isFullyCompleted
       }
@@ -506,7 +506,7 @@ async function processPdfWithOCR(pdfBuffer: ArrayBuffer, openaiApiKey: string, j
           .from('documents')
           .update({
             content: fullText,
-            language: dominantLanguage,
+            language: preservedLanguage,
             processed_pages: totalProcessed,
             total_pages: conversionResult.images.length,
             status: isFullyCompleted ? 'processed' : 'processing'
@@ -519,14 +519,14 @@ async function processPdfWithOCR(pdfBuffer: ArrayBuffer, openaiApiKey: string, j
 
     console.log(`PDF OCR batch completed successfully: ${totalProcessed}/${conversionResult.images.length} pages processed`);
 
-    return {
-      success: true,
-      totalPages: conversionResult.images.length,
-      processedPages: totalProcessed,
-      pages: allPages.sort((a, b) => a.pageNumber - b.pageNumber),
-      fullText,
-      language: dominantLanguage,
-    };
+  return {
+    success: true,
+    totalPages: conversionResult.images.length,
+    processedPages: totalProcessed,
+    pages: allPages.sort((a, b) => a.pageNumber - b.pageNumber),
+    fullText,
+    language: preservedLanguage,
+  };
   }
 
   // Fallback: send the raw PDF to OpenAI Vision API to extract all text at once
@@ -586,6 +586,7 @@ async function processPdfWithOCR(pdfBuffer: ArrayBuffer, openaiApiKey: string, j
     const parsed = JSON.parse(content);
     const fullText = parsed.text || '';
     const language = parsed.language || 'fr';
+    const langToPersist = preservedLanguage || language;
 
     // Update final progress and document
     await updateJobProgress(jobId, {
@@ -596,7 +597,7 @@ async function processPdfWithOCR(pdfBuffer: ArrayBuffer, openaiApiKey: string, j
       total_pages: 1,
       result_data: {
         totalPages: 1,
-        language: language,
+        language: langToPersist,
         contentLength: fullText.length
       }
     });
@@ -608,7 +609,7 @@ async function processPdfWithOCR(pdfBuffer: ArrayBuffer, openaiApiKey: string, j
           .from('documents')
           .update({
             content: fullText,
-            language: language,
+            language: langToPersist,
             processed_pages: 1,
             total_pages: 1,
             status: 'processed'
@@ -619,14 +620,14 @@ async function processPdfWithOCR(pdfBuffer: ArrayBuffer, openaiApiKey: string, j
       }
     }
 
-    return {
-      success: true,
-      totalPages: 1,
-      processedPages: 1,
-      pages: [{ pageNumber: 1, content: fullText, confidence: parsed.confidence || 0.9, language }],
-      fullText,
-      language,
-    };
+  return {
+    success: true,
+    totalPages: 1,
+    processedPages: 1,
+    pages: [{ pageNumber: 1, content: fullText, confidence: parsed.confidence || 0.9, language: langToPersist }],
+    fullText,
+    language: langToPersist,
+  };
   } catch (parseError) {
     console.error('Failed to parse OpenAI PDF OCR response:', parseError);
     throw new Error('Failed to parse PDF OCR response');
@@ -653,6 +654,7 @@ serve(async (req) => {
     const pdfUrl = formData.get('pdfUrl') as string;
     jobId = formData.get('jobId') as string;
     const filename = formData.get('filename') as string || file?.name || 'unknown.pdf';
+    const preservedLanguage = (formData.get('language') as string) || 'fr';
 
     let pdfBuffer: ArrayBuffer;
     let isResume = false;
@@ -698,7 +700,7 @@ serve(async (req) => {
       });
     }
 
-    const result = await processPdfWithOCR(pdfBuffer, openaiApiKey, jobId, filename, isResume);
+    const result = await processPdfWithOCR(pdfBuffer, openaiApiKey, jobId, filename, isResume, preservedLanguage);
 
     if (!result.success) {
       throw new Error(result.error || 'Failed to process PDF with OCR');
