@@ -71,6 +71,7 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [translatedByAI, setTranslatedByAI] = useState<{fr: boolean, ar: boolean}>({fr: false, ar: false});
   const [currentPage, setCurrentPage] = useState(1);
+  const [translatedContent, setTranslatedContent] = useState<string>('');
 
   useEffect(() => {
     setEditedData(documentData);
@@ -183,6 +184,8 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
               ])
             ]
           }));
+          // Store translated content separately
+          setTranslatedContent(analysis.translatedContent || '');
           // Switch to French tab to show translated content
           setCurrentLanguage('fr');
         } else {
@@ -208,6 +211,10 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
               ])
             ]
           }));
+          // Store translated content separately
+          setTranslatedContent(analysis.translatedContent || '');
+          // Switch to Arabic tab to show translated content
+          setCurrentLanguage('ar');
         }
 
         // Mark translated content
@@ -335,6 +342,19 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
       'en': 'English'
     };
     return labels[lang as keyof typeof labels] || lang;
+  };
+
+  // Get content to display based on current language
+  const getCurrentContent = () => {
+    const isPrimaryArabic = editedData.language === 'ar';
+    
+    if (currentLanguage === editedData.language) {
+      // Show original content in primary language
+      return editedData.fullContent || editedData.content;
+    } else {
+      // Show translated content in secondary language
+      return translatedContent || editedData.fullContent || editedData.content;
+    }
   };
 
   const formatContent = (content: string) => {
@@ -808,19 +828,31 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
                     {currentLanguage === 'ar' && editedData.title_ar ? editedData.title_ar : editedData.title}
                   </h4>
                   <div className="whitespace-pre-wrap text-sm leading-relaxed" dir={currentLanguage === 'ar' ? 'rtl' : 'ltr'}>
-                    {formatContent(editedData.fullContent || editedData.content)}
+                    {formatContent(getCurrentContent())}
                   </div>
                 </div>
               ) : (
                 <Textarea
-                  value={editedData.fullContent || editedData.content}
-                  onChange={(e) => setEditedData(prev => ({
-                    ...prev,
-                    content: e.target.value,
-                    fullContent: e.target.value
-                  }))}
+                  value={getCurrentContent()}
+                  onChange={(e) => {
+                    const newContent = e.target.value;
+                    if (currentLanguage === editedData.language) {
+                      // Editing primary language content
+                      setEditedData(prev => ({
+                        ...prev,
+                        content: newContent,
+                        fullContent: newContent
+                      }));
+                    } else {
+                      // Editing translated content
+                      setTranslatedContent(newContent);
+                    }
+                  }}
                   className="min-h-[600px] font-mono text-sm"
                   dir={currentLanguage === 'ar' ? 'rtl' : 'ltr'}
+                  placeholder={currentLanguage === editedData.language ? 
+                    "Contenu original du document" : 
+                    "Contenu traduit (utilisez l'analyse IA pour générer automatiquement)"}
                 />
               )}
             </Card>
