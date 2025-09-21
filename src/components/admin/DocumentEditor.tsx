@@ -632,10 +632,38 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
                       />
                     </div>
 
+                    <div>
+                      <Label className="text-sm font-medium">Catégorie</Label>
+                      <Select
+                        value={editedData.category_id || ''}
+                        onValueChange={(value) => setEditedData(prev => ({
+                          ...prev,
+                          category_id: value
+                        }))}
+                      >
+                        <SelectTrigger className="mt-1 bg-background">
+                          <SelectValue placeholder="Sélectionner une catégorie" />
+                        </SelectTrigger>
+                        <SelectContent className="bg-background border shadow-lg z-50">
+                          {categories.map((category) => (
+                            <SelectItem key={category.id} value={category.id}>
+                              <div className="flex items-center space-x-2">
+                                <div
+                                  className="w-3 h-3 rounded-full"
+                                  style={{ backgroundColor: category.color }}
+                                />
+                                <span>{category.name}</span>
+                              </div>
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+
                     {/* Informations Juridiques - Français */}
                     <div className="mt-4 pt-4 border-t border-border">
                       <h5 className="text-sm font-semibold mb-3 text-muted-foreground">Informations Juridiques</h5>
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                      <div className="space-y-3">
                         <div>
                           <Label className="text-xs font-medium">Auteur</Label>
                           <Input
@@ -800,10 +828,38 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
                       />
                     </div>
 
+                    <div>
+                      <Label className="text-sm font-medium">الفئة</Label>
+                      <Select
+                        value={editedData.category_id || ''}
+                        onValueChange={(value) => setEditedData(prev => ({
+                          ...prev,
+                          category_id: value
+                        }))}
+                      >
+                        <SelectTrigger className="mt-1 bg-background" dir="rtl">
+                          <SelectValue placeholder="اختر فئة" />
+                        </SelectTrigger>
+                        <SelectContent className="bg-background border shadow-lg z-50">
+                          {categories.map((category) => (
+                            <SelectItem key={category.id} value={category.id}>
+                              <div className="flex items-center space-x-2">
+                                <div
+                                  className="w-3 h-3 rounded-full"
+                                  style={{ backgroundColor: category.color }}
+                                />
+                                <span>{category.name_ar || category.name}</span>
+                              </div>
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+
                     {/* Informations Juridiques - Arabe */}
                     <div className="mt-4 pt-4 border-t border-border">
                       <h5 className="text-sm font-semibold mb-3 text-muted-foreground" dir="rtl">المعلومات القانونية</h5>
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                      <div className="space-y-3">
                         <div>
                           <Label className="text-xs font-medium">المؤلف</Label>
                           <Input
@@ -947,43 +1003,6 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
                     </div>
                   </TabsContent>
                 </Tabs>
-
-                <div>
-                  <Label className="text-sm font-medium">Catégorie</Label>
-                  <Select
-                    value={editedData.category_id || ''}
-                    onValueChange={(value) => setEditedData(prev => ({
-                      ...prev,
-                      category_id: value
-                    }))}
-                  >
-                    <SelectTrigger className="mt-1">
-                      <SelectValue placeholder="Sélectionner une catégorie" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {categories.map((category) => (
-                        <SelectItem key={category.id} value={category.id}>
-                          <div className="flex items-center gap-2">
-                            <div 
-                              className="w-3 h-3 rounded-full" 
-                              style={{ backgroundColor: category.color }}
-                            />
-                            {editedData.language === 'ar' && category.name_ar 
-                              ? category.name_ar 
-                              : category.name
-                            }
-                            {editedData.language === 'ar' && category.name_ar && category.name && (
-                              <span className="text-xs text-muted-foreground">/ {category.name}</span>
-                            )}
-                            {editedData.language === 'fr' && category.name_ar && (
-                              <span className="text-xs text-muted-foreground">/ {category.name_ar}</span>
-                            )}
-                          </div>
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
 
                 <div>
                   <Label className="text-sm font-medium">Type de document</Label>
