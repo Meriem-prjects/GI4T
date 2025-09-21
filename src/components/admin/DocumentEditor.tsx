@@ -624,6 +624,73 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
                       />
                     </div>
 
+                    {/* Informations Juridiques - Français */}
+                    <div className="mt-4 pt-4 border-t border-border">
+                      <h5 className="text-sm font-semibold mb-3 text-muted-foreground">Informations Juridiques</h5>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                        <div>
+                          <Label className="text-xs font-medium">Auteur</Label>
+                          <Input
+                            value={editedData.author || ''}
+                            onChange={(e) => setEditedData(prev => ({ ...prev, author: e.target.value }))}
+                            placeholder="Nom de l'auteur"
+                            className="mt-1 h-8"
+                          />
+                        </div>
+
+                        <div>
+                          <Label className="text-xs font-medium">Tribunal</Label>
+                          <Input
+                            value={editedData.court || ''}
+                            onChange={(e) => setEditedData(prev => ({ ...prev, court: e.target.value }))}
+                            placeholder="Nom du tribunal"
+                            className="mt-1 h-8"
+                          />
+                        </div>
+
+                        <div>
+                          <Label className="text-xs font-medium">Numéro de l'affaire</Label>
+                          <Input
+                            value={editedData.case_number || ''}
+                            onChange={(e) => setEditedData(prev => ({ ...prev, case_number: e.target.value }))}
+                            placeholder="Numéro de l'affaire"
+                            className="mt-1 h-8"
+                          />
+                        </div>
+
+                        <div>
+                          <Label className="text-xs font-medium">Année</Label>
+                          <Input
+                            type="number"
+                            value={editedData.year?.toString() || ''}
+                            onChange={(e) => setEditedData(prev => ({ ...prev, year: e.target.value ? parseInt(e.target.value) : undefined }))}
+                            placeholder="2024"
+                            className="mt-1 h-8"
+                          />
+                        </div>
+
+                        <div>
+                          <Label className="text-xs font-medium">Demandeur / Plaignant</Label>
+                          <Input
+                            value={editedData.plaintiff || ''}
+                            onChange={(e) => setEditedData(prev => ({ ...prev, plaintiff: e.target.value }))}
+                            placeholder="Nom du demandeur"
+                            className="mt-1 h-8"
+                          />
+                        </div>
+
+                        <div>
+                          <Label className="text-xs font-medium">Défendeur</Label>
+                          <Input
+                            value={editedData.defendant || ''}
+                            onChange={(e) => setEditedData(prev => ({ ...prev, defendant: e.target.value }))}
+                            placeholder="Nom du défendeur"
+                            className="mt-1 h-8"
+                          />
+                        </div>
+                      </div>
+                    </div>
+
                     <div>
                       <Label className="text-sm font-medium">
                         Résumé
@@ -690,6 +757,56 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
                         className="mt-1"
                         required={editedData.language === 'ar'}
                       />
+                    </div>
+
+                    {/* Informations Juridiques - Arabe */}
+                    <div className="mt-4 pt-4 border-t border-border">
+                      <h5 className="text-sm font-semibold mb-3 text-muted-foreground" dir="rtl">المعلومات القانونية</h5>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                        <div>
+                          <Label className="text-xs font-medium">المؤلف</Label>
+                          <Input
+                            value={editedData.author_ar || ''}
+                            onChange={(e) => setEditedData(prev => ({ ...prev, author_ar: e.target.value }))}
+                            placeholder="اسم المؤلف"
+                            dir="rtl"
+                            className="mt-1 h-8"
+                          />
+                        </div>
+
+                        <div>
+                          <Label className="text-xs font-medium">المحكمة</Label>
+                          <Input
+                            value={editedData.court_ar || ''}
+                            onChange={(e) => setEditedData(prev => ({ ...prev, court_ar: e.target.value }))}
+                            placeholder="اسم المحكمة"
+                            dir="rtl"
+                            className="mt-1 h-8"
+                          />
+                        </div>
+
+                        <div>
+                          <Label className="text-xs font-medium">المدعي</Label>
+                          <Input
+                            value={editedData.plaintiff_ar || ''}
+                            onChange={(e) => setEditedData(prev => ({ ...prev, plaintiff_ar: e.target.value }))}
+                            placeholder="اسم المدعي"
+                            dir="rtl"
+                            className="mt-1 h-8"
+                          />
+                        </div>
+
+                        <div>
+                          <Label className="text-xs font-medium">المدعى عليه</Label>
+                          <Input
+                            value={editedData.defendant_ar || ''}
+                            onChange={(e) => setEditedData(prev => ({ ...prev, defendant_ar: e.target.value }))}
+                            placeholder="اسم المدعى عليه"
+                            dir="rtl"
+                            className="mt-1 h-8"
+                          />
+                        </div>
+                      </div>
                     </div>
 
                     <div>
@@ -829,131 +946,6 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
                       <SelectItem value="en">English</SelectItem>
                     </SelectContent>
                   </Select>
-                </div>
-
-                {/* Informations Juridiques */}
-                <div className="mt-6 pt-6 border-t border-border">
-                  <h4 className="text-md font-semibold mb-4">Informations Juridiques</h4>
-                  
-                  <Tabs value={currentLanguage} onValueChange={(value) => setCurrentLanguage(value as 'fr' | 'ar')} className="w-full">
-                    <TabsList className="grid w-full grid-cols-2">
-                      <TabsTrigger value="fr">Français</TabsTrigger>
-                      <TabsTrigger value="ar">العربية</TabsTrigger>
-                    </TabsList>
-
-                    <TabsContent value="fr" className="space-y-4 mt-4">
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div>
-                          <Label className="text-sm font-medium">Auteur</Label>
-                          <Input
-                            value={editedData.author || ''}
-                            onChange={(e) => setEditedData(prev => ({ ...prev, author: e.target.value }))}
-                            placeholder="Nom de l'auteur"
-                            className="mt-1"
-                          />
-                        </div>
-
-                        <div>
-                          <Label className="text-sm font-medium">Tribunal</Label>
-                          <Input
-                            value={editedData.court || ''}
-                            onChange={(e) => setEditedData(prev => ({ ...prev, court: e.target.value }))}
-                            placeholder="Nom du tribunal"
-                            className="mt-1"
-                          />
-                        </div>
-
-                        <div>
-                          <Label className="text-sm font-medium">Numéro de l'affaire</Label>
-                          <Input
-                            value={editedData.case_number || ''}
-                            onChange={(e) => setEditedData(prev => ({ ...prev, case_number: e.target.value }))}
-                            placeholder="Numéro de l'affaire"
-                            className="mt-1"
-                          />
-                        </div>
-
-                        <div>
-                          <Label className="text-sm font-medium">Année</Label>
-                          <Input
-                            type="number"
-                            value={editedData.year?.toString() || ''}
-                            onChange={(e) => setEditedData(prev => ({ ...prev, year: e.target.value ? parseInt(e.target.value) : undefined }))}
-                            placeholder="2024"
-                            className="mt-1"
-                          />
-                        </div>
-
-                        <div>
-                          <Label className="text-sm font-medium">Demandeur / Plaignant</Label>
-                          <Input
-                            value={editedData.plaintiff || ''}
-                            onChange={(e) => setEditedData(prev => ({ ...prev, plaintiff: e.target.value }))}
-                            placeholder="Nom du demandeur"
-                            className="mt-1"
-                          />
-                        </div>
-
-                        <div>
-                          <Label className="text-sm font-medium">Défendeur</Label>
-                          <Input
-                            value={editedData.defendant || ''}
-                            onChange={(e) => setEditedData(prev => ({ ...prev, defendant: e.target.value }))}
-                            placeholder="Nom du défendeur"
-                            className="mt-1"
-                          />
-                        </div>
-                      </div>
-                    </TabsContent>
-
-                    <TabsContent value="ar" className="space-y-4 mt-4">
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div>
-                          <Label className="text-sm font-medium">المؤلف</Label>
-                          <Input
-                            value={editedData.author_ar || ''}
-                            onChange={(e) => setEditedData(prev => ({ ...prev, author_ar: e.target.value }))}
-                            placeholder="اسم المؤلف"
-                            dir="rtl"
-                            className="mt-1"
-                          />
-                        </div>
-
-                        <div>
-                          <Label className="text-sm font-medium">المحكمة</Label>
-                          <Input
-                            value={editedData.court_ar || ''}
-                            onChange={(e) => setEditedData(prev => ({ ...prev, court_ar: e.target.value }))}
-                            placeholder="اسم المحكمة"
-                            dir="rtl"
-                            className="mt-1"
-                          />
-                        </div>
-
-                        <div>
-                          <Label className="text-sm font-medium">المدعي</Label>
-                          <Input
-                            value={editedData.plaintiff_ar || ''}
-                            onChange={(e) => setEditedData(prev => ({ ...prev, plaintiff_ar: e.target.value }))}
-                            placeholder="اسم المدعي"
-                            dir="rtl"
-                            className="mt-1"
-                          />
-                        </div>
-
-                        <div>
-                          <Label className="text-sm font-medium">المدعى عليه</Label>
-                          <Input
-                            value={editedData.defendant_ar || ''}
-                            onChange={(e) => setEditedData(prev => ({ ...prev, defendant_ar: e.target.value }))}
-                            placeholder="اسم المدعى عليه"
-                            dir="rtl"
-                            className="mt-1"
-                          />
-                        </div>
-                      </div>
-                    </TabsContent>
-                  </Tabs>
                 </div>
               </div>
             </Card>
