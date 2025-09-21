@@ -971,8 +971,8 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
           {/* Content Column */}
           <div className="lg:col-span-2 space-y-6">
             {/* Summary and Keywords Section */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-              <Card className="p-4">
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
+              <Card className="p-4 lg:col-span-7">
                 <div className="space-y-3">
                   <Label className="text-sm font-medium">
                     {currentLanguage === 'ar' ? 'الملخص' : 'Résumé'}
@@ -996,15 +996,15 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
                       [currentLanguage === 'ar' ? 'summary_ar' : 'summary']: e.target.value
                     }))}
                     placeholder={currentLanguage === 'ar' ? 'ملخص الوثيقة' : 'Résumé du document'}
-                    rows={3}
+                    rows={4}
                     dir={currentLanguage === 'ar' ? 'rtl' : 'ltr'}
-                    className="resize-none"
+                    className="resize-none w-full"
                     required={editedData.language === currentLanguage}
                   />
                 </div>
               </Card>
 
-              <Card className="p-4">
+              <Card className="p-4 lg:col-span-5">
                 <div className="space-y-3">
                   <Label className="text-sm font-medium">
                     {currentLanguage === 'ar' ? 'الكلمات المفاتيح' : 'Mots-clés'}
