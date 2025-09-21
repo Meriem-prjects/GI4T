@@ -782,55 +782,6 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
                       </div>
                     </div>
 
-                    <div>
-                      <Label className="text-sm font-medium">
-                        Résumé
-                        {editedData.language === 'fr' && <span className="text-red-500 ml-1">*</span>}
-                        {editedData.language !== 'fr' && <span className="text-xs text-muted-foreground ml-2">(traduction)</span>}
-                        {translatedByAI.fr && (
-                          <span className="text-xs text-muted-foreground ml-2">(traduction faite par l'IA)</span>
-                        )}
-                      </Label>
-                      <Textarea
-                        value={editedData.summary || ''}
-                        onChange={(e) => setEditedData(prev => ({ ...prev, summary: e.target.value }))}
-                        placeholder="Résumé du document"
-                        rows={3}
-                        className="mt-1"
-                        required={editedData.language === 'fr'}
-                      />
-                    </div>
-
-                    <div>
-                      <Label className="text-sm font-medium">Mots-clés</Label>
-                      <div className="flex gap-2 mt-2">
-                        <Input
-                          value={newKeyword}
-                          onChange={(e) => setNewKeyword(e.target.value)}
-                          placeholder="Ajouter un mot-clé"
-                          onKeyPress={(e) => {
-                            if (e.key === 'Enter') {
-                              e.preventDefault();
-                              addKeyword('fr');
-                            }
-                          }}
-                        />
-                        <Button type="button" onClick={() => addKeyword('fr')} size="sm">
-                          Ajouter
-                        </Button>
-                      </div>
-                      <div className="flex flex-wrap gap-2 mt-2">
-                        {editedData.keywords?.map((keyword, index) => (
-                          <Badge key={index} variant="secondary" className="flex items-center gap-1">
-                            {keyword}
-                            <X
-                              className="h-3 w-3 cursor-pointer"
-                              onClick={() => removeKeyword(keyword, 'fr')}
-                            />
-                          </Badge>
-                        ))}
-                      </div>
-                    </div>
                   </TabsContent>
 
                   <TabsContent value="ar" className="space-y-4">
@@ -994,57 +945,6 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
                       </div>
                     </div>
 
-                    <div>
-                      <Label className="text-sm font-medium">
-                        الملخص
-                        {editedData.language === 'ar' && <span className="text-red-500 ml-1">*</span>}
-                        {editedData.language !== 'ar' && <span className="text-xs text-muted-foreground ml-2">(ترجمة)</span>}
-                        {translatedByAI.ar && (
-                          <span className="text-xs text-muted-foreground ml-2">(ترجمة بواسطة الذكاء الاصطناعي)</span>
-                        )}
-                      </Label>
-                      <Textarea
-                        value={editedData.summary_ar || ''}
-                        onChange={(e) => setEditedData(prev => ({ ...prev, summary_ar: e.target.value }))}
-                        placeholder="ملخص الوثيقة"
-                        rows={3}
-                        dir="rtl"
-                        className="mt-1"
-                        required={editedData.language === 'ar'}
-                      />
-                    </div>
-
-                    <div>
-                      <Label className="text-sm font-medium">الكلمات المفاتيح</Label>
-                      <div className="flex gap-2 mt-2">
-                        <Input
-                          value={newKeywordAr}
-                          onChange={(e) => setNewKeywordAr(e.target.value)}
-                          placeholder="إضافة كلمة مفتاحية"
-                          onKeyPress={(e) => {
-                            if (e.key === 'Enter') {
-                              e.preventDefault();
-                              addKeyword('ar');
-                            }
-                          }}
-                          dir="rtl"
-                        />
-                        <Button type="button" onClick={() => addKeyword('ar')} size="sm">
-                          إضافة
-                        </Button>
-                      </div>
-                      <div className="flex flex-wrap gap-2 mt-2">
-                        {editedData.keywords_ar?.map((keyword, index) => (
-                          <Badge key={index} variant="secondary" className="flex items-center gap-1">
-                            {keyword}
-                            <X
-                              className="h-3 w-3 cursor-pointer"
-                              onClick={() => removeKeyword(keyword, 'ar')}
-                            />
-                          </Badge>
-                        ))}
-                      </div>
-                    </div>
                   </TabsContent>
                 </Tabs>
 
@@ -1070,6 +970,85 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
 
           {/* Content Column */}
           <div className="lg:col-span-2 space-y-6">
+            {/* Summary and Keywords Section */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+              <Card className="p-4">
+                <div className="space-y-3">
+                  <Label className="text-sm font-medium">
+                    {currentLanguage === 'ar' ? 'الملخص' : 'Résumé'}
+                    {editedData.language === currentLanguage && <span className="text-red-500 ml-1">*</span>}
+                    {editedData.language !== currentLanguage && (
+                      <span className="text-xs text-muted-foreground ml-2">
+                        {currentLanguage === 'ar' ? '(ترجمة)' : '(traduction)'}
+                      </span>
+                    )}
+                    {currentLanguage === 'fr' && translatedByAI.fr && (
+                      <span className="text-xs text-muted-foreground ml-2">(IA)</span>
+                    )}
+                    {currentLanguage === 'ar' && translatedByAI.ar && (
+                      <span className="text-xs text-muted-foreground ml-2">(ذكاء اصطناعي)</span>
+                    )}
+                  </Label>
+                  <Textarea
+                    value={currentLanguage === 'ar' ? (editedData.summary_ar || '') : (editedData.summary || '')}
+                    onChange={(e) => setEditedData(prev => ({
+                      ...prev,
+                      [currentLanguage === 'ar' ? 'summary_ar' : 'summary']: e.target.value
+                    }))}
+                    placeholder={currentLanguage === 'ar' ? 'ملخص الوثيقة' : 'Résumé du document'}
+                    rows={3}
+                    dir={currentLanguage === 'ar' ? 'rtl' : 'ltr'}
+                    className="resize-none"
+                    required={editedData.language === currentLanguage}
+                  />
+                </div>
+              </Card>
+
+              <Card className="p-4">
+                <div className="space-y-3">
+                  <Label className="text-sm font-medium">
+                    {currentLanguage === 'ar' ? 'الكلمات المفاتيح' : 'Mots-clés'}
+                  </Label>
+                  <div className="flex gap-2">
+                    <Input
+                      value={currentLanguage === 'ar' ? newKeywordAr : newKeyword}
+                      onChange={(e) => currentLanguage === 'ar' 
+                        ? setNewKeywordAr(e.target.value) 
+                        : setNewKeyword(e.target.value)
+                      }
+                      placeholder={currentLanguage === 'ar' ? 'إضافة كلمة مفتاحية' : 'Ajouter un mot-clé'}
+                      onKeyPress={(e) => {
+                        if (e.key === 'Enter') {
+                          e.preventDefault();
+                          addKeyword(currentLanguage as 'fr' | 'ar');
+                        }
+                      }}
+                      dir={currentLanguage === 'ar' ? 'rtl' : 'ltr'}
+                    />
+                    <Button 
+                      type="button" 
+                      onClick={() => addKeyword(currentLanguage as 'fr' | 'ar')} 
+                      size="sm"
+                      variant="secondary"
+                    >
+                      {currentLanguage === 'ar' ? 'إضافة' : 'Ajouter'}
+                    </Button>
+                  </div>
+                  <div className="flex flex-wrap gap-2 max-h-24 overflow-y-auto">
+                    {(currentLanguage === 'ar' ? editedData.keywords_ar : editedData.keywords)?.map((keyword, index) => (
+                      <Badge key={index} variant="secondary" className="flex items-center gap-1">
+                        {keyword}
+                        <X
+                          className="h-3 w-3 cursor-pointer hover:text-destructive transition-colors"
+                          onClick={() => removeKeyword(keyword, currentLanguage as 'fr' | 'ar')}
+                        />
+                      </Badge>
+                    ))}
+                  </div>
+                </div>
+              </Card>
+            </div>
+
             <Card className="p-6">
               <div className="flex items-center justify-between mb-4">
                 <h3 className="text-lg font-semibold">Contenu du document</h3>
