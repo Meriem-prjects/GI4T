@@ -7,6 +7,7 @@ import { FileText, Download, ExternalLink, Heart, ShieldCheck, GraduationCap, Bo
 import { supabase } from "@/integrations/supabase/client";
 import { useEffect, useState } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
+import { createCategorySlug, createDocumentSlug } from "@/lib/urlUtils";
 
 interface Category {
   id: string;
@@ -251,7 +252,7 @@ const CategorieDetail = () => {
                     </div>
                     <div className="flex flex-col gap-2 ml-4">
                       <Button size="sm" asChild>
-                        <Link to={`/observatoire/document/${document.id}`}>
+                        <Link to={`/observatoire/${createCategorySlug(category?.name || '')}/${createDocumentSlug(document.title)}`}>
                           <ExternalLink className="w-4 h-4 mr-2" />
                           Consulter
                         </Link>

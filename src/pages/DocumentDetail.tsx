@@ -8,6 +8,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useEffect, useState } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Separator } from "@/components/ui/separator";
+import { createSlug, createDocumentPath } from "@/lib/urlUtils";
 
 interface Document {
   id: string;
@@ -56,10 +57,14 @@ interface SuggestedDocument {
   document_type: string;
   created_at: string;
   page_count: number;
+  categories?: {
+    name: string;
+    name_ar: string;
+  };
 }
 
 const DocumentDetail = () => {
-  const { documentId } = useParams<{ documentId: string }>();
+  const { categorySlug, documentSlug } = useParams<{ categorySlug: string; documentSlug: string }>();
   const [document, setDocument] = useState<Document | null>(null);
   const [category, setCategory] = useState<Category | null>(null);
   const [suggestedDocuments, setSuggestedDocuments] = useState<SuggestedDocument[]>([]);
@@ -68,67 +73,97 @@ const DocumentDetail = () => {
   const [showOriginal, setShowOriginal] = useState(false);
 
   useEffect(() => {
-    const fetchDocumentAndRelated = async () => {
-      if (!documentId) return;
-      
+    const fetchDocument = async () => {
+      if (!categorySlug || !documentSlug) return;
+
       try {
-        // Fetch document details
-        const { data: documentData, error: documentError } = await supabase
+        // First, find the category by slug
+        const { data: categories, error: categoryError } = await supabase
+          .from('categories')
+          .select('id, name, name_ar, color');
+
+        if (categoryError) {
+          console.error('Error fetching categories:', categoryError);
+          return;
+        }
+
+        const matchingCategory = categories?.find(cat => 
+          createSlug(cat.name) === categorySlug
+        );
+
+        if (!matchingCategory) {
+          console.error('Category not found for slug:', categorySlug);
+          return;
+        }
+
+        // Then, find the document by title slug and category
+        const { data: documents, error: documentsError } = await supabase
           .from('documents')
           .select('*')
-          .eq('id', documentId)
-          .single();
-        
-        if (documentError) throw documentError;
-        setDocument(documentData);
+          .eq('category_id', matchingCategory.id);
 
-        // Fetch category
-        if (documentData.category_id) {
-          const { data: categoryData } = await supabase
-            .from('categories')
-            .select('*')
-            .eq('id', documentData.category_id)
-            .single();
-          
-          setCategory(categoryData);
+        if (documentsError) {
+          console.error('Error fetching documents:', documentsError);
+          return;
         }
+
+        const matchingDocument = documents?.find(doc => 
+          createSlug(doc.title) === documentSlug
+        );
+
+        if (!matchingDocument) {
+          console.error('Document not found for slug:', documentSlug);
+          return;
+        }
+
+        setDocument(matchingDocument);
+        setCategory(matchingCategory);
 
         // Fetch suggested documents (same category, excluding current)
         const { data: suggestedData } = await supabase
           .from('documents')
-          .select('id, title, title_ar, summary, document_type, created_at, page_count')
-          .eq('category_id', documentData.category_id)
-          .neq('id', documentId)
+          .select(`
+            id, title, title_ar, summary, document_type, created_at, page_count,
+            categories (
+              name, name_ar
+            )
+          `)
+          .eq('category_id', matchingCategory.id)
+          .neq('id', matchingDocument.id)
           .in('status', ['published', 'processed'])
           .limit(5);
         
         setSuggestedDocuments(suggestedData || []);
 
         // Fetch related documents (similar keywords/legal domains)
-        if (documentData.keywords?.length > 0 || documentData.legal_domains?.length > 0) {
+        if (matchingDocument.keywords?.length > 0 || matchingDocument.legal_domains?.length > 0) {
           let query = supabase
             .from('documents')
-            .select('id, title, title_ar, summary, document_type, created_at, page_count')
-            .neq('id', documentId)
+            .select(`
+              id, title, title_ar, summary, document_type, created_at, page_count,
+              categories (
+                name, name_ar
+              )
+            `)
+            .neq('id', matchingDocument.id)
             .in('status', ['published', 'processed']);
 
-          if (documentData.keywords?.length > 0) {
-            query = query.overlaps('keywords', documentData.keywords);
+          if (matchingDocument.keywords?.length > 0) {
+            query = query.overlaps('keywords', matchingDocument.keywords);
           }
 
           const { data: relatedData } = await query.limit(5);
           setRelatedDocuments(relatedData || []);
         }
-        
       } catch (error) {
-        console.error('Error fetching document:', error);
+        console.error('Error:', error);
       } finally {
         setLoading(false);
       }
     };
 
-    fetchDocumentAndRelated();
-  }, [documentId]);
+    fetchDocument();
+  }, [categorySlug, documentSlug]);
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('fr-FR', {
@@ -232,6 +267,16 @@ const DocumentDetail = () => {
             </BreadcrumbLink>
           </BreadcrumbItem>
           <BreadcrumbSeparator />
+          {category && (
+            <>
+              <BreadcrumbItem>
+                <BreadcrumbLink asChild>
+                  <Link to={`/observatoire/categorie/${category.id}`}>{category.name}</Link>
+                </BreadcrumbLink>
+              </BreadcrumbItem>
+              <BreadcrumbSeparator />
+            </>
+          )}
           <BreadcrumbItem>
             <BreadcrumbPage className="max-w-[200px] truncate">{currentTitle}</BreadcrumbPage>
           </BreadcrumbItem>
@@ -446,7 +491,7 @@ const DocumentDetail = () => {
                 {relatedDocuments.slice(0, 3).map((doc) => (
                   <div key={doc.id} className="border-b pb-3 last:border-b-0">
                     <Link 
-                      to={`/observatoire/document/${doc.id}`}
+                      to={doc.categories ? createDocumentPath(doc.categories.name, doc.title) : '#'}
                       className="block hover:text-primary transition-colors"
                     >
                       <h4 className="font-medium text-sm mb-1 line-clamp-2">
@@ -476,7 +521,7 @@ const DocumentDetail = () => {
                 {suggestedDocuments.slice(0, 3).map((doc) => (
                   <div key={doc.id} className="border-b pb-3 last:border-b-0">
                     <Link 
-                      to={`/observatoire/document/${doc.id}`}
+                      to={doc.categories ? createDocumentPath(doc.categories.name, doc.title) : '#'}
                       className="block hover:text-primary transition-colors"
                     >
                       <h4 className="font-medium text-sm mb-1 line-clamp-2">
