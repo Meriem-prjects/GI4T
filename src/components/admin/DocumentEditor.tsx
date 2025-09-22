@@ -511,59 +511,64 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
   return (
     <div className="space-y-6" dir={currentLanguage === 'ar' ? 'rtl' : 'ltr'}>
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h2 className="text-2xl font-bold text-foreground">
-            {isFromValidation ? 'Validation de Document' : 'Éditeur de Document'}
-          </h2>
-          <div className="flex items-center space-x-4 mt-2">
-            <p className="text-sm text-muted-foreground">
-              Source: {editedData.originalFileName}
-            </p>
-            <Badge variant="outline">
-              {getLanguageLabel(editedData.language)}
-            </Badge>
+      <div className="space-y-4">
+        <div className="flex items-center justify-between">
+          <div>
+            <h2 className="text-2xl font-bold text-foreground">
+              {isFromValidation ? 'Validation de Document' : 'Éditeur de Document'}
+            </h2>
+            <div className="flex items-center space-x-4 mt-2">
+              <p className="text-sm text-muted-foreground">
+                Source: {editedData.originalFileName}
+              </p>
+              <Badge variant="outline">
+                {getLanguageLabel(editedData.language)}
+              </Badge>
+            </div>
           </div>
-        </div>
-        
-        <div className="flex items-center space-x-2">
-          {editedData.page_contents && editedData.page_contents.length > 0 && (
+          
+          <div className="flex items-center space-x-2">
+            {editedData.page_contents && editedData.page_contents.length > 0 && (
+              <Button
+                variant="outline"
+                onClick={() => setCurrentView(currentView === 'pages' ? 'editor' : 'pages')}
+              >
+                {currentView === 'pages' ? (
+                  <>
+                    <Eye className="mr-2 h-4 w-4" />
+                    Éditeur
+                  </>
+                ) : (
+                  <>
+                    <BookOpen className="mr-2 h-4 w-4" />
+                    Pages ({editedData.processed_pages}/{editedData.total_pages})
+                  </>
+                )}
+              </Button>
+            )}
+            
             <Button
               variant="outline"
-              onClick={() => setCurrentView(currentView === 'pages' ? 'editor' : 'pages')}
+              onClick={() => setCurrentView(currentView === 'pdf' ? 'editor' : 'pdf')}
+              disabled={!editedData.file_url}
             >
-              {currentView === 'pages' ? (
+              {currentView === 'pdf' ? (
                 <>
                   <Eye className="mr-2 h-4 w-4" />
                   Éditeur
                 </>
               ) : (
                 <>
-                  <BookOpen className="mr-2 h-4 w-4" />
-                  Pages ({editedData.processed_pages}/{editedData.total_pages})
+                  <FileText className="mr-2 h-4 w-4" />
+                  PDF
                 </>
               )}
             </Button>
-          )}
-          
-          <Button
-            variant="outline"
-            onClick={() => setCurrentView(currentView === 'pdf' ? 'editor' : 'pdf')}
-            disabled={!editedData.file_url}
-          >
-            {currentView === 'pdf' ? (
-              <>
-                <Eye className="mr-2 h-4 w-4" />
-                Éditeur
-              </>
-            ) : (
-              <>
-                <FileText className="mr-2 h-4 w-4" />
-                PDF
-              </>
-            )}
-          </Button>
-          
+          </div>
+        </div>
+        
+        {/* Editing buttons row */}
+        <div className="flex items-center justify-end space-x-2">
           <Button
             variant="outline"
             onClick={() => setShowPreview(!showPreview)}
