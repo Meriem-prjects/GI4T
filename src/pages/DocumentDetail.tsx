@@ -80,7 +80,12 @@ const DocumentDetail = () => {
 
   useEffect(() => {
     const fetchDocument = async () => {
-      if (!categorySlug || !documentSlug) return;
+      if (!categorySlug || !documentSlug) {
+        console.log('Missing categorySlug or documentSlug:', { categorySlug, documentSlug });
+        return;
+      }
+
+      console.log('Attempting to fetch document with:', { categorySlug, documentSlug });
 
       try {
         // First, find the category by slug
@@ -93,16 +98,23 @@ const DocumentDetail = () => {
           return;
         }
 
+        console.log('Available categories:', categories);
+
         const matchingCategory = categories?.find(cat => {
           const slugName = createSlug(cat.name || '');
           const slugNameAr = createSlug(cat.name_ar || '');
-          return slugName === categorySlug || slugNameAr === categorySlug || cat.id === categorySlug;
+          const match = slugName === categorySlug || slugNameAr === categorySlug || cat.id === categorySlug;
+          console.log('Checking category:', cat.name, 'slugs:', { slugName, slugNameAr }, 'match:', match);
+          return match;
         });
 
         if (!matchingCategory) {
           console.error('Category not found for slug:', categorySlug);
+          setLoading(false);
           return;
         }
+
+        console.log('Found matching category:', matchingCategory);
 
         // Then, find the document by title slug and category
         const { data: documents, error: documentsError } = await supabase
@@ -115,14 +127,22 @@ const DocumentDetail = () => {
           return;
         }
 
-        const matchingDocument = documents?.find(doc => 
-          createSlug(doc.title) === documentSlug
-        );
+        console.log('Available documents in category:', documents);
+
+        const matchingDocument = documents?.find(doc => {
+          const docSlug = createSlug(doc.title);
+          const match = docSlug === documentSlug;
+          console.log('Checking document:', doc.title, 'slug:', docSlug, 'match:', match);
+          return match;
+        });
 
         if (!matchingDocument) {
           console.error('Document not found for slug:', documentSlug);
+          setLoading(false);
           return;
         }
+
+        console.log('Found matching document:', matchingDocument);
 
         setDocument(matchingDocument);
         setCategory(matchingCategory);
