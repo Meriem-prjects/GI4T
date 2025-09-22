@@ -250,14 +250,12 @@ const CategorieDetail = () => {
                       )}
                     </div>
                     <div className="flex flex-col gap-2 ml-4">
-                      {document.file_url && (
-                        <Button size="sm" asChild>
-                          <a href={document.file_url} target="_blank" rel="noopener noreferrer">
-                            <ExternalLink className="w-4 h-4 mr-2" />
-                            Consulter
-                          </a>
-                        </Button>
-                      )}
+                      <Button size="sm" asChild>
+                        <Link to={`/observatoire/document/${document.id}`}>
+                          <ExternalLink className="w-4 h-4 mr-2" />
+                          Consulter
+                        </Link>
+                      </Button>
                       {document.pdf_url && (
                         <Button variant="outline" size="sm" asChild>
                           <a href={document.pdf_url} download>
