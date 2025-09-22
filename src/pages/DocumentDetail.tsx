@@ -447,7 +447,7 @@ const DocumentDetail = () => {
               {document.file_url && (
                 <Button onClick={() => handleDownload(document.file_url, `${document.title}.pdf`)}>
                   <Download className="w-4 h-4 mr-2" />
-                  Télécharger le document
+                  Télécharger le document original
                 </Button>
               )}
               
