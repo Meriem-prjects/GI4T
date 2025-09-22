@@ -4,11 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
-import { Textarea } from "@/components/ui/textarea";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { CalendarIcon, Edit, FileText, Globe, MoreVertical, Search, CheckCircle, XCircle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { CategoryCombobox } from "@/components/admin/CategoryCombobox";
@@ -17,20 +13,20 @@ import { useNavigate } from "react-router-dom";
 interface Document {
   id: string;
   title: string;
-  title_ar: string;
-  summary: string;
-  summary_ar: string;
+  title_ar?: string;
+  summary?: string;
+  summary_ar?: string;
   status: string;
   language: string;
   created_at: string;
   updated_at: string;
   keywords: string[];
-  keywords_ar: string[];
-  category_id: string;
+  keywords_ar?: string[];
+  category_id?: string;
   categories?: {
     id: string;
     name: string;
-    name_ar: string;
+    name_ar?: string;
     color: string;
   };
 }
@@ -38,22 +34,16 @@ interface Document {
 interface Category {
   id: string;
   name: string;
-  name_ar: string;
+  name_ar?: string;
   color: string;
 }
 
 const AdminValidation = () => {
-  console.log("AdminValidation component is rendering");
   const [documents, setDocuments] = useState<Document[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
-  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-  const [documentToDelete, setDocumentToDelete] = useState<string | null>(null);
-  const [rejectDialogOpen, setRejectDialogOpen] = useState(false);
-  const [documentToReject, setDocumentToReject] = useState<string | null>(null);
-  const [rejectionComment, setRejectionComment] = useState("");
   const { toast } = useToast();
   const navigate = useNavigate();
 
@@ -130,28 +120,19 @@ const AdminValidation = () => {
     }
   };
 
-  const rejectDocument = async () => {
-    if (!documentToReject) return;
-
+  const rejectDocument = async (documentId: string) => {
     try {
       const { error } = await supabase
         .from('documents')
-        .update({ 
-          status: 'draft',
-          // Note: You might want to add a comments field to store rejection reason
-        })
-        .eq('id', documentToReject);
+        .update({ status: 'draft' })
+        .eq('id', documentId);
 
       if (error) throw error;
 
-      setDocuments(documents.filter(doc => doc.id !== documentToReject));
-      setRejectDialogOpen(false);
-      setDocumentToReject(null);
-      setRejectionComment("");
-      
+      setDocuments(documents.filter(doc => doc.id !== documentId));
       toast({
         title: "Document remis en modification",
-        description: rejectionComment ? "Le document a été remis en modification avec commentaire" : "Le document a été remis en modification",
+        description: "Le document a été remis en modification",
       });
     } catch (error) {
       console.error('Error rejecting document:', error);
@@ -186,7 +167,7 @@ const AdminValidation = () => {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-[400px]">
+      <div className="flex items-center justify-center min-h-[400px] p-6">
         <div className="text-center">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
           <p className="text-muted-foreground">Chargement des documents...</p>
@@ -277,7 +258,6 @@ const AdminValidation = () => {
                         <Edit className="w-4 h-4 mr-2" />
                         Éditer
                       </DropdownMenuItem>
-                      <DropdownMenuSeparator />
                       <DropdownMenuItem 
                         onClick={() => publishDocument(document.id)}
                         className="text-green-600"
@@ -286,10 +266,7 @@ const AdminValidation = () => {
                         Publier
                       </DropdownMenuItem>
                       <DropdownMenuItem 
-                        onClick={() => {
-                          setDocumentToReject(document.id);
-                          setRejectDialogOpen(true);
-                        }}
+                        onClick={() => rejectDocument(document.id)}
                         className="text-orange-600"
                       >
                         <XCircle className="w-4 h-4 mr-2" />
@@ -351,34 +328,6 @@ const AdminValidation = () => {
           ))}
         </div>
       )}
-
-      {/* Reject Dialog */}
-      <Dialog open={rejectDialogOpen} onOpenChange={setRejectDialogOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Remettre en modification</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-4">
-            <p className="text-sm text-muted-foreground">
-              Vous pouvez ajouter un commentaire expliquant les modifications nécessaires.
-            </p>
-            <Textarea
-              placeholder="Commentaire pour les modifications nécessaires (optionnel)"
-              value={rejectionComment}
-              onChange={(e) => setRejectionComment(e.target.value)}
-              rows={4}
-            />
-          </div>
-          <div className="flex justify-end gap-2 mt-6">
-            <Button variant="outline" onClick={() => setRejectDialogOpen(false)}>
-              Annuler
-            </Button>
-            <Button onClick={rejectDocument} variant="destructive">
-              Remettre en modification
-            </Button>
-          </div>
-        </DialogContent>
-      </Dialog>
     </div>
   );
 };
