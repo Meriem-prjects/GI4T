@@ -8,9 +8,10 @@ import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Save, Eye, EyeOff, X, AlertTriangle, FileText, ChevronLeft, ChevronRight, BookOpen, Brain, Loader2 } from 'lucide-react';
+import { Save, Eye, EyeOff, X, AlertTriangle, FileText, ChevronLeft, ChevronRight, BookOpen, Brain, Loader2, CheckCircle, XCircle } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
+import { useSearchParams, useNavigate } from 'react-router-dom';
 import PDFViewer from './PDFViewer';
 
 interface PageContent {
@@ -74,6 +75,10 @@ interface DocumentEditorProps {
 
 const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave }) => {
   const { toast } = useToast();
+  const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const isFromValidation = searchParams.get('source') === 'validation';
+  
   const [editedData, setEditedData] = useState<DocumentData>(documentData);
   const [showPreview, setShowPreview] = useState(false);
   const [hasChanges, setHasChanges] = useState(false);
@@ -87,6 +92,7 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
   const [translatedByAI, setTranslatedByAI] = useState<{fr: boolean, ar: boolean}>({fr: false, ar: false});
   const [currentPage, setCurrentPage] = useState(1);
   const [translatedContent, setTranslatedContent] = useState<string>('');
+  const [validationRemarks, setValidationRemarks] = useState<string>('');
 
   useEffect(() => {
     setEditedData(documentData);
@@ -333,6 +339,87 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
     }
   };
 
+  const handlePublish = async () => {
+    try {
+      if (!editedData.id) {
+        toast({
+          title: "Erreur",
+          description: "Impossible de publier un document sans ID.",
+          variant: "destructive"
+        });
+        return;
+      }
+
+      const { error } = await supabase
+        .from('documents')
+        .update({ 
+          status: 'published',
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', editedData.id);
+
+      if (error) throw error;
+
+      toast({
+        title: "Document publié",
+        description: "Le document a été publié avec succès.",
+      });
+
+      navigate('/admin/observatoire/validation');
+    } catch (error) {
+      console.error('Publish error:', error);
+      toast({
+        title: "Erreur de publication",
+        description: "Impossible de publier le document.",
+        variant: "destructive"
+      });
+    }
+  };
+
+  const handleReturnForModification = async () => {
+    try {
+      if (!editedData.id) {
+        toast({
+          title: "Erreur",
+          description: "Impossible de retourner un document sans ID.",
+          variant: "destructive"
+        });
+        return;
+      }
+
+      const updateData: any = { 
+        status: 'draft',
+        updated_at: new Date().toISOString()
+      };
+
+      // Add remarks if provided
+      if (validationRemarks.trim()) {
+        updateData.validation_remarks = validationRemarks.trim();
+      }
+
+      const { error } = await supabase
+        .from('documents')
+        .update(updateData)
+        .eq('id', editedData.id);
+
+      if (error) throw error;
+
+      toast({
+        title: "Document retourné",
+        description: "Le document a été retourné pour modification.",
+      });
+
+      navigate('/admin/observatoire/validation');
+    } catch (error) {
+      console.error('Return error:', error);
+      toast({
+        title: "Erreur",
+        description: "Impossible de retourner le document.",
+        variant: "destructive"
+      });
+    }
+  };
+
   const addKeyword = (language: 'fr' | 'ar' = 'fr') => {
     const keyword = language === 'fr' ? newKeyword.trim() : newKeywordAr.trim();
     const field = language === 'fr' ? 'keywords' : 'keywords_ar';
@@ -425,7 +512,7 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-2xl font-bold text-foreground">
-            Éditeur de Document
+            {isFromValidation ? 'Validation de Document' : 'Éditeur de Document'}
           </h2>
           <div className="flex items-center space-x-4 mt-2">
             <p className="text-sm text-muted-foreground">
@@ -505,10 +592,23 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
             {isAnalyzing ? 'Analyse...' : '🤖 Analyse IA'}
           </Button>
           
-          <Button onClick={handleSave} disabled={!hasChanges}>
-            <Save className="mr-2 h-4 w-4" />
-            Sauvegarder
-          </Button>
+          {isFromValidation ? (
+            <div className="flex space-x-2">
+              <Button onClick={handlePublish} variant="default">
+                <CheckCircle className="mr-2 h-4 w-4" />
+                Publier
+              </Button>
+              <Button onClick={handleReturnForModification} variant="destructive">
+                <XCircle className="mr-2 h-4 w-4" />
+                Retourner pour modification
+              </Button>
+            </div>
+          ) : (
+            <Button onClick={handleSave} disabled={!hasChanges}>
+              <Save className="mr-2 h-4 w-4" />
+              Sauvegarder
+            </Button>
+          )}
         </div>
       </div>
 
@@ -592,6 +692,21 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
           <div className="space-y-6">
             <Card className="p-6">
               <h3 className="text-lg font-semibold mb-4">Métadonnées</h3>
+              
+              {/* Validation Remarks - Only show when coming from validation */}
+              {isFromValidation && (
+                <div className="mb-6 p-4 border rounded-lg bg-muted/50">
+                  <Label className="text-sm font-medium mb-2 block">
+                    Remarques de validation (optionnel)
+                  </Label>
+                  <Textarea
+                    value={validationRemarks}
+                    onChange={(e) => setValidationRemarks(e.target.value)}
+                    placeholder="Ajoutez des remarques pour expliquer la décision de validation..."
+                    className="min-h-[100px]"
+                  />
+                </div>
+              )}
               
               <div className="space-y-4">
                 <Tabs value={currentLanguage} onValueChange={(value) => setCurrentLanguage(value as 'fr' | 'ar')}>
