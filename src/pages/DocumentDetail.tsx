@@ -473,7 +473,7 @@ const DocumentDetail = () => {
             {document.translated_content && document.translated_content !== document.content && (
               <div className="text-center mb-6">
                 <Badge variant="secondary" className="bg-blue-100 text-blue-800">
-                  {showOriginal ? "Version originale" : "Version traduite en français"}
+                  {showOriginal ? "Version originale" : "Version traduite par l'IA"}
                 </Badge>
               </div>
             )}
