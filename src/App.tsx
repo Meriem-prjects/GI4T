@@ -44,8 +44,7 @@ const App = () => (
           {/* Legacy redirect */}
           <Route path="/search-results" element={<SearchResults />} />
           
-          {/* Observatoire interface */}
-          <Route path="/observatoire/*" element={<Observatoire />} />
+          {/* Observatoire interface - Routes spécifiques d'abord */}
           <Route element={<ObservatoireLayout />}>
             <Route path="/observatoire/search-results" element={<SearchResults />} />
             <Route path="/observatoire/textes-fondamentaux" element={<TextesFondamentaux />} />
@@ -54,6 +53,9 @@ const App = () => (
             <Route path="/observatoire/analyses-opinions" element={<AnalysesOpinions />} />
             <Route path="/observatoire/actualites" element={<Actualites />} />
           </Route>
+          
+          {/* Route générale observatoire en dernier */}
+          <Route path="/observatoire/*" element={<Observatoire />} />
           
           {/* Accès aux droits interface */}
           <Route path="/acces-aux-droits" element={<AccesAuxDroits />} />
