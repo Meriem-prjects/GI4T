@@ -207,6 +207,32 @@ const DocumentDetail = () => {
     return text.charAt(0).toUpperCase() + text.slice(1);
   };
 
+  const handleDownload = async (url: string, filename?: string) => {
+    try {
+      const response = await fetch(url);
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      
+      const blob = await response.blob();
+      const downloadUrl = URL.createObjectURL(blob);
+      
+      const link = window.document.createElement('a');
+      link.href = downloadUrl;
+      link.download = filename || 'document.pdf';
+      window.document.body.appendChild(link);
+      link.click();
+      
+      // Cleanup
+      window.document.body.removeChild(link);
+      URL.revokeObjectURL(downloadUrl);
+    } catch (error) {
+      console.error('Erreur lors du téléchargement:', error);
+      // Fallback to direct link
+      window.open(url, '_blank');
+    }
+  };
+
 
   if (loading) {
     return (
@@ -419,20 +445,16 @@ const DocumentDetail = () => {
               )}
               
               {document.file_url && (
-                <Button asChild>
-                  <a href={document.file_url} download>
-                    <Download className="w-4 h-4 mr-2" />
-                    Télécharger le document
-                  </a>
+                <Button onClick={() => handleDownload(document.file_url, `${document.title}.pdf`)}>
+                  <Download className="w-4 h-4 mr-2" />
+                  Télécharger le document
                 </Button>
               )}
               
               {document.pdf_url && (
-                <Button variant="outline" asChild>
-                  <a href={document.pdf_url} download>
-                    <Download className="w-4 h-4 mr-2" />
-                    Télécharger PDF
-                  </a>
+                <Button variant="outline" onClick={() => handleDownload(document.pdf_url, `${document.title}_pdf.pdf`)}>
+                  <Download className="w-4 h-4 mr-2" />
+                  Télécharger PDF
                 </Button>
               )}
 
