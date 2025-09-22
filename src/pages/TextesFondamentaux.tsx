@@ -3,9 +3,62 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Breadcrumb, BreadcrumbList, BreadcrumbItem, BreadcrumbLink, BreadcrumbPage, BreadcrumbSeparator } from "@/components/ui/breadcrumb";
-import { FileText, BookOpen, Scale, Users, Download, ExternalLink } from "lucide-react";
+import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel";
+import { FileText, BookOpen, Scale, Users, Download, ExternalLink, Heart, ShieldCheck, GraduationCap } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { useEffect, useState } from "react";
+
+interface Category {
+  id: string;
+  name: string;
+  name_ar: string;
+  description: string;
+  description_ar: string;
+  color: string;
+}
 
 const TextesFondamentaux = () => {
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchCategories = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('categories')
+          .select('*')
+          .order('name');
+        
+        if (error) throw error;
+        
+        // Put "Droit à la santé" first, then sort the rest
+        const sortedCategories = data?.sort((a, b) => {
+          if (a.name === "Droit à la santé") return -1;
+          if (b.name === "Droit à la santé") return 1;
+          return a.name.localeCompare(b.name);
+        }) || [];
+        
+        setCategories(sortedCategories);
+      } catch (error) {
+        console.error('Error fetching categories:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchCategories();
+  }, []);
+
+  const getIconForCategory = (categoryName: string) => {
+    const name = categoryName.toLowerCase();
+    if (name.includes('santé') || name.includes('health')) return Heart;
+    if (name.includes('justice') || name.includes('legal')) return Scale;
+    if (name.includes('enseignement') || name.includes('éducation') || name.includes('education')) return GraduationCap;
+    if (name.includes('protection') || name.includes('sécurité')) return ShieldCheck;
+    if (name.includes('civils') || name.includes('politiques')) return Users;
+    return BookOpen;
+  };
+
   const fundamentalTexts = [
     {
       id: 1,
@@ -39,26 +92,6 @@ const TextesFondamentaux = () => {
     }
   ];
 
-  const rightsByCategory = [
-    {
-      title: "Droits civils et politiques",
-      count: 12,
-      description: "Liberté d'expression, droit de vote, liberté de mouvement",
-      icon: Users
-    },
-    {
-      title: "Droits économiques et sociaux", 
-      count: 8,
-      description: "Droit au travail, à l'éducation, à la santé",
-      icon: BookOpen
-    },
-    {
-      title: "Droits de la justice",
-      count: 15,
-      description: "Droit à un procès équitable, présomption d'innocence",
-      icon: Scale
-    }
-  ];
 
   return (
     <div className="container mx-auto px-4 py-6">
@@ -95,29 +128,54 @@ const TextesFondamentaux = () => {
         {/* Droits par catégorie */}
         <section className="mb-12">
           <h2 className="text-2xl font-bold mb-6">Droits par Catégorie</h2>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {rightsByCategory.map((category) => {
-              const Icon = category.icon;
-              return (
-                <Card key={category.title} className="hover:shadow-lg transition-all duration-300 cursor-pointer">
-                  <CardHeader>
-                    <div className="flex items-center justify-between mb-2">
-                      <Icon className="w-8 h-8 text-primary" />
-                      <Badge variant="secondary">{category.count} droits</Badge>
-                    </div>
-                    <CardTitle className="text-lg">{category.title}</CardTitle>
-                    <CardDescription>{category.description}</CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <Button variant="outline" className="w-full">
-                      <BookOpen className="w-4 h-4 mr-2" />
-                      Explorer
-                    </Button>
-                  </CardContent>
-                </Card>
-              );
-            })}
-          </div>
+          {loading ? (
+            <div className="flex justify-center items-center py-12">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+            </div>
+          ) : (
+            <Carousel
+              opts={{
+                align: "start",
+                slidesToScroll: 3,
+              }}
+              className="w-full"
+            >
+              <CarouselContent className="-ml-2 md:-ml-4">
+                {categories.map((category) => {
+                  const Icon = getIconForCategory(category.name);
+                  return (
+                    <CarouselItem key={category.id} className="pl-2 md:pl-4 md:basis-1/3">
+                      <Card className="hover:shadow-lg transition-all duration-300 cursor-pointer h-full">
+                        <CardHeader>
+                          <div className="flex items-center justify-between mb-2">
+                            <div 
+                              className="w-8 h-8 rounded-full flex items-center justify-center"
+                              style={{ backgroundColor: category.color + '20' }}
+                            >
+                              <Icon className="w-5 h-5" style={{ color: category.color }} />
+                            </div>
+                            <Badge variant="secondary">Droit fondamental</Badge>
+                          </div>
+                          <CardTitle className="text-lg">{category.name}</CardTitle>
+                          <CardDescription className="line-clamp-2">
+                            {category.description}
+                          </CardDescription>
+                        </CardHeader>
+                        <CardContent>
+                          <Button variant="outline" className="w-full">
+                            <BookOpen className="w-4 h-4 mr-2" />
+                            Explorer
+                          </Button>
+                        </CardContent>
+                      </Card>
+                    </CarouselItem>
+                  );
+                })}
+              </CarouselContent>
+              <CarouselPrevious className="hidden md:flex -left-12" />
+              <CarouselNext className="hidden md:flex -right-12" />
+            </Carousel>
+          )}
         </section>
 
         {/* Textes fondamentaux */}
