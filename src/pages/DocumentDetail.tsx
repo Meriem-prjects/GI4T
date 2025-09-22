@@ -420,9 +420,9 @@ const DocumentDetail = () => {
               
               {document.file_url && (
                 <Button asChild>
-                  <a href={document.file_url} target="_blank" rel="noopener noreferrer">
-                    <ExternalLink className="w-4 h-4 mr-2" />
-                    Consulter le document
+                  <a href={document.file_url} download>
+                    <Download className="w-4 h-4 mr-2" />
+                    Télécharger le document
                   </a>
                 </Button>
               )}
