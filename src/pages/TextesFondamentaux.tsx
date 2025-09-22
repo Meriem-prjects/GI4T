@@ -4,7 +4,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { Breadcrumb, BreadcrumbList, BreadcrumbItem, BreadcrumbLink, BreadcrumbPage, BreadcrumbSeparator } from "@/components/ui/breadcrumb";
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel";
-import { FileText, BookOpen, Scale, Users, Download, ExternalLink, Heart, ShieldCheck, GraduationCap } from "lucide-react";
+import { FileText, BookOpen, Scale, Users, Download, ExternalLink, Heart, ShieldCheck, GraduationCap, Search } from "lucide-react";
+import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/client";
 import { useEffect, useState } from "react";
 
@@ -20,6 +21,7 @@ interface Category {
 const TextesFondamentaux = () => {
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
+  const [searchTerm, setSearchTerm] = useState("");
 
   useEffect(() => {
     const fetchCategories = async () => {
@@ -58,6 +60,13 @@ const TextesFondamentaux = () => {
     if (name.includes('civils') || name.includes('politiques')) return Users;
     return BookOpen;
   };
+
+  const filteredCategories = categories.filter(category =>
+    category.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    category.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    (category.name_ar && category.name_ar.includes(searchTerm)) ||
+    (category.description_ar && category.description_ar.toLowerCase().includes(searchTerm.toLowerCase()))
+  );
 
   const fundamentalTexts = [
     {
@@ -128,6 +137,18 @@ const TextesFondamentaux = () => {
         {/* Droits par catégorie */}
         <section className="mb-12">
           <h2 className="text-2xl font-bold mb-6">Droits par Catégorie</h2>
+          
+          {/* Barre de recherche */}
+          <div className="relative mb-8 max-w-md">
+            <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder="Rechercher une catégorie de droit..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="pl-10"
+            />
+          </div>
+
           {loading ? (
             <div className="flex justify-center items-center py-12">
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
@@ -141,7 +162,7 @@ const TextesFondamentaux = () => {
               className="w-full"
             >
               <CarouselContent className="-ml-2 md:-ml-4">
-                {categories.map((category) => {
+                {filteredCategories.map((category) => {
                   const Icon = getIconForCategory(category.name);
                   return (
                     <CarouselItem key={category.id} className="pl-2 md:pl-4 md:basis-1/3">
@@ -172,9 +193,19 @@ const TextesFondamentaux = () => {
                   );
                 })}
               </CarouselContent>
-              <CarouselPrevious className="hidden md:flex -left-12" />
-              <CarouselNext className="hidden md:flex -right-12" />
+              {filteredCategories.length > 3 && (
+                <>
+                  <CarouselPrevious className="hidden md:flex -left-12" />
+                  <CarouselNext className="hidden md:flex -right-12" />
+                </>
+              )}
             </Carousel>
+          )}
+          
+          {!loading && filteredCategories.length === 0 && searchTerm && (
+            <div className="text-center py-8 text-muted-foreground">
+              Aucune catégorie trouvée pour "{searchTerm}"
+            </div>
           )}
         </section>
 
