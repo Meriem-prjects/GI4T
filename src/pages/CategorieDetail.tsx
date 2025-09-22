@@ -32,6 +32,8 @@ interface Document {
   keywords: string[];
   document_type: string;
   year: number;
+  court_category: string;
+  court_level: string;
 }
 
 const CategorieDetail = () => {
@@ -226,16 +228,18 @@ const CategorieDetail = () => {
                 <CardHeader>
                   <div className="flex items-start justify-between">
                     <div className="flex-1">
-                      <div className="flex items-center gap-3 mb-2">
+                       <div className="flex items-center gap-3 mb-2">
                         <FileText className="w-5 h-5 text-primary" />
-                        {document.document_type && (
-                          <Badge variant="outline">{document.document_type}</Badge>
+                        {category?.name && (
+                          <Badge variant="secondary" className="bg-blue-100 text-blue-800">
+                            {category.name}
+                          </Badge>
                         )}
-                        <Badge variant="secondary" className="bg-green-100 text-green-800">
-                          Publié
-                        </Badge>
-                        {document.year && (
-                          <Badge variant="outline">{document.year}</Badge>
+                        {document.court_category && (
+                          <Badge variant="outline">{document.court_category}</Badge>
+                        )}
+                        {document.court_level && (
+                          <Badge variant="outline">{document.court_level}</Badge>
                         )}
                       </div>
                       <CardTitle className="text-xl mb-2">{document.title}</CardTitle>
