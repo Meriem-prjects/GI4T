@@ -24,6 +24,7 @@ interface DocumentData {
   file_url?: string;
   pdf_url?: string;
   fullContent?: string;
+  translated_content?: string;
   author?: string;
   author_ar?: string;
   court?: string;
@@ -110,6 +111,7 @@ const AdminEditor = () => {
         file_url: document.file_url,
         pdf_url: document.pdf_url,
         fullContent: document.content,
+        translated_content: document.translated_content || '',
         author: document.author || '',
         author_ar: document.author_ar || '',
         court: document.court || '',

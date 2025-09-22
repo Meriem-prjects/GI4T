@@ -1192,6 +1192,7 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
                     } else {
                       // Editing translated content
                       setTranslatedContent(newContent);
+                      setHasChanges(true);
                     }
                   }}
                   className="min-h-[600px] font-mono text-sm"
