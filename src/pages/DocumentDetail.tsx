@@ -16,6 +16,7 @@ interface Document {
   summary: string;
   summary_ar: string;
   content: string;
+  translated_content: string;
   author: string;
   author_ar: string;
   court: string;
@@ -64,7 +65,7 @@ const DocumentDetail = () => {
   const [suggestedDocuments, setSuggestedDocuments] = useState<SuggestedDocument[]>([]);
   const [relatedDocuments, setRelatedDocuments] = useState<SuggestedDocument[]>([]);
   const [loading, setLoading] = useState(true);
-  const [isArabic, setIsArabic] = useState(false);
+  const [showOriginal, setShowOriginal] = useState(false);
 
   useEffect(() => {
     const fetchDocumentAndRelated = async () => {
@@ -80,7 +81,6 @@ const DocumentDetail = () => {
         
         if (documentError) throw documentError;
         setDocument(documentData);
-        setIsArabic(documentData.language === 'ar');
 
         // Fetch category
         if (documentData.category_id) {
@@ -200,15 +200,17 @@ const DocumentDetail = () => {
     );
   }
 
-  const contentElements = parseContent(document.content);
-  const currentTitle = isArabic ? document.title_ar || document.title : document.title;
-  const currentSummary = isArabic ? document.summary_ar || document.summary : document.summary;
-  const currentAuthor = isArabic ? document.author_ar || document.author : document.author;
-  const currentCourt = isArabic ? document.court_ar || document.court : document.court;
-  const currentCourtLevel = isArabic ? document.court_level_ar || document.court_level : document.court_level;
+  // Use translated content by default, original if showOriginal is true
+  const displayContent = showOriginal ? document.content : (document.translated_content || document.content);
+  const contentElements = parseContent(displayContent);
+  const currentTitle = document.title;
+  const currentSummary = document.summary;
+  const currentAuthor = document.author;
+  const currentCourt = document.court;
+  const currentCourtLevel = document.court_level;
 
   return (
-    <div className={`container mx-auto px-4 py-6 ${isArabic ? 'rtl' : 'ltr'}`}>
+    <div className="container mx-auto px-4 py-6">
       {/* Breadcrumb */}
       <Breadcrumb className="mb-6">
         <BreadcrumbList>
@@ -236,76 +238,9 @@ const DocumentDetail = () => {
         </BreadcrumbList>
       </Breadcrumb>
 
-      <div className={`grid gap-8 ${isArabic ? 'lg:grid-cols-4' : 'lg:grid-cols-4'}`}>
-        {/* Sidebar for Arabic (left side) */}
-        {isArabic && (
-          <div className="lg:col-span-1 order-first">
-            <div className="sticky top-6 space-y-6">
-              {/* Documents à consulter */}
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-lg flex items-center gap-2">
-                    <BookOpen className="w-5 h-5" />
-                    المستندات للاطلاع
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-3">
-                  {relatedDocuments.slice(0, 3).map((doc) => (
-                    <div key={doc.id} className="border-b pb-3 last:border-b-0">
-                      <Link 
-                        to={`/observatoire/document/${doc.id}`}
-                        className="block hover:text-primary transition-colors"
-                      >
-                        <h4 className="font-medium text-sm mb-1 line-clamp-2">
-                          {doc.title_ar || doc.title}
-                        </h4>
-                        <p className="text-xs text-muted-foreground">
-                          {doc.document_type} • {formatDate(doc.created_at)}
-                        </p>
-                      </Link>
-                    </div>
-                  ))}
-                  {relatedDocuments.length === 0 && (
-                    <p className="text-sm text-muted-foreground">لا توجد مستندات ذات صلة</p>
-                  )}
-                </CardContent>
-              </Card>
-
-              {/* Suggestions */}
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-lg flex items-center gap-2">
-                    <FileText className="w-5 h-5" />
-                    اقتراحات
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-3">
-                  {suggestedDocuments.slice(0, 3).map((doc) => (
-                    <div key={doc.id} className="border-b pb-3 last:border-b-0">
-                      <Link 
-                        to={`/observatoire/document/${doc.id}`}
-                        className="block hover:text-primary transition-colors"
-                      >
-                        <h4 className="font-medium text-sm mb-1 line-clamp-2">
-                          {doc.title_ar || doc.title}
-                        </h4>
-                        <p className="text-xs text-muted-foreground">
-                          {doc.document_type} • {formatDate(doc.created_at)}
-                        </p>
-                      </Link>
-                    </div>
-                  ))}
-                  {suggestedDocuments.length === 0 && (
-                    <p className="text-sm text-muted-foreground">لا توجد اقتراحات</p>
-                  )}
-                </CardContent>
-              </Card>
-            </div>
-          </div>
-        )}
-
+      <div className="grid gap-8 lg:grid-cols-4">
         {/* Main Content */}
-        <div className={`${isArabic ? 'lg:col-span-3' : 'lg:col-span-3'}`}>
+        <div className="lg:col-span-3">
           {/* Document Header */}
           <div className="text-center mb-12">
             <h1 className="text-3xl md:text-4xl font-bold mb-4 leading-tight">
@@ -335,7 +270,7 @@ const DocumentDetail = () => {
                       <Scale className="w-5 h-5 text-muted-foreground" />
                       <span className="font-medium">Catégorie de jurisprudence:</span>
                       <Badge variant="secondary" style={{ backgroundColor: category.color + '20', color: category.color }}>
-                        {isArabic ? category.name_ar || category.name : category.name}
+                        {category.name}
                       </Badge>
                     </div>
                   )}
@@ -379,6 +314,17 @@ const DocumentDetail = () => {
 
             {/* Action Buttons */}
             <div className="flex flex-wrap items-center justify-center gap-4 mb-8">
+              {/* Toggle between original and translated */}
+              {document.translated_content && document.translated_content !== document.content && (
+                <Button 
+                  variant={showOriginal ? "default" : "outline"}
+                  onClick={() => setShowOriginal(!showOriginal)}
+                >
+                  <FileText className="w-4 h-4 mr-2" />
+                  {showOriginal ? "Version traduite" : "Version originale"}
+                </Button>
+              )}
+              
               {document.file_url && (
                 <Button asChild>
                   <a href={document.file_url} target="_blank" rel="noopener noreferrer">
@@ -410,6 +356,15 @@ const DocumentDetail = () => {
                 Partager
               </Button>
             </div>
+
+            {/* Content Type Indicator */}
+            {document.translated_content && document.translated_content !== document.content && (
+              <div className="text-center mb-6">
+                <Badge variant="secondary" className="bg-blue-100 text-blue-800">
+                  {showOriginal ? "Version originale" : "Version traduite en français"}
+                </Badge>
+              </div>
+            )}
           </div>
 
           {/* Document Content */}
@@ -476,72 +431,70 @@ const DocumentDetail = () => {
           )}
         </div>
 
-        {/* Sidebar for French (right side) */}
-        {!isArabic && (
-          <div className="lg:col-span-1">
-            <div className="sticky top-6 space-y-6">
-              {/* Documents à consulter */}
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-lg flex items-center gap-2">
-                    <BookOpen className="w-5 h-5" />
-                    Documents à consulter
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-3">
-                  {relatedDocuments.slice(0, 3).map((doc) => (
-                    <div key={doc.id} className="border-b pb-3 last:border-b-0">
-                      <Link 
-                        to={`/observatoire/document/${doc.id}`}
-                        className="block hover:text-primary transition-colors"
-                      >
-                        <h4 className="font-medium text-sm mb-1 line-clamp-2">
-                          {doc.title}
-                        </h4>
-                        <p className="text-xs text-muted-foreground">
-                          {doc.document_type} • {formatDate(doc.created_at)}
-                        </p>
-                      </Link>
-                    </div>
-                  ))}
-                  {relatedDocuments.length === 0 && (
-                    <p className="text-sm text-muted-foreground">Aucun document connexe</p>
-                  )}
-                </CardContent>
-              </Card>
+        {/* Sidebar - French (right side) */}
+        <div className="lg:col-span-1">
+          <div className="sticky top-6 space-y-6">
+            {/* Documents à consulter */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-lg flex items-center gap-2">
+                  <BookOpen className="w-5 h-5" />
+                  Documents à consulter
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                {relatedDocuments.slice(0, 3).map((doc) => (
+                  <div key={doc.id} className="border-b pb-3 last:border-b-0">
+                    <Link 
+                      to={`/observatoire/document/${doc.id}`}
+                      className="block hover:text-primary transition-colors"
+                    >
+                      <h4 className="font-medium text-sm mb-1 line-clamp-2">
+                        {doc.title}
+                      </h4>
+                      <p className="text-xs text-muted-foreground">
+                        {doc.document_type} • {formatDate(doc.created_at)}
+                      </p>
+                    </Link>
+                  </div>
+                ))}
+                {relatedDocuments.length === 0 && (
+                  <p className="text-sm text-muted-foreground">Aucun document connexe</p>
+                )}
+              </CardContent>
+            </Card>
 
-              {/* Suggestions */}
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-lg flex items-center gap-2">
-                    <FileText className="w-5 h-5" />
-                    Suggestions
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-3">
-                  {suggestedDocuments.slice(0, 3).map((doc) => (
-                    <div key={doc.id} className="border-b pb-3 last:border-b-0">
-                      <Link 
-                        to={`/observatoire/document/${doc.id}`}
-                        className="block hover:text-primary transition-colors"
-                      >
-                        <h4 className="font-medium text-sm mb-1 line-clamp-2">
-                          {doc.title}
-                        </h4>
-                        <p className="text-xs text-muted-foreground">
-                          {doc.document_type} • {formatDate(doc.created_at)}
-                        </p>
-                      </Link>
-                    </div>
-                  ))}
-                  {suggestedDocuments.length === 0 && (
-                    <p className="text-sm text-muted-foreground">Aucune suggestion</p>
-                  )}
-                </CardContent>
-              </Card>
-            </div>
+            {/* Suggestions */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-lg flex items-center gap-2">
+                  <FileText className="w-5 h-5" />
+                  Suggestions
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                {suggestedDocuments.slice(0, 3).map((doc) => (
+                  <div key={doc.id} className="border-b pb-3 last:border-b-0">
+                    <Link 
+                      to={`/observatoire/document/${doc.id}`}
+                      className="block hover:text-primary transition-colors"
+                    >
+                      <h4 className="font-medium text-sm mb-1 line-clamp-2">
+                        {doc.title}
+                      </h4>
+                      <p className="text-xs text-muted-foreground">
+                        {doc.document_type} • {formatDate(doc.created_at)}
+                      </p>
+                    </Link>
+                  </div>
+                ))}
+                {suggestedDocuments.length === 0 && (
+                  <p className="text-sm text-muted-foreground">Aucune suggestion</p>
+                )}
+              </CardContent>
+            </Card>
           </div>
-        )}
+        </div>
       </div>
     </div>
   );
