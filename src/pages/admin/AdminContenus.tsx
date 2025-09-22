@@ -88,6 +88,7 @@ const AdminContenus = () => {
           categories (name, color),
           document_types (name)
         `)
+        .neq('status', 'pending_validation')
         .order('created_at', { ascending: false });
 
       if (error) throw error;
@@ -161,6 +162,32 @@ const AdminContenus = () => {
     }
   };
 
+  const submitForValidation = async (documentId: string) => {
+    try {
+      const { error } = await supabase
+        .from('documents')
+        .update({ status: 'pending_validation' })
+        .eq('id', documentId);
+
+      if (error) throw error;
+
+      // Remove document from current list since it's no longer visible in contents
+      setDocuments(prev => prev.filter(doc => doc.id !== documentId));
+      
+      toast({
+        title: "Document soumis pour validation",
+        description: "Le document a été envoyé en validation avec succès",
+      });
+    } catch (error) {
+      console.error('Error submitting document for validation:', error);
+      toast({
+        title: "Erreur",
+        description: "Impossible de soumettre le document pour validation",
+        variant: "destructive",
+      });
+    }
+  };
+
   const deleteDocument = async (documentId: string) => {
     try {
       const { error } = await supabase
@@ -191,6 +218,8 @@ const AdminContenus = () => {
         return <Badge variant="outline" className="bg-yellow-50 text-yellow-700 border-yellow-200"><Clock className="w-3 h-3 mr-1" />Brouillon</Badge>;
       case 'processed':
         return <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200"><CheckCircle className="w-3 h-3 mr-1" />Publié</Badge>;
+      case 'pending_validation':
+        return <Badge variant="outline" className="bg-orange-50 text-orange-700 border-orange-200"><AlertCircle className="w-3 h-3 mr-1" />En validation</Badge>;
       case 'processing':
         return <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200"><AlertCircle className="w-3 h-3 mr-1" />En traitement</Badge>;
       default:
@@ -310,6 +339,12 @@ const AdminContenus = () => {
                         Éditer
                       </Link>
                     </DropdownMenuItem>
+                    {document.status === 'draft' && (
+                      <DropdownMenuItem onClick={() => submitForValidation(document.id)}>
+                        <CheckCircle className="w-4 h-4 mr-2" />
+                        Faire valider
+                      </DropdownMenuItem>
+                    )}
                     <DropdownMenuItem
                       onClick={() => updateDocumentStatus(
                         document.id, 
