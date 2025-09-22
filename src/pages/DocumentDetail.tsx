@@ -9,6 +9,7 @@ import { useEffect, useState } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Separator } from "@/components/ui/separator";
 import { createSlug, createCategorySlug, createDocumentPath } from "@/lib/urlUtils";
+import { renderFormattedContent } from "@/utils/contentFormatter";
 
 interface Document {
   id: string;
@@ -201,31 +202,6 @@ const DocumentDetail = () => {
     });
   };
 
-  const parseContent = (content: string) => {
-    if (!content) return [];
-    
-    // Simple content parsing to identify headings
-    const lines = content.split('\n').filter(line => line.trim());
-    const parsedContent = [];
-    
-    for (const line of lines) {
-      const trimmed = line.trim();
-      if (!trimmed) continue;
-      
-      // Detect headings based on patterns (uppercase, short lines, etc.)
-      if (trimmed.length < 100 && trimmed === trimmed.toUpperCase() && trimmed.length > 5) {
-        parsedContent.push({ type: 'h1', content: trimmed });
-      } else if (trimmed.startsWith('Article') || trimmed.startsWith('ARTICLE')) {
-        parsedContent.push({ type: 'h2', content: trimmed });
-      } else if (trimmed.match(/^\d+\.|\d+\)\s/)) {
-        parsedContent.push({ type: 'h3', content: trimmed });
-      } else {
-        parsedContent.push({ type: 'p', content: trimmed });
-      }
-    }
-    
-    return parsedContent;
-  };
 
   if (loading) {
     return (
@@ -265,7 +241,7 @@ const DocumentDetail = () => {
 
   // Use translated content by default, original if showOriginal is true
   const displayContent = showOriginal ? document.content : (document.translated_content || document.content);
-  const contentElements = parseContent(displayContent);
+  const formattedContent = renderFormattedContent(displayContent);
   const currentTitle = document.title;
   const currentSummary = document.summary;
   const currentAuthor = document.author;
@@ -481,36 +457,11 @@ const DocumentDetail = () => {
 
           {/* Document Content */}
           <div className="prose prose-lg max-w-none">
-            {contentElements.length > 0 ? (
-              <div className="space-y-6">
-                {contentElements.map((element, index) => {
-                  if (element.type === 'h1') {
-                    return (
-                      <h1 key={index} className="text-2xl font-bold text-foreground border-b pb-2 mb-4">
-                        {element.content}
-                      </h1>
-                    );
-                  } else if (element.type === 'h2') {
-                    return (
-                      <h2 key={index} className="text-xl font-semibold text-foreground mt-8 mb-4">
-                        {element.content}
-                      </h2>
-                    );
-                  } else if (element.type === 'h3') {
-                    return (
-                      <h3 key={index} className="text-lg font-medium text-foreground mt-6 mb-3">
-                        {element.content}
-                      </h3>
-                    );
-                  } else {
-                    return (
-                      <p key={index} className="text-foreground leading-relaxed mb-4">
-                        {element.content}
-                      </p>
-                    );
-                  }
-                })}
-              </div>
+            {formattedContent ? (
+              <div 
+                className="space-y-6"
+                dangerouslySetInnerHTML={{ __html: formattedContent }}
+              />
             ) : (
               <div className="text-center py-12">
                 <FileText className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
