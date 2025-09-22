@@ -27,8 +27,34 @@ const PDFViewer: React.FC<PDFViewerProps> = ({ fileUrl, title }) => {
     document.body.removeChild(link);
   };
 
-  const openInNewTab = () => {
-    window.open(fileUrl, '_blank');
+  const openInNewTab = async () => {
+    try {
+      // Télécharger le fichier comme blob pour éviter les restrictions de sécurité
+      const response = await fetch(fileUrl);
+      if (!response.ok) {
+        throw new Error('Erreur lors du téléchargement du fichier');
+      }
+      
+      const blob = await response.blob();
+      const blobUrl = URL.createObjectURL(blob);
+      
+      // Ouvrir le blob dans un nouvel onglet
+      const newTab = window.open(blobUrl, '_blank');
+      
+      // Nettoyer l'URL du blob après un délai
+      setTimeout(() => {
+        URL.revokeObjectURL(blobUrl);
+      }, 1000);
+      
+      // Si l'ouverture échoue, fallback vers téléchargement
+      if (!newTab) {
+        handleDownload();
+      }
+    } catch (error) {
+      console.error('Erreur lors de l\'ouverture du PDF:', error);
+      // Fallback vers le téléchargement normal
+      handleDownload();
+    }
   };
 
   return (
