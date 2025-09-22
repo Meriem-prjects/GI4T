@@ -36,6 +36,7 @@ interface DocumentData {
   file_url?: string;
   pdf_url?: string;
   fullContent?: string;
+  translated_content?: string;
   page_contents?: PageContent[];
   total_pages?: number;
   processed_pages?: number;
@@ -96,6 +97,7 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
 
   useEffect(() => {
     setEditedData(documentData);
+    setTranslatedContent(documentData.translated_content || '');
     setHasChanges(false);
     // Set default tab based on document language - force refresh
     const docLang = documentData.language || 'fr';
