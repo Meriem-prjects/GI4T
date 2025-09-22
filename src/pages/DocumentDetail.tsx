@@ -8,7 +8,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useEffect, useState } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Separator } from "@/components/ui/separator";
-import { createSlug, createDocumentPath } from "@/lib/urlUtils";
+import { createSlug, createCategorySlug, createDocumentPath } from "@/lib/urlUtils";
 
 interface Document {
   id: string;
@@ -93,9 +93,11 @@ const DocumentDetail = () => {
           return;
         }
 
-        const matchingCategory = categories?.find(cat => 
-          createSlug(cat.name) === categorySlug
-        );
+        const matchingCategory = categories?.find(cat => {
+          const slugName = createSlug(cat.name || '');
+          const slugNameAr = createSlug(cat.name_ar || '');
+          return slugName === categorySlug || slugNameAr === categorySlug || cat.id === categorySlug;
+        });
 
         if (!matchingCategory) {
           console.error('Category not found for slug:', categorySlug);
@@ -277,7 +279,7 @@ const DocumentDetail = () => {
             <>
               <BreadcrumbItem>
                 <BreadcrumbLink asChild>
-                  <Link to={`/observatoire/categorie/${category.id}`}>{category.name}</Link>
+                  <Link to={`/observatoire/categorie/${createCategorySlug(category.name)}`}>{category.name}</Link>
                 </BreadcrumbLink>
               </BreadcrumbItem>
               <BreadcrumbSeparator />

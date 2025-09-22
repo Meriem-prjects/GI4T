@@ -53,10 +53,12 @@ const CategorieDetail = () => {
         
         if (categoriesError) throw categoriesError;
         
-        // Find category by matching slug
-        const categoryData = allCategories?.find(cat => 
-          createCategorySlug(cat.name) === categorySlug
-        );
+        // Find category by matching slug (name or name_ar), or by id as fallback
+        const categoryData = allCategories?.find(cat => {
+          const slugName = createCategorySlug(cat.name || '');
+          const slugNameAr = createCategorySlug(cat.name_ar || '');
+          return slugName === categorySlug || slugNameAr === categorySlug || cat.id === categorySlug;
+        });
         
         if (!categoryData) {
           throw new Error('Category not found');
