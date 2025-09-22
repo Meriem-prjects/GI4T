@@ -456,10 +456,10 @@ const DocumentDetail = () => {
           </div>
 
           {/* Document Content */}
-          <div className="prose prose-lg max-w-none">
+          <div className="max-w-none">
             {formattedContent ? (
               <div 
-                className="space-y-6"
+                className="document-content space-y-6"
                 dangerouslySetInnerHTML={{ __html: formattedContent }}
               />
             ) : (

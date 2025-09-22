@@ -117,4 +117,33 @@ All colors MUST be HSL.
   body {
     @apply bg-background text-foreground;
   }
+
+  /* Styles pour le contenu des documents */
+  .document-content h1 {
+    @apply text-2xl font-bold text-foreground border-b pb-2 mb-4 mt-6;
+  }
+  
+  .document-content h2 {
+    @apply text-xl font-semibold text-foreground mt-8 mb-4;
+  }
+  
+  .document-content h3 {
+    @apply text-lg font-medium text-foreground mt-6 mb-3;
+  }
+  
+  .document-content p {
+    @apply text-foreground leading-relaxed mb-4;
+  }
+  
+  .document-content strong {
+    @apply font-bold text-foreground;
+  }
+  
+  .document-content em {
+    @apply italic text-foreground;
+  }
+  
+  .document-content br {
+    @apply block mb-2;
+  }
 }
