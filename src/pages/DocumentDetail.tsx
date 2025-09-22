@@ -344,11 +344,11 @@ const DocumentDetail = () => {
                     </div>
                   )}
 
-                  {document.court_category_type && (
+                  {(document.court_category_type || true) && (
                     <div className="flex items-center gap-3 justify-center md:justify-start">
                       <Scale className="w-5 h-5 text-muted-foreground" />
                       <span className="font-medium">Catégorie du tribunal:</span>
-                      <span>{document.court_category_type}</span>
+                      <span>{document.court_category_type || "Non spécifié"}</span>
                     </div>
                   )}
 
