@@ -77,15 +77,6 @@ const CategorieDetail = () => {
     fetchCategoryAndDocuments();
   }, [categoryId]);
 
-  const getEmojiForCategory = (categoryName: string) => {
-    const name = categoryName.toLowerCase();
-    if (name.includes('santé') || name.includes('health')) return '🏥';
-    if (name.includes('justice') || name.includes('legal')) return '⚖️';
-    if (name.includes('enseignement') || name.includes('éducation') || name.includes('education')) return '🎓';
-    if (name.includes('protection') || name.includes('sécurité')) return '🛡️';
-    if (name.includes('civils') || name.includes('politiques')) return '👥';
-    return '📚';
-  };
 
   const getIconForCategory = (categoryName: string) => {
     const name = categoryName.toLowerCase();
@@ -136,7 +127,6 @@ const CategorieDetail = () => {
   }
 
   const Icon = getIconForCategory(category.name);
-  const emoji = getEmojiForCategory(category.name);
 
   return (
     <div className="container mx-auto px-4 py-6">
@@ -181,7 +171,6 @@ const CategorieDetail = () => {
           <div className="absolute inset-0 backdrop-blur-sm bg-background/60 rounded-lg"></div>
           <div className="relative z-10">
           <div className="flex items-center gap-4 mb-4">
-            <div className="text-4xl">{emoji}</div>
             <div 
               className="w-12 h-12 rounded-full flex items-center justify-center"
               style={{ backgroundColor: category.color + '20' }}
