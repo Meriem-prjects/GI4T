@@ -254,7 +254,7 @@ const AdminValidation = () => {
                       </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end" className="bg-background border z-50">
-                      <DropdownMenuItem onClick={() => navigate(`/admin/observatoire/editeur?id=${document.id}`)}>
+                      <DropdownMenuItem onClick={() => navigate(`/admin/observatoire/editeur?doc=${document.id}`)}>
                         <Edit className="w-4 h-4 mr-2" />
                         Éditer
                       </DropdownMenuItem>
