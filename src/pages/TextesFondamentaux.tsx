@@ -10,7 +10,6 @@ import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { supabase } from "@/integrations/supabase/client";
 import { useEffect, useState } from "react";
-import { createCategorySlug } from "@/lib/urlUtils";
 
 interface Category {
   id: string;
@@ -116,9 +115,8 @@ const TextesFondamentaux = () => {
     return '📚';
   };
 
-  const handleExploreCategory = (categoryName: string) => {
-    const categorySlug = createCategorySlug(categoryName);
-    navigate(`/observatoire/categorie/${categorySlug}`);
+  const handleExploreCategory = (categoryId: string) => {
+    navigate(`/observatoire/categorie/${categoryId}`);
   };
 
   const formatDate = (dateString: string) => {
@@ -235,7 +233,7 @@ const TextesFondamentaux = () => {
                           <Button 
                             variant="outline" 
                             className="w-full"
-                            onClick={() => handleExploreCategory(category.name)}
+                            onClick={() => handleExploreCategory(category.id)}
                           >
                             <BookOpen className="w-4 h-4 mr-2" />
                             Explorer

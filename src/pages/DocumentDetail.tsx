@@ -176,15 +176,7 @@ const DocumentDetail = () => {
   const parseContent = (content: string) => {
     if (!content) return [];
     
-    // Check if content contains HTML tags (rich text from editor)
-    const hasHtmlTags = /<[^>]+>/g.test(content);
-    
-    if (hasHtmlTags) {
-      // Content is HTML from rich text editor, return as single HTML element
-      return [{ type: 'html', content: content }];
-    }
-    
-    // Legacy: Simple content parsing to identify headings for plain text
+    // Simple content parsing to identify headings
     const lines = content.split('\n').filter(line => line.trim());
     const parsedContent = [];
     
@@ -425,16 +417,7 @@ const DocumentDetail = () => {
             {contentElements.length > 0 ? (
               <div className="space-y-6">
                 {contentElements.map((element, index) => {
-                  if (element.type === 'html') {
-                    // Render HTML content from rich text editor with proper styling
-                    return (
-                      <div 
-                        key={index} 
-                        className="prose prose-lg max-w-none [&_p]:mb-4 [&_p]:leading-relaxed [&_h1]:text-2xl [&_h1]:font-bold [&_h1]:mb-4 [&_h2]:text-xl [&_h2]:font-semibold [&_h2]:mb-3 [&_h3]:text-lg [&_h3]:font-medium [&_h3]:mb-3 [&_ul]:mb-4 [&_ol]:mb-4 [&_li]:mb-1 [&_blockquote]:border-l-4 [&_blockquote]:border-muted [&_blockquote]:pl-4 [&_blockquote]:italic [&_blockquote]:mb-4"
-                        dangerouslySetInnerHTML={{ __html: element.content }}
-                      />
-                    );
-                  } else if (element.type === 'h1') {
+                  if (element.type === 'h1') {
                     return (
                       <h1 key={index} className="text-2xl font-bold text-foreground border-b pb-2 mb-4">
                         {element.content}
@@ -454,7 +437,7 @@ const DocumentDetail = () => {
                     );
                   } else {
                     return (
-                      <p key={index} className="text-foreground leading-relaxed mb-4 whitespace-pre-wrap">
+                      <p key={index} className="text-foreground leading-relaxed mb-4">
                         {element.content}
                       </p>
                     );

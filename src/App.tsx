@@ -49,7 +49,7 @@ const App = () => (
           <Route element={<ObservatoireLayout />}>
             <Route path="/observatoire/search-results" element={<SearchResults />} />
             <Route path="/observatoire/textes-fondamentaux" element={<TextesFondamentaux />} />
-            <Route path="/observatoire/categorie/:categorySlug" element={<CategorieDetail />} />
+            <Route path="/observatoire/categorie/:categoryId" element={<CategorieDetail />} />
             <Route path="/observatoire/:categorySlug/:documentSlug" element={<DocumentDetail />} />
             <Route path="/observatoire/analyses-opinions" element={<AnalysesOpinions />} />
             <Route path="/observatoire/actualites" element={<Actualites />} />
