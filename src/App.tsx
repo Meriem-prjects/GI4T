@@ -8,7 +8,6 @@ import Observatoire from "./pages/Observatoire";
 import SearchResults from "./pages/SearchResults";
 import NotFound from "./pages/NotFound";
 import TextesFondamentaux from "./pages/TextesFondamentaux";
-import CategorieDetail from "./pages/CategorieDetail";
 import AnalysesOpinions from "./pages/AnalysesOpinions";
 import Actualites from "./pages/Actualites";
 import AccesAuxDroits from "./pages/AccesAuxDroits";
@@ -48,7 +47,6 @@ const App = () => (
           <Route element={<ObservatoireLayout />}>
             <Route path="/observatoire/search-results" element={<SearchResults />} />
             <Route path="/observatoire/textes-fondamentaux" element={<TextesFondamentaux />} />
-            <Route path="/observatoire/categorie/:categoryId" element={<CategorieDetail />} />
             <Route path="/observatoire/analyses-opinions" element={<AnalysesOpinions />} />
             <Route path="/observatoire/actualites" element={<Actualites />} />
           </Route>
