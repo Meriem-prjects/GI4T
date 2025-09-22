@@ -169,7 +169,17 @@ const CategorieDetail = () => {
 
       {/* Category Header - Style boutique */}
       <section className="mb-12">
-        <div className="bg-gradient-to-r from-primary/10 to-primary/5 rounded-lg p-8 mb-8">
+        <div 
+          className="bg-gradient-to-r from-primary/10 to-primary/5 rounded-lg p-8 mb-8 relative overflow-hidden"
+          style={{
+            backgroundImage: 'url(/src/assets/justice-background.jpg)',
+            backgroundSize: 'cover',
+            backgroundPosition: 'center',
+            backgroundRepeat: 'no-repeat'
+          }}
+        >
+          <div className="absolute inset-0 backdrop-blur-sm bg-background/60 rounded-lg"></div>
+          <div className="relative z-10">
           <div className="flex items-center gap-4 mb-4">
             <div className="text-4xl">{emoji}</div>
             <div 
@@ -192,6 +202,7 @@ const CategorieDetail = () => {
             <Badge variant="outline" className="px-4 py-2">
               Droit fondamental
             </Badge>
+          </div>
           </div>
         </div>
       </section>
