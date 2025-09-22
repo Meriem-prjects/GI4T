@@ -129,8 +129,8 @@ const CategorieDetail = () => {
           <p className="text-muted-foreground mb-6">
             La catégorie que vous recherchez n'existe pas ou a été supprimée.
           </p>
-          <Link to="/observatoire/textes-fondamentaux">
-            <Button>Retour aux textes fondamentaux</Button>
+          <Link to="/observatoire/droits-fondamentaux">
+            <Button>Retour aux droits fondamentaux</Button>
           </Link>
         </div>
       </div>
@@ -158,7 +158,7 @@ const CategorieDetail = () => {
           <BreadcrumbSeparator />
           <BreadcrumbItem>
             <BreadcrumbLink asChild>
-              <Link to="/observatoire/textes-fondamentaux">Textes fondamentaux</Link>
+              <Link to="/observatoire/droits-fondamentaux">Droits fondamentaux</Link>
             </BreadcrumbLink>
           </BreadcrumbItem>
           <BreadcrumbSeparator />
@@ -262,7 +262,7 @@ const CategorieDetail = () => {
                     </div>
                     <div className="flex flex-col gap-2 ml-4">
                       <Button size="sm" asChild>
-                        <Link to={`/observatoire/${createCategorySlug(category?.name || '')}/${createDocumentSlug(document.title)}`}>
+                        <Link to={`/observatoire/droits-fondamentaux/${createCategorySlug(category?.name || '')}/${createDocumentSlug(document.title)}`}>
                           <ExternalLink className="w-4 h-4 mr-2" />
                           Consulter
                         </Link>

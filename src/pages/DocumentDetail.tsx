@@ -252,10 +252,10 @@ const DocumentDetail = () => {
           <p className="text-muted-foreground mb-6">
             Le document que vous recherchez n'existe pas ou a été supprimé.
           </p>
-          <Link to="/observatoire/textes-fondamentaux">
+          <Link to="/observatoire/droits-fondamentaux">
             <Button>
               <ArrowLeft className="w-4 h-4 mr-2" />
-              Retour aux textes fondamentaux
+              Retour aux droits fondamentaux
             </Button>
           </Link>
         </div>
@@ -291,7 +291,7 @@ const DocumentDetail = () => {
           <BreadcrumbSeparator />
           <BreadcrumbItem>
             <BreadcrumbLink asChild>
-              <Link to="/observatoire/textes-fondamentaux">Textes fondamentaux</Link>
+              <Link to="/observatoire/droits-fondamentaux">Droits fondamentaux</Link>
             </BreadcrumbLink>
           </BreadcrumbItem>
           <BreadcrumbSeparator />
@@ -299,7 +299,7 @@ const DocumentDetail = () => {
             <>
               <BreadcrumbItem>
                 <BreadcrumbLink asChild>
-                  <Link to={`/observatoire/categorie/${createCategorySlug(category.name)}`}>{category.name}</Link>
+                  <Link to={`/observatoire/droits-fondamentaux/${createCategorySlug(category.name)}`}>{category.name}</Link>
                 </BreadcrumbLink>
               </BreadcrumbItem>
               <BreadcrumbSeparator />

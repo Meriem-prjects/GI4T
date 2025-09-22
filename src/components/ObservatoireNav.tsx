@@ -14,8 +14,8 @@ const ObservatoireNav = () => {
       description: "Recherche avancée"
     },
     {
-      path: "/observatoire/textes-fondamentaux", 
-      label: "Textes fondamentaux",
+      path: "/observatoire/droits-fondamentaux", 
+      label: "Droits fondamentaux",
       icon: BookOpen,
       description: "Textes de référence"
     },

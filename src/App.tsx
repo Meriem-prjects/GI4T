@@ -47,9 +47,9 @@ const App = () => (
           {/* Observatoire interface - Routes spécifiques d'abord */}
           <Route element={<ObservatoireLayout />}>
             <Route path="/observatoire/search-results" element={<SearchResults />} />
-            <Route path="/observatoire/textes-fondamentaux" element={<TextesFondamentaux />} />
-            <Route path="/observatoire/categorie/:categorySlug" element={<CategorieDetail />} />
-            <Route path="/observatoire/:categorySlug/:documentSlug" element={<DocumentDetail />} />
+            <Route path="/observatoire/droits-fondamentaux" element={<TextesFondamentaux />} />
+            <Route path="/observatoire/droits-fondamentaux/:categorySlug" element={<CategorieDetail />} />
+            <Route path="/observatoire/droits-fondamentaux/:categorySlug/:documentSlug" element={<DocumentDetail />} />
             <Route path="/observatoire/analyses-opinions" element={<AnalysesOpinions />} />
             <Route path="/observatoire/actualites" element={<Actualites />} />
           </Route>

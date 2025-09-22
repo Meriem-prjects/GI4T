@@ -118,7 +118,7 @@ const TextesFondamentaux = () => {
 
   const handleExploreCategory = (categoryName: string) => {
     const categorySlug = createCategorySlug(categoryName);
-    navigate(`/observatoire/categorie/${categorySlug}`);
+    navigate(`/observatoire/droits-fondamentaux/${categorySlug}`);
   };
 
   const formatDate = (dateString: string) => {

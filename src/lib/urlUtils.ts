@@ -37,5 +37,13 @@ export const createDocumentSlug = (documentTitle: string): string => {
 export const createDocumentPath = (categoryName: string, documentTitle: string): string => {
   const categorySlug = createCategorySlug(categoryName);
   const documentSlug = createDocumentSlug(documentTitle);
-  return `/observatoire/${categorySlug}/${documentSlug}`;
+  return `/observatoire/droits-fondamentaux/${categorySlug}/${documentSlug}`;
+};
+
+/**
+ * Creates category URL path
+ */
+export const createCategoryPath = (categoryName: string): string => {
+  const categorySlug = createCategorySlug(categoryName);
+  return `/observatoire/droits-fondamentaux/${categorySlug}`;
 };
