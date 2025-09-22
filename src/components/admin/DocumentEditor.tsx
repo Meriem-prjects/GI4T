@@ -13,6 +13,7 @@ import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import PDFViewer from './PDFViewer';
+import RichTextEditor from './RichTextEditor';
 
 interface PageContent {
   pageNumber: number;
@@ -1173,15 +1174,16 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
                   <h4 className="font-semibold text-base" dir={currentLanguage === 'ar' ? 'rtl' : 'ltr'}>
                     {currentLanguage === 'ar' && editedData.title_ar ? editedData.title_ar : editedData.title}
                   </h4>
-                  <div className="whitespace-pre-wrap text-sm leading-relaxed" dir={currentLanguage === 'ar' ? 'rtl' : 'ltr'}>
-                    {formatContent(getCurrentContent())}
-                  </div>
+                  <div 
+                    className="prose prose-sm text-sm leading-relaxed" 
+                    dir={currentLanguage === 'ar' ? 'rtl' : 'ltr'}
+                    dangerouslySetInnerHTML={{ __html: getCurrentContent() }}
+                  />
                 </div>
               ) : (
-                <Textarea
-                  value={getCurrentContent()}
-                  onChange={(e) => {
-                    const newContent = e.target.value;
+                <RichTextEditor
+                  content={getCurrentContent()}
+                  onChange={(newContent) => {
                     if (currentLanguage === editedData.language) {
                       // Editing primary language content
                       setEditedData(prev => ({
@@ -1195,7 +1197,7 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
                       setHasChanges(true);
                     }
                   }}
-                  className="min-h-[600px] font-mono text-sm"
+                  className="min-h-[600px]"
                   dir={currentLanguage === 'ar' ? 'rtl' : 'ltr'}
                   placeholder={currentLanguage === editedData.language ? 
                     "Contenu original du document" : 

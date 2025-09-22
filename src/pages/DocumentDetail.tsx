@@ -176,7 +176,15 @@ const DocumentDetail = () => {
   const parseContent = (content: string) => {
     if (!content) return [];
     
-    // Simple content parsing to identify headings
+    // Check if content contains HTML tags (rich text from editor)
+    const hasHtmlTags = /<[^>]+>/g.test(content);
+    
+    if (hasHtmlTags) {
+      // Content is HTML from rich text editor, return as single HTML element
+      return [{ type: 'html', content: content }];
+    }
+    
+    // Legacy: Simple content parsing to identify headings for plain text
     const lines = content.split('\n').filter(line => line.trim());
     const parsedContent = [];
     
@@ -417,7 +425,16 @@ const DocumentDetail = () => {
             {contentElements.length > 0 ? (
               <div className="space-y-6">
                 {contentElements.map((element, index) => {
-                  if (element.type === 'h1') {
+                  if (element.type === 'html') {
+                    // Render HTML content from rich text editor
+                    return (
+                      <div 
+                        key={index} 
+                        className="prose prose-lg max-w-none"
+                        dangerouslySetInnerHTML={{ __html: element.content }}
+                      />
+                    );
+                  } else if (element.type === 'h1') {
                     return (
                       <h1 key={index} className="text-2xl font-bold text-foreground border-b pb-2 mb-4">
                         {element.content}
