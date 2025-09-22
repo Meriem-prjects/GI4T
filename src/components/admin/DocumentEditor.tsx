@@ -45,8 +45,8 @@ interface DocumentData {
   author_ar?: string;
   court?: string;
   court_ar?: string;
-  court_category?: string;
-  court_category_ar?: string;
+  court_category_type?: string;
+  court_category_type_ar?: string;
   court_level?: string;
   court_level_ar?: string;
   case_number?: string;
@@ -298,8 +298,8 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
           author_ar: editedData.author_ar?.trim() || null,
           court: editedData.court?.trim() || null,
           court_ar: editedData.court_ar?.trim() || null,
-          court_category: editedData.court_category?.trim() || null,
-          court_category_ar: editedData.court_category_ar?.trim() || null,
+          court_category_type: editedData.court_category_type?.trim() || null,
+          court_category_type_ar: editedData.court_category_type_ar?.trim() || null,
           court_level: editedData.court_level?.trim() || null,
           court_level_ar: editedData.court_level_ar?.trim() || null,
           case_number: editedData.case_number?.trim() || null,
@@ -816,8 +816,8 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
                         <div>
                           <Label className="text-xs font-medium">Catégorie de tribunal</Label>
                           <Select
-                            value={editedData.court_category || ''}
-                            onValueChange={(value) => setEditedData(prev => ({ ...prev, court_category: value }))}
+                            value={editedData.court_category_type || ''}
+                            onValueChange={(value) => setEditedData(prev => ({ ...prev, court_category_type: value }))}
                           >
                             <SelectTrigger className="mt-1 h-8 bg-background">
                               <SelectValue placeholder="Sélectionner une catégorie" />
@@ -975,8 +975,8 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
                         <div>
                           <Label className="text-xs font-medium">فئة المحكمة</Label>
                           <Select
-                            value={editedData.court_category_ar || ''}
-                            onValueChange={(value) => setEditedData(prev => ({ ...prev, court_category_ar: value }))}
+                            value={editedData.court_category_type_ar || ''}
+                            onValueChange={(value) => setEditedData(prev => ({ ...prev, court_category_type_ar: value }))}
                           >
                             <SelectTrigger className="mt-1 h-8 bg-background" dir="rtl">
                               <SelectValue placeholder="اختر فئة" />
