@@ -202,6 +202,11 @@ const DocumentDetail = () => {
     });
   };
 
+  const capitalizeFirstLetter = (text: string) => {
+    if (!text) return '';
+    return text.charAt(0).toUpperCase() + text.slice(1);
+  };
+
 
   if (loading) {
     return (
@@ -346,7 +351,7 @@ const DocumentDetail = () => {
                     <div className="flex items-center gap-3 justify-center md:justify-start">
                       <Scale className="w-5 h-5 text-muted-foreground" />
                       <span className="font-medium">Catégorie du tribunal:</span>
-                      <span>{document.court_category_type || "Non spécifié"}</span>
+                      <span>{capitalizeFirstLetter(document.court_category_type || "Non spécifié")}</span>
                     </div>
                   )}
 
@@ -354,7 +359,7 @@ const DocumentDetail = () => {
                     <div className="flex items-center gap-3 justify-center md:justify-start">
                       <MapPin className="w-5 h-5 text-muted-foreground" />
                       <span className="font-medium">Niveau de juridiction:</span>
-                      <span>{currentCourtLevel}</span>
+                      <span>{capitalizeFirstLetter(currentCourtLevel)}</span>
                     </div>
                   )}
 
