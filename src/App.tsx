@@ -55,7 +55,7 @@ const App = () => (
           </Route>
           
           {/* Route générale observatoire en dernier */}
-          <Route path="/observatoire/*" element={<Observatoire />} />
+          <Route path="/observatoire" element={<Observatoire />} />
           
           {/* Accès aux droits interface */}
           <Route path="/acces-aux-droits" element={<AccesAuxDroits />} />
