@@ -172,7 +172,7 @@ const CategorieDetail = () => {
         <div 
           className="bg-gradient-to-r from-primary/10 to-primary/5 rounded-lg p-8 mb-8 relative overflow-hidden"
           style={{
-            backgroundImage: 'url(/src/assets/justice-background.jpg)',
+            backgroundImage: 'url(/src/assets/justice-background.webp)',
             backgroundSize: 'cover',
             backgroundPosition: 'center',
             backgroundRepeat: 'no-repeat'
