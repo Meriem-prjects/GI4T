@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import RichTextEditor from './RichTextEditor';
 import { Input } from '@/components/ui/input';
 import { CategoryCombobox } from '@/components/admin/CategoryCombobox';
 import { Textarea } from '@/components/ui/textarea';
@@ -8,7 +9,7 @@ import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Save, Eye, EyeOff, X, AlertTriangle, FileText, ChevronLeft, ChevronRight, BookOpen, Brain, Loader2, CheckCircle, XCircle } from 'lucide-react';
+import { Save, Eye, EyeOff, X, AlertTriangle, FileText, ChevronLeft, ChevronRight, BookOpen, Brain, Loader2, CheckCircle, XCircle, PenTool } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { useSearchParams, useNavigate } from 'react-router-dom';
@@ -94,6 +95,7 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
   const [currentPage, setCurrentPage] = useState(1);
   const [translatedContent, setTranslatedContent] = useState<string>('');
   const [validationRemarks, setValidationRemarks] = useState<string>('');
+  const [useRichEditor, setUseRichEditor] = useState(false);
 
   useEffect(() => {
     setEditedData(documentData);
@@ -579,6 +581,15 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
                 Aperçu
               </>
             )}
+          </Button>
+          
+          <Button
+            variant="outline"
+            onClick={() => setUseRichEditor(!useRichEditor)}
+            title={useRichEditor ? "Basculer vers l'éditeur simple" : "Basculer vers l'éditeur riche"}
+          >
+            <PenTool className="mr-2 h-4 w-4" />
+            {useRichEditor ? 'Éditeur simple' : 'Éditeur riche'}
           </Button>
           
           <Button 
@@ -1177,6 +1188,29 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
                     {formatContent(getCurrentContent())}
                   </div>
                 </div>
+              ) : useRichEditor ? (
+                <RichTextEditor
+                  content={getCurrentContent()}
+                  onChange={(newContent) => {
+                    if (currentLanguage === editedData.language) {
+                      // Editing primary language content
+                      setEditedData(prev => ({
+                        ...prev,
+                        content: newContent,
+                        fullContent: newContent
+                      }));
+                    } else {
+                      // Editing translated content
+                      setTranslatedContent(newContent);
+                      setHasChanges(true);
+                    }
+                  }}
+                  placeholder={currentLanguage === editedData.language ? 
+                    "Contenu du document..." : 
+                    "Contenu traduit..."
+                  }
+                  className="min-h-[600px]"
+                />
               ) : (
                 <Textarea
                   value={getCurrentContent()}
