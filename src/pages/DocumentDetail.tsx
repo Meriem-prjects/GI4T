@@ -26,6 +26,8 @@ interface Document {
   court_level_ar: string;
   court_category: string;
   court_category_ar: string;
+  court_category_type: string;
+  court_category_type_ar: string;
   document_type: string;
   created_at: string;
   status: string;
@@ -342,6 +344,14 @@ const DocumentDetail = () => {
                     </div>
                   )}
 
+                  {document.court_category_type && (
+                    <div className="flex items-center gap-3 justify-center md:justify-start">
+                      <Scale className="w-5 h-5 text-muted-foreground" />
+                      <span className="font-medium">Catégorie du tribunal:</span>
+                      <span>{document.court_category_type}</span>
+                    </div>
+                  )}
+
                   {currentCourtLevel && (
                     <div className="flex items-center gap-3 justify-center md:justify-start">
                       <MapPin className="w-5 h-5 text-muted-foreground" />
@@ -366,7 +376,7 @@ const DocumentDetail = () => {
                   <div className="grid md:grid-cols-2 gap-6">
                     <div className="space-y-2">
                       <h4 className="font-semibold text-sm text-muted-foreground uppercase tracking-wide">
-                        Plaignants
+                        Demandeur / Plaignant
                       </h4>
                       <div className="space-y-1">
                         {document.plaintiff && (
@@ -378,7 +388,7 @@ const DocumentDetail = () => {
                     
                     <div className="space-y-2">
                       <h4 className="font-semibold text-sm text-muted-foreground uppercase tracking-wide">
-                        Plaignant contre
+                        Défendeur
                       </h4>
                       <div className="space-y-1">
                         {document.defendant && (
