@@ -426,11 +426,11 @@ const DocumentDetail = () => {
               <div className="space-y-6">
                 {contentElements.map((element, index) => {
                   if (element.type === 'html') {
-                    // Render HTML content from rich text editor
+                    // Render HTML content from rich text editor with proper styling
                     return (
                       <div 
                         key={index} 
-                        className="prose prose-lg max-w-none"
+                        className="prose prose-lg max-w-none [&_p]:mb-4 [&_p]:leading-relaxed [&_h1]:text-2xl [&_h1]:font-bold [&_h1]:mb-4 [&_h2]:text-xl [&_h2]:font-semibold [&_h2]:mb-3 [&_h3]:text-lg [&_h3]:font-medium [&_h3]:mb-3 [&_ul]:mb-4 [&_ol]:mb-4 [&_li]:mb-1 [&_blockquote]:border-l-4 [&_blockquote]:border-muted [&_blockquote]:pl-4 [&_blockquote]:italic [&_blockquote]:mb-4"
                         dangerouslySetInnerHTML={{ __html: element.content }}
                       />
                     );
@@ -454,7 +454,7 @@ const DocumentDetail = () => {
                     );
                   } else {
                     return (
-                      <p key={index} className="text-foreground leading-relaxed mb-4">
+                      <p key={index} className="text-foreground leading-relaxed mb-4 whitespace-pre-wrap">
                         {element.content}
                       </p>
                     );
