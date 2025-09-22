@@ -22,11 +22,18 @@ export const renderFormattedContent = (content: string): string => {
     // Process inline formatting (bold and italic)
     let processedLine = line;
     
-    // Bold: **text** (must not conflict with markdown)
-    processedLine = processedLine.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
+    // Bold: **text** - simple approach, process bold first
+    processedLine = processedLine.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
     
-    // Italic: *text* (single asterisk, avoiding conflicts with bold)
-    processedLine = processedLine.replace(/(?<!\*)\*([^*]+)\*(?!\*)/g, '<em>$1</em>');
+    // Italic: *text* - simple approach, but avoid already processed bold text
+    // Split by <strong> tags to avoid processing inside them
+    const parts = processedLine.split(/(<strong>.*?<\/strong>)/);
+    processedLine = parts.map(part => {
+      if (part.startsWith('<strong>')) {
+        return part; // Don't process inside strong tags
+      }
+      return part.replace(/\*(.+?)\*/g, '<em>$1</em>');
+    }).join('');
     
     // If line becomes a heading, don't wrap in paragraph
     if (processedLine.startsWith('<h1>') || processedLine.startsWith('<h2>') || processedLine.startsWith('<h3>')) {
