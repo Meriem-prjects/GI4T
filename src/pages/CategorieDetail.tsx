@@ -35,7 +35,7 @@ interface Document {
 }
 
 const CategorieDetail = () => {
-  const { categoryId } = useParams<{ categoryId: string }>();
+  const { categorySlug } = useParams<{ categorySlug: string }>();
   const [category, setCategory] = useState<Category | null>(null);
   const [documents, setDocuments] = useState<Document[]>([]);
   const [loading, setLoading] = useState(true);
@@ -43,24 +43,32 @@ const CategorieDetail = () => {
 
   useEffect(() => {
     const fetchCategoryAndDocuments = async () => {
-      if (!categoryId) return;
+      if (!categorySlug) return;
       
       try {
-        // Fetch category details
-        const { data: categoryData, error: categoryError } = await supabase
+        // Create slug from category name for comparison
+        const { data: allCategories, error: categoriesError } = await supabase
           .from('categories')
-          .select('*')
-          .eq('id', categoryId)
-          .single();
+          .select('*');
         
-        if (categoryError) throw categoryError;
+        if (categoriesError) throw categoriesError;
+        
+        // Find category by matching slug
+        const categoryData = allCategories?.find(cat => 
+          createCategorySlug(cat.name) === categorySlug
+        );
+        
+        if (!categoryData) {
+          throw new Error('Category not found');
+        }
+        
         setCategory(categoryData);
 
         // Fetch documents for this category
         const { data: documentsData, error: documentsError } = await supabase
           .from('documents')
           .select('*')
-          .eq('category_id', categoryId)
+          .eq('category_id', categoryData.id)
           .in('status', ['published', 'processed'])
           .order('created_at', { ascending: false });
         
@@ -76,7 +84,7 @@ const CategorieDetail = () => {
     };
 
     fetchCategoryAndDocuments();
-  }, [categoryId]);
+  }, [categorySlug]);
 
 
   const getIconForCategory = (categoryName: string) => {
