@@ -216,14 +216,11 @@ const TextesFondamentaux = () => {
                       <Card className="hover:shadow-lg transition-all duration-300 cursor-pointer h-full">
                         <CardHeader>
                           <div className="flex items-center justify-between mb-2">
-                            <div className="flex items-center gap-2">
-                              <div className="text-2xl">{emoji}</div>
-                              <div 
-                                className="w-8 h-8 rounded-full flex items-center justify-center"
-                                style={{ backgroundColor: category.color + '20' }}
-                              >
-                                <Icon className="w-5 h-5" style={{ color: category.color }} />
-                              </div>
+                            <div 
+                              className="w-8 h-8 rounded-full flex items-center justify-center"
+                              style={{ backgroundColor: category.color + '20' }}
+                            >
+                              <Icon className="w-5 h-5" style={{ color: category.color }} />
                             </div>
                             <Badge variant="secondary">Droit fondamental</Badge>
                           </div>
