@@ -43,6 +43,7 @@ interface Category {
 }
 
 const AdminValidation = () => {
+  console.log("AdminValidation component is rendering");
   const [documents, setDocuments] = useState<Document[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
