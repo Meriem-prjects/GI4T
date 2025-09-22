@@ -40,6 +40,10 @@ interface Document {
   category_id: string;
   case_number: string;
   jurisdiction: string;
+  plaintiff?: string;
+  plaintiff_ar?: string;
+  defendant?: string;
+  defendant_ar?: string;
 }
 
 interface Category {
@@ -313,7 +317,7 @@ const DocumentDetail = () => {
                   {category && (
                     <div className="flex items-center gap-3 justify-center md:justify-start">
                       <Scale className="w-5 h-5 text-muted-foreground" />
-                      <span className="font-medium">Catégorie de jurisprudence:</span>
+                      <span className="font-medium">Catégorie de droit fondamental:</span>
                       <Badge variant="secondary" style={{ backgroundColor: category.color + '20', color: category.color }}>
                         {category.name}
                       </Badge>
@@ -341,7 +345,7 @@ const DocumentDetail = () => {
                   {currentCourtLevel && (
                     <div className="flex items-center gap-3 justify-center md:justify-start">
                       <MapPin className="w-5 h-5 text-muted-foreground" />
-                      <span className="font-medium">Niveau du tribunal:</span>
+                      <span className="font-medium">Niveau de juridiction:</span>
                       <span>{currentCourtLevel}</span>
                     </div>
                   )}
@@ -355,6 +359,37 @@ const DocumentDetail = () => {
                   )}
                 </div>
               </div>
+
+              {/* Parties Section - 4 lines, 2 columns */}
+              {(document.plaintiff || document.defendant) && (
+                <div className="mt-6 pt-6 border-t border-border">
+                  <div className="grid md:grid-cols-2 gap-6">
+                    <div className="space-y-2">
+                      <h4 className="font-semibold text-sm text-muted-foreground uppercase tracking-wide">
+                        Plaignants
+                      </h4>
+                      <div className="space-y-1">
+                        {document.plaintiff && (
+                          <div className="text-sm">{document.plaintiff}</div>
+                        )}
+                        {/* Additional plaintiff lines can be added here */}
+                      </div>
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <h4 className="font-semibold text-sm text-muted-foreground uppercase tracking-wide">
+                        Plaignant contre
+                      </h4>
+                      <div className="space-y-1">
+                        {document.defendant && (
+                          <div className="text-sm">{document.defendant}</div>
+                        )}
+                        {/* Additional defendant lines can be added here */}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
 
             {/* Action Buttons */}
