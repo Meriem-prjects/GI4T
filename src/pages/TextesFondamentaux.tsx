@@ -1,11 +1,13 @@
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Breadcrumb, BreadcrumbList, BreadcrumbItem, BreadcrumbLink, BreadcrumbPage, BreadcrumbSeparator } from "@/components/ui/breadcrumb";
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel";
+import { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from "@/components/ui/pagination";
 import { FileText, BookOpen, Scale, Users, Download, ExternalLink, Heart, ShieldCheck, GraduationCap, Search } from "lucide-react";
 import { Input } from "@/components/ui/input";
+import { Skeleton } from "@/components/ui/skeleton";
 import { supabase } from "@/integrations/supabase/client";
 import { useEffect, useState } from "react";
 
@@ -18,10 +20,31 @@ interface Category {
   color: string;
 }
 
+interface Document {
+  id: string;
+  title: string;
+  title_ar: string;
+  summary: string;
+  summary_ar: string;
+  created_at: string;
+  status: string;
+  file_url: string;
+  pdf_url: string;
+  page_count: number;
+  keywords: string[];
+  document_type: string;
+  year: number;
+}
+
 const TextesFondamentaux = () => {
+  const navigate = useNavigate();
   const [categories, setCategories] = useState<Category[]>([]);
+  const [documents, setDocuments] = useState<Document[]>([]);
   const [loading, setLoading] = useState(true);
+  const [documentsLoading, setDocumentsLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+  const documentsPerPage = 5;
 
   useEffect(() => {
     const fetchCategories = async () => {
@@ -51,6 +74,27 @@ const TextesFondamentaux = () => {
     fetchCategories();
   }, []);
 
+  useEffect(() => {
+    const fetchDocuments = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('documents')
+          .select('*')
+          .in('status', ['published', 'processed'])
+          .order('created_at', { ascending: false });
+        
+        if (error) throw error;
+        setDocuments(data || []);
+      } catch (error) {
+        console.error('Error fetching documents:', error);
+      } finally {
+        setDocumentsLoading(false);
+      }
+    };
+
+    fetchDocuments();
+  }, []);
+
   const getIconForCategory = (categoryName: string) => {
     const name = categoryName.toLowerCase();
     if (name.includes('santé') || name.includes('health')) return Heart;
@@ -61,6 +105,28 @@ const TextesFondamentaux = () => {
     return BookOpen;
   };
 
+  const getEmojiForCategory = (categoryName: string) => {
+    const name = categoryName.toLowerCase();
+    if (name.includes('santé') || name.includes('health')) return '🏥';
+    if (name.includes('justice') || name.includes('legal')) return '⚖️';
+    if (name.includes('enseignement') || name.includes('éducation') || name.includes('education')) return '🎓';
+    if (name.includes('protection') || name.includes('sécurité')) return '🛡️';
+    if (name.includes('civils') || name.includes('politiques')) return '👥';
+    return '📚';
+  };
+
+  const handleExploreCategory = (categoryId: string) => {
+    navigate(`/observatoire/categorie/${categoryId}`);
+  };
+
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString('fr-FR', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
+    });
+  };
+
   const filteredCategories = categories.filter(category =>
     category.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
     category.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -68,38 +134,18 @@ const TextesFondamentaux = () => {
     (category.description_ar && category.description_ar.toLowerCase().includes(searchTerm.toLowerCase()))
   );
 
-  const fundamentalTexts = [
-    {
-      id: 1,
-      title: "Constitution de la République Tunisienne",
-      description: "Texte constitutionnel adopté le 27 janvier 2014, garantissant les droits et libertés fondamentaux",
-      category: "Constitution",
-      date: "27 janvier 2014",
-      status: "En vigueur",
-      articles: 149,
-      tags: ["Droits fondamentaux", "Constitution", "République"]
-    },
-    {
-      id: 2,
-      title: "Code des Droits de l'Homme",
-      description: "Ensemble des dispositions relatives à la protection des droits de l'homme en Tunisie",
-      category: "Code",
-      date: "15 mars 2022", 
-      status: "En vigueur",
-      articles: 245,
-      tags: ["Droits de l'homme", "Protection", "Libertés"]
-    },
-    {
-      id: 3,
-      title: "Loi Organique sur l'Accès à l'Information",
-      description: "Loi garantissant le droit d'accès à l'information publique pour tous les citoyens",
-      category: "Loi Organique",
-      date: "24 mars 2016",
-      status: "En vigueur", 
-      articles: 89,
-      tags: ["Information", "Transparence", "Accès public"]
-    }
-  ];
+  // Pagination logic
+  const totalPages = Math.ceil(documents.length / documentsPerPage);
+  const startIndex = (currentPage - 1) * documentsPerPage;
+  const endIndex = startIndex + documentsPerPage;
+  const currentDocuments = documents.slice(startIndex, endIndex);
+
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
+    // Scroll to top of documents section
+    document.getElementById('textes-reference')?.scrollIntoView({ behavior: 'smooth' });
+  };
+
 
 
   return (
@@ -164,16 +210,20 @@ const TextesFondamentaux = () => {
               <CarouselContent className="-ml-2 md:-ml-4">
                 {filteredCategories.map((category) => {
                   const Icon = getIconForCategory(category.name);
+                  const emoji = getEmojiForCategory(category.name);
                   return (
                     <CarouselItem key={category.id} className="pl-2 md:pl-4 md:basis-1/3">
                       <Card className="hover:shadow-lg transition-all duration-300 cursor-pointer h-full">
                         <CardHeader>
                           <div className="flex items-center justify-between mb-2">
-                            <div 
-                              className="w-8 h-8 rounded-full flex items-center justify-center"
-                              style={{ backgroundColor: category.color + '20' }}
-                            >
-                              <Icon className="w-5 h-5" style={{ color: category.color }} />
+                            <div className="flex items-center gap-2">
+                              <div className="text-2xl">{emoji}</div>
+                              <div 
+                                className="w-8 h-8 rounded-full flex items-center justify-center"
+                                style={{ backgroundColor: category.color + '20' }}
+                              >
+                                <Icon className="w-5 h-5" style={{ color: category.color }} />
+                              </div>
                             </div>
                             <Badge variant="secondary">Droit fondamental</Badge>
                           </div>
@@ -183,7 +233,11 @@ const TextesFondamentaux = () => {
                           </CardDescription>
                         </CardHeader>
                         <CardContent>
-                          <Button variant="outline" className="w-full">
+                          <Button 
+                            variant="outline" 
+                            className="w-full"
+                            onClick={() => handleExploreCategory(category.id)}
+                          >
                             <BookOpen className="w-4 h-4 mr-2" />
                             Explorer
                           </Button>
@@ -209,53 +263,137 @@ const TextesFondamentaux = () => {
           )}
         </section>
 
-        {/* Textes fondamentaux */}
-        <section>
+        {/* Textes de référence */}
+        <section id="textes-reference">
           <h2 className="text-2xl font-bold mb-6">Textes de Référence</h2>
-          <div className="space-y-6">
-            {fundamentalTexts.map((text) => (
-              <Card key={text.id} className="hover:shadow-lg transition-all duration-300">
-                <CardHeader>
-                  <div className="flex items-start justify-between">
-                    <div className="flex-1">
-                      <div className="flex items-center gap-3 mb-2">
-                        <FileText className="w-5 h-5 text-primary" />
-                        <Badge variant="outline">{text.category}</Badge>
-                        <Badge variant="secondary" className="bg-green-100 text-green-800">
-                          {text.status}
-                        </Badge>
+          
+          {documentsLoading ? (
+            <div className="space-y-6">
+              {[1, 2, 3, 4, 5].map((i) => (
+                <Skeleton key={i} className="h-40 w-full" />
+              ))}
+            </div>
+          ) : documents.length === 0 ? (
+            <div className="text-center py-12">
+              <FileText className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
+              <h3 className="text-xl font-semibold mb-2">Aucun document disponible</h3>
+              <p className="text-muted-foreground">
+                Il n'y a actuellement aucun document publié.
+              </p>
+            </div>
+          ) : (
+            <>
+              <div className="space-y-6 mb-8">
+                {currentDocuments.map((document) => (
+                  <Card key={document.id} className="hover:shadow-lg transition-all duration-300">
+                    <CardHeader>
+                      <div className="flex items-start justify-between">
+                        <div className="flex-1">
+                          <div className="flex items-center gap-3 mb-2">
+                            <FileText className="w-5 h-5 text-primary" />
+                            {document.document_type && (
+                              <Badge variant="outline">{document.document_type}</Badge>
+                            )}
+                            <Badge variant="secondary" className="bg-green-100 text-green-800">
+                              Publié
+                            </Badge>
+                            {document.year && (
+                              <Badge variant="outline">{document.year}</Badge>
+                            )}
+                          </div>
+                          <CardTitle className="text-xl mb-2">{document.title}</CardTitle>
+                          {document.summary && (
+                            <CardDescription className="text-base mb-3">
+                              {document.summary}
+                            </CardDescription>
+                          )}
+                          <div className="flex items-center gap-4 text-sm text-muted-foreground mb-3">
+                            <span>Publié le {formatDate(document.created_at)}</span>
+                            {document.page_count && (
+                              <span>• {document.page_count} page{document.page_count > 1 ? 's' : ''}</span>
+                            )}
+                          </div>
+                          {document.keywords && document.keywords.length > 0 && (
+                            <div className="flex flex-wrap gap-2">
+                              {document.keywords.slice(0, 5).map((keyword) => (
+                                <Badge key={keyword} variant="outline" className="text-xs">
+                                  {keyword}
+                                </Badge>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                        <div className="flex flex-col gap-2 ml-4">
+                          {document.file_url && (
+                            <Button size="sm" asChild>
+                              <a href={document.file_url} target="_blank" rel="noopener noreferrer">
+                                <ExternalLink className="w-4 h-4 mr-2" />
+                                Consulter
+                              </a>
+                            </Button>
+                          )}
+                          {document.pdf_url && (
+                            <Button variant="outline" size="sm" asChild>
+                              <a href={document.pdf_url} download>
+                                <Download className="w-4 h-4 mr-2" />
+                                Télécharger
+                              </a>
+                            </Button>
+                          )}
+                        </div>
                       </div>
-                      <CardTitle className="text-xl mb-2">{text.title}</CardTitle>
-                      <CardDescription className="text-base mb-3">
-                        {text.description}
-                      </CardDescription>
-                      <div className="flex items-center gap-4 text-sm text-muted-foreground mb-3">
-                        <span>Adopté le {text.date}</span>
-                        <span>• {text.articles} articles</span>
-                      </div>
-                      <div className="flex flex-wrap gap-2">
-                        {text.tags.map((tag) => (
-                          <Badge key={tag} variant="outline" className="text-xs">
-                            {tag}
-                          </Badge>
-                        ))}
-                      </div>
-                    </div>
-                    <div className="flex flex-col gap-2 ml-4">
-                      <Button size="sm">
-                        <ExternalLink className="w-4 h-4 mr-2" />
-                        Consulter
-                      </Button>
-                      <Button variant="outline" size="sm">
-                        <Download className="w-4 h-4 mr-2" />
-                        Télécharger
-                      </Button>
-                    </div>
-                  </div>
-                </CardHeader>
-              </Card>
-            ))}
-          </div>
+                    </CardHeader>
+                  </Card>
+                ))}
+              </div>
+
+              {/* Pagination */}
+              {totalPages > 1 && (
+                <Pagination className="justify-center">
+                  <PaginationContent>
+                    {currentPage > 1 && (
+                      <PaginationItem>
+                        <PaginationPrevious 
+                          href="#"
+                          onClick={(e) => {
+                            e.preventDefault();
+                            handlePageChange(currentPage - 1);
+                          }}
+                        />
+                      </PaginationItem>
+                    )}
+                    
+                    {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+                      <PaginationItem key={page}>
+                        <PaginationLink
+                          href="#"
+                          onClick={(e) => {
+                            e.preventDefault();
+                            handlePageChange(page);
+                          }}
+                          isActive={currentPage === page}
+                        >
+                          {page}
+                        </PaginationLink>
+                      </PaginationItem>
+                    ))}
+
+                    {currentPage < totalPages && (
+                      <PaginationItem>
+                        <PaginationNext 
+                          href="#"
+                          onClick={(e) => {
+                            e.preventDefault();
+                            handlePageChange(currentPage + 1);
+                          }}
+                        />
+                      </PaginationItem>
+                    )}
+                  </PaginationContent>
+                </Pagination>
+              )}
+            </>
+          )}
         </section>
       </div>
   );
