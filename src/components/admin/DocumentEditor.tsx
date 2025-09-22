@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import RichTextEditor from './RichTextEditor';
+import SimpleTextEditor from './SimpleTextEditor';
 import { Input } from '@/components/ui/input';
 import { CategoryCombobox } from '@/components/admin/CategoryCombobox';
 import { Textarea } from '@/components/ui/textarea';
@@ -9,11 +9,12 @@ import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Save, Eye, EyeOff, X, AlertTriangle, FileText, ChevronLeft, ChevronRight, BookOpen, Brain, Loader2, CheckCircle, XCircle, PenTool } from 'lucide-react';
+import { Save, Eye, EyeOff, X, AlertTriangle, FileText, ChevronLeft, ChevronRight, BookOpen, Brain, Loader2, CheckCircle, XCircle } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import PDFViewer from './PDFViewer';
+import { renderFormattedContent, formatContent } from '@/utils/contentFormatter';
 
 interface PageContent {
   pageNumber: number;
@@ -95,7 +96,6 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
   const [currentPage, setCurrentPage] = useState(1);
   const [translatedContent, setTranslatedContent] = useState<string>('');
   const [validationRemarks, setValidationRemarks] = useState<string>('');
-  const [useRichEditor, setUseRichEditor] = useState(false);
 
   useEffect(() => {
     setEditedData(documentData);
@@ -495,10 +495,6 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
     }
   };
 
-  const formatContent = (content: string) => {
-    // Only normalize CRLF to LF, preserve line breaks
-    return content.replace(/\r\n/g, '\n');
-  };
 
   const getStorageUrl = (path: string) => {
     if (!path) return '';
@@ -583,14 +579,6 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
             )}
           </Button>
           
-          <Button
-            variant="outline"
-            onClick={() => setUseRichEditor(!useRichEditor)}
-            title={useRichEditor ? "Basculer vers l'éditeur simple" : "Basculer vers l'éditeur riche"}
-          >
-            <PenTool className="mr-2 h-4 w-4" />
-            {useRichEditor ? 'Éditeur simple' : 'Éditeur riche'}
-          </Button>
           
           <Button 
             onClick={runAIAnalysis} 
@@ -1184,12 +1172,14 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
                   <h4 className="font-semibold text-base" dir={currentLanguage === 'ar' ? 'rtl' : 'ltr'}>
                     {currentLanguage === 'ar' && editedData.title_ar ? editedData.title_ar : editedData.title}
                   </h4>
-                  <div className="whitespace-pre-wrap text-sm leading-relaxed" dir={currentLanguage === 'ar' ? 'rtl' : 'ltr'}>
-                    {formatContent(getCurrentContent())}
-                  </div>
+                  <div 
+                    className="prose prose-sm max-w-none text-sm leading-relaxed [&>h1]:text-xl [&>h1]:font-bold [&>h1]:mb-3 [&>h2]:text-lg [&>h2]:font-semibold [&>h2]:mb-2 [&>h3]:text-base [&>h3]:font-medium [&>h3]:mb-2 [&>p]:mb-2 [&>br]:block [&>br]:content-[''] [&>br]:mt-2" 
+                    dir={currentLanguage === 'ar' ? 'rtl' : 'ltr'}
+                    dangerouslySetInnerHTML={{ __html: renderFormattedContent(getCurrentContent()) }}
+                  />
                 </div>
-              ) : useRichEditor ? (
-                <RichTextEditor
+              ) : (
+                <SimpleTextEditor
                   content={getCurrentContent()}
                   onChange={(newContent) => {
                     if (currentLanguage === editedData.language) {
@@ -1206,34 +1196,11 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
                     }
                   }}
                   placeholder={currentLanguage === editedData.language ? 
-                    "Contenu du document..." : 
-                    "Contenu traduit..."
+                    "Contenu du document... Utilisez # pour les titres, **gras**, *italique*" : 
+                    "Contenu traduit... Utilisez # pour les titres, **gras**, *italique*"
                   }
                   className="min-h-[600px]"
-                />
-              ) : (
-                <Textarea
-                  value={getCurrentContent()}
-                  onChange={(e) => {
-                    const newContent = e.target.value;
-                    if (currentLanguage === editedData.language) {
-                      // Editing primary language content
-                      setEditedData(prev => ({
-                        ...prev,
-                        content: newContent,
-                        fullContent: newContent
-                      }));
-                    } else {
-                      // Editing translated content
-                      setTranslatedContent(newContent);
-                      setHasChanges(true);
-                    }
-                  }}
-                  className="min-h-[600px] font-mono text-sm"
                   dir={currentLanguage === 'ar' ? 'rtl' : 'ltr'}
-                  placeholder={currentLanguage === editedData.language ? 
-                    "Contenu original du document" : 
-                    "Contenu traduit (utilisez l'analyse IA pour générer automatiquement)"}
                 />
               )}
             </Card>
