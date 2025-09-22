@@ -35,7 +35,7 @@ interface Document {
 }
 
 const CategorieDetail = () => {
-  const { categoryId } = useParams<{ categoryId: string }>();
+  const { categorySlug } = useParams<{ categorySlug: string }>();
   const [category, setCategory] = useState<Category | null>(null);
   const [documents, setDocuments] = useState<Document[]>([]);
   const [loading, setLoading] = useState(true);
@@ -43,24 +43,34 @@ const CategorieDetail = () => {
 
   useEffect(() => {
     const fetchCategoryAndDocuments = async () => {
-      if (!categoryId) return;
+      if (!categorySlug) return;
       
       try {
-        // Fetch category details
-        const { data: categoryData, error: categoryError } = await supabase
+        // Fetch all categories to find the one matching the slug
+        const { data: allCategories, error: categoriesError } = await supabase
           .from('categories')
-          .select('*')
-          .eq('id', categoryId)
-          .single();
+          .select('*');
         
-        if (categoryError) throw categoryError;
-        setCategory(categoryData);
+        if (categoriesError) throw categoriesError;
+        
+        // Find category by matching slug
+        const category = allCategories?.find(cat => 
+          createCategorySlug(cat.name) === categorySlug
+        );
+        
+        if (!category) {
+          console.error('Category not found for slug:', categorySlug);
+          setLoading(false);
+          return;
+        }
+        
+        setCategory(category);
 
         // Fetch documents for this category
         const { data: documentsData, error: documentsError } = await supabase
           .from('documents')
           .select('*')
-          .eq('category_id', categoryId)
+          .eq('category_id', category.id)
           .in('status', ['published', 'processed'])
           .order('created_at', { ascending: false });
         
@@ -76,7 +86,7 @@ const CategorieDetail = () => {
     };
 
     fetchCategoryAndDocuments();
-  }, [categoryId]);
+  }, [categorySlug]);
 
 
   const getIconForCategory = (categoryName: string) => {
