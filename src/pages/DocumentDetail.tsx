@@ -282,7 +282,32 @@ const DocumentDetail = () => {
   const currentSummary = isArabicContent && document.summary_ar ? document.summary_ar : document.summary;
   const currentAuthor = isArabicContent && document.author_ar ? document.author_ar : document.author;
   const currentCourt = isArabicContent && document.court_ar ? document.court_ar : document.court;
-  const currentCourtLevel = isArabicContent && document.court_level_ar ? document.court_level_ar : document.court_level;
+  
+  // Format court level: replace underscores with spaces and translate for Arabic
+  const formatCourtLevel = (level: string | null) => {
+    if (!level) return null;
+    
+    const formatted = level.replace(/_/g, ' ');
+    
+    if (isArabicContent) {
+      // Translate common court levels to Arabic
+      const translations: { [key: string]: string } = {
+        'premiere instance': 'الدرجة الأولى',
+        'première instance': 'الدرجة الأولى',
+        'appel': 'الاستئناف',
+        'cassation': 'التعقيب',
+        'cour suprême': 'المحكمة العليا',
+        'cour supreme': 'المحكمة العليا'
+      };
+      
+      const lowerCaseFormatted = formatted.toLowerCase();
+      return translations[lowerCaseFormatted] || formatted;
+    }
+    
+    return formatted;
+  };
+  
+  const currentCourtLevel = formatCourtLevel(isArabicContent && document.court_level_ar ? document.court_level_ar : document.court_level);
 
   return (
     <div className="container mx-auto px-4 py-6">
@@ -390,7 +415,7 @@ const DocumentDetail = () => {
                     <div className={`flex items-center gap-3 ${isArabicContent ? 'justify-end flex-row-reverse' : 'justify-center md:justify-start'}`}>
                       <MapPin className="w-5 h-5 text-muted-foreground" />
                       <span className="font-medium">{isArabicContent ? 'مستوى القضاء:' : 'Niveau de juridiction:'}</span>
-                      <span>{capitalizeFirstLetter(currentCourtLevel)}</span>
+                      <span>{currentCourtLevel}</span>
                     </div>
                   )}
 
