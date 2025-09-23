@@ -843,10 +843,10 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
                             <SelectTrigger className="mt-1 h-8 bg-background">
                               <SelectValue placeholder="Sélectionner une catégorie" />
                             </SelectTrigger>
-                            <SelectContent className="bg-background border shadow-lg z-50">
-                              <SelectItem value="civil">Tribunal civil</SelectItem>
-                              <SelectItem value="administratif">Tribunal administratif</SelectItem>
-                            </SelectContent>
+                    <SelectContent className="bg-background border shadow-lg z-50">
+                      <SelectItem value="civil">Civil</SelectItem>
+                      <SelectItem value="administratif">Administratif</SelectItem>
+                    </SelectContent>
                           </Select>
                         </div>
 
@@ -1002,10 +1002,10 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
                             <SelectTrigger className="mt-1 h-8 bg-background" dir="rtl">
                               <SelectValue placeholder="اختر فئة" />
                             </SelectTrigger>
-                            <SelectContent className="bg-background border shadow-lg z-50">
-                              <SelectItem value="civil">محكمة مدنية</SelectItem>
-                              <SelectItem value="administratif">محكمة إدارية</SelectItem>
-                            </SelectContent>
+                             <SelectContent className="bg-background border shadow-lg z-50">
+                               <SelectItem value="مدني">مدني</SelectItem>
+                               <SelectItem value="إداري">إداري</SelectItem>
+                             </SelectContent>
                           </Select>
                         </div>
 
