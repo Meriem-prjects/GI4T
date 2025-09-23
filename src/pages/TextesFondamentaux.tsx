@@ -175,10 +175,9 @@ const TextesFondamentaux = () => {
 
         {/* Hero Section */}
         <section className="text-center mb-12">
-          <h1 className="text-3xl md:text-4xl font-bold mb-4">Textes Fondamentaux</h1>
+          <h1 className="text-3xl md:text-4xl font-bold mb-4">Textes de jurisprudence des droits fondamentaux en Tunisie</h1>
           <p className="text-lg text-muted-foreground max-w-3xl mx-auto">
-            Découvrez les textes juridiques fondamentaux qui garantissent vos droits et libertés en Tunisie. 
-            Constitution, lois organiques et codes essentiels expliqués et analysés.
+            Explorez la jurisprudence tunisienne en matière de droits fondamentaux à travers une collection complète de décisions judiciaires, d'analyses et de textes de référence qui façonnent la protection des libertés et des droits constitutionnels en Tunisie.
           </p>
         </section>
 
@@ -214,35 +213,35 @@ const TextesFondamentaux = () => {
                   const Icon = getIconForCategory(category.name);
                   const emoji = getEmojiForCategory(category.name);
                   return (
-                    <CarouselItem key={category.id} className="pl-2 md:pl-4 md:basis-1/3">
-                      <Card className="hover:shadow-lg transition-all duration-300 cursor-pointer h-full">
-                        <CardHeader>
-                          <div className="flex items-center justify-between mb-2">
-                            <div 
-                              className="w-8 h-8 rounded-full flex items-center justify-center"
-                              style={{ backgroundColor: category.color + '20' }}
-                            >
-                              <Icon className="w-5 h-5" style={{ color: category.color }} />
-                            </div>
-                            <Badge variant="secondary">Droit fondamental</Badge>
-                          </div>
-                          <CardTitle className="text-lg">{category.name}</CardTitle>
-                          <CardDescription className="line-clamp-2">
-                            {category.description}
-                          </CardDescription>
-                        </CardHeader>
-                        <CardContent>
-                          <Button 
-                            variant="outline" 
-                            className="w-full"
-                            onClick={() => handleExploreCategory(category.name)}
-                          >
-                            <BookOpen className="w-4 h-4 mr-2" />
-                            Explorer
-                          </Button>
-                        </CardContent>
-                      </Card>
-                    </CarouselItem>
+                     <CarouselItem key={category.id} className="pl-2 md:pl-4 md:basis-1/3">
+                       <Card className="hover:shadow-lg transition-all duration-300 cursor-pointer h-[280px] flex flex-col">
+                         <CardHeader className="flex-1">
+                           <div className="flex items-center justify-between mb-2">
+                             <div 
+                               className="w-8 h-8 rounded-full flex items-center justify-center"
+                               style={{ backgroundColor: category.color + '20' }}
+                             >
+                               <Icon className="w-5 h-5" style={{ color: category.color }} />
+                             </div>
+                             <Badge variant="secondary">Droit fondamental</Badge>
+                           </div>
+                           <CardTitle className="text-lg mb-2">{category.name}</CardTitle>
+                           <CardDescription className="line-clamp-2 text-sm leading-relaxed">
+                             {category.description}
+                           </CardDescription>
+                         </CardHeader>
+                         <CardContent className="pt-0">
+                           <Button 
+                             variant="outline" 
+                             className="w-full"
+                             onClick={() => handleExploreCategory(category.name)}
+                           >
+                             <BookOpen className="w-4 h-4 mr-2" />
+                             Explorer
+                           </Button>
+                         </CardContent>
+                       </Card>
+                     </CarouselItem>
                   );
                 })}
               </CarouselContent>
