@@ -243,7 +243,7 @@ const TextesFondamentaux = () => {
                             {document.year && <Badge variant="outline">{document.year}</Badge>}
                           </div>
                           <CardTitle className="text-xl mb-2">{document.title}</CardTitle>
-                          {document.summary && <CardDescription className="text-base mb-3">
+                          {document.summary && <CardDescription className="text-base mb-3 line-clamp-2">
                               {document.summary}
                             </CardDescription>}
                           <div className="flex items-center gap-4 text-sm text-muted-foreground mb-3">
