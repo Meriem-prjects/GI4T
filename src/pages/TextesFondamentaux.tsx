@@ -11,7 +11,6 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { supabase } from "@/integrations/supabase/client";
 import { useEffect, useState } from "react";
 import { createCategorySlug } from "@/lib/urlUtils";
-
 interface Category {
   id: string;
   name: string;
@@ -20,7 +19,6 @@ interface Category {
   description_ar: string;
   color: string;
 }
-
 interface Document {
   id: string;
   title: string;
@@ -36,7 +34,6 @@ interface Document {
   document_type: string;
   year: number;
 }
-
 const TextesFondamentaux = () => {
   const navigate = useNavigate();
   const [categories, setCategories] = useState<Category[]>([]);
@@ -46,24 +43,21 @@ const TextesFondamentaux = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const documentsPerPage = 5;
-
   useEffect(() => {
     const fetchCategories = async () => {
       try {
-        const { data, error } = await supabase
-          .from('categories')
-          .select('*')
-          .order('name');
-        
+        const {
+          data,
+          error
+        } = await supabase.from('categories').select('*').order('name');
         if (error) throw error;
-        
+
         // Put "Droit à la santé" first, then sort the rest
         const sortedCategories = data?.sort((a, b) => {
           if (a.name === "Droit à la santé") return -1;
           if (b.name === "Droit à la santé") return 1;
           return a.name.localeCompare(b.name);
         }) || [];
-        
         setCategories(sortedCategories);
       } catch (error) {
         console.error('Error fetching categories:', error);
@@ -71,19 +65,17 @@ const TextesFondamentaux = () => {
         setLoading(false);
       }
     };
-
     fetchCategories();
   }, []);
-
   useEffect(() => {
     const fetchDocuments = async () => {
       try {
-        const { data, error } = await supabase
-          .from('documents')
-          .select('*')
-          .in('status', ['published', 'processed'])
-          .order('created_at', { ascending: false });
-        
+        const {
+          data,
+          error
+        } = await supabase.from('documents').select('*').in('status', ['published', 'processed']).order('created_at', {
+          ascending: false
+        });
         if (error) throw error;
         setDocuments(data || []);
       } catch (error) {
@@ -92,10 +84,8 @@ const TextesFondamentaux = () => {
         setDocumentsLoading(false);
       }
     };
-
     fetchDocuments();
   }, []);
-
   const getIconForCategory = (categoryName: string) => {
     const name = categoryName.toLowerCase();
     if (name.includes('santé') || name.includes('health')) return Heart;
@@ -105,7 +95,6 @@ const TextesFondamentaux = () => {
     if (name.includes('civils') || name.includes('politiques')) return Users;
     return BookOpen;
   };
-
   const getEmojiForCategory = (categoryName: string) => {
     const name = categoryName.toLowerCase();
     if (name.includes('santé') || name.includes('health')) return '🏥';
@@ -115,12 +104,10 @@ const TextesFondamentaux = () => {
     if (name.includes('civils') || name.includes('politiques')) return '👥';
     return '📚';
   };
-
   const handleExploreCategory = (categoryName: string) => {
     const categorySlug = createCategorySlug(categoryName);
     navigate(`/observatoire/droits-fondamentaux/${categorySlug}`);
   };
-
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('fr-FR', {
       year: 'numeric',
@@ -128,30 +115,21 @@ const TextesFondamentaux = () => {
       day: 'numeric'
     });
   };
-
-  const filteredCategories = categories.filter(category =>
-    category.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    category.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    (category.name_ar && category.name_ar.includes(searchTerm)) ||
-    (category.description_ar && category.description_ar.toLowerCase().includes(searchTerm.toLowerCase()))
-  );
+  const filteredCategories = categories.filter(category => category.name.toLowerCase().includes(searchTerm.toLowerCase()) || category.description.toLowerCase().includes(searchTerm.toLowerCase()) || category.name_ar && category.name_ar.includes(searchTerm) || category.description_ar && category.description_ar.toLowerCase().includes(searchTerm.toLowerCase()));
 
   // Pagination logic
   const totalPages = Math.ceil(documents.length / documentsPerPage);
   const startIndex = (currentPage - 1) * documentsPerPage;
   const endIndex = startIndex + documentsPerPage;
   const currentDocuments = documents.slice(startIndex, endIndex);
-
   const handlePageChange = (page: number) => {
     setCurrentPage(page);
     // Scroll to top of documents section
-    document.getElementById('textes-reference')?.scrollIntoView({ behavior: 'smooth' });
+    document.getElementById('textes-reference')?.scrollIntoView({
+      behavior: 'smooth'
+    });
   };
-
-
-
-  return (
-    <div className="container mx-auto px-4 py-6">
+  return <div className="container mx-auto px-4 py-6">
         {/* Breadcrumb */}
         <Breadcrumb className="mb-6">
           <BreadcrumbList>
@@ -176,9 +154,7 @@ const TextesFondamentaux = () => {
         {/* Hero Section */}
         <section className="text-center mb-12">
           <h1 className="text-3xl md:text-4xl font-bold mb-4">Textes de jurisprudence des droits fondamentaux en Tunisie</h1>
-          <p className="text-lg text-muted-foreground max-w-3xl mx-auto">
-            Explorez la jurisprudence tunisienne en matière de droits fondamentaux à travers une collection complète de décisions judiciaires, d'analyses et de textes de référence qui façonnent la protection des libertés et des droits constitutionnels en Tunisie.
-          </p>
+          <p className="text-lg text-muted-foreground max-w-3xl mx-auto">Explorez la jurisprudence tunisienne en matière de droits fondamentaux à travers une collection complète de décisions judiciaires, d'analyses et de textes de référence en Tunisie.</p>
         </section>
 
         {/* Droits par catégorie */}
@@ -188,40 +164,29 @@ const TextesFondamentaux = () => {
           {/* Barre de recherche */}
           <div className="relative mb-8 max-w-md">
             <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-            <Input
-              placeholder="Rechercher une catégorie de droit..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10"
-            />
+            <Input placeholder="Rechercher une catégorie de droit..." value={searchTerm} onChange={e => setSearchTerm(e.target.value)} className="pl-10" />
           </div>
 
-          {loading ? (
-            <div className="flex justify-center items-center py-12">
+          {loading ? <div className="flex justify-center items-center py-12">
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-            </div>
-          ) : (
-            <Carousel
-              opts={{
-                align: "start",
-                slidesToScroll: 3,
-              }}
-              className="w-full"
-            >
+            </div> : <Carousel opts={{
+        align: "start",
+        slidesToScroll: 3
+      }} className="w-full">
               <CarouselContent className="-ml-2 md:-ml-4">
-                {filteredCategories.map((category) => {
-                  const Icon = getIconForCategory(category.name);
-                  const emoji = getEmojiForCategory(category.name);
-                  return (
-                     <CarouselItem key={category.id} className="pl-2 md:pl-4 md:basis-1/3">
+                {filteredCategories.map(category => {
+            const Icon = getIconForCategory(category.name);
+            const emoji = getEmojiForCategory(category.name);
+            return <CarouselItem key={category.id} className="pl-2 md:pl-4 md:basis-1/3">
                        <Card className="hover:shadow-lg transition-all duration-300 cursor-pointer h-[280px] flex flex-col">
                          <CardHeader className="flex-1">
                            <div className="flex items-center justify-between mb-2">
-                             <div 
-                               className="w-8 h-8 rounded-full flex items-center justify-center"
-                               style={{ backgroundColor: category.color + '20' }}
-                             >
-                               <Icon className="w-5 h-5" style={{ color: category.color }} />
+                             <div className="w-8 h-8 rounded-full flex items-center justify-center" style={{
+                      backgroundColor: category.color + '20'
+                    }}>
+                               <Icon className="w-5 h-5" style={{
+                        color: category.color
+                      }} />
                              </div>
                              <Badge variant="secondary">Droit fondamental</Badge>
                            </div>
@@ -231,170 +196,116 @@ const TextesFondamentaux = () => {
                            </CardDescription>
                          </CardHeader>
                          <CardContent className="pt-0">
-                           <Button 
-                             variant="outline" 
-                             className="w-full"
-                             onClick={() => handleExploreCategory(category.name)}
-                           >
+                           <Button variant="outline" className="w-full" onClick={() => handleExploreCategory(category.name)}>
                              <BookOpen className="w-4 h-4 mr-2" />
                              Explorer
                            </Button>
                          </CardContent>
                        </Card>
-                     </CarouselItem>
-                  );
-                })}
+                     </CarouselItem>;
+          })}
               </CarouselContent>
-              {filteredCategories.length > 3 && (
-                <>
+              {filteredCategories.length > 3 && <>
                   <CarouselPrevious className="hidden md:flex -left-12" />
                   <CarouselNext className="hidden md:flex -right-12" />
-                </>
-              )}
-            </Carousel>
-          )}
+                </>}
+            </Carousel>}
           
-          {!loading && filteredCategories.length === 0 && searchTerm && (
-            <div className="text-center py-8 text-muted-foreground">
+          {!loading && filteredCategories.length === 0 && searchTerm && <div className="text-center py-8 text-muted-foreground">
               Aucune catégorie trouvée pour "{searchTerm}"
-            </div>
-          )}
+            </div>}
         </section>
 
         {/* Textes de référence */}
         <section id="textes-reference">
           <h2 className="text-2xl font-bold mb-6">Textes de Référence</h2>
           
-          {documentsLoading ? (
-            <div className="space-y-6">
-              {[1, 2, 3, 4, 5].map((i) => (
-                <Skeleton key={i} className="h-40 w-full" />
-              ))}
-            </div>
-          ) : documents.length === 0 ? (
-            <div className="text-center py-12">
+          {documentsLoading ? <div className="space-y-6">
+              {[1, 2, 3, 4, 5].map(i => <Skeleton key={i} className="h-40 w-full" />)}
+            </div> : documents.length === 0 ? <div className="text-center py-12">
               <FileText className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
               <h3 className="text-xl font-semibold mb-2">Aucun document disponible</h3>
               <p className="text-muted-foreground">
                 Il n'y a actuellement aucun document publié.
               </p>
-            </div>
-          ) : (
-            <>
+            </div> : <>
               <div className="space-y-6 mb-8">
-                {currentDocuments.map((document) => (
-                  <Card key={document.id} className="hover:shadow-lg transition-all duration-300">
+                {currentDocuments.map(document => <Card key={document.id} className="hover:shadow-lg transition-all duration-300">
                     <CardHeader>
                       <div className="flex items-start justify-between">
                         <div className="flex-1">
                           <div className="flex items-center gap-3 mb-2">
                             <FileText className="w-5 h-5 text-primary" />
-                            {document.document_type && (
-                              <Badge variant="outline">{document.document_type}</Badge>
-                            )}
+                            {document.document_type && <Badge variant="outline">{document.document_type}</Badge>}
                             <Badge variant="secondary" className="bg-green-100 text-green-800">
                               Publié
                             </Badge>
-                            {document.year && (
-                              <Badge variant="outline">{document.year}</Badge>
-                            )}
+                            {document.year && <Badge variant="outline">{document.year}</Badge>}
                           </div>
                           <CardTitle className="text-xl mb-2">{document.title}</CardTitle>
-                          {document.summary && (
-                            <CardDescription className="text-base mb-3">
+                          {document.summary && <CardDescription className="text-base mb-3">
                               {document.summary}
-                            </CardDescription>
-                          )}
+                            </CardDescription>}
                           <div className="flex items-center gap-4 text-sm text-muted-foreground mb-3">
                             <span>Publié le {formatDate(document.created_at)}</span>
-                            {document.page_count && (
-                              <span>• {document.page_count} page{document.page_count > 1 ? 's' : ''}</span>
-                            )}
+                            {document.page_count && <span>• {document.page_count} page{document.page_count > 1 ? 's' : ''}</span>}
                           </div>
-                          {document.keywords && document.keywords.length > 0 && (
-                            <div className="flex flex-wrap gap-2">
-                              {document.keywords.slice(0, 5).map((keyword) => (
-                                <Badge key={keyword} variant="outline" className="text-xs">
+                          {document.keywords && document.keywords.length > 0 && <div className="flex flex-wrap gap-2">
+                              {document.keywords.slice(0, 5).map(keyword => <Badge key={keyword} variant="outline" className="text-xs">
                                   {keyword}
-                                </Badge>
-                              ))}
-                            </div>
-                          )}
+                                </Badge>)}
+                            </div>}
                         </div>
                         <div className="flex flex-col gap-2 ml-4">
-                          {document.file_url && (
-                            <Button size="sm" asChild>
+                          {document.file_url && <Button size="sm" asChild>
                               <a href={document.file_url} target="_blank" rel="noopener noreferrer">
                                 <ExternalLink className="w-4 h-4 mr-2" />
                                 Consulter
                               </a>
-                            </Button>
-                          )}
-                          {document.pdf_url && (
-                            <Button variant="outline" size="sm" asChild>
+                            </Button>}
+                          {document.pdf_url && <Button variant="outline" size="sm" asChild>
                               <a href={document.pdf_url} download>
                                 <Download className="w-4 h-4 mr-2" />
                                 Télécharger
                               </a>
-                            </Button>
-                          )}
+                            </Button>}
                         </div>
                       </div>
                     </CardHeader>
-                  </Card>
-                ))}
+                  </Card>)}
               </div>
 
               {/* Pagination */}
-              {totalPages > 1 && (
-                <Pagination className="justify-center">
+              {totalPages > 1 && <Pagination className="justify-center">
                   <PaginationContent>
-                    {currentPage > 1 && (
-                      <PaginationItem>
-                        <PaginationPrevious 
-                          href="#"
-                          onClick={(e) => {
-                            e.preventDefault();
-                            handlePageChange(currentPage - 1);
-                          }}
-                        />
-                      </PaginationItem>
-                    )}
+                    {currentPage > 1 && <PaginationItem>
+                        <PaginationPrevious href="#" onClick={e => {
+                e.preventDefault();
+                handlePageChange(currentPage - 1);
+              }} />
+                      </PaginationItem>}
                     
-                    {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
-                      <PaginationItem key={page}>
-                        <PaginationLink
-                          href="#"
-                          onClick={(e) => {
-                            e.preventDefault();
-                            handlePageChange(page);
-                          }}
-                          isActive={currentPage === page}
-                        >
+                    {Array.from({
+              length: totalPages
+            }, (_, i) => i + 1).map(page => <PaginationItem key={page}>
+                        <PaginationLink href="#" onClick={e => {
+                e.preventDefault();
+                handlePageChange(page);
+              }} isActive={currentPage === page}>
                           {page}
                         </PaginationLink>
-                      </PaginationItem>
-                    ))}
+                      </PaginationItem>)}
 
-                    {currentPage < totalPages && (
-                      <PaginationItem>
-                        <PaginationNext 
-                          href="#"
-                          onClick={(e) => {
-                            e.preventDefault();
-                            handlePageChange(currentPage + 1);
-                          }}
-                        />
-                      </PaginationItem>
-                    )}
+                    {currentPage < totalPages && <PaginationItem>
+                        <PaginationNext href="#" onClick={e => {
+                e.preventDefault();
+                handlePageChange(currentPage + 1);
+              }} />
+                      </PaginationItem>}
                   </PaginationContent>
-                </Pagination>
-              )}
-            </>
-          )}
+                </Pagination>}
+            </>}
         </section>
-      </div>
-  );
+      </div>;
 };
-
 export default TextesFondamentaux;
