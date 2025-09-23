@@ -147,3 +147,33 @@ All colors MUST be HSL.
     @apply block mb-2;
   }
 }
+
+/* Document content styling for RTL languages */
+.document-content[dir="rtl"] {
+  direction: rtl;
+  text-align: right;
+}
+
+.document-content[dir="rtl"] h1,
+.document-content[dir="rtl"] h2,
+.document-content[dir="rtl"] h3,
+.document-content[dir="rtl"] h4,
+.document-content[dir="rtl"] h5,
+.document-content[dir="rtl"] h6 {
+  text-align: right;
+}
+
+.document-content[dir="rtl"] p {
+  text-align: right;
+  line-height: 1.8;
+}
+
+.document-content[dir="rtl"] ul,
+.document-content[dir="rtl"] ol {
+  padding-right: 1.5rem;
+  padding-left: 0;
+}
+
+.document-content[dir="rtl"] li {
+  text-align: right;
+}

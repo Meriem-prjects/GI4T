@@ -273,11 +273,16 @@ const DocumentDetail = () => {
   // Use translated content by default, original if showOriginal is true
   const displayContent = showOriginal ? document.content : (document.translated_content || document.content);
   const formattedContent = renderFormattedContent(displayContent);
-  const currentTitle = document.title;
-  const currentSummary = document.summary;
-  const currentAuthor = document.author;
-  const currentCourt = document.court;
-  const currentCourtLevel = document.court_level;
+  
+  // Detect if we're displaying Arabic content
+  const isArabicContent = showOriginal && document.language === 'ar';
+  
+  // Use Arabic fields when displaying Arabic content
+  const currentTitle = isArabicContent && document.title_ar ? document.title_ar : document.title;
+  const currentSummary = isArabicContent && document.summary_ar ? document.summary_ar : document.summary;
+  const currentAuthor = isArabicContent && document.author_ar ? document.author_ar : document.author;
+  const currentCourt = isArabicContent && document.court_ar ? document.court_ar : document.court;
+  const currentCourtLevel = isArabicContent && document.court_level_ar ? document.court_level_ar : document.court_level;
 
   return (
     <div className="container mx-auto px-4 py-6">
@@ -322,43 +327,43 @@ const DocumentDetail = () => {
         {/* Main Content */}
         <div className="lg:col-span-3">
           {/* Document Header */}
-          <div className="text-center mb-12">
-            <h1 className="text-3xl md:text-4xl font-bold mb-4 leading-tight">
+          <div className={`text-center mb-12 ${isArabicContent ? 'text-right' : ''}`}>
+            <h1 className={`text-3xl md:text-4xl font-bold mb-4 leading-tight ${isArabicContent ? 'dir-rtl text-right' : ''}`}>
               {currentTitle}
             </h1>
             
             {currentSummary && (
-              <p className="text-lg text-muted-foreground mb-8 max-w-4xl mx-auto">
+              <p className={`text-lg text-muted-foreground mb-8 max-w-4xl mx-auto ${isArabicContent ? 'dir-rtl text-right' : ''}`}>
                 {currentSummary}
               </p>
             )}
 
             {/* Metadata */}
-            <div className="bg-muted/30 rounded-lg p-6 mb-8">
+            <div className={`bg-muted/30 rounded-lg p-6 mb-8 ${isArabicContent ? 'dir-rtl text-right' : ''}`}>
               <div className="grid md:grid-cols-2 gap-6">
                 <div className="space-y-3">
                   {document.created_at && (
-                    <div className="flex items-center gap-3 justify-center md:justify-start">
+                    <div className={`flex items-center gap-3 ${isArabicContent ? 'justify-end' : 'justify-center md:justify-start'}`}>
                       <Calendar className="w-5 h-5 text-muted-foreground" />
-                      <span className="font-medium">Date de publication:</span>
+                      <span className="font-medium">{isArabicContent ? 'تاريخ النشر:' : 'Date de publication:'}</span>
                       <span>{formatDate(document.created_at)}</span>
                     </div>
                   )}
                   
                   {category && (
-                    <div className="flex items-center gap-3 justify-center md:justify-start">
+                    <div className={`flex items-center gap-3 ${isArabicContent ? 'justify-end' : 'justify-center md:justify-start'}`}>
                       <Scale className="w-5 h-5 text-muted-foreground" />
-                      <span className="font-medium">Catégorie de droit fondamental:</span>
+                      <span className="font-medium">{isArabicContent ? 'فئة الحق الأساسي:' : 'Catégorie de droit fondamental:'}</span>
                       <Badge variant="secondary" style={{ backgroundColor: category.color + '20', color: category.color }}>
-                        {category.name}
+                        {isArabicContent && category.name_ar ? category.name_ar : category.name}
                       </Badge>
                     </div>
                   )}
 
                   {currentAuthor && (
-                    <div className="flex items-center gap-3 justify-center md:justify-start">
+                    <div className={`flex items-center gap-3 ${isArabicContent ? 'justify-end' : 'justify-center md:justify-start'}`}>
                       <User className="w-5 h-5 text-muted-foreground" />
-                      <span className="font-medium">Auteur:</span>
+                      <span className="font-medium">{isArabicContent ? 'المؤلف:' : 'Auteur:'}</span>
                       <span>{currentAuthor}</span>
                     </div>
                   )}
@@ -366,33 +371,33 @@ const DocumentDetail = () => {
 
                 <div className="space-y-3">
                   {currentCourt && (
-                    <div className="flex items-center gap-3 justify-center md:justify-start">
+                    <div className={`flex items-center gap-3 ${isArabicContent ? 'justify-end' : 'justify-center md:justify-start'}`}>
                       <Building2 className="w-5 h-5 text-muted-foreground" />
-                      <span className="font-medium">Type de tribunal:</span>
+                      <span className="font-medium">{isArabicContent ? 'نوع المحكمة:' : 'Type de tribunal:'}</span>
                       <span>{currentCourt}</span>
                     </div>
                   )}
 
-                  {(document.court_category_type || true) && (
-                    <div className="flex items-center gap-3 justify-center md:justify-start">
+                  {(document.court_category_type || document.court_category_type_ar || true) && (
+                    <div className={`flex items-center gap-3 ${isArabicContent ? 'justify-end' : 'justify-center md:justify-start'}`}>
                       <Scale className="w-5 h-5 text-muted-foreground" />
-                      <span className="font-medium">Catégorie du tribunal:</span>
-                      <span>{capitalizeFirstLetter(document.court_category_type || "Non spécifié")}</span>
+                      <span className="font-medium">{isArabicContent ? 'فئة المحكمة:' : 'Catégorie du tribunal:'}</span>
+                      <span>{capitalizeFirstLetter((isArabicContent ? document.court_category_type_ar : document.court_category_type) || (isArabicContent ? "غير محدد" : "Non spécifié"))}</span>
                     </div>
                   )}
 
                   {currentCourtLevel && (
-                    <div className="flex items-center gap-3 justify-center md:justify-start">
+                    <div className={`flex items-center gap-3 ${isArabicContent ? 'justify-end' : 'justify-center md:justify-start'}`}>
                       <MapPin className="w-5 h-5 text-muted-foreground" />
-                      <span className="font-medium">Niveau de juridiction:</span>
+                      <span className="font-medium">{isArabicContent ? 'مستوى القضاء:' : 'Niveau de juridiction:'}</span>
                       <span>{capitalizeFirstLetter(currentCourtLevel)}</span>
                     </div>
                   )}
 
                   {document.case_number && (
-                    <div className="flex items-center gap-3 justify-center md:justify-start">
+                    <div className={`flex items-center gap-3 ${isArabicContent ? 'justify-end' : 'justify-center md:justify-start'}`}>
                       <FileText className="w-5 h-5 text-muted-foreground" />
-                      <span className="font-medium">Numéro d'affaire:</span>
+                      <span className="font-medium">{isArabicContent ? 'رقم القضية:' : 'Numéro d\'affaire:'}</span>
                       <span>{document.case_number}</span>
                     </div>
                   )}
@@ -400,30 +405,28 @@ const DocumentDetail = () => {
               </div>
 
               {/* Parties Section - 4 lines, 2 columns */}
-              {(document.plaintiff || document.defendant) && (
+              {(document.plaintiff || document.defendant || document.plaintiff_ar || document.defendant_ar) && (
                 <div className="mt-6 pt-6 border-t border-border">
                   <div className="grid md:grid-cols-2 gap-6">
-                    <div className="space-y-2">
+                    <div className={`space-y-2 ${isArabicContent ? 'text-right' : ''}`}>
                       <h4 className="font-semibold text-sm text-muted-foreground uppercase tracking-wide">
-                        Demandeur / Plaignant
+                        {isArabicContent ? 'المدعي' : 'Demandeur / Plaignant'}
                       </h4>
                       <div className="space-y-1">
-                        {document.plaintiff && (
-                          <div className="text-sm">{document.plaintiff}</div>
+                        {(isArabicContent ? document.plaintiff_ar : document.plaintiff) && (
+                          <div className="text-sm">{isArabicContent ? document.plaintiff_ar : document.plaintiff}</div>
                         )}
-                        {/* Additional plaintiff lines can be added here */}
                       </div>
                     </div>
                     
-                    <div className="space-y-2">
+                    <div className={`space-y-2 ${isArabicContent ? 'text-right' : ''}`}>
                       <h4 className="font-semibold text-sm text-muted-foreground uppercase tracking-wide">
-                        Défendeur
+                        {isArabicContent ? 'المدعى عليه' : 'Défendeur'}
                       </h4>
                       <div className="space-y-1">
-                        {document.defendant && (
-                          <div className="text-sm">{document.defendant}</div>
+                        {(isArabicContent ? document.defendant_ar : document.defendant) && (
+                          <div className="text-sm">{isArabicContent ? document.defendant_ar : document.defendant}</div>
                         )}
-                        {/* Additional defendant lines can be added here */}
                       </div>
                     </div>
                   </div>
@@ -483,22 +486,23 @@ const DocumentDetail = () => {
           </div>
 
           {/* Document Content */}
-          <div className="max-w-none">
+          <div className={`max-w-none ${isArabicContent ? 'dir-rtl' : ''}`}>
             {formattedContent ? (
               <div 
-                className="document-content space-y-6"
+                className={`document-content space-y-6 ${isArabicContent ? 'text-right' : ''}`}
+                dir={isArabicContent ? 'rtl' : 'ltr'}
                 dangerouslySetInnerHTML={{ __html: formattedContent }}
               />
             ) : (
               <div className="text-center py-12">
                 <FileText className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
                 <p className="text-muted-foreground">
-                  Le contenu du document n'est pas disponible pour l'affichage en ligne.
+                  {isArabicContent ? 'محتوى الوثيقة غير متاح للعرض عبر الإنترنت.' : 'Le contenu du document n\'est pas disponible pour l\'affichage en ligne.'}
                 </p>
                 {document.file_url && (
                   <Button className="mt-4" asChild>
                     <a href={document.file_url} target="_blank" rel="noopener noreferrer">
-                      Consulter le document complet
+                      {isArabicContent ? 'استشارة الوثيقة كاملة' : 'Consulter le document complet'}
                     </a>
                   </Button>
                 )}
@@ -507,11 +511,11 @@ const DocumentDetail = () => {
           </div>
 
           {/* Keywords */}
-          {document.keywords && document.keywords.length > 0 && (
-            <div className="mt-12 pt-6 border-t">
-              <h3 className="text-lg font-semibold mb-4">Mots-clés</h3>
-              <div className="flex flex-wrap gap-2">
-                {document.keywords.map((keyword) => (
+          {((isArabicContent ? document.keywords_ar : document.keywords) || document.keywords)?.length > 0 && (
+            <div className={`mt-12 pt-6 border-t ${isArabicContent ? 'text-right' : ''}`}>
+              <h3 className="text-lg font-semibold mb-4">{isArabicContent ? 'الكلمات المفتاحية' : 'Mots-clés'}</h3>
+              <div className={`flex flex-wrap gap-2 ${isArabicContent ? 'justify-end' : ''}`}>
+                {(isArabicContent && document.keywords_ar ? document.keywords_ar : document.keywords || []).map((keyword) => (
                   <Badge key={keyword} variant="outline">
                     {keyword}
                   </Badge>
