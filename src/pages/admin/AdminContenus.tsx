@@ -304,7 +304,8 @@ const AdminContenus = () => {
               showAllOption={true}
               allOptionText="Toutes les catégories"
               allOptionValue="all"
-              className="w-48"
+              showArabic={true}
+              className="w-64 sm:w-72"
             />
           </div>
         </CardContent>

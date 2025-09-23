@@ -109,8 +109,9 @@ export const CategoryCombobox: React.FC<CategoryComboboxProps> = ({
   };
 
   const handleClear = () => {
-    onValueChange('');
-    setInputValue('');
+    const resetValue = showAllOption ? (allOptionValue as string) : '';
+    onValueChange(resetValue);
+    setInputValue(showAllOption ? allOptionText : '');
     setSearchValue('');
     inputRef.current?.focus();
   };
