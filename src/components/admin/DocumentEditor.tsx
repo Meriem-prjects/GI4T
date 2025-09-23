@@ -1049,6 +1049,18 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
                         </div>
 
                         <div>
+                          <Label className="text-xs font-medium">السنة</Label>
+                          <Input
+                            type="number"
+                            value={editedData.year?.toString() || ''}
+                            onChange={(e) => setEditedData(prev => ({ ...prev, year: e.target.value ? parseInt(e.target.value) : undefined }))}
+                            placeholder="2024"
+                            dir="rtl"
+                            className="mt-1 h-8"
+                          />
+                        </div>
+
+                        <div>
                           <Label className="text-xs font-medium">المدعي</Label>
                           <Input
                             value={editedData.plaintiff_ar || ''}
