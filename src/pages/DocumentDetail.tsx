@@ -419,6 +419,14 @@ const DocumentDetail = () => {
                     </div>
                   )}
 
+                  {document.year && (
+                    <div className={`flex items-center gap-3 ${isArabicContent ? 'justify-start flex-row-reverse' : 'justify-center md:justify-start'}`}>
+                      <Calendar className="w-5 h-5 text-muted-foreground" />
+                      <span className="font-medium">{isArabicContent ? 'السنة:' : 'Année:'}</span>
+                      <span>{document.year}</span>
+                    </div>
+                  )}
+
                   {document.case_number && (
                     <div className={`flex items-center gap-3 ${isArabicContent ? 'justify-start flex-row-reverse' : 'justify-center md:justify-start'}`}>
                       <FileText className="w-5 h-5 text-muted-foreground" />
