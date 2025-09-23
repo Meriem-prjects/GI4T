@@ -32,9 +32,25 @@ serve(async (req) => {
     Analyse ce document et extrait les informations suivantes avec précision :
 
     IMPORTANT: 
-    - Tous les champs principaux (title, subtitle, assignedRight, summary, existingKeywords, suggestedKeywords) doivent être en ${sourceLanguage}
-    - Tous les champs traduits (translatedTitle, translatedSummary, translatedKeywords, translatedContent) doivent être en ${targetLanguage}
+    - Tous les champs principaux (title, subtitle, assignedRight, summary, existingKeywords, suggestedKeywords, metadata) doivent être en ${sourceLanguage}
+    - Tous les champs traduits (translatedTitle, translatedSummary, translatedKeywords, translatedContent, metadataTranslated) doivent être en ${targetLanguage}
     - Le champ translatedContent doit préserver EXACTEMENT la structure et les sauts de ligne du document original
+    - Le champ cleanedContent doit supprimer les numéros de pages isolés (lignes contenant uniquement des chiffres)
+
+    RÈGLES DE DÉTECTION DES MÉTADONNÉES :
+    - AUTEUR : Recherche dans les 5 premières lignes du document
+    - TITRE : Recherche sous le "numéro 1" de la première page, sinon prendre un titre contextuel approprié
+    - TRIBUNAL : Identifie le tribunal mentionné et son niveau de juridiction (première instance, appel, cassation, etc.)
+    - NUMÉRO D'AFFAIRE : Patterns comme "n° [chiffres]/[année]" ou similaires
+    - DEMANDEUR : Nom qui précède le "/" après le numéro d'affaire
+    - DÉFENDEUR : Nom qui suit le "/" après le numéro d'affaire
+    - ANNÉE : Extrait l'année du document ou de la décision
+    - NIVEAU TRIBUNAL : Détermine le niveau (première instance, appel, cassation, administratif, etc.)
+
+    NETTOYAGE DU CONTENU :
+    - Supprime les lignes contenant uniquement des numéros de pages
+    - Préserve la structure et les sauts de ligne du document
+    - Garde tout le contenu juridique pertinent
 
     1. TITRE : Identifie le titre principal en ${sourceLanguage}
     2. SOUS-TITRE : Le sous-titre ou contexte en ${sourceLanguage}
@@ -42,10 +58,47 @@ serve(async (req) => {
     4. RÉSUMÉ : Génère un résumé en exactement 4 phrases en ${sourceLanguage}
     5. MOTS-CLÉS EXISTANTS : Extrait les mots-clés existants en ${sourceLanguage}
     6. MOTS-CLÉS SUGGÉRÉS : Propose 5-8 mots-clés pertinents en ${sourceLanguage}
-    7. TRADUCTION COMPLÈTE : Traduis tout le contenu en ${targetLanguage} en préservant les sauts de ligne
-    8. LANGUE DÉTECTÉE : Confirme "${sourceLanguage}"
+    7. MÉTADONNÉES : Extrait auteur, tribunal, numéro d'affaire, demandeur, défendeur, année, niveau tribunal en ${sourceLanguage}
+    8. CONTENU NETTOYÉ : Contenu sans numéros de pages isolés en ${sourceLanguage}
+    9. TRADUCTION COMPLÈTE : Traduis tout le contenu nettoyé en ${targetLanguage}
+    10. MÉTADONNÉES TRADUITES : Traduis toutes les métadonnées en ${targetLanguage}
+    11. LANGUE DÉTECTÉE : Confirme "${sourceLanguage}"
 
-    Réponds uniquement en JSON valide :`;
+    Réponds uniquement en JSON valide avec cette structure exacte :
+    {
+      "title": "titre en ${sourceLanguage}",
+      "subtitle": "sous-titre en ${sourceLanguage}",
+      "assignedRight": "droit assigné en ${sourceLanguage}",
+      "summary": "résumé 4 phrases en ${sourceLanguage}",
+      "existingKeywords": ["mots-clés existants en ${sourceLanguage}"],
+      "suggestedKeywords": ["mots-clés suggérés en ${sourceLanguage}"],
+      "metadata": {
+        "author": "auteur en ${sourceLanguage}",
+        "court": "tribunal en ${sourceLanguage}",
+        "case_number": "numéro d'affaire",
+        "plaintiff": "demandeur en ${sourceLanguage}",
+        "defendant": "défendeur en ${sourceLanguage}",
+        "year": année_numérique,
+        "court_level": "niveau tribunal en ${sourceLanguage}"
+      },
+      "cleanedContent": "contenu nettoyé en ${sourceLanguage}",
+      "translatedTitle": "titre traduit en ${targetLanguage}",
+      "translatedSummary": "résumé traduit en ${targetLanguage}",
+      "translatedKeywords": ["mots-clés traduits en ${targetLanguage}"],
+      "translatedContent": "contenu complet traduit en ${targetLanguage}",
+      "metadataTranslated": {
+        "author": "auteur en ${targetLanguage}",
+        "court": "tribunal en ${targetLanguage}",
+        "plaintiff": "demandeur en ${targetLanguage}",
+        "defendant": "défendeur en ${targetLanguage}",
+        "court_level": "niveau tribunal en ${targetLanguage}"
+      },
+      "language": "${sourceLanguage}",
+      "detectedPatterns": {
+        "case_pattern": "pattern détecté pour le numéro d'affaire",
+        "court_pattern": "pattern détecté pour le tribunal"
+      }
+    }`;
 
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',

@@ -185,6 +185,9 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
         const analysis = data.analysis;
         const isPrimaryArabic = editedData.language === 'ar';
         
+        // Update content with cleaned version if available
+        const cleanedContent = analysis.cleanedContent || editedData.content;
+        
         // Assign fields based on document's primary language
         if (isPrimaryArabic) {
           // Arabic is primary - analysis result goes to Arabic fields, translation to French
@@ -194,6 +197,21 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
             title: analysis.translatedTitle || prev.title,
             summary_ar: analysis.summary || prev.summary_ar,
             summary: analysis.translatedSummary || prev.summary,
+            content: cleanedContent, // Use cleaned content
+            // Metadata in Arabic (primary language)
+            author_ar: analysis.metadata?.author || prev.author_ar,
+            court_ar: analysis.metadata?.court || prev.court_ar,
+            case_number: analysis.metadata?.case_number || prev.case_number,
+            plaintiff_ar: analysis.metadata?.plaintiff || prev.plaintiff_ar,
+            defendant_ar: analysis.metadata?.defendant || prev.defendant_ar,
+            year: analysis.metadata?.year || prev.year,
+            court_level_ar: analysis.metadata?.court_level || prev.court_level_ar,
+            // Translated metadata in French
+            author: analysis.metadataTranslated?.author || prev.author,
+            court: analysis.metadataTranslated?.court || prev.court,
+            plaintiff: analysis.metadataTranslated?.plaintiff || prev.plaintiff,
+            defendant: analysis.metadataTranslated?.defendant || prev.defendant,
+            court_level: analysis.metadataTranslated?.court_level || prev.court_level,
             // Keep original Arabic content, don't replace it
             keywords_ar: [
               ...new Set([
@@ -221,6 +239,21 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
             title_ar: analysis.translatedTitle || prev.title_ar,
             summary: analysis.summary || prev.summary,
             summary_ar: analysis.translatedSummary || prev.summary_ar,
+            content: cleanedContent, // Use cleaned content
+            // Metadata in French (primary language)
+            author: analysis.metadata?.author || prev.author,
+            court: analysis.metadata?.court || prev.court,
+            case_number: analysis.metadata?.case_number || prev.case_number,
+            plaintiff: analysis.metadata?.plaintiff || prev.plaintiff,
+            defendant: analysis.metadata?.defendant || prev.defendant,
+            year: analysis.metadata?.year || prev.year,
+            court_level: analysis.metadata?.court_level || prev.court_level,
+            // Translated metadata in Arabic
+            author_ar: analysis.metadataTranslated?.author || prev.author_ar,
+            court_ar: analysis.metadataTranslated?.court || prev.court_ar,
+            plaintiff_ar: analysis.metadataTranslated?.plaintiff || prev.plaintiff_ar,
+            defendant_ar: analysis.metadataTranslated?.defendant || prev.defendant_ar,
+            court_level_ar: analysis.metadataTranslated?.court_level || prev.court_level_ar,
             // Keep original French content, don't replace it
             keywords: [
               ...new Set([
@@ -252,7 +285,7 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
         
         toast({
           title: "Analyse IA terminée",
-          description: `Analyse et traduction terminées en ${isPrimaryArabic ? 'arabe → français' : 'français → arabe'}.`,
+          description: `Analyse, extraction des métadonnées et traduction terminées en ${isPrimaryArabic ? 'arabe → français' : 'français → arabe'}.`,
         });
       } else {
         throw new Error(data.error || 'Analyse échouée');
