@@ -1,8 +1,6 @@
-import React, { useState, useMemo } from 'react';
-import { Button } from '@/components/ui/button';
-import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { Check, ChevronsUpDown } from 'lucide-react';
+import React, { useState, useMemo, useRef, useEffect } from 'react';
+import { Input } from '@/components/ui/input';
+import { Check, ChevronsUpDown, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface Category {
@@ -39,136 +37,187 @@ export const CategoryCombobox: React.FC<CategoryComboboxProps> = ({
   className,
   showArabic = false
 }) => {
-  const [open, setOpen] = useState(false);
+  const [isOpen, setIsOpen] = useState(false);
   const [searchValue, setSearchValue] = useState('');
+  const [inputValue, setInputValue] = useState('');
+  const inputRef = useRef<HTMLInputElement>(null);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+
+  const selectedCategory = categories.find(cat => cat.id === value);
+  const isAllSelected = value === allOptionValue;
 
   const filteredCategories = useMemo(() => {
     if (!searchValue) return categories;
     
     const searchLower = searchValue.toLowerCase();
-    const searchArabic = searchValue.trim();
     
     return categories.filter(category => {
-      // Search in French name (case insensitive)
       const frenchMatch = category.name.toLowerCase().includes(searchLower);
-      
-      // Search in Arabic name (case insensitive and trimmed)
       const arabicMatch = category.name_ar && 
-        category.name_ar.toLowerCase().includes(searchArabic.toLowerCase());
+        category.name_ar.toLowerCase().includes(searchLower);
       
       return frenchMatch || arabicMatch;
     });
   }, [categories, searchValue]);
 
-  const selectedCategory = categories.find(cat => cat.id === value);
-  const isAllSelected = value === allOptionValue;
-
-  const getDisplayText = () => {
+  // Update input value when category is selected
+  useEffect(() => {
     if (isAllSelected && showAllOption) {
-      return allOptionText;
+      setInputValue(allOptionText);
+    } else if (selectedCategory) {
+      const displayText = showArabic && selectedCategory.name_ar ? selectedCategory.name_ar : selectedCategory.name;
+      setInputValue(displayText);
+    } else {
+      setInputValue('');
     }
-    if (selectedCategory) {
-      if (showArabic && selectedCategory.name_ar) {
-        return selectedCategory.name_ar;
+  }, [selectedCategory, isAllSelected, showAllOption, allOptionText, showArabic]);
+
+  // Handle clicking outside to close dropdown
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        dropdownRef.current &&
+        inputRef.current &&
+        !dropdownRef.current.contains(event.target as Node) &&
+        !inputRef.current.contains(event.target as Node)
+      ) {
+        setIsOpen(false);
+        setSearchValue('');
       }
-      return selectedCategory.name;
-    }
-    return placeholder;
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const newValue = e.target.value;
+    setInputValue(newValue);
+    setSearchValue(newValue);
+    setIsOpen(true);
+  };
+
+  const handleInputFocus = () => {
+    setIsOpen(true);
+    setSearchValue(inputValue);
+  };
+
+  const handleCategorySelect = (categoryId: string) => {
+    onValueChange(categoryId);
+    setIsOpen(false);
+    setSearchValue('');
+  };
+
+  const handleClear = () => {
+    onValueChange('');
+    setInputValue('');
+    setSearchValue('');
+    inputRef.current?.focus();
   };
 
   return (
-    <Popover open={open} onOpenChange={setOpen}>
-      <PopoverTrigger asChild>
-        <Button
-          variant="outline"
-          role="combobox"
-          aria-expanded={open}
-          className={cn("justify-between", className)}
-        >
-          <div className="flex items-center space-x-2 flex-1 min-w-0">
-            {selectedCategory && (
-              <div
-                className="w-3 h-3 rounded-full flex-shrink-0"
-                style={{ backgroundColor: selectedCategory.color }}
-              />
+    <div className={cn("relative", className)}>
+      <div className="relative">
+        <div className="flex items-center">
+          {selectedCategory && (
+            <div
+              className="absolute left-3 w-3 h-3 rounded-full z-10"
+              style={{ backgroundColor: selectedCategory.color }}
+            />
+          )}
+          <Input
+            ref={inputRef}
+            value={inputValue}
+            onChange={handleInputChange}
+            onFocus={handleInputFocus}
+            placeholder={placeholder}
+            className={cn(
+              "pr-8",
+              selectedCategory && "pl-8"
             )}
-            <span className="truncate">{getDisplayText()}</span>
-          </div>
-          <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-        </Button>
-      </PopoverTrigger>
-      <PopoverContent className="w-80 p-0" align="start">
-        <Command>
-          <CommandInput 
-            placeholder={searchPlaceholder}
-            value={searchValue}
-            onValueChange={setSearchValue}
           />
-          <CommandList>
-            <CommandEmpty>{emptyText}</CommandEmpty>
-            <CommandGroup>
-              {showAllOption && (
-                <CommandItem
-                  key={allOptionValue}
-                  value={allOptionValue}
-                  onSelect={() => {
-                    onValueChange(allOptionValue);
-                    setOpen(false);
-                    setSearchValue('');
-                  }}
-                >
-                  <Check
-                    className={cn(
-                      "mr-2 h-4 w-4",
-                      isAllSelected ? "opacity-100" : "opacity-0"
-                    )}
-                  />
-                  {allOptionText}
-                </CommandItem>
-              )}
-              {filteredCategories.map((category) => (
-                <CommandItem
+          <div className="absolute right-2 flex items-center space-x-1">
+            {value && (
+              <button
+                type="button"
+                onClick={handleClear}
+                className="p-1 hover:bg-muted rounded"
+              >
+                <X className="h-3 w-3" />
+              </button>
+            )}
+            <ChevronsUpDown className="h-4 w-4 opacity-50" />
+          </div>
+        </div>
+      </div>
+
+      {isOpen && (
+        <div
+          ref={dropdownRef}
+          className="absolute z-50 w-full mt-1 bg-popover border rounded-md shadow-lg max-h-60 overflow-auto"
+        >
+          <div className="p-2">
+            {showAllOption && (
+              <div
+                onClick={() => handleCategorySelect(allOptionValue)}
+                className={cn(
+                  "flex items-center space-x-2 p-2 cursor-pointer rounded hover:bg-muted",
+                  isAllSelected && "bg-accent"
+                )}
+              >
+                <Check
+                  className={cn(
+                    "h-4 w-4",
+                    isAllSelected ? "opacity-100" : "opacity-0"
+                  )}
+                />
+                <span>{allOptionText}</span>
+              </div>
+            )}
+
+            {filteredCategories.length === 0 ? (
+              <div className="p-2 text-sm text-muted-foreground">{emptyText}</div>
+            ) : (
+              filteredCategories.map((category) => (
+                <div
                   key={category.id}
-                  value={category.id}
-                  onSelect={(currentValue) => {
-                    onValueChange(currentValue === value ? "" : currentValue);
-                    setOpen(false);
-                    setSearchValue('');
-                  }}
+                  onClick={() => handleCategorySelect(category.id)}
+                  className={cn(
+                    "flex items-center space-x-2 p-2 cursor-pointer rounded hover:bg-muted",
+                    value === category.id && "bg-accent"
+                  )}
                 >
                   <Check
                     className={cn(
-                      "mr-2 h-4 w-4",
+                      "h-4 w-4",
                       value === category.id ? "opacity-100" : "opacity-0"
                     )}
                   />
-                  <div className="flex items-center space-x-2 flex-1 min-w-0">
-                    <div
-                      className="w-3 h-3 rounded-full flex-shrink-0"
-                      style={{ backgroundColor: category.color }}
-                    />
-                    <div className="flex flex-col min-w-0">
-                      <span className="truncate">
-                        {showArabic && category.name_ar ? category.name_ar : category.name}
+                  <div
+                    className="w-3 h-3 rounded-full flex-shrink-0"
+                    style={{ backgroundColor: category.color }}
+                  />
+                  <div className="flex flex-col min-w-0 flex-1">
+                    <span className="truncate">
+                      {showArabic && category.name_ar ? category.name_ar : category.name}
+                    </span>
+                    {showArabic && category.name_ar && (
+                      <span className="text-xs text-muted-foreground truncate">
+                        {category.name}
                       </span>
-                      {showArabic && category.name_ar && (
-                        <span className="text-xs text-muted-foreground truncate">
-                          {category.name}
-                        </span>
-                      )}
-                      {!showArabic && category.name_ar && (
-                        <span className="text-xs text-muted-foreground truncate" dir="rtl">
-                          {category.name_ar}
-                        </span>
-                      )}
-                    </div>
+                    )}
+                    {!showArabic && category.name_ar && (
+                      <span className="text-xs text-muted-foreground truncate" dir="rtl">
+                        {category.name_ar}
+                      </span>
+                    )}
                   </div>
-                </CommandItem>
-              ))}
-            </CommandGroup>
-          </CommandList>
-        </Command>
-      </PopoverContent>
-    </Popover>
+                </div>
+              ))
+            )}
+          </div>
+        </div>
+      )}
+    </div>
   );
 };
