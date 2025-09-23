@@ -8,7 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import ObservatoireNav from "@/components/ObservatoireNav";
 import Footer from "@/components/Footer";
-
+import SearchResults from "@/pages/SearchResults";
 
 const Observatoire = () => {
   const navigate = useNavigate();
@@ -19,7 +19,9 @@ const Observatoire = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   const handleSearch = () => {
-    // Search functionality removed
+    if (searchQuery.trim()) {
+      navigate(`/observatoire/search-results?q=${encodeURIComponent(searchQuery)}`);
+    }
   };
 
   const popularTags = ["RGPD", "Liberté d'expression", "Droit du travail", "Égalité"];
@@ -117,7 +119,7 @@ const Observatoire = () => {
 
       {/* Route Content */}
       <Routes>
-        
+        <Route path="search-results" element={<SearchResults />} />
         <Route path="/" element={
           <>
             {/* Hero Section with Search */}
