@@ -6,6 +6,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Index from "./pages/Index";
 import Observatoire from "./pages/Observatoire";
 import SearchResults from "./pages/SearchResults";
+
 import NotFound from "./pages/NotFound";
 import TextesFondamentaux from "./pages/TextesFondamentaux";
 import AnalysesOpinions from "./pages/AnalysesOpinions";
@@ -41,8 +42,6 @@ const App = () => (
         <Routes>
           <Route path="/" element={<Index />} />
           
-          {/* Legacy redirect */}
-          <Route path="/search-results" element={<SearchResults />} />
           
           {/* Observatoire interface - Routes spécifiques d'abord */}
           <Route element={<ObservatoireLayout />}>
