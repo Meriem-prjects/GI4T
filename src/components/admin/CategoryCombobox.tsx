@@ -97,16 +97,17 @@ export const CategoryCombobox: React.FC<CategoryComboboxProps> = ({
           <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
         </Button>
       </PopoverTrigger>
-      <PopoverContent className="w-80 p-0" align="start">
-        <Command>
+      <PopoverContent className="w-80 p-0 bg-popover border border-border shadow-lg" align="start">
+        <Command className="bg-popover">
           <CommandInput 
             placeholder={searchPlaceholder}
             value={searchValue}
             onValueChange={setSearchValue}
+            className="border-b border-border bg-popover text-popover-foreground"
           />
-          <CommandList>
-            <CommandEmpty>{emptyText}</CommandEmpty>
-            <CommandGroup>
+          <CommandList className="bg-popover">
+            <CommandEmpty className="text-muted-foreground">{emptyText}</CommandEmpty>
+            <CommandGroup className="bg-popover">
               {showAllOption && (
                 <CommandItem
                   key={allOptionValue}
