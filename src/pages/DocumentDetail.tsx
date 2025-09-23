@@ -343,7 +343,7 @@ const DocumentDetail = () => {
               <div className="grid md:grid-cols-2 gap-6">
                 <div className="space-y-3">
                   {document.created_at && (
-                    <div className={`flex items-center gap-3 ${isArabicContent ? 'justify-end' : 'justify-center md:justify-start'}`}>
+                    <div className={`flex items-center gap-3 ${isArabicContent ? 'justify-end flex-row-reverse' : 'justify-center md:justify-start'}`}>
                       <Calendar className="w-5 h-5 text-muted-foreground" />
                       <span className="font-medium">{isArabicContent ? 'تاريخ النشر:' : 'Date de publication:'}</span>
                       <span>{formatDate(document.created_at)}</span>
@@ -351,7 +351,7 @@ const DocumentDetail = () => {
                   )}
                   
                   {category && (
-                    <div className={`flex items-center gap-3 ${isArabicContent ? 'justify-end' : 'justify-center md:justify-start'}`}>
+                    <div className={`flex items-center gap-3 ${isArabicContent ? 'justify-end flex-row-reverse' : 'justify-center md:justify-start'}`}>
                       <Scale className="w-5 h-5 text-muted-foreground" />
                       <span className="font-medium">{isArabicContent ? 'فئة الحق الأساسي:' : 'Catégorie de droit fondamental:'}</span>
                       <Badge variant="secondary" style={{ backgroundColor: category.color + '20', color: category.color }}>
@@ -361,7 +361,7 @@ const DocumentDetail = () => {
                   )}
 
                   {currentAuthor && (
-                    <div className={`flex items-center gap-3 ${isArabicContent ? 'justify-end' : 'justify-center md:justify-start'}`}>
+                    <div className={`flex items-center gap-3 ${isArabicContent ? 'justify-end flex-row-reverse' : 'justify-center md:justify-start'}`}>
                       <User className="w-5 h-5 text-muted-foreground" />
                       <span className="font-medium">{isArabicContent ? 'المؤلف:' : 'Auteur:'}</span>
                       <span>{currentAuthor}</span>
@@ -371,15 +371,15 @@ const DocumentDetail = () => {
 
                 <div className="space-y-3">
                   {currentCourt && (
-                    <div className={`flex items-center gap-3 ${isArabicContent ? 'justify-end' : 'justify-center md:justify-start'}`}>
+                    <div className={`flex items-center gap-3 ${isArabicContent ? 'justify-end flex-row-reverse' : 'justify-center md:justify-start'}`}>
                       <Building2 className="w-5 h-5 text-muted-foreground" />
                       <span className="font-medium">{isArabicContent ? 'نوع المحكمة:' : 'Type de tribunal:'}</span>
                       <span>{currentCourt}</span>
                     </div>
                   )}
 
-                  {(document.court_category_type || document.court_category_type_ar || true) && (
-                    <div className={`flex items-center gap-3 ${isArabicContent ? 'justify-end' : 'justify-center md:justify-start'}`}>
+                  {(document.court_category_type || document.court_category_type_ar) && (
+                    <div className={`flex items-center gap-3 ${isArabicContent ? 'justify-end flex-row-reverse' : 'justify-center md:justify-start'}`}>
                       <Scale className="w-5 h-5 text-muted-foreground" />
                       <span className="font-medium">{isArabicContent ? 'فئة المحكمة:' : 'Catégorie du tribunal:'}</span>
                       <span>{capitalizeFirstLetter((isArabicContent ? document.court_category_type_ar : document.court_category_type) || (isArabicContent ? "غير محدد" : "Non spécifié"))}</span>
@@ -387,7 +387,7 @@ const DocumentDetail = () => {
                   )}
 
                   {currentCourtLevel && (
-                    <div className={`flex items-center gap-3 ${isArabicContent ? 'justify-end' : 'justify-center md:justify-start'}`}>
+                    <div className={`flex items-center gap-3 ${isArabicContent ? 'justify-end flex-row-reverse' : 'justify-center md:justify-start'}`}>
                       <MapPin className="w-5 h-5 text-muted-foreground" />
                       <span className="font-medium">{isArabicContent ? 'مستوى القضاء:' : 'Niveau de juridiction:'}</span>
                       <span>{capitalizeFirstLetter(currentCourtLevel)}</span>
@@ -395,7 +395,7 @@ const DocumentDetail = () => {
                   )}
 
                   {document.case_number && (
-                    <div className={`flex items-center gap-3 ${isArabicContent ? 'justify-end' : 'justify-center md:justify-start'}`}>
+                    <div className={`flex items-center gap-3 ${isArabicContent ? 'justify-end flex-row-reverse' : 'justify-center md:justify-start'}`}>
                       <FileText className="w-5 h-5 text-muted-foreground" />
                       <span className="font-medium">{isArabicContent ? 'رقم القضية:' : 'Numéro d\'affaire:'}</span>
                       <span>{document.case_number}</span>
