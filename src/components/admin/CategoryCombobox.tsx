@@ -97,17 +97,17 @@ export const CategoryCombobox: React.FC<CategoryComboboxProps> = ({
           <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
         </Button>
       </PopoverTrigger>
-      <PopoverContent className="w-96 p-0 bg-popover border border-border shadow-lg" align="start">
-        <Command className="bg-popover">
+      <PopoverContent className="w-[500px] p-0 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 shadow-xl z-50" align="start">
+        <Command className="bg-white dark:bg-gray-800 rounded-lg">
           <CommandInput 
             placeholder={searchPlaceholder}
             value={searchValue}
             onValueChange={setSearchValue}
-            className="border-b border-border bg-popover text-popover-foreground px-4 py-3"
+            className="border-b border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 px-4 py-3 text-sm"
           />
-          <CommandList className="bg-popover max-h-80 overflow-y-auto">
-            <CommandEmpty className="text-muted-foreground py-6 text-center">{emptyText}</CommandEmpty>
-            <CommandGroup className="bg-popover p-4">
+          <CommandList className="bg-white dark:bg-gray-800 max-h-80 overflow-y-auto">
+            <CommandEmpty className="text-gray-500 dark:text-gray-400 py-6 text-center text-sm">{emptyText}</CommandEmpty>
+            <CommandGroup className="bg-white dark:bg-gray-800 p-4">
               <div className="grid grid-cols-2 gap-2">
                 {showAllOption && (
                   <div 
