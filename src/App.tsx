@@ -5,7 +5,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Index from "./pages/Index";
 import Observatoire from "./pages/Observatoire";
-import SearchResults from "./pages/SearchResults";
+
 import NotFound from "./pages/NotFound";
 import TextesFondamentaux from "./pages/TextesFondamentaux";
 import AnalysesOpinions from "./pages/AnalysesOpinions";
@@ -41,12 +41,10 @@ const App = () => (
         <Routes>
           <Route path="/" element={<Index />} />
           
-          {/* Legacy redirect */}
-          <Route path="/search-results" element={<SearchResults />} />
           
           {/* Observatoire interface - Routes spécifiques d'abord */}
           <Route element={<ObservatoireLayout />}>
-            <Route path="/observatoire/search-results" element={<SearchResults />} />
+            
             <Route path="/observatoire/droits-fondamentaux" element={<TextesFondamentaux />} />
             <Route path="/observatoire/droits-fondamentaux/:categorySlug" element={<CategorieDetail />} />
             <Route path="/observatoire/droits-fondamentaux/:categorySlug/:documentSlug" element={<DocumentDetail />} />
