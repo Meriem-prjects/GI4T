@@ -46,10 +46,18 @@ export const CategoryCombobox: React.FC<CategoryComboboxProps> = ({
     if (!searchValue) return categories;
     
     const searchLower = searchValue.toLowerCase();
-    return categories.filter(category => 
-      category.name.toLowerCase().includes(searchLower) ||
-      (category.name_ar && category.name_ar.includes(searchValue))
-    );
+    const searchArabic = searchValue.trim();
+    
+    return categories.filter(category => {
+      // Search in French name (case insensitive)
+      const frenchMatch = category.name.toLowerCase().includes(searchLower);
+      
+      // Search in Arabic name (case insensitive and trimmed)
+      const arabicMatch = category.name_ar && 
+        category.name_ar.toLowerCase().includes(searchArabic.toLowerCase());
+      
+      return frenchMatch || arabicMatch;
+    });
   }, [categories, searchValue]);
 
   const selectedCategory = categories.find(cat => cat.id === value);
