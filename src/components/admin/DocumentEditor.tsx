@@ -3,13 +3,12 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import SimpleTextEditor from './SimpleTextEditor';
 import { Input } from '@/components/ui/input';
-import { CategoryCombobox } from '@/components/admin/CategoryCombobox';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Save, Eye, EyeOff, X, AlertTriangle, FileText, ChevronLeft, ChevronRight, BookOpen, Brain, Loader2, CheckCircle, XCircle } from 'lucide-react';
+import { Save, Eye, EyeOff, X, AlertTriangle, FileText, ChevronLeft, ChevronRight, BookOpen, Brain, Loader2, CheckCircle, XCircle, Search } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { useSearchParams, useNavigate } from 'react-router-dom';
@@ -784,18 +783,55 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
 
                     <div>
                       <Label className="text-sm font-medium">Catégorie</Label>
-                      <CategoryCombobox
-                        categories={categories}
+                      <Select
                         value={editedData.category_id || ''}
                         onValueChange={(value) => setEditedData(prev => ({
                           ...prev,
                           category_id: value
                         }))}
-                        placeholder="Sélectionner une catégorie"
-                        searchPlaceholder="Rechercher une catégorie..."
-                        emptyText="Aucune catégorie trouvée."
-                        className="mt-1 w-full"
-                      />
+                      >
+                        <SelectTrigger className="mt-1 bg-background">
+                          <SelectValue placeholder="Sélectionner une catégorie" />
+                        </SelectTrigger>
+                        <SelectContent className="bg-background border border-border shadow-lg z-[100] max-h-80">
+                          <div className="p-2">
+                            <div className="relative mb-2">
+                              <Search className="absolute left-2 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
+                              <Input
+                                placeholder="Rechercher une catégorie..."
+                                className="pl-8 h-8"
+                                onChange={(e) => {
+                                  const searchValue = e.target.value.toLowerCase();
+                                  const items = document.querySelectorAll('[data-category-item-fr]');
+                                  items.forEach((item) => {
+                                    const text = item.textContent?.toLowerCase() || '';
+                                    const shouldShow = text.includes(searchValue);
+                                    (item as HTMLElement).style.display = shouldShow ? 'flex' : 'none';
+                                  });
+                                }}
+                              />
+                            </div>
+                          </div>
+                          {categories.map((category) => (
+                            <SelectItem key={category.id} value={category.id} data-category-item-fr>
+                              <div className="flex items-center space-x-2">
+                                <div
+                                  className="w-3 h-3 rounded-full flex-shrink-0"
+                                  style={{ backgroundColor: category.color }}
+                                />
+                                <div className="flex flex-col min-w-0 flex-1">
+                                  <span className="truncate">{category.name}</span>
+                                  {category.name_ar && (
+                                    <span className="text-xs text-muted-foreground truncate" dir="rtl">
+                                      {category.name_ar}
+                                    </span>
+                                  )}
+                                </div>
+                              </div>
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
                     </div>
 
                     <div>
@@ -941,19 +977,58 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
 
                     <div>
                       <Label className="text-sm font-medium">الفئة</Label>
-                      <CategoryCombobox
-                        categories={categories}
+                      <Select
                         value={editedData.category_id || ''}
                         onValueChange={(value) => setEditedData(prev => ({
                           ...prev,
                           category_id: value
                         }))}
-                        placeholder="اختر فئة"
-                        searchPlaceholder="البحث عن فئة..."
-                        emptyText="لم يتم العثور على فئة."
-                        className="mt-1 w-full"
-                        showArabic={true}
-                      />
+                      >
+                        <SelectTrigger className="mt-1 bg-background" dir="rtl">
+                          <SelectValue placeholder="اختر فئة" />
+                        </SelectTrigger>
+                        <SelectContent className="bg-background border border-border shadow-lg z-[100] max-h-80">
+                          <div className="p-2">
+                            <div className="relative mb-2">
+                              <Search className="absolute left-2 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
+                              <Input
+                                placeholder="البحث عن فئة..."
+                                className="pl-8 h-8"
+                                dir="rtl"
+                                onChange={(e) => {
+                                  const searchValue = e.target.value.toLowerCase();
+                                  const items = document.querySelectorAll('[data-category-item-ar]');
+                                  items.forEach((item) => {
+                                    const text = item.textContent?.toLowerCase() || '';
+                                    const shouldShow = text.includes(searchValue);
+                                    (item as HTMLElement).style.display = shouldShow ? 'flex' : 'none';
+                                  });
+                                }}
+                              />
+                            </div>
+                          </div>
+                          {categories.map((category) => (
+                            <SelectItem key={category.id} value={category.id} data-category-item-ar>
+                              <div className="flex items-center space-x-2" dir="rtl">
+                                <div
+                                  className="w-3 h-3 rounded-full flex-shrink-0"
+                                  style={{ backgroundColor: category.color }}
+                                />
+                                <div className="flex flex-col min-w-0 flex-1">
+                                  <span className="truncate">
+                                    {category.name_ar || category.name}
+                                  </span>
+                                  {category.name_ar && (
+                                    <span className="text-xs text-muted-foreground truncate">
+                                      {category.name}
+                                    </span>
+                                  )}
+                                </div>
+                              </div>
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
                     </div>
 
                     <div>

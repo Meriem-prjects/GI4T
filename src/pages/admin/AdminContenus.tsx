@@ -4,7 +4,6 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { CategoryCombobox } from '@/components/admin/CategoryCombobox';
 import { 
   Search, 
   FileText, 
@@ -53,6 +52,7 @@ interface Document {
 interface Category {
   id: string;
   name: string;
+  name_ar?: string;
   color: string;
 }
 
@@ -294,19 +294,55 @@ const AdminContenus = () => {
                 <SelectItem value="processing">En traitement</SelectItem>
               </SelectContent>
             </Select>
-            <CategoryCombobox
-              categories={categories}
-              value={categoryFilter}
-              onValueChange={setCategoryFilter}
-              placeholder="Catégorie"
-              searchPlaceholder="Rechercher une catégorie..."
-              emptyText="Aucune catégorie trouvée."
-              showAllOption={true}
-              allOptionText="Toutes les catégories"
-              allOptionValue="all"
-              showArabic={true}
-              className="w-64 sm:w-72"
-            />
+            <Select value={categoryFilter} onValueChange={setCategoryFilter}>
+              <SelectTrigger className="w-64 sm:w-72">
+                <SelectValue placeholder="Catégorie" />
+              </SelectTrigger>
+              <SelectContent className="bg-background border border-border shadow-lg z-[100] max-h-80">
+                <div className="p-2">
+                  <div className="relative mb-2">
+                    <Search className="absolute left-2 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
+                    <Input
+                      placeholder="Rechercher une catégorie..."
+                      className="pl-8 h-8"
+                      onChange={(e) => {
+                        const searchValue = e.target.value.toLowerCase();
+                        // This will filter the visible items in real-time
+                        const items = document.querySelectorAll('[data-category-item]');
+                        items.forEach((item) => {
+                          const text = item.textContent?.toLowerCase() || '';
+                          const shouldShow = text.includes(searchValue);
+                          (item as HTMLElement).style.display = shouldShow ? 'flex' : 'none';
+                        });
+                      }}
+                    />
+                  </div>
+                </div>
+                <SelectItem value="all" data-category-item>
+                  <div className="flex items-center space-x-2">
+                    <span>Toutes les catégories</span>
+                  </div>
+                </SelectItem>
+                {categories.map((category) => (
+                  <SelectItem key={category.id} value={category.id} data-category-item>
+                    <div className="flex items-center space-x-2">
+                      <div
+                        className="w-3 h-3 rounded-full flex-shrink-0"
+                        style={{ backgroundColor: category.color }}
+                      />
+                      <div className="flex flex-col min-w-0 flex-1">
+                        <span className="truncate">{category.name}</span>
+                        {category.name_ar && (
+                          <span className="text-xs text-muted-foreground truncate" dir="rtl">
+                            {category.name_ar}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
         </CardContent>
       </Card>
