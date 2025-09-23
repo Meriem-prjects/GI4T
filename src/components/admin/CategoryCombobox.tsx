@@ -97,59 +97,58 @@ export const CategoryCombobox: React.FC<CategoryComboboxProps> = ({
           <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
         </Button>
       </PopoverTrigger>
-      <PopoverContent className="w-80 p-0 bg-popover border border-border shadow-lg" align="start">
+      <PopoverContent className="w-96 p-0 bg-popover border border-border shadow-lg" align="start">
         <Command className="bg-popover">
           <CommandInput 
             placeholder={searchPlaceholder}
             value={searchValue}
             onValueChange={setSearchValue}
-            className="border-b border-border bg-popover text-popover-foreground"
+            className="border-b border-border bg-popover text-popover-foreground px-4 py-3"
           />
-          <CommandList className="bg-popover">
-            <CommandEmpty className="text-muted-foreground">{emptyText}</CommandEmpty>
-            <CommandGroup className="bg-popover">
-              {showAllOption && (
-                <CommandItem
-                  key={allOptionValue}
-                  value={allOptionValue}
-                  onSelect={() => {
-                    onValueChange(allOptionValue);
-                    setOpen(false);
-                    setSearchValue('');
-                  }}
-                >
-                  <Check
-                    className={cn(
-                      "mr-2 h-4 w-4",
-                      isAllSelected ? "opacity-100" : "opacity-0"
-                    )}
-                  />
-                  {allOptionText}
-                </CommandItem>
-              )}
-              {filteredCategories.map((category) => (
-                <CommandItem
-                  key={category.id}
-                  value={category.id}
-                  onSelect={(currentValue) => {
-                    onValueChange(currentValue === value ? "" : currentValue);
-                    setOpen(false);
-                    setSearchValue('');
-                  }}
-                >
-                  <Check
-                    className={cn(
-                      "mr-2 h-4 w-4",
-                      value === category.id ? "opacity-100" : "opacity-0"
-                    )}
-                  />
-                  <div className="flex items-center space-x-2 flex-1 min-w-0">
+          <CommandList className="bg-popover max-h-80 overflow-y-auto">
+            <CommandEmpty className="text-muted-foreground py-6 text-center">{emptyText}</CommandEmpty>
+            <CommandGroup className="bg-popover p-4">
+              <div className="grid grid-cols-2 gap-2">
+                {showAllOption && (
+                  <div 
+                    className="flex items-center space-x-3 p-2 rounded-md hover:bg-accent hover:text-accent-foreground cursor-pointer"
+                    onClick={() => {
+                      onValueChange(allOptionValue);
+                      setOpen(false);
+                      setSearchValue('');
+                    }}
+                  >
+                    <input
+                      type="checkbox"
+                      checked={isAllSelected}
+                      onChange={() => {}}
+                      className="h-4 w-4 rounded border-border"
+                    />
+                    <span className="text-sm font-medium">{allOptionText}</span>
+                  </div>
+                )}
+                {filteredCategories.map((category) => (
+                  <div
+                    key={category.id}
+                    className="flex items-center space-x-3 p-2 rounded-md hover:bg-accent hover:text-accent-foreground cursor-pointer"
+                    onClick={() => {
+                      onValueChange(category.id === value ? "" : category.id);
+                      setOpen(false);
+                      setSearchValue('');
+                    }}
+                  >
+                    <input
+                      type="checkbox"
+                      checked={value === category.id}
+                      onChange={() => {}}
+                      className="h-4 w-4 rounded border-border"
+                    />
                     <div
-                      className="w-3 h-3 rounded-full flex-shrink-0"
+                      className="w-4 h-4 rounded-full flex-shrink-0"
                       style={{ backgroundColor: category.color }}
                     />
-                    <div className="flex flex-col min-w-0">
-                      <span className="truncate">
+                    <div className="flex flex-col min-w-0 flex-1">
+                      <span className="text-sm font-medium truncate">
                         {showArabic && category.name_ar ? category.name_ar : category.name}
                       </span>
                       {showArabic && category.name_ar && (
@@ -164,8 +163,8 @@ export const CategoryCombobox: React.FC<CategoryComboboxProps> = ({
                       )}
                     </div>
                   </div>
-                </CommandItem>
-              ))}
+                ))}
+              </div>
             </CommandGroup>
           </CommandList>
         </Command>
