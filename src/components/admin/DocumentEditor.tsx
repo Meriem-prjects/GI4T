@@ -805,18 +805,7 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
                           <Label className="text-xs font-medium">Catégorie de tribunal</Label>
                           <Select
                             value={editedData.court_category_type || ''}
-                            onValueChange={(value) => {
-                              const arabicMapping: Record<string, string> = {
-                                'civil': 'مدني',
-                                'administratif': 'إداري'
-                              };
-                              setEditedData(prev => ({ 
-                                ...prev, 
-                                court_category_type: value,
-                                court_category_type_ar: arabicMapping[value] || null
-                              }));
-                              setHasChanges(true);
-                            }}
+                            onValueChange={(value) => setEditedData(prev => ({ ...prev, court_category_type: value }))}
                           >
                             <SelectTrigger className="mt-1 h-8 bg-background">
                               <SelectValue placeholder="Sélectionner une catégorie" />
@@ -975,25 +964,14 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
                           <Label className="text-xs font-medium">فئة المحكمة</Label>
                           <Select
                             value={editedData.court_category_type_ar || ''}
-                            onValueChange={(value) => {
-                              const frenchMapping: Record<string, string> = {
-                                'مدني': 'civil',
-                                'إداري': 'administratif'
-                              };
-                              setEditedData(prev => ({ 
-                                ...prev, 
-                                court_category_type_ar: value,
-                                court_category_type: frenchMapping[value] || null
-                              }));
-                              setHasChanges(true);
-                            }}
+                            onValueChange={(value) => setEditedData(prev => ({ ...prev, court_category_type_ar: value }))}
                           >
                             <SelectTrigger className="mt-1 h-8 bg-background" dir="rtl">
                               <SelectValue placeholder="اختر فئة" />
                             </SelectTrigger>
                             <SelectContent className="bg-background border shadow-lg z-50">
-                              <SelectItem value="مدني">محكمة مدنية</SelectItem>
-                              <SelectItem value="إداري">محكمة إدارية</SelectItem>
+                              <SelectItem value="civil">محكمة مدنية</SelectItem>
+                              <SelectItem value="administratif">محكمة إدارية</SelectItem>
                             </SelectContent>
                           </Select>
                         </div>
