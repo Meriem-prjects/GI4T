@@ -1,22 +1,16 @@
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Facebook, Mail } from "lucide-react";
-
 const Footer = () => {
-  return (
-    <footer className="bg-slate-800 text-white mt-auto">
+  return <footer className="bg-slate-800 text-white mt-auto">
       <div className="container mx-auto px-4 py-12">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           {/* Left section - Logo and description */}
           <div className="space-y-4">
             <div className="flex items-center space-x-3">
-              <img 
-                src="/Feelinx_upload/justclic-logo.png" 
-                alt="JustClic.tn" 
-                className="h-10 w-auto object-contain"
-              />
+              <img src="/Feelinx_upload/justclic-logo.png" alt="JustClic.tn" className="h-10 w-auto object-contain" />
               <div>
-                <h3 className="text-xl font-bold text-white">JustClic.tn</h3>
+                
               </div>
             </div>
             <p className="text-gray-300 text-sm leading-relaxed">
@@ -50,10 +44,7 @@ const Footer = () => {
               </Button>
             </div>
             <div className="space-y-3">
-              <Input 
-                placeholder="Votre email" 
-                className="bg-gray-700 border-gray-600 text-white placeholder:text-gray-400"
-              />
+              <Input placeholder="Votre email" className="bg-gray-700 border-gray-600 text-white placeholder:text-gray-400" />
               <Button className="w-full bg-blue-600 hover:bg-blue-700 text-white">
                 NEWSLETTER
               </Button>
@@ -78,8 +69,6 @@ const Footer = () => {
           </div>
         </div>
       </div>
-    </footer>
-  );
+    </footer>;
 };
-
 export default Footer;
