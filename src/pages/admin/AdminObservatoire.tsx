@@ -5,7 +5,6 @@ import AdminDashboard from "@/components/admin/AdminDashboard";
 import AdminEditor from "./AdminEditor";
 import AdminContenus from "./AdminContenus";
 import AdminValidation from "./AdminValidation";
-import AdminParametres from "./AdminParametres";
 import PDFAOptimizer from "@/components/admin/PDFAOptimizer";
 import { cn } from "@/lib/utils";
 
@@ -44,7 +43,7 @@ const AdminObservatoire = () => {
             <Route path="validation" element={<AdminValidation />} />
             <Route path="historique" element={<div className="p-6">Historique - En développement</div>} />
             <Route path="mediatheque" element={<div className="p-6">Médiathèque - En développement</div>} />
-            <Route path="parametres" element={<AdminParametres />} />
+            <Route path="parametres" element={<div className="p-6">Paramètres - En développement</div>} />
           </Routes>
         </div>
       </main>
