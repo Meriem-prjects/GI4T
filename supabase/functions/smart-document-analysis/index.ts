@@ -9,17 +9,30 @@ const corsHeaders = {
 };
 
 serve(async (req) => {
+  console.log('Smart document analysis function called with method:', req.method);
+  
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
-    const { content, currentLanguage = 'fr' } = await req.json();
+    console.log('Processing POST request...');
+    const requestBody = await req.json();
+    console.log('Request body received:', { hasContent: !!requestBody.content, currentLanguage: requestBody.currentLanguage });
+    
+    const { content, currentLanguage = 'fr' } = requestBody;
 
     console.log('Starting smart document analysis for content length:', content?.length);
+    console.log('OpenAI API Key available:', !!openAIApiKey);
 
     if (!content) {
+      console.error('No content provided for analysis');
       throw new Error('Content is required for analysis');
+    }
+
+    if (!openAIApiKey) {
+      console.error('OpenAI API key not configured');
+      throw new Error('OpenAI API key not configured');
     }
 
     // Use currentLanguage as absolute primary language (no auto-detection)
@@ -100,6 +113,7 @@ serve(async (req) => {
       }
     }`;
 
+    console.log('Making OpenAI API call...');
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
       headers: {
@@ -117,6 +131,8 @@ serve(async (req) => {
         max_tokens: 4000,
       }),
     });
+
+    console.log('OpenAI response status:', response.status);
 
     if (!response.ok) {
       const errorData = await response.text();
@@ -164,10 +180,17 @@ serve(async (req) => {
 
   } catch (error) {
     console.error('Error in smart-document-analysis function:', error);
+    console.error('Error stack:', error.stack);
+    
     return new Response(JSON.stringify({ 
       success: false,
-      error: error.message,
-      timestamp: new Date().toISOString()
+      error: error.message || 'Unknown error occurred',
+      errorType: error.constructor.name,
+      timestamp: new Date().toISOString(),
+      debug: {
+        hasOpenAIKey: !!openAIApiKey,
+        contentReceived: !!req.body
+      }
     }), {
       status: 500,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },

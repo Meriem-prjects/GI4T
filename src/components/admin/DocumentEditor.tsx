@@ -170,6 +170,9 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
     }
 
     setIsAnalyzing(true);
+    console.log('Starting AI analysis with content length:', editedData.content.length);
+    console.log('Document language:', editedData.language);
+    
     try {
       const { data, error } = await supabase.functions.invoke('smart-document-analysis', {
         body: {
@@ -178,7 +181,12 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
         }
       });
 
-      if (error) throw error;
+      console.log('AI analysis response:', { data, error });
+
+      if (error) {
+        console.error('Supabase function error:', error);
+        throw error;
+      }
 
       if (data.success && data.analysis) {
         const analysis = data.analysis;
