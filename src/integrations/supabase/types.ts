@@ -93,6 +93,7 @@ export type Database = {
           id: string
           name: string
           name_ar: string | null
+          type: string | null
           updated_at: string
         }
         Insert: {
@@ -102,6 +103,7 @@ export type Database = {
           id?: string
           name: string
           name_ar?: string | null
+          type?: string | null
           updated_at?: string
         }
         Update: {
@@ -111,6 +113,7 @@ export type Database = {
           id?: string
           name?: string
           name_ar?: string | null
+          type?: string | null
           updated_at?: string
         }
         Relationships: []
@@ -344,7 +347,9 @@ export type Database = {
           level_order: number
           name: string
           name_ar: string | null
+          type: string | null
           updated_at: string
+          value: string | null
         }
         Insert: {
           created_at?: string
@@ -354,7 +359,9 @@ export type Database = {
           level_order?: number
           name: string
           name_ar?: string | null
+          type?: string | null
           updated_at?: string
+          value?: string | null
         }
         Update: {
           created_at?: string
@@ -364,7 +371,9 @@ export type Database = {
           level_order?: number
           name?: string
           name_ar?: string | null
+          type?: string | null
           updated_at?: string
+          value?: string | null
         }
         Relationships: []
       }

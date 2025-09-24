@@ -12,6 +12,8 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Plus, Edit, Trash2, Building, Scale, FileText, Globe, Users, Shield } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useCategories, useDeleteCategory } from "@/hooks/useCategories";
+import { useCourtTypes, useDeleteCourtType } from "@/hooks/useCourtTypes";
+import { useJurisdictionLevels, useDeleteJurisdictionLevel } from "@/hooks/useJurisdictionLevels";
 import CategoryForm from "@/components/admin/CategoryForm";
 
 const AdminParametres = () => {
@@ -21,17 +23,18 @@ const AdminParametres = () => {
   // Real data from Supabase
   const { data: categories = [], isLoading: categoriesLoading } = useCategories();
   const deleteCategory = useDeleteCategory();
+  
+  const { data: courtTypes = [], isLoading: courtTypesLoading } = useCourtTypes();
+  const deleteCourtType = useDeleteCourtType();
+  
+  const { data: jurisdictionLevels = [], isLoading: jurisdictionLevelsLoading } = useJurisdictionLevels();
+  const deleteJurisdictionLevel = useDeleteJurisdictionLevel();
 
   // Category form state
   const [categoryFormOpen, setCategoryFormOpen] = useState(false);
   const [editingCategory, setEditingCategory] = useState<any>(null);
 
   // Mock data for other sections (will be replaced with real data later)
-  const [courtTypes] = useState([
-    { id: "1", name: "Tribunal de première instance", name_ar: "محكمة الناحية", description: "Juridictions de droit commun", description_ar: "محاكم القانون العام" },
-    { id: "2", name: "Cour d'appel", name_ar: "محكمة الاستئناف", description: "Juridictions d'appel", description_ar: "محاكم الاستئناف" }
-  ]);
-
   const [documentTypes] = useState([
     { id: "1", name: "Décision judiciaire", name_ar: "قرار قضائي", description: "Décisions rendues par les tribunaux", description_ar: "القرارات الصادرة عن المحاكم" },
     { id: "2", name: "Loi", name_ar: "قانون", description: "Textes législatifs", description_ar: "النصوص التشريعية" }
@@ -45,11 +48,6 @@ const AdminParametres = () => {
   const [users] = useState([
     { id: "1", first_name: "Ahmed", last_name: "Ben Ali", email: "ahmed@example.com", role: "admin" },
     { id: "2", first_name: "Fatma", last_name: "Trabelsi", email: "fatma@example.com", role: "editor" }
-  ]);
-
-  const [jurisdictionLevels] = useState([
-    { id: "1", name: "Première instance", name_ar: "الدرجة الأولى", description: "Juridictions de première instance", description_ar: "محاكم الدرجة الأولى", level_order: 1 },
-    { id: "2", name: "Appel", name_ar: "الاستئناف", description: "Juridictions d'appel", description_ar: "محاكم الاستئناف", level_order: 2 }
   ]);
 
   // Category handlers
@@ -80,17 +78,27 @@ const AdminParametres = () => {
     setIsDialogOpen(true);
   };
 
-  const handleEdit = (item: any) => {
-    setCurrentForm(item);
-    setEditingId(item.id);
+  const handleEdit = (type: string, id: string) => {
+    setCurrentForm({});
+    setEditingId(id);
     setIsDialogOpen(true);
   };
 
-  const handleDelete = (id: string, type: string) => {
-    toast({
-      title: "Supprimé",
-      description: "L'élément a été supprimé avec succès."
-    });
+  const handleDelete = (type: string, id: string) => {
+    if (type === 'court-type') {
+      if (window.confirm("Êtes-vous sûr de vouloir supprimer ce type de tribunal ?")) {
+        deleteCourtType.mutate(id);
+      }
+    } else if (type === 'jurisdiction-level') {
+      if (window.confirm("Êtes-vous sûr de vouloir supprimer ce niveau de juridiction ?")) {
+        deleteJurisdictionLevel.mutate(id);
+      }
+    } else {
+      toast({
+        title: "Supprimé",
+        description: "L'élément a été supprimé avec succès."
+      });
+    }
   };
 
   const handleSave = () => {
@@ -114,42 +122,54 @@ const AdminParametres = () => {
               Gérer les différents types de tribunaux du système judiciaire
             </CardDescription>
           </div>
-          <Button onClick={() => handleAdd("court-types")} size="sm">
+          <Button onClick={() => handleAdd("court-type")} size="sm">
             <Plus className="w-4 h-4 mr-2" />
             Ajouter
           </Button>
         </div>
       </CardHeader>
       <CardContent>
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Nom (FR)</TableHead>
-              <TableHead>Nom (AR)</TableHead>
-              <TableHead>Description</TableHead>
-              <TableHead className="text-right">Actions</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {courtTypes.map((item) => (
-              <TableRow key={item.id}>
-                <TableCell className="font-medium">{item.name}</TableCell>
-                <TableCell dir="rtl">{item.name_ar}</TableCell>
-                <TableCell className="text-muted-foreground">{item.description}</TableCell>
-                <TableCell className="text-right">
-                  <div className="flex justify-end gap-2">
-                    <Button variant="outline" size="sm" onClick={() => handleEdit(item)}>
-                      <Edit className="w-4 h-4" />
-                    </Button>
-                    <Button variant="outline" size="sm" onClick={() => handleDelete(item.id, "court-types")}>
-                      <Trash2 className="w-4 h-4" />
-                    </Button>
-                  </div>
-                </TableCell>
+        {courtTypesLoading ? (
+          <div className="flex items-center justify-center py-8">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+          </div>
+        ) : (
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Nom (FR)</TableHead>
+                <TableHead>Nom (AR)</TableHead>
+                <TableHead>Type</TableHead>
+                <TableHead>Description</TableHead>
+                <TableHead className="text-right">Actions</TableHead>
               </TableRow>
-            ))}
-          </TableBody>
-        </Table>
+            </TableHeader>
+            <TableBody>
+              {courtTypes.map((item) => (
+                <TableRow key={item.id}>
+                  <TableCell className="font-medium">{item.name}</TableCell>
+                  <TableCell dir="rtl">{item.name_ar}</TableCell>
+                  <TableCell>
+                    <Badge variant={item.type === 'civil' ? 'default' : 'secondary'}>
+                      {item.type === 'civil' ? 'Civil' : 'Administratif'}
+                    </Badge>
+                  </TableCell>
+                  <TableCell className="text-muted-foreground">{item.description}</TableCell>
+                  <TableCell className="text-right">
+                    <div className="flex justify-end gap-2">
+                      <Button variant="outline" size="sm" onClick={() => handleEdit('court-type', item.id)}>
+                        <Edit className="w-4 h-4" />
+                      </Button>
+                      <Button variant="outline" size="sm" onClick={() => handleDelete('court-type', item.id)}>
+                        <Trash2 className="w-4 h-4" />
+                      </Button>
+                    </div>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        )}
       </CardContent>
     </Card>
   );
@@ -274,10 +294,10 @@ const AdminParametres = () => {
                 <TableCell className="text-muted-foreground">{item.description}</TableCell>
                 <TableCell className="text-right">
                   <div className="flex justify-end gap-2">
-                    <Button variant="outline" size="sm" onClick={() => handleEdit(item)}>
+                    <Button variant="outline" size="sm" onClick={() => handleEdit('document-type', item.id)}>
                       <Edit className="w-4 h-4" />
                     </Button>
-                    <Button variant="outline" size="sm" onClick={() => handleDelete(item.id, "document-types")}>
+                    <Button variant="outline" size="sm" onClick={() => handleDelete('document-type', item.id)}>
                       <Trash2 className="w-4 h-4" />
                     </Button>
                   </div>
@@ -334,10 +354,10 @@ const AdminParametres = () => {
                 </TableCell>
                 <TableCell className="text-right">
                   <div className="flex justify-end gap-2">
-                    <Button variant="outline" size="sm" onClick={() => handleEdit(item)}>
+                    <Button variant="outline" size="sm" onClick={() => handleEdit('language', item.id)}>
                       <Edit className="w-4 h-4" />
                     </Button>
-                    <Button variant="outline" size="sm" onClick={() => handleDelete(item.id, "languages")}>
+                    <Button variant="outline" size="sm" onClick={() => handleDelete('language', item.id)}>
                       <Trash2 className="w-4 h-4" />
                     </Button>
                   </div>
@@ -395,10 +415,10 @@ const AdminParametres = () => {
                 </TableCell>
                 <TableCell className="text-right">
                   <div className="flex justify-end gap-2">
-                    <Button variant="outline" size="sm" onClick={() => handleEdit(item)}>
+                    <Button variant="outline" size="sm" onClick={() => handleEdit('user', item.id)}>
                       <Edit className="w-4 h-4" />
                     </Button>
-                    <Button variant="outline" size="sm" onClick={() => handleDelete(item.id, "users")}>
+                    <Button variant="outline" size="sm" onClick={() => handleDelete('user', item.id)}>
                       <Trash2 className="w-4 h-4" />
                     </Button>
                   </div>
@@ -424,44 +444,62 @@ const AdminParametres = () => {
               Configurer la hiérarchie des juridictions
             </CardDescription>
           </div>
-          <Button onClick={() => handleAdd("jurisdiction-levels")} size="sm">
+          <Button onClick={() => handleAdd("jurisdiction-level")} size="sm">
             <Plus className="w-4 h-4 mr-2" />
             Ajouter
           </Button>
         </div>
       </CardHeader>
       <CardContent>
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Ordre</TableHead>
-              <TableHead>Nom (FR)</TableHead>
-              <TableHead>Nom (AR)</TableHead>
-              <TableHead>Description</TableHead>
-              <TableHead className="text-right">Actions</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {jurisdictionLevels.sort((a, b) => a.level_order - b.level_order).map((item) => (
-              <TableRow key={item.id}>
-                <TableCell className="font-medium">{item.level_order}</TableCell>
-                <TableCell>{item.name}</TableCell>
-                <TableCell dir="rtl">{item.name_ar}</TableCell>
-                <TableCell className="text-muted-foreground">{item.description}</TableCell>
-                <TableCell className="text-right">
-                  <div className="flex justify-end gap-2">
-                    <Button variant="outline" size="sm" onClick={() => handleEdit(item)}>
-                      <Edit className="w-4 h-4" />
-                    </Button>
-                    <Button variant="outline" size="sm" onClick={() => handleDelete(item.id, "jurisdiction-levels")}>
-                      <Trash2 className="w-4 h-4" />
-                    </Button>
-                  </div>
-                </TableCell>
+        {jurisdictionLevelsLoading ? (
+          <div className="flex items-center justify-center py-8">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+          </div>
+        ) : (
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Ordre</TableHead>
+                <TableHead>Nom (FR)</TableHead>
+                <TableHead>Nom (AR)</TableHead>
+                <TableHead>Type</TableHead>
+                <TableHead>Valeur</TableHead>
+                <TableHead>Description</TableHead>
+                <TableHead className="text-right">Actions</TableHead>
               </TableRow>
-            ))}
-          </TableBody>
-        </Table>
+            </TableHeader>
+            <TableBody>
+              {jurisdictionLevels.sort((a, b) => a.level_order - b.level_order).map((item) => (
+                <TableRow key={item.id}>
+                  <TableCell>
+                    <Badge variant="outline">{item.level_order}</Badge>
+                  </TableCell>
+                  <TableCell className="font-medium">{item.name}</TableCell>
+                  <TableCell dir="rtl">{item.name_ar}</TableCell>
+                  <TableCell>
+                    <Badge variant={item.type === 'civil' ? 'default' : 'secondary'}>
+                      {item.type === 'civil' ? 'Civil' : 'Administratif'}
+                    </Badge>
+                  </TableCell>
+                  <TableCell>
+                    <code className="text-xs bg-muted px-1 py-0.5 rounded">{item.value}</code>
+                  </TableCell>
+                  <TableCell className="text-muted-foreground max-w-xs truncate">{item.description}</TableCell>
+                  <TableCell className="text-right">
+                    <div className="flex justify-end gap-2">
+                      <Button variant="outline" size="sm" onClick={() => handleEdit('jurisdiction-level', item.id)}>
+                        <Edit className="w-4 h-4" />
+                      </Button>
+                      <Button variant="outline" size="sm" onClick={() => handleDelete('jurisdiction-level', item.id)}>
+                        <Trash2 className="w-4 h-4" />
+                      </Button>
+                    </div>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        )}
       </CardContent>
     </Card>
   );
