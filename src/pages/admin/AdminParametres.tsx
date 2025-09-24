@@ -14,9 +14,11 @@ import { useToast } from "@/hooks/use-toast";
 import { useCategories, useDeleteCategory } from "@/hooks/useCategories";
 import { useCourtTypes, useDeleteCourtType } from "@/hooks/useCourtTypes";
 import { useJurisdictionLevels, useDeleteJurisdictionLevel } from "@/hooks/useJurisdictionLevels";
+import { useDocumentTypes, useDeleteDocumentType } from "@/hooks/useDocumentTypes";
 import CategoryForm from "@/components/admin/CategoryForm";
 import { CourtTypeForm } from "@/components/admin/CourtTypeForm";
 import { JurisdictionLevelForm } from "@/components/admin/JurisdictionLevelForm";
+import { DocumentTypeForm } from "@/components/admin/DocumentTypeForm";
 
 const AdminParametres = () => {
   const { toast } = useToast();
@@ -32,6 +34,9 @@ const AdminParametres = () => {
   const { data: jurisdictionLevels = [], isLoading: jurisdictionLevelsLoading } = useJurisdictionLevels();
   const deleteJurisdictionLevel = useDeleteJurisdictionLevel();
 
+  const { data: documentTypes = [], isLoading: documentTypesLoading } = useDocumentTypes();
+  const deleteDocumentType = useDeleteDocumentType();
+
   // Category form state
   const [categoryFormOpen, setCategoryFormOpen] = useState(false);
   const [editingCategory, setEditingCategory] = useState<any>(null);
@@ -44,11 +49,11 @@ const AdminParametres = () => {
   const [jurisdictionLevelFormOpen, setJurisdictionLevelFormOpen] = useState(false);
   const [editingJurisdictionLevel, setEditingJurisdictionLevel] = useState<any>(null);
 
+  // Document type form state
+  const [documentTypeFormOpen, setDocumentTypeFormOpen] = useState(false);
+  const [editingDocumentType, setEditingDocumentType] = useState<any>(null);
+
   // Mock data for other sections (will be replaced with real data later)
-  const [documentTypes] = useState([
-    { id: "1", name: "Décision judiciaire", name_ar: "قرار قضائي", description: "Décisions rendues par les tribunaux", description_ar: "القرارات الصادرة عن المحاكم" },
-    { id: "2", name: "Loi", name_ar: "قانون", description: "Textes législatifs", description_ar: "النصوص التشريعية" }
-  ]);
 
   const [languages] = useState([
     { id: "1", code: "fr", name: "Français", name_native: "Français", is_default: true, is_active: true },
@@ -92,6 +97,9 @@ const AdminParametres = () => {
     } else if (type === 'jurisdiction-level') {
       setEditingJurisdictionLevel(null);
       setJurisdictionLevelFormOpen(true);
+    } else if (type === 'document-type') {
+      setEditingDocumentType(null);
+      setDocumentTypeFormOpen(true);
     } else {
       setCurrentForm({});
       setEditingId(null);
@@ -299,14 +307,19 @@ const AdminParametres = () => {
               Gérer les différents types de documents juridiques
             </CardDescription>
           </div>
-          <Button onClick={() => handleAdd("document-types")} size="sm">
+          <Button onClick={() => handleAdd("document-type")} size="sm">
             <Plus className="w-4 h-4 mr-2" />
             Ajouter
           </Button>
         </div>
       </CardHeader>
       <CardContent>
-        <Table>
+        {documentTypesLoading ? (
+          <div className="flex justify-center py-4">
+            <div className="text-muted-foreground">Chargement...</div>
+          </div>
+        ) : (
+          <Table>
           <TableHeader>
             <TableRow>
               <TableHead>Nom (FR)</TableHead>
@@ -335,6 +348,7 @@ const AdminParametres = () => {
             ))}
           </TableBody>
         </Table>
+        )}
       </CardContent>
     </Card>
   );
@@ -642,6 +656,13 @@ const AdminParametres = () => {
           />
         </DialogContent>
       </Dialog>
+
+      {/* Document Type Form Dialog */}
+      <DocumentTypeForm
+        isOpen={documentTypeFormOpen}
+        onClose={() => setDocumentTypeFormOpen(false)}
+        documentType={editingDocumentType}
+      />
     </div>
   );
 };
