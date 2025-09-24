@@ -88,7 +88,7 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
   const [hasChanges, setHasChanges] = useState(false);
   const [categories, setCategories] = useState<Category[]>([]);
   const [documentTypes, setDocumentTypes] = useState<DocumentType[]>([]);
-  const [selectedCourtType, setSelectedCourtType] = useState<'civil' | 'administratif' | ''>('');
+  const [selectedCourtType, setSelectedCourtType] = useState<string>('');
   
   // Hook pour récupérer les types de tribunaux et niveaux de juridiction
   const { data: courtTypes = [] } = useCourtTypes();
@@ -111,6 +111,12 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
     const docLang = documentData.language || 'fr';
     setCurrentLanguage(docLang === 'ar' ? 'ar' : 'fr');
     console.log('DocumentEditor loaded with language:', docLang, 'Setting currentLanguage to:', docLang === 'ar' ? 'ar' : 'fr');
+    
+    // Initialize selectedCourtType if document has court_category_type
+    if (documentData.court_category_type) {
+      setSelectedCourtType(documentData.court_category_type);
+    }
+    
     loadCategories();
     loadDocumentTypes();
   }, [documentData]);
@@ -881,15 +887,26 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
                           <Label className="text-xs font-medium">Catégorie de tribunal</Label>
                           <Select
                             value={editedData.court_category_type || ''}
-                            onValueChange={(value) => setEditedData(prev => ({ ...prev, court_category_type: value }))}
+                            onValueChange={(value) => {
+                              setEditedData(prev => ({ ...prev, court_category_type: value }));
+                              // Update Arabic equivalent
+                              const courtType = courtTypes.find(ct => ct.name === value);
+                              if (courtType?.name_ar) {
+                                setEditedData(prev => ({ ...prev, court_category_type_ar: courtType.name_ar }));
+                              }
+                              setSelectedCourtType(value);
+                            }}
                           >
                             <SelectTrigger className="mt-1 h-8 bg-background">
                               <SelectValue placeholder="Sélectionner une catégorie" />
                             </SelectTrigger>
-                    <SelectContent className="bg-background border shadow-lg z-50">
-                      <SelectItem value="civil">Civil</SelectItem>
-                      <SelectItem value="administratif">Administratif</SelectItem>
-                    </SelectContent>
+                            <SelectContent className="bg-background border shadow-lg z-50">
+                              {courtTypes.map((courtType) => (
+                                <SelectItem key={courtType.id} value={courtType.name}>
+                                  {courtType.name}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
                           </Select>
                         </div>
 
@@ -897,15 +914,25 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
                           <Label className="text-xs font-medium">Niveau de juridiction</Label>
                           <Select
                             value={editedData.court_level || ''}
-                            onValueChange={(value) => setEditedData(prev => ({ ...prev, court_level: value }))}
+                            onValueChange={(value) => {
+                              setEditedData(prev => ({ ...prev, court_level: value }));
+                              // Update Arabic equivalent
+                              const level = jurisdictionLevels.find(jl => jl.name === value);
+                              if (level?.name_ar) {
+                                setEditedData(prev => ({ ...prev, court_level_ar: level.name_ar }));
+                              }
+                            }}
+                            disabled={!selectedCourtType}
                           >
                             <SelectTrigger className="mt-1 h-8 bg-background">
-                              <SelectValue placeholder="Sélectionner un niveau" />
+                              <SelectValue placeholder={selectedCourtType ? "Sélectionner un niveau" : "Choisir une catégorie d'abord"} />
                             </SelectTrigger>
                             <SelectContent className="bg-background border shadow-lg z-50">
-                              <SelectItem value="premiere_instance">Tribunal de première instance</SelectItem>
-                              <SelectItem value="appel">Cour d'appel</SelectItem>
-                              <SelectItem value="cassation">Cour de cassation</SelectItem>
+                              {jurisdictionLevels.map((level) => (
+                                <SelectItem key={level.id} value={level.name}>
+                                  {level.name}
+                                </SelectItem>
+                              ))}
                             </SelectContent>
                           </Select>
                         </div>
@@ -1082,9 +1109,11 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
                             onValueChange={(value) => {
                               setEditedData(prev => ({ ...prev, court_category_type_ar: value }));
                               // Update French equivalent and selectedCourtType
-                              const frenchType = courtTypes.find(ct => ct.name_ar === value)?.name || '';
-                              setEditedData(prev => ({ ...prev, court_category_type: frenchType }));
-                              setSelectedCourtType(frenchType === 'Civil' ? 'civil' : frenchType === 'Administratif' ? 'administratif' : '');
+                              const courtType = courtTypes.find(ct => ct.name_ar === value);
+                              if (courtType) {
+                                setEditedData(prev => ({ ...prev, court_category_type: courtType.name }));
+                                setSelectedCourtType(courtType.name);
+                              }
                             }}
                           >
                             <SelectTrigger className="mt-1 h-8 bg-background" dir="rtl">
