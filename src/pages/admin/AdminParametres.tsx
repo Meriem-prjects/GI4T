@@ -8,45 +8,68 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Plus, Edit, Trash2, Building, Scale, FileText, Globe, Users, Shield } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { useCategories, useDeleteCategory } from "@/hooks/useCategories";
+import CategoryForm from "@/components/admin/CategoryForm";
 
 const AdminParametres = () => {
   const { toast } = useToast();
   const [activeTab, setActiveTab] = useState("court-types");
+  
+  // Real data from Supabase
+  const { data: categories = [], isLoading: categoriesLoading } = useCategories();
+  const deleteCategory = useDeleteCategory();
 
-  // Mock data for demonstration
-  const [courtTypes, setCourtTypes] = useState([
+  // Category form state
+  const [categoryFormOpen, setCategoryFormOpen] = useState(false);
+  const [editingCategory, setEditingCategory] = useState<any>(null);
+
+  // Mock data for other sections (will be replaced with real data later)
+  const [courtTypes] = useState([
     { id: "1", name: "Tribunal de première instance", name_ar: "محكمة الناحية", description: "Juridictions de droit commun", description_ar: "محاكم القانون العام" },
     { id: "2", name: "Cour d'appel", name_ar: "محكمة الاستئناف", description: "Juridictions d'appel", description_ar: "محاكم الاستئناف" }
   ]);
 
-  const [categories, setCategories] = useState([
-    { id: "1", name: "Droits civils", name_ar: "الحقوق المدنية", description: "Droits civils et politiques", description_ar: "الحقوق المدنية والسياسية", color: "#3B82F6", parent_id: null },
-    { id: "2", name: "Droits sociaux", name_ar: "الحقوق الاجتماعية", description: "Droits économiques et sociaux", description_ar: "الحقوق الاقتصادية والاجتماعية", color: "#10B981", parent_id: null }
-  ]);
-
-  const [documentTypes, setDocumentTypes] = useState([
+  const [documentTypes] = useState([
     { id: "1", name: "Décision judiciaire", name_ar: "قرار قضائي", description: "Décisions rendues par les tribunaux", description_ar: "القرارات الصادرة عن المحاكم" },
     { id: "2", name: "Loi", name_ar: "قانون", description: "Textes législatifs", description_ar: "النصوص التشريعية" }
   ]);
 
-  const [languages, setLanguages] = useState([
+  const [languages] = useState([
     { id: "1", code: "fr", name: "Français", name_native: "Français", is_default: true, is_active: true },
     { id: "2", code: "ar", name: "Arabe", name_native: "العربية", is_default: false, is_active: true }
   ]);
 
-  const [users, setUsers] = useState([
+  const [users] = useState([
     { id: "1", first_name: "Ahmed", last_name: "Ben Ali", email: "ahmed@example.com", role: "admin" },
     { id: "2", first_name: "Fatma", last_name: "Trabelsi", email: "fatma@example.com", role: "editor" }
   ]);
 
-  const [jurisdictionLevels, setJurisdictionLevels] = useState([
+  const [jurisdictionLevels] = useState([
     { id: "1", name: "Première instance", name_ar: "الدرجة الأولى", description: "Juridictions de première instance", description_ar: "محاكم الدرجة الأولى", level_order: 1 },
     { id: "2", name: "Appel", name_ar: "الاستئناف", description: "Juridictions d'appel", description_ar: "محاكم الاستئناف", level_order: 2 }
   ]);
 
+  // Category handlers
+  const handleAddCategory = () => {
+    setEditingCategory(null);
+    setCategoryFormOpen(true);
+  };
+
+  const handleEditCategory = (category: any) => {
+    setEditingCategory(category);
+    setCategoryFormOpen(true);
+  };
+
+  const handleDeleteCategory = async (id: string) => {
+    if (window.confirm("Êtes-vous sûr de vouloir supprimer cette catégorie ?")) {
+      await deleteCategory.mutateAsync(id);
+    }
+  };
+
+  // Generic handlers for other sections (temporary)
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [currentForm, setCurrentForm] = useState<any>({});
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -64,7 +87,6 @@ const AdminParametres = () => {
   };
 
   const handleDelete = (id: string, type: string) => {
-    // Mock delete functionality
     toast({
       title: "Supprimé",
       description: "L'élément a été supprimé avec succès."
@@ -72,7 +94,6 @@ const AdminParametres = () => {
   };
 
   const handleSave = () => {
-    // Mock save functionality
     setIsDialogOpen(false);
     toast({
       title: editingId ? "Modifié" : "Ajouté",
@@ -113,7 +134,7 @@ const AdminParametres = () => {
             {courtTypes.map((item) => (
               <TableRow key={item.id}>
                 <TableCell className="font-medium">{item.name}</TableCell>
-                <TableCell>{item.name_ar}</TableCell>
+                <TableCell dir="rtl">{item.name_ar}</TableCell>
                 <TableCell className="text-muted-foreground">{item.description}</TableCell>
                 <TableCell className="text-right">
                   <div className="flex justify-end gap-2">
@@ -143,55 +164,75 @@ const AdminParametres = () => {
               Catégories de Droits
             </CardTitle>
             <CardDescription>
-              Gérer la classification des droits fondamentaux
+              Gérer la classification des droits fondamentaux ({categories.length} catégories)
             </CardDescription>
           </div>
-          <Button onClick={() => handleAdd("categories")} size="sm">
+          <Button onClick={handleAddCategory} size="sm">
             <Plus className="w-4 h-4 mr-2" />
             Ajouter
           </Button>
         </div>
       </CardHeader>
       <CardContent>
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Nom (FR)</TableHead>
-              <TableHead>Nom (AR)</TableHead>
-              <TableHead>Couleur</TableHead>
-              <TableHead>Description</TableHead>
-              <TableHead className="text-right">Actions</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {categories.map((item) => (
-              <TableRow key={item.id}>
-                <TableCell className="font-medium">{item.name}</TableCell>
-                <TableCell>{item.name_ar}</TableCell>
-                <TableCell>
-                  <div className="flex items-center gap-2">
-                    <div 
-                      className="w-4 h-4 rounded" 
-                      style={{ backgroundColor: item.color }}
-                    />
-                    <span className="text-sm text-muted-foreground">{item.color}</span>
-                  </div>
-                </TableCell>
-                <TableCell className="text-muted-foreground">{item.description}</TableCell>
-                <TableCell className="text-right">
-                  <div className="flex justify-end gap-2">
-                    <Button variant="outline" size="sm" onClick={() => handleEdit(item)}>
-                      <Edit className="w-4 h-4" />
-                    </Button>
-                    <Button variant="outline" size="sm" onClick={() => handleDelete(item.id, "categories")}>
-                      <Trash2 className="w-4 h-4" />
-                    </Button>
-                  </div>
-                </TableCell>
+        {categoriesLoading ? (
+          <div className="text-center py-8 text-muted-foreground">
+            Chargement des catégories...
+          </div>
+        ) : (
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Nom (FR)</TableHead>
+                <TableHead>Nom (AR)</TableHead>
+                <TableHead>Couleur</TableHead>
+                <TableHead>Description</TableHead>
+                <TableHead>Parent</TableHead>
+                <TableHead className="text-right">Actions</TableHead>
               </TableRow>
-            ))}
-          </TableBody>
-        </Table>
+            </TableHeader>
+            <TableBody>
+              {categories.map((item) => {
+                const parentCategory = categories.find(cat => cat.id === item.parent_id);
+                return (
+                  <TableRow key={item.id}>
+                    <TableCell className="font-medium">{item.name}</TableCell>
+                    <TableCell dir="rtl">{item.name_ar || "-"}</TableCell>
+                    <TableCell>
+                      <div className="flex items-center gap-2">
+                        <div 
+                          className="w-4 h-4 rounded border" 
+                          style={{ backgroundColor: item.color }}
+                        />
+                        <span className="text-sm text-muted-foreground font-mono">{item.color}</span>
+                      </div>
+                    </TableCell>
+                    <TableCell className="text-muted-foreground max-w-xs truncate">
+                      {item.description || "-"}
+                    </TableCell>
+                    <TableCell className="text-muted-foreground">
+                      {parentCategory ? parentCategory.name : "Racine"}
+                    </TableCell>
+                    <TableCell className="text-right">
+                      <div className="flex justify-end gap-2">
+                        <Button variant="outline" size="sm" onClick={() => handleEditCategory(item)}>
+                          <Edit className="w-4 h-4" />
+                        </Button>
+                        <Button 
+                          variant="outline" 
+                          size="sm" 
+                          onClick={() => handleDeleteCategory(item.id)}
+                          disabled={deleteCategory.isPending}
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </Button>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                );
+              })}
+            </TableBody>
+          </Table>
+        )}
       </CardContent>
     </Card>
   );
@@ -229,7 +270,7 @@ const AdminParametres = () => {
             {documentTypes.map((item) => (
               <TableRow key={item.id}>
                 <TableCell className="font-medium">{item.name}</TableCell>
-                <TableCell>{item.name_ar}</TableCell>
+                <TableCell dir="rtl">{item.name_ar}</TableCell>
                 <TableCell className="text-muted-foreground">{item.description}</TableCell>
                 <TableCell className="text-right">
                   <div className="flex justify-end gap-2">
@@ -405,7 +446,7 @@ const AdminParametres = () => {
               <TableRow key={item.id}>
                 <TableCell className="font-medium">{item.level_order}</TableCell>
                 <TableCell>{item.name}</TableCell>
-                <TableCell>{item.name_ar}</TableCell>
+                <TableCell dir="rtl">{item.name_ar}</TableCell>
                 <TableCell className="text-muted-foreground">{item.description}</TableCell>
                 <TableCell className="text-right">
                   <div className="flex justify-end gap-2">
@@ -469,7 +510,14 @@ const AdminParametres = () => {
         </TabsContent>
       </Tabs>
 
-      {/* Generic Dialog for Add/Edit */}
+      {/* Category Form Dialog */}
+      <CategoryForm
+        isOpen={categoryFormOpen}
+        onClose={() => setCategoryFormOpen(false)}
+        category={editingCategory}
+      />
+
+      {/* Generic Dialog for other sections (will be replaced with specific forms) */}
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <DialogContent className="sm:max-w-[425px]">
           <DialogHeader>
