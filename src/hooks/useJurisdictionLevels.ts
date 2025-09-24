@@ -9,26 +9,18 @@ export interface JurisdictionLevel {
   description?: string;
   description_ar?: string;
   level_order: number;
-  type: 'civil' | 'administratif';
-  value?: string;
   created_at: string;
   updated_at: string;
 }
 
-export const useJurisdictionLevels = (type?: 'civil' | 'administratif') => {
+export const useJurisdictionLevels = () => {
   return useQuery({
-    queryKey: ['jurisdiction-levels', type],
+    queryKey: ['jurisdiction-levels'],
     queryFn: async () => {
-      let query = supabase
+      const { data, error } = await supabase
         .from('jurisdiction_levels')
         .select('*')
         .order('level_order');
-      
-      if (type) {
-        query = query.eq('type', type);
-      }
-      
-      const { data, error } = await query;
       
       if (error) throw error;
       return data as JurisdictionLevel[];

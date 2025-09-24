@@ -8,7 +8,6 @@ export interface CourtType {
   name_ar?: string;
   description?: string;
   description_ar?: string;
-  type: 'civil' | 'administratif';
   created_at: string;
   updated_at: string;
 }

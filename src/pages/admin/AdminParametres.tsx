@@ -15,6 +15,8 @@ import { useCategories, useDeleteCategory } from "@/hooks/useCategories";
 import { useCourtTypes, useDeleteCourtType } from "@/hooks/useCourtTypes";
 import { useJurisdictionLevels, useDeleteJurisdictionLevel } from "@/hooks/useJurisdictionLevels";
 import CategoryForm from "@/components/admin/CategoryForm";
+import { CourtTypeForm } from "@/components/admin/CourtTypeForm";
+import { JurisdictionLevelForm } from "@/components/admin/JurisdictionLevelForm";
 
 const AdminParametres = () => {
   const { toast } = useToast();
@@ -33,6 +35,14 @@ const AdminParametres = () => {
   // Category form state
   const [categoryFormOpen, setCategoryFormOpen] = useState(false);
   const [editingCategory, setEditingCategory] = useState<any>(null);
+
+  // Court type form state
+  const [courtTypeFormOpen, setCourtTypeFormOpen] = useState(false);
+  const [editingCourtType, setEditingCourtType] = useState<any>(null);
+
+  // Jurisdiction level form state
+  const [jurisdictionLevelFormOpen, setJurisdictionLevelFormOpen] = useState(false);
+  const [editingJurisdictionLevel, setEditingJurisdictionLevel] = useState<any>(null);
 
   // Mock data for other sections (will be replaced with real data later)
   const [documentTypes] = useState([
@@ -73,15 +83,40 @@ const AdminParametres = () => {
   const [editingId, setEditingId] = useState<string | null>(null);
 
   const handleAdd = (type: string) => {
-    setCurrentForm({});
-    setEditingId(null);
-    setIsDialogOpen(true);
+    if (type === 'category') {
+      setEditingCategory(null);
+      setCategoryFormOpen(true);
+    } else if (type === 'court-type') {
+      setEditingCourtType(null);
+      setCourtTypeFormOpen(true);
+    } else if (type === 'jurisdiction-level') {
+      setEditingJurisdictionLevel(null);
+      setJurisdictionLevelFormOpen(true);
+    } else {
+      setCurrentForm({});
+      setEditingId(null);
+      setIsDialogOpen(true);
+    }
   };
 
   const handleEdit = (type: string, id: string) => {
-    setCurrentForm({});
-    setEditingId(id);
-    setIsDialogOpen(true);
+    if (type === 'category') {
+      const category = categories.find(c => c.id === id);
+      setEditingCategory(category);
+      setCategoryFormOpen(true);
+    } else if (type === 'court-type') {
+      const courtType = courtTypes.find(c => c.id === id);
+      setEditingCourtType(courtType);
+      setCourtTypeFormOpen(true);
+    } else if (type === 'jurisdiction-level') {
+      const jurisdictionLevel = jurisdictionLevels.find(j => j.id === id);
+      setEditingJurisdictionLevel(jurisdictionLevel);
+      setJurisdictionLevelFormOpen(true);
+    } else {
+      setCurrentForm({});
+      setEditingId(id);
+      setIsDialogOpen(true);
+    }
   };
 
   const handleDelete = (type: string, id: string) => {
@@ -139,7 +174,6 @@ const AdminParametres = () => {
               <TableRow>
                 <TableHead>Nom (FR)</TableHead>
                 <TableHead>Nom (AR)</TableHead>
-                <TableHead>Type</TableHead>
                 <TableHead>Description</TableHead>
                 <TableHead className="text-right">Actions</TableHead>
               </TableRow>
@@ -149,11 +183,6 @@ const AdminParametres = () => {
                 <TableRow key={item.id}>
                   <TableCell className="font-medium">{item.name}</TableCell>
                   <TableCell dir="rtl">{item.name_ar}</TableCell>
-                  <TableCell>
-                    <Badge variant={item.type === 'civil' ? 'default' : 'secondary'}>
-                      {item.type === 'civil' ? 'Civil' : 'Administratif'}
-                    </Badge>
-                  </TableCell>
                   <TableCell className="text-muted-foreground">{item.description}</TableCell>
                   <TableCell className="text-right">
                     <div className="flex justify-end gap-2">
@@ -462,8 +491,6 @@ const AdminParametres = () => {
                 <TableHead>Ordre</TableHead>
                 <TableHead>Nom (FR)</TableHead>
                 <TableHead>Nom (AR)</TableHead>
-                <TableHead>Type</TableHead>
-                <TableHead>Valeur</TableHead>
                 <TableHead>Description</TableHead>
                 <TableHead className="text-right">Actions</TableHead>
               </TableRow>
@@ -476,14 +503,6 @@ const AdminParametres = () => {
                   </TableCell>
                   <TableCell className="font-medium">{item.name}</TableCell>
                   <TableCell dir="rtl">{item.name_ar}</TableCell>
-                  <TableCell>
-                    <Badge variant={item.type === 'civil' ? 'default' : 'secondary'}>
-                      {item.type === 'civil' ? 'Civil' : 'Administratif'}
-                    </Badge>
-                  </TableCell>
-                  <TableCell>
-                    <code className="text-xs bg-muted px-1 py-0.5 rounded">{item.value}</code>
-                  </TableCell>
                   <TableCell className="text-muted-foreground max-w-xs truncate">{item.description}</TableCell>
                   <TableCell className="text-right">
                     <div className="flex justify-end gap-2">
@@ -585,6 +604,42 @@ const AdminParametres = () => {
               {editingId ? "Modifier" : "Ajouter"}
             </Button>
           </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Court Type Form Dialog */}
+      <Dialog open={courtTypeFormOpen} onOpenChange={setCourtTypeFormOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>
+              {editingCourtType ? "Modifier" : "Ajouter"} un type de tribunal
+            </DialogTitle>
+            <DialogDescription>
+              Remplissez les informations du type de tribunal.
+            </DialogDescription>
+          </DialogHeader>
+          <CourtTypeForm
+            courtType={editingCourtType}
+            onClose={() => setCourtTypeFormOpen(false)}
+          />
+        </DialogContent>
+      </Dialog>
+
+      {/* Jurisdiction Level Form Dialog */}
+      <Dialog open={jurisdictionLevelFormOpen} onOpenChange={setJurisdictionLevelFormOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>
+              {editingJurisdictionLevel ? "Modifier" : "Ajouter"} un niveau de juridiction
+            </DialogTitle>
+            <DialogDescription>
+              Remplissez les informations du niveau de juridiction.
+            </DialogDescription>
+          </DialogHeader>
+          <JurisdictionLevelForm
+            jurisdictionLevel={editingJurisdictionLevel}
+            onClose={() => setJurisdictionLevelFormOpen(false)}
+          />
         </DialogContent>
       </Dialog>
     </div>

@@ -92,7 +92,7 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
   
   // Hook pour récupérer les types de tribunaux et niveaux de juridiction
   const { data: courtTypes = [] } = useCourtTypes();
-  const { data: jurisdictionLevels = [] } = useJurisdictionLevels(selectedCourtType as 'civil' | 'administratif' | undefined);
+  const { data: jurisdictionLevels = [] } = useJurisdictionLevels();
   const [newKeyword, setNewKeyword] = useState('');
   const [newKeywordAr, setNewKeywordAr] = useState('');
   const [currentView, setCurrentView] = useState<'editor' | 'pdf' | 'pages'>('editor');
@@ -1109,7 +1109,7 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
                               // Update French equivalent
                               const level = jurisdictionLevels.find(jl => jl.name_ar === value);
                               if (level) {
-                                setEditedData(prev => ({ ...prev, court_level: level.value || level.name }));
+                                setEditedData(prev => ({ ...prev, court_level: level.name }));
                               }
                             }}
                             disabled={!selectedCourtType}
