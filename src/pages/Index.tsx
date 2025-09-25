@@ -18,8 +18,8 @@ const Index = () => {
       <div className="min-h-screen flex flex-col">
         <HomeHeader />
 
-        {/* Main Content - Split Screen - Expanded sections */}
-        <div className="min-h-[120vh] flex flex-col md:flex-row">
+        {/* Main Content - Split Screen - Contained sections */}
+        <div className="flex-grow flex flex-col md:flex-row justify-center items-center py-8">
           <ObservatoireSection />
           <AccesAuxDroitsSection />
         </div>
