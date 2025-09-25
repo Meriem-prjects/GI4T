@@ -5,7 +5,7 @@ import { Link } from "react-router-dom";
 
 const ObservatoireSection = () => {
   return (
-    <Link to="/observatoire" className="w-full md:w-1/2 h-full bg-gradient-to-b md:bg-gradient-to-r from-blue-50 to-blue-100 flex flex-col relative cursor-pointer">
+    <Link to="/observatoire" className="w-full md:w-1/2 min-h-[60vh] flex-1 bg-gradient-to-b md:bg-gradient-to-r from-blue-50 to-blue-100 flex flex-col relative cursor-pointer">
       <div className="flex flex-col items-center justify-between px-4 sm:px-8 py-12 sm:py-16 h-full">
         {/* Header Section - Logo & Title */}
         <div className="flex flex-col items-center space-y-6 sm:space-y-8">
