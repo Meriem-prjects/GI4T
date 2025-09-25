@@ -129,35 +129,7 @@ const AdminSidebar = ({ type, isCollapsed = false, onToggle }: AdminSidebarProps
 
       {/* Navigation */}
       <nav className="flex-1 p-2 space-y-1">
-        {navigationItems.map((item) => {
-          const isActive = location.pathname === item.href || 
-            (item.href === basePath && location.pathname.startsWith(basePath + "/"));
-          
-          return (
-            <Link key={item.href} to={item.href}>
-              <Button
-                variant="ghost"
-                className={cn(
-                  "w-full justify-start h-auto p-3 transition-all",
-                  themeColors.text,
-                  themeColors.hover,
-                  isActive && themeColors.active,
-                  isCollapsed && "px-2"
-                )}
-              >
-                <item.icon className={cn("w-5 h-5", !isCollapsed && "mr-3")} />
-                {!isCollapsed && (
-                  <div className="text-left">
-                    <div className="font-medium">{item.title}</div>
-                    <div className={cn("text-xs", themeColors.textMuted)}>
-                      {item.description}
-                    </div>
-                  </div>
-                )}
-              </Button>
-            </Link>
-          );
-        })}
+        {/* Navigation items removed */}
       </nav>
 
       {/* Footer */}
