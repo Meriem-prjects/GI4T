@@ -49,60 +49,55 @@ const Footer = () => {
           </div>
 
           {/* Fourth section - Social Media & Newsletter */}
-          <div className="space-y-6">
-            <div className="space-y-4">
-              <h3 className="text-lg font-semibold text-white">Suivez-nous</h3>
-              <div className="flex flex-wrap gap-3">
-                <Button 
-                  size="sm" 
-                  variant="outline" 
-                  className="border-blue-600 bg-blue-600/10 text-blue-400 hover:bg-blue-600 hover:text-white hover:border-blue-600 transition-all duration-300"
-                >
-                  <Facebook className="h-4 w-4" />
-                </Button>
-                <Button 
-                  size="sm" 
-                  variant="outline" 
-                  className="border-pink-600 bg-pink-600/10 text-pink-400 hover:bg-pink-600 hover:text-white hover:border-pink-600 transition-all duration-300"
-                >
-                  <Instagram className="h-4 w-4" />
-                </Button>
-                <Button 
-                  size="sm" 
-                  variant="outline" 
-                  className="border-blue-400 bg-blue-400/10 text-blue-300 hover:bg-blue-400 hover:text-white hover:border-blue-400 transition-all duration-300"
-                >
-                  <Twitter className="h-4 w-4" />
-                </Button>
-                <Button 
-                  size="sm" 
-                  variant="outline" 
-                  className="border-blue-700 bg-blue-700/10 text-blue-300 hover:bg-blue-700 hover:text-white hover:border-blue-700 transition-all duration-300"
-                >
-                  <Linkedin className="h-4 w-4" />
-                </Button>
-                <Button 
-                  size="sm" 
-                  variant="outline" 
-                  className="border-red-600 bg-red-600/10 text-red-400 hover:bg-red-600 hover:text-white hover:border-red-600 transition-all duration-300"
-                >
-                  <Youtube className="h-4 w-4" />
-                </Button>
-              </div>
+          <div className="space-y-4">
+            {/* Social Media Icons - More minimal */}
+            <div className="flex flex-wrap gap-2">
+              <Button 
+                size="sm" 
+                variant="outline" 
+                className="border-blue-600 bg-blue-600/10 text-blue-400 hover:bg-blue-600 hover:text-white hover:border-blue-600 transition-all duration-300"
+              >
+                <Facebook className="h-4 w-4" />
+              </Button>
+              <Button 
+                size="sm" 
+                variant="outline" 
+                className="border-pink-600 bg-pink-600/10 text-pink-400 hover:bg-pink-600 hover:text-white hover:border-pink-600 transition-all duration-300"
+              >
+                <Instagram className="h-4 w-4" />
+              </Button>
+              <Button 
+                size="sm" 
+                variant="outline" 
+                className="border-blue-400 bg-blue-400/10 text-blue-300 hover:bg-blue-400 hover:text-white hover:border-blue-400 transition-all duration-300"
+              >
+                <Twitter className="h-4 w-4" />
+              </Button>
+              <Button 
+                size="sm" 
+                variant="outline" 
+                className="border-blue-700 bg-blue-700/10 text-blue-300 hover:bg-blue-700 hover:text-white hover:border-blue-700 transition-all duration-300"
+              >
+                <Linkedin className="h-4 w-4" />
+              </Button>
+              <Button 
+                size="sm" 
+                variant="outline" 
+                className="border-red-600 bg-red-600/10 text-red-400 hover:bg-red-600 hover:text-white hover:border-red-600 transition-all duration-300"
+              >
+                <Youtube className="h-4 w-4" />
+              </Button>
             </div>
 
-            {/* Newsletter */}
-            <div className="space-y-3">
-              <h4 className="text-base font-semibold text-white">Newsletter</h4>
-              <div className="space-y-2">
-                <Input 
-                  placeholder="Votre email" 
-                  className="bg-gray-700/50 border-gray-600 text-white placeholder:text-gray-400 focus:border-blue-500" 
-                />
-                <Button className="w-full bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-medium">
-                  S'ABONNER
-                </Button>
-              </div>
+            {/* Newsletter - More minimal */}
+            <div className="space-y-2">
+              <Input 
+                placeholder="Newsletter" 
+                className="bg-gray-700/50 border-gray-600 text-white placeholder:text-gray-400 focus:border-blue-500 text-sm" 
+              />
+              <Button className="w-full bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-medium text-sm py-2">
+                S'ABONNER
+              </Button>
             </div>
           </div>
         </div>
