@@ -6,37 +6,18 @@ const Footer = () => {
     <footer className="bg-slate-800 text-white mt-auto">
       <div className="container mx-auto px-4 py-12">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
-          {/* Left section - Logo and description */}
-          <div className="md:col-span-2 space-y-4">
+          {/* First section - Logo and description */}
+          <div className="space-y-4">
             <div className="flex items-center space-x-3">
               <img src="/Feelinx_upload/justclic-logo.png" alt="JustClic.tn" className="h-12 w-auto object-contain" />
             </div>
-            <p className="text-gray-300 text-sm leading-relaxed max-w-md">
+            <p className="text-gray-300 text-sm leading-relaxed">
               Votre plateforme d'information citoyenne en Tunisie. 
               Accédez facilement à vos droits et aux services administratifs.
             </p>
-            
-            {/* Contact Info */}
-            <div className="space-y-3 pt-4">
-              <h4 className="text-base font-semibold text-white">Contact</h4>
-              <div className="space-y-2 text-sm text-gray-300">
-                <div className="flex items-center space-x-2">
-                  <Mail className="h-4 w-4" />
-                  <span>contact@justclic.tn</span>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <Phone className="h-4 w-4" />
-                  <span>+216 XX XX XX XX</span>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <MapPin className="h-4 w-4" />
-                  <span>Tunis, Tunisie</span>
-                </div>
-              </div>
-            </div>
           </div>
 
-          {/* Middle section - Navigation Links */}
+          {/* Second section - Navigation Links */}
           <div className="space-y-4">
             <h3 className="text-lg font-semibold text-white">Navigation</h3>
             <div className="space-y-2 text-sm text-gray-300">
@@ -48,7 +29,26 @@ const Footer = () => {
             </div>
           </div>
 
-          {/* Right section - Social Media & Newsletter */}
+          {/* Third section - Contact Info */}
+          <div className="space-y-4">
+            <h3 className="text-lg font-semibold text-white">Contact</h3>
+            <div className="space-y-2 text-sm text-gray-300">
+              <div className="flex items-center space-x-2">
+                <Mail className="h-4 w-4" />
+                <span>contact@justclic.tn</span>
+              </div>
+              <div className="flex items-center space-x-2">
+                <Phone className="h-4 w-4" />
+                <span>+216 XX XX XX XX</span>
+              </div>
+              <div className="flex items-center space-x-2">
+                <MapPin className="h-4 w-4" />
+                <span>Tunis, Tunisie</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Fourth section - Social Media & Newsletter */}
           <div className="space-y-6">
             <div className="space-y-4">
               <h3 className="text-lg font-semibold text-white">Suivez-nous</h3>
