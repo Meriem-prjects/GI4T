@@ -48,7 +48,7 @@ const HomeFooter = () => {
         {/* Bottom section */}
         <div className="border-t border-gray-700 mt-8 pt-6">
           <div className="text-center text-sm text-gray-400 space-y-2">
-            <p>© 2024 JustClic.tn. Tous droits réservés | Privacy Policy</p>
+            <p>© 2025 JustClic.tn. Tous droits réservés | Privacy Policy</p>
             <p>
               Developed by <span className="text-blue-400 font-semibold">Feelinx</span>
             </p>
