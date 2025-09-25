@@ -15,11 +15,11 @@ const Index = () => {
         rel="stylesheet" 
       />
       
-      <div className="flex flex-col">
+      <div className="min-h-screen flex flex-col">
         <HomeHeader />
 
-        {/* Main Content - Split Screen - Extends to footer */}
-        <div className="flex flex-col md:flex-row" style={{ minHeight: 'calc(100vh - 80px)' }}>
+        {/* Main Content - Split Screen - Contained sections */}
+        <div className="flex-grow flex flex-col md:flex-row justify-center items-center py-8">
           <ObservatoireSection />
           <AccesAuxDroitsSection />
         </div>
