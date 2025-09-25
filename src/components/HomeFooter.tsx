@@ -15,9 +15,7 @@ const HomeFooter = () => {
                 alt="JustClic.tn" 
                 className="h-10 w-auto object-contain"
               />
-              <div>
-                <h3 className="text-xl font-bold text-white">JustClic.tn</h3>
-              </div>
+              
             </div>
             <p className="text-gray-300 text-sm leading-relaxed">
               Votre plateforme d'information citoyenne en Tunisie. 
