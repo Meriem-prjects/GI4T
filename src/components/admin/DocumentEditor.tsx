@@ -26,6 +26,7 @@ interface PageContent {
 interface DocumentData {
   id?: string;
   content: string;
+  textual_metadata?: string;
   title: string;
   title_ar?: string;
   summary: string;
@@ -187,6 +188,7 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
       const { data, error } = await supabase.functions.invoke('smart-document-analysis', {
         body: {
           content: editedData.content,
+          textualMetadata: editedData.textual_metadata,
           currentLanguage: editedData.language || 'fr'
         }
       });
@@ -325,6 +327,7 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
           summary_ar: editedData.summary_ar?.trim() || null,
           content: editedData.content || '',
           translated_content: translatedContent?.trim() || null,
+          textual_metadata: editedData.textual_metadata?.trim() || null,
           keywords: Array.isArray(editedData.keywords) ? editedData.keywords.filter(k => k && k.trim()) : [],
           keywords_ar: Array.isArray(editedData.keywords_ar) ? editedData.keywords_ar.filter(k => k && k.trim()) : [],
           category_id: editedData.category_id || null,
@@ -739,21 +742,40 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
             <Card className="p-6">
               <h3 className="text-lg font-semibold mb-4">Métadonnées</h3>
               
-              {/* Validation Remarks - Only show when coming from validation */}
-              {isFromValidation && (
-                <div className="mb-6 p-4 border rounded-lg bg-muted/50">
-                  <Label className="text-sm font-medium mb-2 block">
-                    Remarques de validation (optionnel)
-                  </Label>
-                  <Textarea
-                    value={validationRemarks}
-                    onChange={(e) => setValidationRemarks(e.target.value)}
-                    placeholder="Ajoutez des remarques pour expliquer la décision de validation..."
-                    className="min-h-[100px]"
-                  />
-                </div>
-              )}
-              
+               {/* Validation Remarks - Only show when coming from validation */}
+               {isFromValidation && (
+                 <div className="mb-6 p-4 border rounded-lg bg-muted/50">
+                   <Label className="text-sm font-medium mb-2 block">
+                     Remarques de validation (optionnel)
+                   </Label>
+                   <Textarea
+                     value={validationRemarks}
+                     onChange={(e) => setValidationRemarks(e.target.value)}
+                     placeholder="Ajoutez des remarques pour expliquer la décision de validation..."
+                     className="min-h-[100px]"
+                   />
+                 </div>
+               )}
+
+               {/* Textual Metadata Section */}
+               {editedData.textual_metadata && (
+                 <div className="mb-6 p-4 border rounded-lg bg-blue-50/50">
+                   <Label className="text-sm font-medium mb-2 block flex items-center gap-2">
+                     <FileText className="h-4 w-4" />
+                     Métadonnées textuelles (extraites automatiquement)
+                   </Label>
+                   <div className="text-xs text-muted-foreground mb-2">
+                     Cette section contient les informations administratives extraites avant le mot-clé "اﻟﻤﺸﻜﻞ"
+                   </div>
+                   <Textarea
+                     value={editedData.textual_metadata}
+                     onChange={(e) => setEditedData(prev => ({ ...prev, textual_metadata: e.target.value }))}
+                     className="min-h-[120px] font-mono text-xs"
+                     dir="rtl"
+                   />
+                 </div>
+               )}
+               
               <div className="space-y-4">
                 <Tabs value={currentLanguage} onValueChange={(value) => setCurrentLanguage(value as 'fr' | 'ar')}>
                   <TabsList className="grid w-full grid-cols-2">

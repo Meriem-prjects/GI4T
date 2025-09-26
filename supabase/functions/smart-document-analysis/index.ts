@@ -14,9 +14,10 @@ serve(async (req) => {
   }
 
   try {
-    const { content, currentLanguage = 'fr' } = await req.json();
+    const { content, textualMetadata, currentLanguage = 'fr' } = await req.json();
 
     console.log('Starting smart document analysis for content length:', content?.length);
+    console.log('Textual metadata length:', textualMetadata?.length || 0);
 
     if (!content) {
       throw new Error('Content is required for analysis');
@@ -38,13 +39,15 @@ serve(async (req) => {
     - Le champ cleanedContent doit supprimer les numéros de pages isolés (lignes contenant uniquement des chiffres)
 
     RÈGLES DE DÉTECTION DES MÉTADONNÉES :
-    - AUTEUR : Recherche dans les 5 premières lignes du document
-    - TITRE : Recherche sous le "numéro 1" de la première page, sinon prendre un titre contextuel approprié
-    - TRIBUNAL : Identifie le tribunal mentionné et son niveau de juridiction (première instance, appel, cassation, etc.)
-    - NUMÉRO D'AFFAIRE : Patterns comme "n° [chiffres]/[année]" ou similaires
-    - DEMANDEUR : Nom qui précède le "/" après le numéro d'affaire
-    - DÉFENDEUR : Nom qui suit le "/" après le numéro d'affaire
-    - ANNÉE : Extrait l'année du document ou de la décision
+    ${textualMetadata ? `- UTILISE PRIORITAIREMENT LES MÉTADONNÉES TEXTUELLES : Ces métadonnées préstructurées contiennent les informations administratives du document
+    - MÉTADONNÉES FOURNIES : ${textualMetadata.substring(0, 200)}...` : ''}
+    - AUTEUR : Recherche dans les métadonnées textuelles ou les 5 premières lignes du document
+    - TITRE : Recherche dans les métadonnées textuelles sous le "numéro 1", sinon prendre un titre contextuel approprié
+    - TRIBUNAL : Identifie le tribunal mentionné dans les métadonnées textuelles et son niveau de juridiction
+    - NUMÉRO D'AFFAIRE : Patterns comme "n° [chiffres]/[année]" ou similaires dans les métadonnées textuelles
+    - DEMANDEUR : Nom qui précède le "/" après le numéro d'affaire dans les métadonnées textuelles
+    - DÉFENDEUR : Nom qui suit le "/" après le numéro d'affaire dans les métadonnées textuelles
+    - ANNÉE : Extrait l'année du document ou de la décision des métadonnées textuelles
     - NIVEAU TRIBUNAL : Détermine le niveau (première instance, appel, cassation, administratif, etc.)
 
     NETTOYAGE DU CONTENU :
@@ -110,7 +113,7 @@ serve(async (req) => {
         model: 'gpt-4o',
         messages: [
           { role: 'system', content: systemPrompt },
-          { role: 'user', content: `Analyse ce document:\n\n${content}` }
+          { role: 'user', content: `Analyse ce document:${textualMetadata ? `\n\nMÉTADONNÉES TEXTUELLES (à utiliser prioritairement pour les métadonnées):\n${textualMetadata}\n\n` : '\n\n'}CONTENU PRINCIPAL:\n${content}` }
         ],
         response_format: { type: "json_object" },
         temperature: 0.3,

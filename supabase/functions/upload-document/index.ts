@@ -401,6 +401,32 @@ serve(async (req) => {
 
     console.log('Document processing completed');
 
+    // Separate content based on "اﻟﻤﺸﻜﻞ" keyword for Arabic legal documents
+    const separateContent = (content: string) => {
+      const problemKeyword = 'اﻟﻤﺸﻜﻞ';
+      const keywordIndex = content.indexOf(problemKeyword);
+      
+      if (keywordIndex !== -1) {
+        const textualMetadata = content.substring(0, keywordIndex).trim();
+        const mainContent = content.substring(keywordIndex).trim();
+        console.log(`Content separated at "${problemKeyword}": metadata=${textualMetadata.length} chars, content=${mainContent.length} chars`);
+        return { textualMetadata, mainContent };
+      } else {
+        // Fallback: use first 3 paragraphs as metadata if no keyword found
+        const paragraphs = content.split('\n').filter(p => p.trim().length > 0);
+        if (paragraphs.length > 3) {
+          const textualMetadata = paragraphs.slice(0, 3).join('\n');
+          const mainContent = paragraphs.slice(3).join('\n');
+          console.log(`No "${problemKeyword}" found, using first 3 paragraphs as metadata: ${textualMetadata.length} chars`);
+          return { textualMetadata, mainContent };
+        }
+        console.log(`No "${problemKeyword}" found and insufficient paragraphs, keeping original content`);
+        return { textualMetadata: '', mainContent: content };
+      }
+    };
+
+    const { textualMetadata, mainContent } = separateContent(fileContent);
+
     // Get public URL for the uploaded file
     const { data: { publicUrl } } = supabaseAdmin.storage
       .from('documents')
@@ -414,7 +440,8 @@ serve(async (req) => {
       title_ar: analysisData.title_ar || null,
       summary: analysisData.summary || '',
       summary_ar: analysisData.summary_ar || null,
-      content: fileContent, // Store extracted content for all file types
+      content: mainContent, // Store main content after separation
+      textual_metadata: textualMetadata, // Store metadata part
       keywords: analysisData.keywords || [],
       keywords_ar: analysisData.keywords_ar || [],
       language: language, // Use the provided language
