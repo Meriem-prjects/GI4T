@@ -1345,6 +1345,11 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
               <h3 className="text-lg font-semibold mb-3 flex items-center gap-2">
                 <FileText className="h-4 w-4" />
                 Métadonnées textuelles
+                {editedData.textual_metadata && (
+                  <Badge variant="secondary" className="ml-2">
+                    {editedData.textual_metadata.length} caractères
+                  </Badge>
+                )}
               </h3>
               <p className="text-sm text-muted-foreground mb-4">
                 Contenu structuré extrait avant le mot-clé "اﻟﻤﺸﻜﻞ" (utilisé pour l'extraction automatique des métadonnées)
@@ -1352,10 +1357,16 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
               <Textarea
                 value={editedData.textual_metadata || ''}
                 onChange={(e) => setEditedData(prev => ({ ...prev, textual_metadata: e.target.value }))}
-                placeholder="Informations structurées du document (en-têtes, références, auteur, etc.)"
-                className="min-h-[120px] w-full text-sm font-mono bg-muted/30"
+                placeholder={editedData.textual_metadata ? "" : "Aucun contenu extrait - le document ne contient pas le mot-clé 'اﻟﻤﺸﻜﻞ'"}
+                className="min-h-[120px] w-full text-sm font-mono bg-muted/30 whitespace-pre-wrap"
                 dir="rtl"
+                readOnly={false}
               />
+              {editedData.textual_metadata && (
+                <p className="text-xs text-muted-foreground mt-2">
+                  💡 Ce contenu a été automatiquement extrait de la partie du document située avant "اﻟﻤﺸﻜﻞ"
+                </p>
+              )}
             </Card>
 
             <Card className="p-6">
