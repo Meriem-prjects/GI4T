@@ -67,10 +67,6 @@ Deno.serve(async (req) => {
         // Handle the actual format returned by unpdf
         if (extractionResult.text && Array.isArray(extractionResult.text)) {
           texts = extractionResult.text.map(pageText => String(pageText || ''));
-        } else if (extractionResult.pages && Array.isArray(extractionResult.pages)) {
-          texts = extractionResult.pages.map(page => 
-            (page && typeof page === 'object' && page.text) ? page.text : String(page || '')
-          );
         } else if (extractionResult.text && typeof extractionResult.text === 'string') {
           // If we got a single text string, treat it as page 1
           texts = [extractionResult.text];

@@ -42,7 +42,8 @@ async function extractFirstPageText(pdfBuffer: ArrayBuffer): Promise<{ rawText: 
     return { rawText: firstPageText, totalPages };
   } catch (error) {
     console.error('Error extracting first page text:', error);
-    throw new Error(`Failed to extract text: ${error.message}`);
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    throw new Error(`Failed to extract text: ${errorMessage}`);
   }
 }
 
@@ -147,7 +148,7 @@ serve(async (req) => {
       processedPages: 0,
       pages: [],
       fullText: '',
-      error: error.message
+      error: error instanceof Error ? error.message : String(error)
     };
 
     return new Response(JSON.stringify(errorResult), {
