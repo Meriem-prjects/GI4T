@@ -1338,6 +1338,24 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
                   </div>
                 </div>
               </Card>
+
+              {/* Métadonnées textuelles */}
+              <Card className="p-4">
+                <h3 className="text-md font-semibold mb-3 flex items-center gap-2">
+                  <FileText className="h-4 w-4" />
+                  Métadonnées textuelles
+                </h3>
+                <p className="text-sm text-muted-foreground mb-3">
+                  Contenu structuré extrait avant le mot-clé "اﻟﻤﺸﻜﻞ" (utilisé pour l'extraction automatique des métadonnées)
+                </p>
+                <Textarea
+                  value={editedData.textual_metadata || ''}
+                  onChange={(e) => setEditedData(prev => ({ ...prev, textual_metadata: e.target.value }))}
+                  placeholder="Informations structurées du document (en-têtes, références, auteur, etc.)"
+                  className="min-h-[120px] text-sm font-mono bg-muted/30"
+                  dir="rtl"
+                />
+              </Card>
             </div>
 
             <Card className="p-6">
