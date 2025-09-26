@@ -1,5 +1,5 @@
 // Import unpdf for serverless PDF text extraction
-import { extractText, getDocumentProxy } from "npm:unpdf@1.2.2";
+import { extractText, getDocumentProxy } from "https://esm.sh/unpdf@1.2.2";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -48,7 +48,8 @@ Deno.serve(async (req) => {
       console.log(`PDF loaded successfully. Total pages: ${pdf.numPages}`);
     } catch (loadError) {
       console.error('Failed to load PDF with unpdf:', loadError);
-      throw new Error(`Impossible de charger le PDF: ${loadError.message}`);
+      const errorMessage = loadError instanceof Error ? loadError.message : String(loadError);
+      throw new Error(`Impossible de charger le PDF: ${errorMessage}`);
     }
 
     // Extract text from all pages with comprehensive error handling
@@ -118,9 +119,10 @@ Deno.serve(async (req) => {
   } catch (error) {
     console.error('Error in pdf-reader function:', error);
     
+    const errorMessage = error instanceof Error ? error.message : String(error);
     const errorResult = {
       success: false,
-      error: error.message,
+      error: errorMessage,
       numPages: 0,
       texts: []
     };

@@ -151,10 +151,11 @@ Réponds UNIQUEMENT avec l'objet JSON, sans texte additionnel.`
 
   } catch (error) {
     console.error('Error in document-analysis function:', error);
+    const errorMessage = error instanceof Error ? error.message : String(error);
     return new Response(
       JSON.stringify({ 
         error: "Erreur lors de l'analyse du document",
-        details: error.message 
+        details: errorMessage 
       }),
       { 
         status: 500, 
