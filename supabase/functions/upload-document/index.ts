@@ -316,23 +316,23 @@ serve(async (req) => {
 
         // Enhance analysis data with PDF/A metadata if available
         if (pdfaInfo?.isPDFA) {
-            analysisData.document_type = `PDF/A Document (${pdfaInfo.pdfaVersion || 'Unknown version'})`;
+            analysisData.document_type = `PDF/A Document (${pdfaInfo.pdfaVersion || 'Unknown version'})` as any;
             
             // Add PDF/A metadata to analysis
             if (pdfaInfo.metadata?.title) {
               analysisData.title = pdfaInfo.metadata.title;
             }
             if (pdfaInfo.metadata?.keywords) {
-              analysisData.keywords = pdfaInfo.metadata.keywords.split(',').map(k => k.trim()).filter(Boolean);
+              analysisData.keywords = pdfaInfo.metadata.keywords.split(',').map((k: string) => k.trim()).filter(Boolean);
             }
             if (pdfaInfo.metadata?.subject) {
               analysisData.summary = `Document d'archivage PDF/A: ${pdfaInfo.metadata.subject}`;
             }
             
             // Add archival information to legal domains
-            analysisData.legal_domains = ['Document d\'archivage', 'PDF/A Standard'];
+            (analysisData as any).legal_domains = ['Document d\'archivage', 'PDF/A Standard'];
             if (pdfaInfo.conformanceLevel) {
-              analysisData.legal_domains.push(`Conformité niveau ${pdfaInfo.conformanceLevel}`);
+              (analysisData as any).legal_domains.push(`Conformité niveau ${pdfaInfo.conformanceLevel}`);
             }
           }
           
@@ -340,7 +340,7 @@ serve(async (req) => {
         console.log(`PDF processing completed with ${processedPages || 0} pages`);
       } catch (pdfException) {
         console.error('PDF OCR processing exception:', pdfException);
-        fileContent = `Exception PDF OCR: ${pdfException.message}`;
+        fileContent = `Exception PDF OCR: ${pdfException instanceof Error ? pdfException.message : String(pdfException)}`;
       }
       
     } else if (file.type?.startsWith('image/') || /\.(jpg|jpeg|png|webp|gif|bmp|tiff)$/i.test(file.name)) {
@@ -371,7 +371,7 @@ serve(async (req) => {
         }
       } catch (ocrException) {
         console.error('Image OCR exception:', ocrException);
-        fileContent = `Exception OCR: ${ocrException.message}`;
+        fileContent = `Exception OCR: ${ocrException instanceof Error ? ocrException.message : String(ocrException)}`;
       }
     } else {
       // For text files, read as text
@@ -517,11 +517,15 @@ serve(async (req) => {
         
         console.log('Triggering background OCR processing (direct extraction was insufficient)...');
         try {
-          EdgeRuntime.waitUntil(
-            supabaseAdmin.functions.invoke('pdf-ocr-batch', { body: pdfFormData })
-              .then(() => console.log('Background PDF OCR completed successfully'))
-              .catch((error) => console.error('Background PDF OCR failed:', error))
-          );
+          if ((globalThis as any).EdgeRuntime && (globalThis as any).EdgeRuntime.waitUntil) {
+            (globalThis as any).EdgeRuntime.waitUntil(
+              supabaseAdmin.functions.invoke('pdf-ocr-batch', { body: pdfFormData })
+                .then(() => console.log('Background PDF OCR completed successfully'))
+                .catch((error) => console.error('Background PDF OCR failed:', error))
+            );
+          } else {
+            console.log('EdgeRuntime not available, skipping background OCR');
+          }
         } catch {
           // Fallback if EdgeRuntime.waitUntil is not available
           supabaseAdmin.functions.invoke('pdf-ocr-batch', { body: pdfFormData })
@@ -558,7 +562,7 @@ serve(async (req) => {
   } catch (error) {
     console.error('Error in upload-document function:', error);
     return new Response(JSON.stringify({ 
-      error: error.message,
+      error: error instanceof Error ? error.message : String(error),
       success: false 
     }), {
       status: 500,
