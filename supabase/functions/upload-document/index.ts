@@ -410,18 +410,58 @@ serve(async (req) => {
         const textualMetadata = content.substring(0, keywordIndex).trim();
         const mainContent = content.substring(keywordIndex).trim();
         console.log(`Content separated at "${problemKeyword}": metadata=${textualMetadata.length} chars, content=${mainContent.length} chars`);
+        
+        // Log more details about what was found
+        console.log('Textual metadata extract:', textualMetadata.substring(0, 200));
+        console.log('Main content extract:', mainContent.substring(0, 200));
+        
         return { textualMetadata, mainContent };
       } else {
-        // Fallback: use first 3 paragraphs as metadata if no keyword found
-        const paragraphs = content.split('\n').filter(p => p.trim().length > 0);
-        if (paragraphs.length > 3) {
-          const textualMetadata = paragraphs.slice(0, 3).join('\n');
-          const mainContent = paragraphs.slice(3).join('\n');
-          console.log(`No "${problemKeyword}" found, using first 3 paragraphs as metadata: ${textualMetadata.length} chars`);
+        console.log(`Keyword "${problemKeyword}" not found in content. Content preview:`, content.substring(0, 500));
+        
+        // More aggressive search for similar patterns or Arabic text
+        const lines = content.split('\n').filter(line => line.trim().length > 0);
+        let headerEndIndex = -1;
+        
+        // Look for common Arabic document patterns
+        const arabicPatterns = [
+          'المشكل الدّستوري',
+          'المشكل',
+          'الحل المقدّم',
+          'رأي المجلس',
+          'القضية'
+        ];
+        
+        for (let i = 0; i < lines.length; i++) {
+          const line = lines[i];
+          for (const pattern of arabicPatterns) {
+            if (line.includes(pattern)) {
+              headerEndIndex = i;
+              console.log(`Found alternative pattern "${pattern}" at line ${i}`);
+              break;
+            }
+          }
+          if (headerEndIndex !== -1) break;
+        }
+        
+        if (headerEndIndex !== -1) {
+          const textualMetadata = lines.slice(0, headerEndIndex).join('\n');
+          const mainContent = lines.slice(headerEndIndex).join('\n');
+          console.log(`Using alternative separation: metadata=${textualMetadata.length} chars, content=${mainContent.length} chars`);
           return { textualMetadata, mainContent };
         }
-        console.log(`No "${problemKeyword}" found and insufficient paragraphs, keeping original content`);
-        return { textualMetadata: '', mainContent: content };
+        
+        // Fallback: use first significant portion as metadata
+        if (lines.length > 5) {
+          const splitPoint = Math.min(5, Math.floor(lines.length / 3));
+          const textualMetadata = lines.slice(0, splitPoint).join('\n');
+          const mainContent = lines.slice(splitPoint).join('\n');
+          console.log(`Using fallback separation at line ${splitPoint}: metadata=${textualMetadata.length} chars`);
+          return { textualMetadata, mainContent };
+        }
+        
+        console.log(`No pattern found and insufficient lines, keeping original content`);
+        return { textualMetadata: content.length > 0 ? content.substring(0, 300) : '', mainContent: content };
       }
     };
 
