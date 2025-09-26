@@ -30,7 +30,23 @@ serve(async (req) => {
 
     const systemPrompt = `Tu es un expert en analyse de documents juridiques et administratifs bilingues (français/arabe). 
     
-    Analyse ce document et extrait les informations suivantes avec précision :
+    ${textualMetadata ? `PRIORITÉ ABSOLUE : EXTRAIRE LES MÉTADONNÉES DEPUIS LE CONTENU TEXTUEL PRÉSTRUCTURÉ
+    
+    MÉTADONNÉES TEXTUELLES FOURNIES :
+    ${textualMetadata}
+    
+    INSTRUCTIONS SPÉCIALES POUR L'EXTRACTION :
+    1. Le contenu textuel ci-dessus contient toutes les informations administratives nécessaires
+    2. CHERCHE SPÉCIFIQUEMENT :
+       - AUTEUR : Nom mentionné après "مرصد الحقوق الأساسية" ou dans les premières lignes
+       - NUMÉRO DE FICHE : Cherche "عدد" ou "numéro" suivi d'un chiffre
+       - TRIBUNAL/COUR : Cherche mentions de "محكمة" ou "مجلس" 
+       - DROIT : Cherche "الحق في" ou mentions de droits spécifiques
+       - ANNÉE : Cherche les dates au format DD.MM.YYYY ou années isolées
+       - TITRE : Combine l'auteur, le numéro et le droit pour former un titre cohérent
+    3. UTILISE CES INFORMATIONS POUR REMPLIR TOUS LES CHAMPS METADATA
+    
+    ` : ''}Analyse ce document et extrait les informations suivantes avec précision :
 
     IMPORTANT: 
     - Tous les champs principaux (title, subtitle, assignedRight, summary, existingKeywords, suggestedKeywords, metadata) doivent être en ${sourceLanguage}
@@ -39,15 +55,13 @@ serve(async (req) => {
     - Le champ cleanedContent doit supprimer les numéros de pages isolés (lignes contenant uniquement des chiffres)
 
     RÈGLES DE DÉTECTION DES MÉTADONNÉES :
-    ${textualMetadata ? `- UTILISE PRIORITAIREMENT LES MÉTADONNÉES TEXTUELLES : Ces métadonnées préstructurées contiennent les informations administratives du document
-    - MÉTADONNÉES FOURNIES : ${textualMetadata.substring(0, 200)}...` : ''}
-    - AUTEUR : Recherche dans les métadonnées textuelles ou les 5 premières lignes du document
-    - TITRE : Recherche dans les métadonnées textuelles sous le "numéro 1", sinon prendre un titre contextuel approprié
-    - TRIBUNAL : Identifie le tribunal mentionné dans les métadonnées textuelles et son niveau de juridiction
-    - NUMÉRO D'AFFAIRE : Patterns comme "n° [chiffres]/[année]" ou similaires dans les métadonnées textuelles
-    - DEMANDEUR : Nom qui précède le "/" après le numéro d'affaire dans les métadonnées textuelles
-    - DÉFENDEUR : Nom qui suit le "/" après le numéro d'affaire dans les métadonnées textuelles
-    - ANNÉE : Extrait l'année du document ou de la décision des métadonnées textuelles
+    - AUTEUR : ${textualMetadata ? 'Extrait depuis les métadonnées textuelles fournies' : 'Recherche dans les 5 premières lignes du document'}
+    - TITRE : ${textualMetadata ? 'Construit à partir de l\'auteur, numéro de fiche et droit mentionnés dans les métadonnées' : 'Prendre un titre contextuel approprié'}
+    - TRIBUNAL : ${textualMetadata ? 'Identifie le tribunal mentionné dans les métadonnées textuelles' : 'Identifie le tribunal mentionné dans le document'}
+    - NUMÉRO D'AFFAIRE : Patterns comme "n° [chiffres]/[année]" ou similaires
+    - DEMANDEUR : Nom qui précède le "/" après le numéro d'affaire
+    - DÉFENDEUR : Nom qui suit le "/" après le numéro d'affaire
+    - ANNÉE : Extrait l'année du document ou de la décision
     - NIVEAU TRIBUNAL : Détermine le niveau (première instance, appel, cassation, administratif, etc.)
 
     NETTOYAGE DU CONTENU :

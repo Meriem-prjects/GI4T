@@ -112,6 +112,7 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
     const docLang = documentData.language || 'fr';
     setCurrentLanguage(docLang === 'ar' ? 'ar' : 'fr');
     console.log('DocumentEditor loaded with language:', docLang, 'Setting currentLanguage to:', docLang === 'ar' ? 'ar' : 'fr');
+    console.log('DocumentEditor textual_metadata:', documentData.textual_metadata ? `${documentData.textual_metadata.length} chars` : 'none');
     
     // Initialize selectedCourtType if document has court_category_type
     if (documentData.court_category_type) {
@@ -120,6 +121,13 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
     
     loadCategories();
     loadDocumentTypes();
+    
+    // Auto-analyze if textual_metadata exists but structured fields are empty
+    if (documentData.textual_metadata && 
+        (!documentData.author && !documentData.court && !documentData.case_number)) {
+      console.log('Document has textual_metadata but missing structured fields, scheduling auto-analysis');
+      setTimeout(() => runAutoMetadataAnalysis(), 2000);
+    }
   }, [documentData]);
 
   useEffect(() => {
@@ -171,6 +179,19 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
     } catch (error) {
       console.error('Document types loading error:', error);
     }
+  };
+
+  // Auto-analysis for metadata when textual_metadata exists
+  const runAutoMetadataAnalysis = async () => {
+    if (!editedData.textual_metadata) return;
+    
+    console.log('Running auto metadata analysis...');
+    toast({
+      title: "Analyse automatique",
+      description: "Extraction des métadonnées à partir du contenu textuel...",
+    });
+    
+    runAIAnalysis();
   };
 
   const runAIAnalysis = async () => {
@@ -1363,9 +1384,30 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
                 readOnly={false}
               />
               {editedData.textual_metadata && (
-                <p className="text-xs text-muted-foreground mt-2">
-                  💡 Ce contenu a été automatiquement extrait de la partie du document située avant "اﻟﻤﺸﻜﻞ"
-                </p>
+                <div className="flex items-center justify-between mt-2">
+                  <p className="text-xs text-muted-foreground">
+                    💡 Ce contenu a été automatiquement extrait de la partie du document située avant "اﻟﻤﺸﻜﻞ"
+                  </p>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={runAIAnalysis}
+                    disabled={isAnalyzing}
+                    className="ml-2"
+                  >
+                    {isAnalyzing ? (
+                      <>
+                        <Loader2 className="h-3 w-3 animate-spin mr-1" />
+                        Analyse...
+                      </>
+                    ) : (
+                      <>
+                        <Brain className="h-3 w-3 mr-1" />
+                        Analyser métadonnées
+                      </>
+                    )}
+                  </Button>
+                </div>
               )}
             </Card>
 
