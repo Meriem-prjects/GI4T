@@ -703,6 +703,27 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
             )}
             {isAnalyzing ? 'Analyse...' : '🤖 Analyse IA'}
           </Button>
+
+          {editedData.id && (
+            <Button
+              onClick={handleReprocessDocument}
+              disabled={isReprocessing}
+              variant="outline"
+              className="bg-secondary/10 hover:bg-secondary/20"
+            >
+              {isReprocessing ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Extraction...
+                </>
+              ) : (
+                <>
+                  <Brain className="mr-2 h-4 w-4" />
+                  Extraire métadonnées
+                </>
+              )}
+            </Button>
+          )}
           
           {isFromValidation ? (
             <div className="flex space-x-2">
@@ -1392,38 +1413,63 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
                       {currentLanguage === 'ar' ? 'المعطيات النصية' : 'Métadonnées textuelles'}
                     </Label>
                     {editedData.id && (
-                      <Button
-                        onClick={handleReprocessDocument}
-                        disabled={isReprocessing}
-                        variant="outline"
-                        size="sm"
-                        className="flex items-center gap-2"
-                      >
-                        {isReprocessing ? (
-                          <Loader2 className="h-3 w-3 animate-spin" />
-                        ) : (
-                          <Brain className="h-3 w-3" />
-                        )}
-                        {currentLanguage === 'ar' ? 'إعادة معالجة' : 'Re-traiter'}
-                      </Button>
+                       <Button
+                         onClick={handleReprocessDocument}
+                         disabled={isReprocessing}
+                         variant="outline"
+                         size="sm"
+                         className="flex items-center gap-2"
+                       >
+                         {isReprocessing ? (
+                           <>
+                             <Loader2 className="h-3 w-3 animate-spin" />
+                             {currentLanguage === 'ar' ? 'معالجة...' : 'Extraction...'}
+                           </>
+                         ) : (
+                           <>
+                             <Brain className="h-3 w-3" />
+                             {currentLanguage === 'ar' ? 'استخراج المعطيات' : 'Extraire métadonnées'}
+                           </>
+                         )}
+                       </Button>
                     )}
                   </div>
-                  <Textarea
-                    value={editedData.textual_metadata || ''}
-                    onChange={(e) => setEditedData(prev => ({ 
-                      ...prev, 
-                      textual_metadata: e.target.value 
-                    }))}
-                    placeholder={currentLanguage === 'ar' ? 'معطيات نصية إضافية...' : 'Métadonnées textuelles extraites du document...'}
-                    className="min-h-[100px] text-sm resize-vertical"
-                    dir={currentLanguage === 'ar' ? 'rtl' : 'ltr'}
-                  />
-                  <div className="text-xs text-muted-foreground">
-                    {currentLanguage === 'ar' 
-                      ? 'يفصل النظام تلقائياً بين المعطيات النصية والمحتوى عند كلمة "المشكل" أو مرادفاتها'
-                      : 'Le système sépare automatiquement les métadonnées du contenu au mot "المشكل" ou ses variantes'
-                    }
-                  </div>
+                   <Textarea
+                     value={editedData.textual_metadata || ''}
+                     onChange={(e) => setEditedData(prev => ({ 
+                       ...prev, 
+                       textual_metadata: e.target.value 
+                     }))}
+                     placeholder={
+                       editedData.textual_metadata 
+                         ? (currentLanguage === 'ar' ? 'معطيات نصية إضافية...' : 'Métadonnées textuelles extraites du document...')
+                         : (currentLanguage === 'ar' 
+                            ? 'لا توجد معطيات نصية مستخرجة. استخدم زر "استخراج المعطيات" لمعالجة هذا المستند'
+                            : 'Aucune métadonnée extraite. Utilisez le bouton "Extraire métadonnées" pour traiter ce document'
+                           )
+                     }
+                     className={`min-h-[100px] text-sm resize-vertical ${
+                       editedData.textual_metadata 
+                         ? 'bg-background border-input' 
+                         : 'bg-muted/30 border-muted-foreground/30 text-muted-foreground'
+                     }`}
+                     dir={currentLanguage === 'ar' ? 'rtl' : 'ltr'}
+                     readOnly={!editedData.textual_metadata}
+                   />
+                   <div className="flex items-center justify-between text-xs">
+                     <span className="text-muted-foreground">
+                       {currentLanguage === 'ar' 
+                         ? 'يفصل النظام تلقائياً بين المعطيات النصية والمحتوى عند كلمة "المشكل" أو مرادفاتها'
+                         : 'Le système sépare automatiquement les métadonnées du contenu au mot "المشكل" ou ses variantes'
+                       }
+                     </span>
+                     <span className={`font-medium ${editedData.textual_metadata ? 'text-primary' : 'text-muted-foreground'}`}>
+                       {editedData.textual_metadata 
+                         ? `${editedData.textual_metadata.length} caractères`
+                         : 'Non extraites'
+                       }
+                     </span>
+                   </div>
                 </div>
               </Card>
             </div>
