@@ -1,5 +1,7 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 
+import { getErrorMessage } from "../_shared/utils.ts";
+
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
@@ -42,7 +44,7 @@ async function extractFirstPageText(pdfBuffer: ArrayBuffer): Promise<{ rawText: 
     return { rawText: firstPageText, totalPages };
   } catch (error) {
     console.error('Error extracting first page text:', error);
-    throw new Error(`Failed to extract text: ${error.message}`);
+    throw new Error(`Failed to extract text: ${getErrorMessage(error)}`);
   }
 }
 
@@ -147,7 +149,7 @@ serve(async (req) => {
       processedPages: 0,
       pages: [],
       fullText: '',
-      error: error.message
+      error: getErrorMessage(error)
     };
 
     return new Response(JSON.stringify(errorResult), {
