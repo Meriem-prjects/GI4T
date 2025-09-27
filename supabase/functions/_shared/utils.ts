@@ -8,6 +8,8 @@ export const ensureString = (value: string | undefined | null, fallback = ''): s
 };
 
 export const fixParentheses = (text: string): string => {
-  // Inverse les parenthèses : ( devient ) et ) devient (
-  return text.replace(/\(/g, '###TEMP###').replace(/\)/g, '(').replace(/###TEMP###/g, ')');
+  // Utilise une regex pour inverser toutes les parenthèses
+  return text.replace(/[()]/g, (match) => {
+    return match === '(' ? ')' : '(';
+  });
 };
