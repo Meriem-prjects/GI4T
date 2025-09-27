@@ -133,16 +133,92 @@ function deepSanitize(value: any): any {
 
 // Function to separate content based on Arabic keyword "المشكل" 
 function separateContent(text: string): { textualMetadata: string; content: string } {
-  // Look for various forms of the keyword
-  const keywords = ['اﻟﻤﺸﻜﻞ', 'المشكل', 'المشكلة', 'المسألة'];
+  // Enhanced keyword detection with more variations and better encoding handling
+  const keywords = [
+    'اﻟﻤﺸﻜﻞ',     // Original with long vowels
+    'المشكل',      // Standard form
+    'المشكلة',     // Feminine form
+    'المسألة',     // Alternative word
+    'الإشكال',     // Synonym
+    'الإشكالية',   // Variant
+    'المشكل الدستوري',  // Full constitutional problem phrase
+    'اﻟﻤﺸﻜﻞ اﻟﺪّﺳﺘﻮري', // With diacritics
+    'الإشكال الدستوري',   // Alternative full phrase
+    'المسألة الدستورية',  // Constitutional matter
+    'اﻟﻤﺸﻜﻠﺔ',     // With diacritics feminine
+    'الموضوع',     // The subject/topic
+    'القضية'       // The case/issue
+  ];
   
+  console.log(`Attempting content separation on text of ${text.length} characters`);
+  
+  // Try exact matches first
   for (const keyword of keywords) {
     const keywordIndex = text.indexOf(keyword);
     if (keywordIndex !== -1) {
       const textualMetadata = text.substring(0, keywordIndex).trim();
       const content = text.substring(keywordIndex).trim();
       
-      console.log(`Content separated at "${keyword}": metadata=${textualMetadata.length} chars, content=${content.length} chars`);
+      console.log(`✓ Content separated at exact match "${keyword}" (index: ${keywordIndex})`);
+      console.log(`  → Metadata: ${textualMetadata.length} chars`);
+      console.log(`  → Content: ${content.length} chars`);
+      console.log(`  → Metadata preview: "${textualMetadata.substring(0, 100)}..."`);
+      console.log(`  → Content preview: "${content.substring(0, 100)}..."`);
+      
+      return {
+        textualMetadata,
+        content
+      };
+    }
+  }
+  
+  // Try case-insensitive and normalized matches
+  const normalizedText = text.replace(/[\u064B-\u065F\u0670\u0640]/g, ''); // Remove diacritics and tatweel
+  
+  for (const keyword of keywords) {
+    const normalizedKeyword = keyword.replace(/[\u064B-\u065F\u0670\u0640]/g, '');
+    const keywordIndex = normalizedText.toLowerCase().indexOf(normalizedKeyword.toLowerCase());
+    if (keywordIndex !== -1) {
+      // Find the actual position in the original text
+      let actualIndex = 0;
+      let normalizedIndex = 0;
+      while (normalizedIndex < keywordIndex && actualIndex < text.length) {
+        const char = text[actualIndex];
+        if (!/[\u064B-\u065F\u0670\u0640]/.test(char)) {
+          normalizedIndex++;
+        }
+        actualIndex++;
+      }
+      
+      const textualMetadata = text.substring(0, actualIndex).trim();
+      const content = text.substring(actualIndex).trim();
+      
+      console.log(`✓ Content separated at normalized match "${keyword}" → "${normalizedKeyword}"`);
+      console.log(`  → Actual index: ${actualIndex}, normalized index: ${keywordIndex}`);
+      console.log(`  → Metadata: ${textualMetadata.length} chars`);
+      console.log(`  → Content: ${content.length} chars`);
+      
+      return {
+        textualMetadata,
+        content
+      };
+    }
+  }
+  
+  // Final fallback: look for any line that starts with similar patterns
+  const lines = text.split('\n');
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i].trim();
+    if (line.includes('مشكل') || line.includes('إشكال') || line.includes('مسألة') || line.includes('قضية')) {
+      const beforeLines = lines.slice(0, i);
+      const fromLines = lines.slice(i);
+      
+      const textualMetadata = beforeLines.join('\n').trim();
+      const content = fromLines.join('\n').trim();
+      
+      console.log(`✓ Content separated at line ${i} containing pattern: "${line.substring(0, 50)}..."`);
+      console.log(`  → Metadata: ${textualMetadata.length} chars`);
+      console.log(`  → Content: ${content.length} chars`);
       
       return {
         textualMetadata,
@@ -152,7 +228,10 @@ function separateContent(text: string): { textualMetadata: string; content: stri
   }
   
   // If no keyword found, keep original text as content
-  console.log('No separation keyword found, keeping full text as content');
+  console.log('⚠ No separation keyword found in any form, keeping full text as content');
+  console.log(`  → Available keywords: ${keywords.slice(0, 5).join(', ')}...`);
+  console.log(`  → Text preview: "${text.substring(0, 200)}..."`);
+  
   return {
     textualMetadata: '',
     content: text

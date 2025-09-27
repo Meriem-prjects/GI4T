@@ -103,6 +103,7 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
   const [currentPage, setCurrentPage] = useState(1);
   const [translatedContent, setTranslatedContent] = useState<string>('');
   const [validationRemarks, setValidationRemarks] = useState<string>('');
+  const [isReprocessing, setIsReprocessing] = useState(false);
 
   useEffect(() => {
     setEditedData(documentData);
@@ -448,7 +449,7 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
       }
 
       const { error } = await supabase
-        .from('documents')
+        .from('documents') 
         .update(updateData)
         .eq('id', editedData.id);
 
@@ -463,10 +464,74 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
     } catch (error) {
       console.error('Return error:', error);
       toast({
-        title: "Erreur",
+        title: "Erreur", 
         description: "Impossible de retourner le document.",
         variant: "destructive"
       });
+    }
+  };
+
+  const handleReprocessDocument = async () => {
+    if (!editedData.id) {
+      toast({
+        title: "Erreur",
+        description: "Impossible de retraiter un document sans ID.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    setIsReprocessing(true);
+    
+    try {
+      console.log('Reprocessing document:', editedData.id);
+      
+      const { data, error } = await supabase.functions.invoke('reprocess-document', {
+        body: { documentId: editedData.id }
+      });
+
+      if (error) {
+        throw error;
+      }
+
+      console.log('Reprocess result:', data);
+
+      // Update the edited data with the new separation  
+      const { data: updatedDoc, error: fetchError } = await supabase
+        .from('documents')
+        .select('*')
+        .eq('id', editedData.id)
+        .single();
+
+      if (fetchError) {
+        throw fetchError;
+      }
+
+      if (updatedDoc) {
+        setEditedData(prev => ({
+          ...prev,
+          textual_metadata: (updatedDoc as any).textual_metadata,
+          content: updatedDoc.content
+        }));
+        
+        toast({
+          title: "Retraitement terminé",
+          description: data.separated 
+            ? `Document retraité avec succès. Métadonnées: ${data.textualMetadataLength} caractères, Contenu: ${data.contentLength} caractères.`
+            : "Document retraité, aucune séparation trouvée.",
+          variant: "default"
+        });
+      }
+
+    } catch (error: any) {
+      console.error('Reprocess error:', error);
+      toast({
+        title: "Erreur de retraitement", 
+        description: error.message || "Impossible de retraiter le document.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsReprocessing(false);
     }
   };
 
@@ -1321,10 +1386,28 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
               {/* Textual Metadata section */}
               <Card className="p-4 lg:col-span-full">
                 <div className="space-y-3">
-                  <Label className="text-sm font-medium flex items-center gap-2">
-                    <FileText className="h-4 w-4" />
-                    {currentLanguage === 'ar' ? 'المعطيات النصية' : 'Métadonnées textuelles'}
-                  </Label>
+                  <div className="flex items-center justify-between">
+                    <Label className="text-sm font-medium flex items-center gap-2">
+                      <FileText className="h-4 w-4" />
+                      {currentLanguage === 'ar' ? 'المعطيات النصية' : 'Métadonnées textuelles'}
+                    </Label>
+                    {editedData.id && (
+                      <Button
+                        onClick={handleReprocessDocument}
+                        disabled={isReprocessing}
+                        variant="outline"
+                        size="sm"
+                        className="flex items-center gap-2"
+                      >
+                        {isReprocessing ? (
+                          <Loader2 className="h-3 w-3 animate-spin" />
+                        ) : (
+                          <Brain className="h-3 w-3" />
+                        )}
+                        {currentLanguage === 'ar' ? 'إعادة معالجة' : 'Re-traiter'}
+                      </Button>
+                    )}
+                  </div>
                   <Textarea
                     value={editedData.textual_metadata || ''}
                     onChange={(e) => setEditedData(prev => ({ 
@@ -1335,6 +1418,12 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
                     className="min-h-[100px] text-sm resize-vertical"
                     dir={currentLanguage === 'ar' ? 'rtl' : 'ltr'}
                   />
+                  <div className="text-xs text-muted-foreground">
+                    {currentLanguage === 'ar' 
+                      ? 'يفصل النظام تلقائياً بين المعطيات النصية والمحتوى عند كلمة "المشكل" أو مرادفاتها'
+                      : 'Le système sépare automatiquement les métadonnées du contenu au mot "المشكل" ou ses variantes'
+                    }
+                  </div>
                 </div>
               </Card>
             </div>
