@@ -258,8 +258,8 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
         const analysis = data.analysis;
         const isPrimaryArabic = editedData.language === 'ar';
         
-        // Update content with cleaned version if available
-        const cleanedContent = analysis.cleanedContent || editedData.content;
+        // DON'T change the original content - keep it intact
+        // Only update metadata fields
         
         // Apply suggested dropdown selections from AI analysis
         const suggestionIds = data.suggestionIds || {};
@@ -275,7 +275,7 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
             subtitle: analysis.translatedSubtitle || prev.subtitle,
             summary_ar: analysis.summary || prev.summary_ar,
             summary: analysis.translatedSummary || prev.summary,
-            content: cleanedContent, // Use cleaned content
+            // Keep original content unchanged
             // Apply AI suggestions for dropdown fields
             category_id: suggestionIds.categoryId || prev.category_id,
             document_type_id: suggestionIds.documentTypeId || prev.document_type_id,
@@ -322,7 +322,7 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
             subtitle_ar: analysis.translatedSubtitle || prev.subtitle_ar,
             summary: analysis.summary || prev.summary,
             summary_ar: analysis.translatedSummary || prev.summary_ar,
-            content: cleanedContent, // Use cleaned content
+            // Keep original content unchanged
             // Apply AI suggestions for dropdown fields
             category_id: suggestionIds.categoryId || prev.category_id,
             document_type_id: suggestionIds.documentTypeId || prev.document_type_id,

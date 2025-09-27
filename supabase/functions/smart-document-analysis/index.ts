@@ -55,10 +55,11 @@ serve(async (req) => {
     const systemPrompt = `Tu es un expert en analyse de documents juridiques tunisiens. Analyse le contenu suivant et extrait les informations demandées en JSON.
 
 IMPORTANT: 
-1. Focus sur l'extraction des métadonnées textuelles pour le titre, sous-titre et auteur
-2. Cherche spécifiquement "مرصد الحقوق الأساسية" comme auteur
-3. Extrait le titre principal (souvent après "المشكل" ou dans les en-têtes)
-4. Identifie un sous-titre complémentaire au titre
+1. NE MODIFIE PAS le contenu original du document - garde-le intact
+2. Focus sur l'extraction des métadonnées textuelles pour le titre, sous-titre et auteur
+3. Cherche spécifiquement "مرصد الحقوق الأساسية" comme auteur
+4. Extrait le titre principal (souvent après "المشكل" ou dans les en-têtes)
+5. Traduis les métadonnées textuelles en français
 
 Catégories disponibles:
 ${categories.map(cat => `- ${cat.name} (${cat.name_ar})`).join('\n')}
@@ -101,7 +102,7 @@ Réponds uniquement en JSON valide avec cette structure exacte :
     "defendant": "défendeur traduit en ${targetLanguage}",
     "court_level": "niveau tribunal traduit en ${targetLanguage}"
   },
-  "cleanedContent": "contenu nettoyé en ${sourceLanguage}",
+  "textualMetadataTranslated": "métadonnées textuelles traduites en français",
   "translatedContent": "contenu traduit en ${targetLanguage}",
   "language": "${sourceLanguage}",
   "suggestions": {
