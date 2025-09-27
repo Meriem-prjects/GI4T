@@ -1518,87 +1518,62 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
                     )}
                   </div>
                     <Textarea
-                      value={editedData.textual_metadata || ''}
-                      onChange={(e) => setEditedData(prev => ({ 
-                        ...prev, 
-                        textual_metadata: e.target.value 
-                      }))}
+                      value={currentLanguage === editedData.language ? (editedData.textual_metadata || '') : (translatedTextualMetadata || '')}
+                      onChange={(e) => {
+                        if (currentLanguage === editedData.language) {
+                          setEditedData(prev => ({
+                            ...prev,
+                            textual_metadata: e.target.value
+                          }));
+                        }
+                      }}
                       placeholder={
-                        editedData.textual_metadata 
-                          ? (currentLanguage === 'ar' ? 'معطيات نصية إضافية...' : 'Métadonnées textuelles extraites du document...')
-                          : (currentLanguage === 'ar' 
-                             ? 'لا توجد معطيات نصية مستخرجة. جاري المعالجة التلقائية...'
-                             : 'Aucune métadonnée extraite. Traitement automatique en cours...'
+                        currentLanguage === editedData.language
+                          ? (
+                              editedData.textual_metadata
+                                ? (currentLanguage === 'ar' ? 'معطيات نصية إضافية...' : 'Métadonnées textuelles extraites du document...')
+                                : (currentLanguage === 'ar'
+                                    ? 'لا توجد معطيات نصية مستخرجة. جاري المعالجة التلقائية...'
+                                    : 'Aucune métadonnée extraite. Traitement automatique en cours...'
+                                  )
+                            )
+                          : (
+                              translatedTextualMetadata
+                                ? (currentLanguage === 'ar' ? 'ترجمة المعطيات النصية' : 'Traduction des métadonnées textuelles')
+                                : (currentLanguage === 'ar' ? 'لا توجد ترجمة بعد. شغّل التحليل بالذكاء الاصطناعي...' : 'Pas encore de traduction. Lancez l’analyse IA...')
                             )
                       }
                       className={`min-h-[100px] text-sm resize-vertical ${
-                        editedData.textual_metadata 
-                          ? 'bg-background border-input' 
+                        (currentLanguage === editedData.language ? editedData.textual_metadata : translatedTextualMetadata)
+                          ? 'bg-background border-input'
                           : 'bg-muted/30 border-muted-foreground/30 text-muted-foreground'
                       }`}
                       dir={currentLanguage === 'ar' ? 'rtl' : 'ltr'}
-                      readOnly={!editedData.textual_metadata}
+                      readOnly={currentLanguage !== editedData.language || !editedData.textual_metadata}
                     />
                    <div className="flex items-center justify-between text-xs">
                      <span className="text-muted-foreground">
-                       {currentLanguage === 'ar' 
-                         ? 'يفصل النظام تلقائياً بين المعطيات النصية والمحتوى عند كلمة "المشكل" أو مرادفاتها'
-                         : 'Le système sépare automatiquement les métadonnées du contenu au mot "المشكل" ou ses variantes'
+                       {currentLanguage !== editedData.language
+                         ? (currentLanguage === 'ar' 
+                             ? 'الترجمة الآلية للمعطيات النصية - للقراءة فقط'
+                             : 'Traduction automatique des métadonnées textuelles - lecture seule'
+                           )
+                         : (currentLanguage === 'ar' 
+                             ? 'يفصل النظام تلقائياً بين المعطيات النصية والمحتوى عند كلمة "المشكل" أو مرادفاتها'
+                             : 'Le système sépare automatiquement les métadonnées du contenu au mot "المشكل" ou ses variantes'
+                           )
                        }
                      </span>
-                     <span className={`font-medium ${editedData.textual_metadata ? 'text-primary' : 'text-muted-foreground'}`}>
-                       {editedData.textual_metadata 
-                         ? `${editedData.textual_metadata.length} caractères`
-                         : 'Non extraites'
+                     <span className={`font-medium ${(currentLanguage === editedData.language ? editedData.textual_metadata : translatedTextualMetadata) ? 'text-primary' : 'text-muted-foreground'}`}>
+                       {(currentLanguage === editedData.language ? editedData.textual_metadata : translatedTextualMetadata)
+                         ? `${(currentLanguage === editedData.language ? editedData.textual_metadata!.length : translatedTextualMetadata.length)} caractères`
+                         : (currentLanguage !== editedData.language ? 'Non disponible' : 'Non extraites')
                        }
                      </span>
                    </div>
                 </div>
               </Card>
               
-              {/* Translated Textual Metadata section - Show only if we have translated metadata and we're in the translated tab */}
-              {translatedTextualMetadata && ((editedData.language === 'ar' && currentLanguage === 'fr') || (editedData.language === 'fr' && currentLanguage === 'ar')) && (
-                <Card className="p-4 lg:col-span-full">
-                  <div className="space-y-3">
-                    <div className="flex items-center justify-between">
-                      <Label className="text-sm font-medium flex items-center gap-2">
-                        <FileText className="h-4 w-4" />
-                        {currentLanguage === 'ar' ? 'ترجمة المعطيات النصية' : 'Traduction des métadonnées textuelles'}
-                      </Label>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => {
-                          navigator.clipboard.writeText(translatedTextualMetadata);
-                          toast({
-                            title: currentLanguage === 'ar' ? 'تم النسخ' : 'Copié',
-                            description: currentLanguage === 'ar' ? 'تم نسخ الترجمة' : 'La traduction a été copiée dans le presse-papier.',
-                          });
-                        }}
-                      >
-                        {currentLanguage === 'ar' ? 'نسخ' : 'Copier'}
-                      </Button>
-                    </div>
-                    <Textarea
-                      value={translatedTextualMetadata}
-                      readOnly
-                      className="min-h-[100px] text-sm resize-vertical bg-muted/20 border-muted-foreground/30"
-                      dir={currentLanguage === 'ar' ? 'rtl' : 'ltr'}
-                    />
-                    <div className="flex items-center justify-between text-xs">
-                      <span className="text-muted-foreground">
-                        {currentLanguage === 'ar' 
-                          ? 'الترجمة الآلية للمعطيات النصية - للقراءة فقط'
-                          : 'Traduction automatique des métadonnées textuelles - lecture seule'
-                        }
-                      </span>
-                      <span className="font-medium text-primary">
-                        {translatedTextualMetadata.length} {currentLanguage === 'ar' ? 'حرف' : 'caractères'}
-                      </span>
-                    </div>
-                  </div>
-                </Card>
-              )}
             </div>
 
             <Card className="p-6">
