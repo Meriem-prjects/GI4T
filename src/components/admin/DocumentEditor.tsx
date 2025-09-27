@@ -259,6 +259,9 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
         // Update content with cleaned version if available
         const cleanedContent = analysis.cleanedContent || editedData.content;
         
+        // Apply suggested dropdown selections from AI analysis
+        const suggestionIds = data.suggestionIds || {};
+        
         // Assign fields based on document's primary language
         if (isPrimaryArabic) {
           // Arabic is primary - analysis result goes to Arabic fields, translation to French
@@ -269,6 +272,9 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
             summary_ar: analysis.summary || prev.summary_ar,
             summary: analysis.translatedSummary || prev.summary,
             content: cleanedContent, // Use cleaned content
+            // Apply AI suggestions for dropdown fields
+            category_id: suggestionIds.categoryId || prev.category_id,
+            document_type_id: suggestionIds.documentTypeId || prev.document_type_id,
             // Metadata in Arabic (primary language)
             author_ar: analysis.metadata?.author || prev.author_ar,
             court_ar: analysis.metadata?.court || prev.court_ar,
@@ -311,6 +317,9 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
             summary: analysis.summary || prev.summary,
             summary_ar: analysis.translatedSummary || prev.summary_ar,
             content: cleanedContent, // Use cleaned content
+            // Apply AI suggestions for dropdown fields
+            category_id: suggestionIds.categoryId || prev.category_id,
+            document_type_id: suggestionIds.documentTypeId || prev.document_type_id,
             // Metadata in French (primary language)
             author: analysis.metadata?.author || prev.author,
             court: analysis.metadata?.court || prev.court,
@@ -346,6 +355,19 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
           setCurrentLanguage('ar');
         }
 
+        // Update court type selection if suggested (for both languages)
+        if (suggestionIds.courtTypeId) {
+          const suggestedCourtType = courtTypes.find(ct => ct.id === suggestionIds.courtTypeId);
+          if (suggestedCourtType) {
+            setSelectedCourtType(suggestedCourtType.name);
+            setEditedData(prev => ({
+              ...prev,
+              court_category_type: suggestedCourtType.name,
+              court_category_type_ar: suggestedCourtType.name_ar || null
+            }));
+          }
+        }
+
         // Mark translated content
         setTranslatedByAI({
           fr: isPrimaryArabic, // French is translated if Arabic is primary
@@ -356,7 +378,7 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
         
         toast({
           title: "Analyse IA terminée",
-          description: `Analyse, extraction des métadonnées et traduction terminées en ${isPrimaryArabic ? 'arabe → français' : 'français → arabe'}.`,
+          description: `Analyse, extraction des métadonnées, classifications automatiques et traduction terminées en ${isPrimaryArabic ? 'arabe → français' : 'français → arabe'}.`,
         });
       } else {
         throw new Error(data.error || 'Analyse échouée');
