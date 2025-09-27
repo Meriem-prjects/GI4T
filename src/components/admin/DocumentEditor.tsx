@@ -761,26 +761,6 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
             {isAnalyzing ? 'Analyse...' : '🤖 Analyse IA'}
           </Button>
 
-          {editedData.id && (
-            <Button
-              onClick={handleReprocessDocument}
-              disabled={isReprocessing}
-              variant="outline"
-              className="bg-secondary/10 hover:bg-secondary/20"
-            >
-              {isReprocessing ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Extraction...
-                </>
-              ) : (
-                <>
-                  <Brain className="mr-2 h-4 w-4" />
-                  Extraire métadonnées
-                </>
-              )}
-            </Button>
-          )}
           
           {isFromValidation ? (
             <div className="flex space-x-2">
