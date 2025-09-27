@@ -1469,50 +1469,35 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
                       <FileText className="h-4 w-4" />
                       {currentLanguage === 'ar' ? 'المعطيات النصية' : 'Métadonnées textuelles'}
                     </Label>
-                    {editedData.id && (
-                       <Button
-                         onClick={handleReprocessDocument}
-                         disabled={isReprocessing}
-                         variant="outline"
-                         size="sm"
-                         className="flex items-center gap-2"
-                       >
-                         {isReprocessing ? (
-                           <>
-                             <Loader2 className="h-3 w-3 animate-spin" />
-                             {currentLanguage === 'ar' ? 'معالجة...' : 'Extraction...'}
-                           </>
-                         ) : (
-                           <>
-                             <Brain className="h-3 w-3" />
-                             {currentLanguage === 'ar' ? 'استخراج المعطيات' : 'Extraire métadonnées'}
-                           </>
-                         )}
-                       </Button>
+                    {isReprocessing && (
+                      <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                        {currentLanguage === 'ar' ? 'جاري الاستخراج...' : 'Extraction automatique...'}
+                      </div>
                     )}
                   </div>
-                   <Textarea
-                     value={editedData.textual_metadata || ''}
-                     onChange={(e) => setEditedData(prev => ({ 
-                       ...prev, 
-                       textual_metadata: e.target.value 
-                     }))}
-                     placeholder={
-                       editedData.textual_metadata 
-                         ? (currentLanguage === 'ar' ? 'معطيات نصية إضافية...' : 'Métadonnées textuelles extraites du document...')
-                         : (currentLanguage === 'ar' 
-                            ? 'لا توجد معطيات نصية مستخرجة. استخدم زر "استخراج المعطيات" لمعالجة هذا المستند'
-                            : 'Aucune métadonnée extraite. Utilisez le bouton "Extraire métadonnées" pour traiter ce document'
-                           )
-                     }
-                     className={`min-h-[100px] text-sm resize-vertical ${
-                       editedData.textual_metadata 
-                         ? 'bg-background border-input' 
-                         : 'bg-muted/30 border-muted-foreground/30 text-muted-foreground'
-                     }`}
-                     dir={currentLanguage === 'ar' ? 'rtl' : 'ltr'}
-                     readOnly={!editedData.textual_metadata}
-                   />
+                    <Textarea
+                      value={editedData.textual_metadata || ''}
+                      onChange={(e) => setEditedData(prev => ({ 
+                        ...prev, 
+                        textual_metadata: e.target.value 
+                      }))}
+                      placeholder={
+                        editedData.textual_metadata 
+                          ? (currentLanguage === 'ar' ? 'معطيات نصية إضافية...' : 'Métadonnées textuelles extraites du document...')
+                          : (currentLanguage === 'ar' 
+                             ? 'لا توجد معطيات نصية مستخرجة. جاري المعالجة التلقائية...'
+                             : 'Aucune métadonnée extraite. Traitement automatique en cours...'
+                            )
+                      }
+                      className={`min-h-[100px] text-sm resize-vertical ${
+                        editedData.textual_metadata 
+                          ? 'bg-background border-input' 
+                          : 'bg-muted/30 border-muted-foreground/30 text-muted-foreground'
+                      }`}
+                      dir={currentLanguage === 'ar' ? 'rtl' : 'ltr'}
+                      readOnly={!editedData.textual_metadata}
+                    />
                    <div className="flex items-center justify-between text-xs">
                      <span className="text-muted-foreground">
                        {currentLanguage === 'ar' 
