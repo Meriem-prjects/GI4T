@@ -189,8 +189,11 @@ export type Database = {
           processed_pages: number | null
           processing_job_id: string | null
           status: string | null
+          subtitle: string | null
+          subtitle_ar: string | null
           summary: string | null
           summary_ar: string | null
+          textual_metadata: string | null
           title: string
           title_ar: string | null
           total_pages: number | null
@@ -245,8 +248,11 @@ export type Database = {
           processed_pages?: number | null
           processing_job_id?: string | null
           status?: string | null
+          subtitle?: string | null
+          subtitle_ar?: string | null
           summary?: string | null
           summary_ar?: string | null
+          textual_metadata?: string | null
           title: string
           title_ar?: string | null
           total_pages?: number | null
@@ -301,8 +307,11 @@ export type Database = {
           processed_pages?: number | null
           processing_job_id?: string | null
           status?: string | null
+          subtitle?: string | null
+          subtitle_ar?: string | null
           summary?: string | null
           summary_ar?: string | null
+          textual_metadata?: string | null
           title?: string
           title_ar?: string | null
           total_pages?: number | null

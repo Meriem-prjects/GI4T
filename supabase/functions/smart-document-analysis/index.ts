@@ -52,112 +52,65 @@ serve(async (req) => {
     const targetLanguage = isPrimaryArabic ? 'français' : 'arabe';
     const sourceLanguage = isPrimaryArabic ? 'arabe' : 'français';
 
-    // Build available options text for AI matching
-    const categoriesText = categories.map(c => `${c.name}${c.name_ar ? ` (${c.name_ar})` : ''} - ${c.description || ''}`).join('\n');
-    const documentTypesText = documentTypes.map(dt => `${dt.name}${dt.name_ar ? ` (${dt.name_ar})` : ''} - ${dt.description || ''}`).join('\n');
-    const courtTypesText = courtTypes.map(ct => `${ct.name}${ct.name_ar ? ` (${ct.name_ar})` : ''} - ${ct.description || ''}`).join('\n');
-    const jurisdictionLevelsText = jurisdictionLevels.map(jl => `${jl.name}${jl.name_ar ? ` (${jl.name_ar})` : ''} - ${jl.description || ''}`).join('\n');
+    const systemPrompt = `Tu es un expert en analyse de documents juridiques tunisiens. Analyse le contenu suivant et extrait les informations demandées en JSON.
 
-    const systemPrompt = `Tu es un expert en analyse de documents juridiques et administratifs bilingues (français/arabe). 
-    
-    Analyse ce document et extrait les informations suivantes avec précision :
+IMPORTANT: 
+1. Focus sur l'extraction des métadonnées textuelles pour le titre, sous-titre et auteur
+2. Cherche spécifiquement "مرصد الحقوق الأساسية" comme auteur
+3. Extrait le titre principal (souvent après "المشكل" ou dans les en-têtes)
+4. Identifie un sous-titre complémentaire au titre
 
-    IMPORTANT: 
-    - Tous les champs principaux (title, subtitle, assignedRight, summary, existingKeywords, suggestedKeywords, metadata) doivent être en ${sourceLanguage}
-    - Tous les champs traduits (translatedTitle, translatedSummary, translatedKeywords, translatedContent, metadataTranslated) doivent être en ${targetLanguage}
-    - Le champ translatedContent doit préserver EXACTEMENT la structure et les sauts de ligne du document original
-    - Le champ cleanedContent doit supprimer les numéros de pages isolés (lignes contenant uniquement des chiffres)
+Catégories disponibles:
+${categories.map(cat => `- ${cat.name} (${cat.name_ar})`).join('\n')}
 
-    RÈGLES DE DÉTECTION DES MÉTADONNÉES :
-    - AUTEUR : Recherche dans les 5 premières lignes du document
-    - TITRE : Recherche sous le "numéro 1" de la première page, sinon prendre un titre contextuel approprié
-    - TRIBUNAL : Identifie le tribunal mentionné et son niveau de juridiction (première instance, appel, cassation, etc.)
-    - NUMÉRO D'AFFAIRE : Patterns comme "n° [chiffres]/[année]" ou similaires
-    - DEMANDEUR : Nom qui précède le "/" après le numéro d'affaire
-    - DÉFENDEUR : Nom qui suit le "/" après le numéro d'affaire
-    - ANNÉE : Extrait l'année du document ou de la décision
-    - NIVEAU TRIBUNAL : Détermine le niveau (première instance, appel, cassation, administratif, etc.)
+Types de documents disponibles:
+${documentTypes.map(type => `- ${type.name} (${type.name_ar})`).join('\n')}
 
-    NETTOYAGE DU CONTENU :
-    - Supprime les lignes contenant uniquement des numéros de pages
-    - Préserve la structure et les sauts de ligne du document
-    - Garde tout le contenu juridique pertinent
+Types de tribunaux disponibles:
+${courtTypes.map(court => `- ${court.name} (${court.name_ar})`).join('\n')}
 
-    CLASSIFICATION AUTOMATIQUE :
-    Analyse le contenu et détermine la meilleure correspondance avec les options disponibles :
+Niveaux de juridiction disponibles:
+${jurisdictionLevels.map(level => `- ${level.name} (${level.name_ar})`).join('\n')}
 
-    CATÉGORIES DISPONIBLES :
-    ${categoriesText}
+Extrait et traduis les informations suivantes :
 
-    TYPES DE DOCUMENTS DISPONIBLES :
-    ${documentTypesText}
-
-    TYPES DE TRIBUNAUX DISPONIBLES :
-    ${courtTypesText}
-
-    NIVEAUX DE JURIDICTION DISPONIBLES :
-    ${jurisdictionLevelsText}
-
-    1. TITRE : Identifie le titre principal en ${sourceLanguage}
-    2. SOUS-TITRE : Le sous-titre ou contexte en ${sourceLanguage}
-    3. DROIT ASSIGNÉ : Le droit spécifique mentionné en ${sourceLanguage}
-    4. RÉSUMÉ : Génère un résumé en exactement 4 phrases en ${sourceLanguage}
-    5. MOTS-CLÉS EXISTANTS : Extrait les mots-clés existants en ${sourceLanguage}
-    6. MOTS-CLÉS SUGGÉRÉS : Propose 5-8 mots-clés pertinents en ${sourceLanguage}
-    7. MÉTADONNÉES : Extrait auteur, tribunal, numéro d'affaire, demandeur, défendeur, année, niveau tribunal en ${sourceLanguage}
-    8. CONTENU NETTOYÉ : Contenu sans numéros de pages isolés en ${sourceLanguage}
-    9. TRADUCTION COMPLÈTE : Traduis tout le contenu nettoyé en ${targetLanguage}
-    10. MÉTADONNÉES TRADUITES : Traduis toutes les métadonnées en ${targetLanguage}
-    11. LANGUE DÉTECTÉE : Confirme "${sourceLanguage}"
-    12. CLASSIFICATION : Détermine la meilleure catégorie, type de document, type de tribunal et niveau de juridiction qui correspondent au contenu analysé
-
-    Réponds uniquement en JSON valide avec cette structure exacte :
-    {
-      "title": "titre en ${sourceLanguage}",
-      "subtitle": "sous-titre en ${sourceLanguage}",
-      "assignedRight": "droit assigné en ${sourceLanguage}",
-      "summary": "résumé 4 phrases en ${sourceLanguage}",
-      "existingKeywords": ["mots-clés existants en ${sourceLanguage}"],
-      "suggestedKeywords": ["mots-clés suggérés en ${sourceLanguage}"],
-      "metadata": {
-        "author": "auteur en ${sourceLanguage}",
-        "court": "tribunal en ${sourceLanguage}",
-        "case_number": "numéro d'affaire",
-        "plaintiff": "demandeur en ${sourceLanguage}",
-        "defendant": "défendeur en ${sourceLanguage}",
-        "year": année_numérique,
-        "court_level": "niveau tribunal en ${sourceLanguage}"
-      },
-      "cleanedContent": "contenu nettoyé en ${sourceLanguage}",
-      "translatedTitle": "titre traduit en ${targetLanguage}",
-      "translatedSummary": "résumé traduit en ${targetLanguage}",
-      "translatedKeywords": ["mots-clés traduits en ${targetLanguage}"],
-      "translatedContent": "contenu complet traduit en ${targetLanguage}",
-      "metadataTranslated": {
-        "author": "auteur en ${targetLanguage}",
-        "court": "tribunal en ${targetLanguage}",
-        "plaintiff": "demandeur en ${targetLanguage}",
-        "defendant": "défendeur en ${targetLanguage}",
-        "court_level": "niveau tribunal en ${targetLanguage}"
-      },
-      "language": "${sourceLanguage}",
-      "detectedPatterns": {
-        "case_pattern": "pattern détecté pour le numéro d'affaire",
-        "court_pattern": "pattern détecté pour le tribunal"
-      },
-      "suggestions": {
-        "suggestedCategory": "nom exact de la catégorie la plus appropriée parmi les options disponibles",
-        "suggestedDocumentType": "nom exact du type de document le plus approprié parmi les options disponibles",
-        "suggestedCourtType": "nom exact du type de tribunal le plus approprié parmi les options disponibles",
-        "suggestedJurisdictionLevel": "nom exact du niveau de juridiction le plus approprié parmi les options disponibles",
-        "confidence": {
-          "category": score_de_confiance_0_à_1,
-          "documentType": score_de_confiance_0_à_1,
-          "courtType": score_de_confiance_0_à_1,
-          "jurisdictionLevel": score_de_confiance_0_à_1
-        }
-      }
-    }`;
+Réponds uniquement en JSON valide avec cette structure exacte :
+{
+  "title": "titre principal en ${sourceLanguage}",
+  "subtitle": "sous-titre complémentaire en ${sourceLanguage}",
+  "translatedTitle": "titre traduit en ${targetLanguage}",
+  "translatedSubtitle": "sous-titre traduit en ${targetLanguage}",
+  "summary": "résumé en ${sourceLanguage}",
+  "translatedSummary": "résumé traduit en ${targetLanguage}",
+  "existingKeywords": ["mots-clés existants en ${sourceLanguage}"],
+  "suggestedKeywords": ["mots-clés suggérés en ${sourceLanguage}"],
+  "translatedKeywords": ["mots-clés traduits en ${targetLanguage}"],
+  "metadata": {
+    "author": "auteur en ${sourceLanguage} (privilégier 'مرصد الحقوق الأساسية')",
+    "court": "tribunal en ${sourceLanguage}",
+    "case_number": "numéro d'affaire extrait des métadonnées",
+    "plaintiff": "demandeur en ${sourceLanguage}",
+    "defendant": "défendeur en ${sourceLanguage}",
+    "year": année_numérique,
+    "court_level": "niveau tribunal en ${sourceLanguage}"
+  },
+  "metadataTranslated": {
+    "author": "auteur traduit en ${targetLanguage}",
+    "court": "tribunal traduit en ${targetLanguage}",
+    "plaintiff": "demandeur traduit en ${targetLanguage}",
+    "defendant": "défendeur traduit en ${targetLanguage}",
+    "court_level": "niveau tribunal traduit en ${targetLanguage}"
+  },
+  "cleanedContent": "contenu nettoyé en ${sourceLanguage}",
+  "translatedContent": "contenu traduit en ${targetLanguage}",
+  "language": "${sourceLanguage}",
+  "suggestions": {
+    "suggestedCategory": "nom exact de la catégorie suggérée",
+    "suggestedDocumentType": "nom exact du type de document suggéré",
+    "suggestedCourtType": "nom exact du type de tribunal suggéré",
+    "suggestedJurisdictionLevel": "nom exact du niveau de juridiction suggéré"
+  }
+}`;
 
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',

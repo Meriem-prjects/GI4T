@@ -25,10 +25,12 @@ interface PageContent {
 
 interface DocumentData {
   id?: string;
-  content: string;
-  textual_metadata?: string;
   title: string;
   title_ar?: string;
+  subtitle?: string;
+  subtitle_ar?: string;
+  content: string;
+  textual_metadata?: string;
   summary: string;
   summary_ar?: string;
   keywords: string[];
@@ -268,7 +270,9 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
           setEditedData(prev => ({
             ...prev,
             title_ar: analysis.title || prev.title_ar,
+            subtitle_ar: analysis.subtitle || prev.subtitle_ar,
             title: analysis.translatedTitle || prev.title,
+            subtitle: analysis.translatedSubtitle || prev.subtitle,
             summary_ar: analysis.summary || prev.summary_ar,
             summary: analysis.translatedSummary || prev.summary,
             content: cleanedContent, // Use cleaned content
@@ -313,7 +317,9 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
           setEditedData(prev => ({
             ...prev,
             title: analysis.title || prev.title,
+            subtitle: analysis.subtitle || prev.subtitle,
             title_ar: analysis.translatedTitle || prev.title_ar,
+            subtitle_ar: analysis.translatedSubtitle || prev.subtitle_ar,
             summary: analysis.summary || prev.summary,
             summary_ar: analysis.translatedSummary || prev.summary_ar,
             content: cleanedContent, // Use cleaned content
@@ -402,6 +408,8 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
         const updateData = {
           title: editedData.title?.trim() || '',
           title_ar: editedData.title_ar?.trim() || null,
+          subtitle: editedData.subtitle?.trim() || null,
+          subtitle_ar: editedData.subtitle_ar?.trim() || null,
           summary: editedData.summary?.trim() || null,
           summary_ar: editedData.summary_ar?.trim() || null,
           content: editedData.content || '',
@@ -941,6 +949,19 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
                     </div>
 
                     <div>
+                      <Label className="text-sm font-medium">
+                        Sous-titre
+                        {editedData.language !== 'fr' && <span className="text-xs text-muted-foreground ml-2">(traduction)</span>}
+                      </Label>
+                      <Input
+                        value={editedData.subtitle || ''}
+                        onChange={(e) => setEditedData(prev => ({ ...prev, subtitle: e.target.value }))}
+                        placeholder="Sous-titre du document (optionnel)"
+                        className="mt-1"
+                      />
+                    </div>
+
+                    <div>
                       <Label className="text-sm font-medium">Catégorie</Label>
                       <Select
                         value={editedData.category_id || ''}
@@ -1152,6 +1173,20 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
                         dir="rtl"
                         className="mt-1"
                         required={editedData.language === 'ar'}
+                      />
+                    </div>
+
+                    <div>
+                      <Label className="text-sm font-medium">
+                        العنوان الفرعي
+                        {editedData.language !== 'ar' && <span className="text-xs text-muted-foreground ml-2">(ترجمة)</span>}
+                      </Label>
+                      <Input
+                        value={editedData.subtitle_ar || ''}
+                        onChange={(e) => setEditedData(prev => ({ ...prev, subtitle_ar: e.target.value }))}
+                        placeholder="العنوان الفرعي للوثيقة (اختياري)"
+                        dir="rtl"
+                        className="mt-1"
                       />
                     </div>
 
