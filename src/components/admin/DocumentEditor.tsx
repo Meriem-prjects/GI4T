@@ -106,6 +106,7 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
   const [translatedContent, setTranslatedContent] = useState<string>('');
   const [validationRemarks, setValidationRemarks] = useState<string>('');
   const [isReprocessing, setIsReprocessing] = useState(false);
+  const [aiAnalysis, setAiAnalysis] = useState<any>(null);
 
   useEffect(() => {
     setEditedData(documentData);
@@ -257,6 +258,9 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
       if (data.success && data.analysis) {
         const analysis = data.analysis;
         const isPrimaryArabic = editedData.language === 'ar';
+        
+        // Store AI analysis for future reference
+        setAiAnalysis(analysis);
         
         // DON'T change the original content - keep it intact
         // Only update metadata fields
@@ -1512,7 +1516,7 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
                         {currentLanguage === 'ar' ? 'جاري الاستخراج...' : 'Extraction automatique...'}
                       </div>
                     )}
-                  </div>
+                   </div>
                     <Textarea
                       value={editedData.textual_metadata || ''}
                       onChange={(e) => setEditedData(prev => ({ 
@@ -1535,6 +1539,21 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
                       dir={currentLanguage === 'ar' ? 'rtl' : 'ltr'}
                       readOnly={!editedData.textual_metadata}
                     />
+
+                    {/* Show translated textual metadata in French section when document is Arabic */}
+                    {editedData.language === 'ar' && currentLanguage === 'fr' && aiAnalysis?.textualMetadataTranslated && (
+                      <div className="mt-4 space-y-2">
+                        <Label className="text-sm font-medium text-blue-600">
+                          Métadonnées textuelles (traduites en français)
+                        </Label>
+                        <Textarea
+                          value={aiAnalysis.textualMetadataTranslated}
+                          readOnly
+                          className="min-h-[100px] text-sm bg-blue-50 border-blue-200"
+                          placeholder="Traduction des métadonnées textuelles..."
+                        />
+                      </div>
+                    )}
                    <div className="flex items-center justify-between text-xs">
                      <span className="text-muted-foreground">
                        {currentLanguage === 'ar' 
