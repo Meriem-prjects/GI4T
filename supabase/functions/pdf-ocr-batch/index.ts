@@ -241,7 +241,7 @@ async function ocrImage(imageData: string, pageNumber: number, openaiApiKey: str
 }
 
 // Enhanced fallback processing chain for PDFs with resume support
-async function processPdfWithOCR(pdfBuffer: ArrayBuffer, openaiApiKey: string, jobId?: string, filename?: string, isResume: boolean = false, preservedLanguage: string = 'fr'): Promise<BatchOCRResult> {
+async function processPdfWithOCR(pdfBuffer: ArrayBuffer, openaiApiKey: string, jobId: string, filename?: string, isResume: boolean = false, preservedLanguage: string = 'fr'): Promise<BatchOCRResult> {
   console.log('Starting enhanced PDF OCR processing with multi-level fallback...');
   
   // Check if PDF might be password-protected
@@ -259,7 +259,7 @@ async function processPdfWithOCR(pdfBuffer: ArrayBuffer, openaiApiKey: string, j
   // Level 0: Try direct text extraction with pdf-reader first (NEW STEP)
   console.log('Attempting direct PDF text extraction with pdf-reader...');
   
-    await updateJobProgress(jobId as string, {
+    await updateJobProgress(jobId, {
     current_step: 'pdf_text_extraction',
     progress: 15
   });
@@ -401,7 +401,7 @@ async function processPdfWithOCR(pdfBuffer: ArrayBuffer, openaiApiKey: string, j
     
     // Check for existing pages if resume
     const existingPageNumbers = isResume ? await getExistingPages(jobId) : [];
-    const imagesToProcess = conversionResult.images.filter(img => !existingPageNumbers.includes(img.pageNumber));
+    const imagesToProcess = conversionResult.images.filter((img: any) => !existingPageNumbers.includes(img.pageNumber));
     
     if (existingPageNumbers.length > 0) {
       console.log(`Resume detected: Skipping pages: ${existingPageNumbers.join(', ')}`);
@@ -652,7 +652,8 @@ serve(async (req) => {
     const formData = await req.formData();
     const file = formData.get('file') as File;
     const pdfUrl = formData.get('pdfUrl') as string;
-    jobId = formData.get('jobId') as string;
+    const providedJobId = formData.get('jobId') as string;
+    jobId = providedJobId || crypto.randomUUID(); // Ensure jobId is always a string
     const filename = formData.get('filename') as string || file?.name || 'unknown.pdf';
     const preservedLanguage = (formData.get('language') as string) || 'fr';
 
@@ -692,7 +693,7 @@ serve(async (req) => {
     }
 
     // Update job status to processing if resuming
-    if (isResume && jobId) {
+    if (isResume) {
       await updateJobProgress(jobId, {
         status: 'processing',
         current_step: 'resuming',
@@ -716,12 +717,12 @@ serve(async (req) => {
     console.error('Error in pdf-ocr-batch function:', error);
     
     // Enhanced error handling with specific error types
-    let errorMessage = error.message;
-    if (error.message.includes('rate limit')) {
+    let errorMessage = error instanceof Error ? error.message : String(error);
+    if (errorMessage.includes('rate limit')) {
       errorMessage = 'Limite de débit API atteinte. Veuillez réessayer dans quelques minutes.';
-    } else if (error.message.includes('timeout')) {
+    } else if (errorMessage.includes('timeout')) {
       errorMessage = 'Temps d\'attente dépassé. Le document est peut-être trop complexe.';
-    } else if (error.message.includes('invalid') || error.message.includes('corrupt')) {
+    } else if (errorMessage.includes('invalid') || errorMessage.includes('corrupt')) {
       errorMessage = 'Fichier PDF invalide ou corrompu. Vérifiez que le fichier n\'est pas endommagé.';
     }
     
@@ -757,7 +758,7 @@ serve(async (req) => {
         await supabaseAdmin
           .from('documents')
           .update({
-            content: hasContent ? document.content : `Erreur de traitement: ${errorMessage}`,
+            content: hasContent ? (document?.content || '') : `Erreur de traitement: ${errorMessage}`,
             status: hasContent ? 'processing' : 'failed'
           })
           .eq('processing_job_id', jobId);

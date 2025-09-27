@@ -48,7 +48,7 @@ Deno.serve(async (req) => {
       console.log(`PDF loaded successfully. Total pages: ${pdf.numPages}`);
     } catch (loadError) {
       console.error('Failed to load PDF with unpdf:', loadError);
-      throw new Error(`Impossible de charger le PDF: ${loadError.message}`);
+      throw new Error(`Impossible de charger le PDF: ${loadError instanceof Error ? loadError.message : String(loadError)}`);
     }
 
     // Extract text from all pages with comprehensive error handling
@@ -66,8 +66,8 @@ Deno.serve(async (req) => {
         // Handle the actual format returned by unpdf
         if (extractionResult.text && Array.isArray(extractionResult.text)) {
           texts = extractionResult.text.map(pageText => String(pageText || ''));
-        } else if (extractionResult.pages && Array.isArray(extractionResult.pages)) {
-          texts = extractionResult.pages.map(page => 
+        } else if ((extractionResult as any).pages && Array.isArray((extractionResult as any).pages)) {
+          texts = (extractionResult as any).pages.map((page: any) => 
             (page && typeof page === 'object' && page.text) ? page.text : String(page || '')
           );
         } else if (extractionResult.text && typeof extractionResult.text === 'string') {
@@ -100,7 +100,7 @@ Deno.serve(async (req) => {
       totalPages = texts.length;
     }
 
-    const totalCharacters = texts.reduce((sum, page) => sum + (page || '').length, 0);
+    const totalCharacters = texts.reduce((sum: number, page: string) => sum + (page || '').length, 0);
     
     console.log(`PDF text extraction completed: ${totalPages} pages, ${totalCharacters} total characters`);
 
@@ -120,7 +120,7 @@ Deno.serve(async (req) => {
     
     const errorResult = {
       success: false,
-      error: error.message,
+      error: error instanceof Error ? error.message : String(error),
       numPages: 0,
       texts: []
     };

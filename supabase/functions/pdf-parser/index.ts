@@ -26,7 +26,7 @@ function extractTextFromPDF(arrayBuffer: ArrayBuffer): string {
           console.log(`Better extraction with ${encoding}: ${extracted.length} chars`);
         }
       } catch (e) {
-        console.log(`Encoding ${encoding} failed:`, e.message);
+        console.log(`Encoding ${encoding} failed:`, e instanceof Error ? e.message : String(e));
       }
     }
     
@@ -44,7 +44,7 @@ function extractTextFromPDF(arrayBuffer: ArrayBuffer): string {
            
   } catch (error) {
     console.error('Critical PDF extraction error:', error);
-    return `Erreur critique d'extraction PDF: ${error.message}`;
+    return `Erreur critique d'extraction PDF: ${error instanceof Error ? error.message : String(error)}`;
   }
 }
 
@@ -277,7 +277,7 @@ serve(async (req) => {
   } catch (error) {
     console.error('Error in pdf-parser function:', error);
     return new Response(JSON.stringify({ 
-      error: error.message,
+      error: error instanceof Error ? error.message : String(error),
       success: false 
     }), {
       status: 500,

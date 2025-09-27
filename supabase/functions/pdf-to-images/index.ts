@@ -50,7 +50,7 @@ async function convertPdfToImages(pdfBuffer: ArrayBuffer): Promise<ConversionRes
         const viewport = page.getViewport({ scale: 2.0 }); // Higher resolution
         
         // Create canvas
-        const canvas = new OffscreenCanvas(viewport.width, viewport.height);
+        const canvas = createCanvas(viewport.width, viewport.height);
         const context = canvas.getContext('2d');
         
         if (!context) {
@@ -113,13 +113,28 @@ async function convertPdfToImages(pdfBuffer: ArrayBuffer): Promise<ConversionRes
       success: false,
       totalPages: 0,
       images: [],
-      error: error.message
+      error: error instanceof Error ? error.message : String(error)
+    };
+  }
+}
+
+// Alternative to OffscreenCanvas for Deno
+function createCanvas(width: number, height: number): any {
+  try {
+    // Try OffscreenCanvas if available
+    return new (globalThis as any).OffscreenCanvas(width, height);
+  } catch {
+    // Fallback - create a simple object that satisfies the interface
+    return {
+      width,
+      height,
+      getContext: () => null,
+      convertToBlob: () => Promise.resolve(new Blob())
     };
   }
 }
 
 serve(async (req) => {
-  console.log('PDF to images function called');
 
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
@@ -164,7 +179,7 @@ serve(async (req) => {
       success: false,
       totalPages: 0,
       images: [],
-      error: error.message
+      error: error instanceof Error ? error.message : String(error)
     };
 
     return new Response(JSON.stringify(errorResult), {

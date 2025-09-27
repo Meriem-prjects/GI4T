@@ -131,6 +131,43 @@ function deepSanitize(value: any): any {
   return value;
 }
 
+// Function to separate content based on Arabic keyword "المشكل" 
+function separateContent(text: string): { textualMetadata: string; content: string } {
+  // Look for various forms of the keyword
+  const keywords = ['اﻟﻤﺸﻜﻞ', 'المشكل', 'المشكلة', 'المسألة'];
+  
+  for (const keyword of keywords) {
+    const keywordIndex = text.indexOf(keyword);
+    if (keywordIndex !== -1) {
+      const textualMetadata = text.substring(0, keywordIndex).trim();
+      const content = text.substring(keywordIndex).trim();
+      
+      console.log(`Content separated at "${keyword}": metadata=${textualMetadata.length} chars, content=${content.length} chars`);
+      
+      return {
+        textualMetadata,
+        content
+      };
+    }
+  }
+  
+  // If no keyword found, keep original text as content
+  console.log('No separation keyword found, keeping full text as content');
+  return {
+    textualMetadata: '',
+    content: text
+  };
+}
+
+// Helper function to access EdgeRuntime safely
+function getEdgeRuntime(): any {
+  try {
+    return (globalThis as any).EdgeRuntime;
+  } catch {
+    return null;
+  }
+}
+
 serve(async (req) => {
   console.log('Upload document function called');
 
@@ -316,31 +353,33 @@ serve(async (req) => {
 
         // Enhance analysis data with PDF/A metadata if available
         if (pdfaInfo?.isPDFA) {
-            analysisData.document_type = `PDF/A Document (${pdfaInfo.pdfaVersion || 'Unknown version'})`;
-            
-            // Add PDF/A metadata to analysis
-            if (pdfaInfo.metadata?.title) {
-              analysisData.title = pdfaInfo.metadata.title;
-            }
-            if (pdfaInfo.metadata?.keywords) {
-              analysisData.keywords = pdfaInfo.metadata.keywords.split(',').map(k => k.trim()).filter(Boolean);
-            }
-            if (pdfaInfo.metadata?.subject) {
-              analysisData.summary = `Document d'archivage PDF/A: ${pdfaInfo.metadata.subject}`;
-            }
-            
-            // Add archival information to legal domains
-            analysisData.legal_domains = ['Document d\'archivage', 'PDF/A Standard'];
-            if (pdfaInfo.conformanceLevel) {
-              analysisData.legal_domains.push(`Conformité niveau ${pdfaInfo.conformanceLevel}`);
-            }
+          // Use any casting to avoid type conflicts
+          const anyAnalysisData = analysisData as any;
+          anyAnalysisData.document_type = `PDF/A Document (${pdfaInfo.pdfaVersion || 'Unknown version'})`;
+          
+          // Add PDF/A metadata to analysis
+          if (pdfaInfo.metadata?.title) {
+            analysisData.title = pdfaInfo.metadata.title;
           }
+          if (pdfaInfo.metadata?.keywords) {
+            anyAnalysisData.keywords = pdfaInfo.metadata.keywords.split(',').map((k: string) => k.trim()).filter(Boolean);
+          }
+          if (pdfaInfo.metadata?.subject) {
+            analysisData.summary = `Document d'archivage PDF/A: ${pdfaInfo.metadata.subject}`;
+          }
+          
+          // Add archival information to legal domains
+          anyAnalysisData.legal_domains = ['Document d\'archivage', 'PDF/A Standard'];
+          if (pdfaInfo.conformanceLevel) {
+            anyAnalysisData.legal_domains.push(`Conformité niveau ${pdfaInfo.conformanceLevel}`);
+          }
+        }
           
         // Page contents populated from pdf-reader extraction
         console.log(`PDF processing completed with ${processedPages || 0} pages`);
       } catch (pdfException) {
         console.error('PDF OCR processing exception:', pdfException);
-        fileContent = `Exception PDF OCR: ${pdfException.message}`;
+        fileContent = `Exception PDF OCR: ${pdfException instanceof Error ? pdfException.message : String(pdfException)}`;
       }
       
     } else if (file.type?.startsWith('image/') || /\.(jpg|jpeg|png|webp|gif|bmp|tiff)$/i.test(file.name)) {
@@ -371,7 +410,7 @@ serve(async (req) => {
         }
       } catch (ocrException) {
         console.error('Image OCR exception:', ocrException);
-        fileContent = `Exception OCR: ${ocrException.message}`;
+        fileContent = `Exception OCR: ${ocrException instanceof Error ? ocrException.message : String(ocrException)}`;
       }
     } else {
       // For text files, read as text
@@ -508,11 +547,19 @@ serve(async (req) => {
         
         console.log('Triggering background OCR processing (direct extraction was insufficient)...');
         try {
-          EdgeRuntime.waitUntil(
+          const edgeRuntime = getEdgeRuntime();
+          if (edgeRuntime && edgeRuntime.waitUntil) {
+            edgeRuntime.waitUntil(
             supabaseAdmin.functions.invoke('pdf-ocr-batch', { body: pdfFormData })
               .then(() => console.log('Background PDF OCR completed successfully'))
               .catch((error) => console.error('Background PDF OCR failed:', error))
-          );
+            );
+          } else {
+            // Fallback if EdgeRuntime is not available
+            supabaseAdmin.functions.invoke('pdf-ocr-batch', { body: pdfFormData })
+              .then(() => console.log('Background PDF OCR completed successfully'))
+              .catch((err) => console.error('Background PDF OCR failed:', err));
+          }
         } catch {
           // Fallback if EdgeRuntime.waitUntil is not available
           supabaseAdmin.functions.invoke('pdf-ocr-batch', { body: pdfFormData })
@@ -549,7 +596,7 @@ serve(async (req) => {
   } catch (error) {
     console.error('Error in upload-document function:', error);
     return new Response(JSON.stringify({ 
-      error: error.message,
+      error: error instanceof Error ? error.message : String(error),
       success: false 
     }), {
       status: 500,

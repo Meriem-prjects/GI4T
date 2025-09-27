@@ -180,7 +180,7 @@ async function convertPdfWithPdfRest(pdfBuffer: ArrayBuffer, optimizedResolution
       success: false,
       totalPages: 0,
       images: [],
-      error: error.message
+      error: error instanceof Error ? error.message : String(error)
     };
   }
 }
@@ -242,7 +242,7 @@ serve(async (req) => {
       success: false,
       totalPages: 0,
       images: [],
-      error: error.message
+      error: error instanceof Error ? error.message : String(error)
     };
 
     return new Response(JSON.stringify(errorResult), {

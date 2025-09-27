@@ -166,7 +166,7 @@ serve(async (req) => {
     console.error('Error in smart-document-analysis function:', error);
     return new Response(JSON.stringify({ 
       success: false,
-      error: error.message,
+      error: error instanceof Error ? error.message : String(error),
       timestamp: new Date().toISOString()
     }), {
       status: 500,
