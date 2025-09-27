@@ -176,12 +176,11 @@ async function convertPdfWithPdfRest(pdfBuffer: ArrayBuffer, optimizedResolution
 
   } catch (error) {
     console.error('pdfRest conversion error:', error);
-    const errorMessage = error instanceof Error ? error.message : String(error);
     return {
       success: false,
       totalPages: 0,
       images: [],
-      error: errorMessage
+      error: error.message
     };
   }
 }
@@ -239,12 +238,11 @@ serve(async (req) => {
   } catch (error) {
     console.error('Error in pdfrest-converter function:', error);
     
-    const errorMessage = error instanceof Error ? error.message : String(error);
     const errorResult: ConversionResult = {
       success: false,
       totalPages: 0,
       images: [],
-      error: errorMessage
+      error: error.message
     };
 
     return new Response(JSON.stringify(errorResult), {

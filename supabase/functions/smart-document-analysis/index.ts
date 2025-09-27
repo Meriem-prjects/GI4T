@@ -14,10 +14,9 @@ serve(async (req) => {
   }
 
   try {
-    const { content, textualMetadata, currentLanguage = 'fr' } = await req.json();
+    const { content, currentLanguage = 'fr' } = await req.json();
 
     console.log('Starting smart document analysis for content length:', content?.length);
-    console.log('Textual metadata length:', textualMetadata?.length || 0);
 
     if (!content) {
       throw new Error('Content is required for analysis');
@@ -30,23 +29,7 @@ serve(async (req) => {
 
     const systemPrompt = `Tu es un expert en analyse de documents juridiques et administratifs bilingues (français/arabe). 
     
-    ${textualMetadata ? `PRIORITÉ ABSOLUE : EXTRAIRE LES MÉTADONNÉES DEPUIS LE CONTENU TEXTUEL PRÉSTRUCTURÉ
-    
-    MÉTADONNÉES TEXTUELLES FOURNIES :
-    ${textualMetadata}
-    
-    INSTRUCTIONS SPÉCIALES POUR L'EXTRACTION :
-    1. Le contenu textuel ci-dessus contient toutes les informations administratives nécessaires
-    2. CHERCHE SPÉCIFIQUEMENT :
-       - AUTEUR : Nom mentionné après "مرصد الحقوق الأساسية" ou dans les premières lignes
-       - NUMÉRO DE FICHE : Cherche "عدد" ou "numéro" suivi d'un chiffre
-       - TRIBUNAL/COUR : Cherche mentions de "محكمة" ou "مجلس" 
-       - DROIT : Cherche "الحق في" ou mentions de droits spécifiques
-       - ANNÉE : Cherche les dates au format DD.MM.YYYY ou années isolées
-       - TITRE : Combine l'auteur, le numéro et le droit pour former un titre cohérent
-    3. UTILISE CES INFORMATIONS POUR REMPLIR TOUS LES CHAMPS METADATA
-    
-    ` : ''}Analyse ce document et extrait les informations suivantes avec précision :
+    Analyse ce document et extrait les informations suivantes avec précision :
 
     IMPORTANT: 
     - Tous les champs principaux (title, subtitle, assignedRight, summary, existingKeywords, suggestedKeywords, metadata) doivent être en ${sourceLanguage}
@@ -55,9 +38,9 @@ serve(async (req) => {
     - Le champ cleanedContent doit supprimer les numéros de pages isolés (lignes contenant uniquement des chiffres)
 
     RÈGLES DE DÉTECTION DES MÉTADONNÉES :
-    - AUTEUR : ${textualMetadata ? 'Extrait depuis les métadonnées textuelles fournies' : 'Recherche dans les 5 premières lignes du document'}
-    - TITRE : ${textualMetadata ? 'Construit à partir de l\'auteur, numéro de fiche et droit mentionnés dans les métadonnées' : 'Prendre un titre contextuel approprié'}
-    - TRIBUNAL : ${textualMetadata ? 'Identifie le tribunal mentionné dans les métadonnées textuelles' : 'Identifie le tribunal mentionné dans le document'}
+    - AUTEUR : Recherche dans les 5 premières lignes du document
+    - TITRE : Recherche sous le "numéro 1" de la première page, sinon prendre un titre contextuel approprié
+    - TRIBUNAL : Identifie le tribunal mentionné et son niveau de juridiction (première instance, appel, cassation, etc.)
     - NUMÉRO D'AFFAIRE : Patterns comme "n° [chiffres]/[année]" ou similaires
     - DEMANDEUR : Nom qui précède le "/" après le numéro d'affaire
     - DÉFENDEUR : Nom qui suit le "/" après le numéro d'affaire
@@ -127,7 +110,7 @@ serve(async (req) => {
         model: 'gpt-4o',
         messages: [
           { role: 'system', content: systemPrompt },
-          { role: 'user', content: `Analyse ce document:${textualMetadata ? `\n\nMÉTADONNÉES TEXTUELLES (à utiliser prioritairement pour les métadonnées):\n${textualMetadata}\n\n` : '\n\n'}CONTENU PRINCIPAL:\n${content}` }
+          { role: 'user', content: `Analyse ce document:\n\n${content}` }
         ],
         response_format: { type: "json_object" },
         temperature: 0.3,
@@ -181,10 +164,9 @@ serve(async (req) => {
 
   } catch (error) {
     console.error('Error in smart-document-analysis function:', error);
-    const errorMessage = error instanceof Error ? error.message : String(error);
     return new Response(JSON.stringify({ 
       success: false,
-      error: errorMessage,
+      error: error.message,
       timestamp: new Date().toISOString()
     }), {
       status: 500,

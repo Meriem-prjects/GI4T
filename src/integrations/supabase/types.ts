@@ -191,7 +191,6 @@ export type Database = {
           status: string | null
           summary: string | null
           summary_ar: string | null
-          textual_metadata: string | null
           title: string
           title_ar: string | null
           total_pages: number | null
@@ -248,7 +247,6 @@ export type Database = {
           status?: string | null
           summary?: string | null
           summary_ar?: string | null
-          textual_metadata?: string | null
           title: string
           title_ar?: string | null
           total_pages?: number | null
@@ -305,7 +303,6 @@ export type Database = {
           status?: string | null
           summary?: string | null
           summary_ar?: string | null
-          textual_metadata?: string | null
           title?: string
           title_ar?: string | null
           total_pages?: number | null

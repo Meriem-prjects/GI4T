@@ -11,7 +11,6 @@ import DocumentEditor from '@/components/admin/DocumentEditor';
 interface DocumentData {
   id?: string;
   content: string;
-  textual_metadata?: string;
   title: string;
   title_ar?: string;
   summary: string;
@@ -99,7 +98,6 @@ const AdminEditor = () => {
       const mappedDocument: DocumentData = {
         id: document.id,
         content: document.content,
-        textual_metadata: document.textual_metadata || '',
         title: document.title,
         title_ar: document.title_ar || '',
         summary: document.summary || '',

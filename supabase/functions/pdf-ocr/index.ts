@@ -97,11 +97,10 @@ serve(async (req) => {
 
   } catch (error) {
     console.error('PDF OCR error:', error);
-    const errorMessage = error instanceof Error ? error.message : String(error);
     return new Response(JSON.stringify({
       success: false,
-      error: errorMessage,
-      content: `Erreur OCR: ${errorMessage}`,
+      error: error.message,
+      content: `Erreur OCR: ${error.message}`,
       pages: [],
       fullText: '',
       processedPages: 0,

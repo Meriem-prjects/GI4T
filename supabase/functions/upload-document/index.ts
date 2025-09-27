@@ -316,23 +316,23 @@ serve(async (req) => {
 
         // Enhance analysis data with PDF/A metadata if available
         if (pdfaInfo?.isPDFA) {
-            analysisData.document_type = `PDF/A Document (${pdfaInfo.pdfaVersion || 'Unknown version'})` as any;
+            analysisData.document_type = `PDF/A Document (${pdfaInfo.pdfaVersion || 'Unknown version'})`;
             
             // Add PDF/A metadata to analysis
             if (pdfaInfo.metadata?.title) {
               analysisData.title = pdfaInfo.metadata.title;
             }
             if (pdfaInfo.metadata?.keywords) {
-              analysisData.keywords = pdfaInfo.metadata.keywords.split(',').map((k: string) => k.trim()).filter(Boolean);
+              analysisData.keywords = pdfaInfo.metadata.keywords.split(',').map(k => k.trim()).filter(Boolean);
             }
             if (pdfaInfo.metadata?.subject) {
               analysisData.summary = `Document d'archivage PDF/A: ${pdfaInfo.metadata.subject}`;
             }
             
             // Add archival information to legal domains
-            (analysisData as any).legal_domains = ['Document d\'archivage', 'PDF/A Standard'];
+            analysisData.legal_domains = ['Document d\'archivage', 'PDF/A Standard'];
             if (pdfaInfo.conformanceLevel) {
-              (analysisData as any).legal_domains.push(`Conformité niveau ${pdfaInfo.conformanceLevel}`);
+              analysisData.legal_domains.push(`Conformité niveau ${pdfaInfo.conformanceLevel}`);
             }
           }
           
@@ -340,7 +340,7 @@ serve(async (req) => {
         console.log(`PDF processing completed with ${processedPages || 0} pages`);
       } catch (pdfException) {
         console.error('PDF OCR processing exception:', pdfException);
-        fileContent = `Exception PDF OCR: ${pdfException instanceof Error ? pdfException.message : String(pdfException)}`;
+        fileContent = `Exception PDF OCR: ${pdfException.message}`;
       }
       
     } else if (file.type?.startsWith('image/') || /\.(jpg|jpeg|png|webp|gif|bmp|tiff)$/i.test(file.name)) {
@@ -371,7 +371,7 @@ serve(async (req) => {
         }
       } catch (ocrException) {
         console.error('Image OCR exception:', ocrException);
-        fileContent = `Exception OCR: ${ocrException instanceof Error ? ocrException.message : String(ocrException)}`;
+        fileContent = `Exception OCR: ${ocrException.message}`;
       }
     } else {
       // For text files, read as text
@@ -401,72 +401,6 @@ serve(async (req) => {
 
     console.log('Document processing completed');
 
-    // Separate content based on "اﻟﻤﺸﻜﻞ" keyword for Arabic legal documents
-    const separateContent = (content: string) => {
-      const problemKeyword = 'اﻟﻤﺸﻜﻞ';
-      const keywordIndex = content.indexOf(problemKeyword);
-      
-      if (keywordIndex !== -1) {
-        const textualMetadata = content.substring(0, keywordIndex).trim();
-        const mainContent = content.substring(keywordIndex).trim();
-        console.log(`Content separated at "${problemKeyword}": metadata=${textualMetadata.length} chars, content=${mainContent.length} chars`);
-        
-        // Log more details about what was found
-        console.log('Textual metadata extract:', textualMetadata.substring(0, 200));
-        console.log('Main content extract:', mainContent.substring(0, 200));
-        
-        return { textualMetadata, mainContent };
-      } else {
-        console.log(`Keyword "${problemKeyword}" not found in content. Content preview:`, content.substring(0, 500));
-        
-        // More aggressive search for similar patterns or Arabic text
-        const lines = content.split('\n').filter(line => line.trim().length > 0);
-        let headerEndIndex = -1;
-        
-        // Look for common Arabic document patterns
-        const arabicPatterns = [
-          'المشكل الدّستوري',
-          'المشكل',
-          'الحل المقدّم',
-          'رأي المجلس',
-          'القضية'
-        ];
-        
-        for (let i = 0; i < lines.length; i++) {
-          const line = lines[i];
-          for (const pattern of arabicPatterns) {
-            if (line.includes(pattern)) {
-              headerEndIndex = i;
-              console.log(`Found alternative pattern "${pattern}" at line ${i}`);
-              break;
-            }
-          }
-          if (headerEndIndex !== -1) break;
-        }
-        
-        if (headerEndIndex !== -1) {
-          const textualMetadata = lines.slice(0, headerEndIndex).join('\n');
-          const mainContent = lines.slice(headerEndIndex).join('\n');
-          console.log(`Using alternative separation: metadata=${textualMetadata.length} chars, content=${mainContent.length} chars`);
-          return { textualMetadata, mainContent };
-        }
-        
-        // Fallback: use first significant portion as metadata
-        if (lines.length > 5) {
-          const splitPoint = Math.min(5, Math.floor(lines.length / 3));
-          const textualMetadata = lines.slice(0, splitPoint).join('\n');
-          const mainContent = lines.slice(splitPoint).join('\n');
-          console.log(`Using fallback separation at line ${splitPoint}: metadata=${textualMetadata.length} chars`);
-          return { textualMetadata, mainContent };
-        }
-        
-        console.log(`No pattern found and insufficient lines, keeping original content`);
-        return { textualMetadata: content.length > 0 ? content.substring(0, 300) : '', mainContent: content };
-      }
-    };
-
-    const { textualMetadata, mainContent } = separateContent(fileContent);
-
     // Get public URL for the uploaded file
     const { data: { publicUrl } } = supabaseAdmin.storage
       .from('documents')
@@ -480,8 +414,7 @@ serve(async (req) => {
       title_ar: analysisData.title_ar || null,
       summary: analysisData.summary || '',
       summary_ar: analysisData.summary_ar || null,
-      content: mainContent, // Store main content after separation
-      textual_metadata: textualMetadata, // Store metadata part
+      content: fileContent, // Store extracted content for all file types
       keywords: analysisData.keywords || [],
       keywords_ar: analysisData.keywords_ar || [],
       language: language, // Use the provided language
@@ -557,15 +490,11 @@ serve(async (req) => {
         
         console.log('Triggering background OCR processing (direct extraction was insufficient)...');
         try {
-          if ((globalThis as any).EdgeRuntime && (globalThis as any).EdgeRuntime.waitUntil) {
-            (globalThis as any).EdgeRuntime.waitUntil(
-              supabaseAdmin.functions.invoke('pdf-ocr-batch', { body: pdfFormData })
-                .then(() => console.log('Background PDF OCR completed successfully'))
-                .catch((error) => console.error('Background PDF OCR failed:', error))
-            );
-          } else {
-            console.log('EdgeRuntime not available, skipping background OCR');
-          }
+          EdgeRuntime.waitUntil(
+            supabaseAdmin.functions.invoke('pdf-ocr-batch', { body: pdfFormData })
+              .then(() => console.log('Background PDF OCR completed successfully'))
+              .catch((error) => console.error('Background PDF OCR failed:', error))
+          );
         } catch {
           // Fallback if EdgeRuntime.waitUntil is not available
           supabaseAdmin.functions.invoke('pdf-ocr-batch', { body: pdfFormData })
@@ -602,7 +531,7 @@ serve(async (req) => {
   } catch (error) {
     console.error('Error in upload-document function:', error);
     return new Response(JSON.stringify({ 
-      error: error instanceof Error ? error.message : String(error),
+      error: error.message,
       success: false 
     }), {
       status: 500,

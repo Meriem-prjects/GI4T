@@ -20,35 +20,100 @@ interface ConversionResult {
   error?: string;
 }
 
-// Convert PDF to images - Simplified for Deno environment
+// Convert PDF to images using Canvas API with pdf.js
 async function convertPdfToImages(pdfBuffer: ArrayBuffer): Promise<ConversionResult> {
   try {
-    console.log('PDF to images conversion not fully supported in Deno edge functions');
-    console.log('This is a placeholder implementation that extracts basic PDF info');
+    // Import PDF.js library
+    const pdfjsLib = await import('https://cdn.skypack.dev/pdfjs-dist@3.11.174');
     
-    // Basic PDF validation
-    const pdfHeader = new TextDecoder('latin1').decode(new Uint8Array(pdfBuffer).slice(0, 10));
-    if (!pdfHeader.includes('%PDF')) {
-      throw new Error('Invalid PDF file');
+    console.log('Loading PDF with pdf.js...');
+    
+    // Load the PDF document
+    const loadingTask = pdfjsLib.getDocument({
+      data: new Uint8Array(pdfBuffer),
+      verbosity: 0
+    });
+    
+    const pdf = await loadingTask.promise;
+    const totalPages = pdf.numPages;
+    
+    console.log(`PDF loaded successfully. Total pages: ${totalPages}`);
+    
+    const images: PageImage[] = [];
+    
+    // Process each page
+    for (let pageNum = 1; pageNum <= totalPages; pageNum++) {
+      console.log(`Processing page ${pageNum}/${totalPages}...`);
+      
+      try {
+        const page = await pdf.getPage(pageNum);
+        const viewport = page.getViewport({ scale: 2.0 }); // Higher resolution
+        
+        // Create canvas
+        const canvas = new OffscreenCanvas(viewport.width, viewport.height);
+        const context = canvas.getContext('2d');
+        
+        if (!context) {
+          throw new Error('Failed to get canvas context');
+        }
+        
+        // Render page to canvas
+        const renderContext = {
+          canvasContext: context,
+          viewport: viewport,
+        };
+        
+        await page.render(renderContext).promise;
+        
+        // Convert canvas to image data (JPEG for smaller size)
+        const blob = await canvas.convertToBlob({ 
+          type: 'image/jpeg', 
+          quality: 0.9 
+        });
+        
+        // Convert to base64
+        const arrayBuffer = await blob.arrayBuffer();
+        const uint8Array = new Uint8Array(arrayBuffer);
+        
+        // Convert to base64 in chunks to avoid call stack issues
+        const chunkSize = 8192;
+        const chunks: string[] = [];
+        
+        for (let i = 0; i < uint8Array.length; i += chunkSize) {
+          const chunk = uint8Array.slice(i, i + chunkSize);
+          chunks.push(String.fromCharCode.apply(null, Array.from(chunk)));
+        }
+        
+        const base64Image = btoa(chunks.join(''));
+        
+        images.push({
+          pageNumber: pageNum,
+          imageData: base64Image,
+          width: viewport.width,
+          height: viewport.height
+        });
+        
+        console.log(`Page ${pageNum} converted successfully (${base64Image.length} chars)`);
+        
+      } catch (pageError) {
+        console.error(`Error processing page ${pageNum}:`, pageError);
+        // Continue with other pages even if one fails
+      }
     }
     
-    // Return a minimal result - in practice, this would need a different approach
-    // for full PDF to images conversion in Deno edge functions
     return {
-      success: false,
-      totalPages: 0,
-      images: [],
-      error: 'PDF to images conversion requires server-side processing with canvas support'
+      success: true,
+      totalPages,
+      images
     };
     
   } catch (error) {
     console.error('PDF conversion error:', error);
-    const errorMessage = error instanceof Error ? error.message : String(error);
     return {
       success: false,
       totalPages: 0,
       images: [],
-      error: errorMessage
+      error: error.message
     };
   }
 }
@@ -95,12 +160,11 @@ serve(async (req) => {
   } catch (error) {
     console.error('Error in pdf-to-images function:', error);
     
-    const errorMessage = error instanceof Error ? error.message : String(error);
     const errorResult: ConversionResult = {
       success: false,
       totalPages: 0,
       images: [],
-      error: errorMessage
+      error: error.message
     };
 
     return new Response(JSON.stringify(errorResult), {

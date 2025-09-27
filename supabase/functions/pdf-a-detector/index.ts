@@ -199,7 +199,6 @@ serve(async (req) => {
   } catch (error) {
     console.error('Error in PDF/A detector function:', error);
     
-    const errorMessage = error instanceof Error ? error.message : String(error);
     return new Response(JSON.stringify({
       isPDFA: false,
       metadata: {},
@@ -213,7 +212,7 @@ serve(async (req) => {
         optimizedResolution: 200,
         preserveMetadata: false
       },
-      error: errorMessage
+      error: error.message
     }), {
       status: 500,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
