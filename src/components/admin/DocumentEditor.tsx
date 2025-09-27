@@ -121,7 +121,64 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
     
     loadCategories();
     loadDocumentTypes();
+    
+    // Auto-extract textual metadata if document exists but has no metadata
+    if (documentData.id && documentData.content && !documentData.textual_metadata) {
+      console.log('Auto-extracting textual metadata for document:', documentData.id);
+      setTimeout(() => {
+        autoExtractMetadata();
+      }, 1000); // Small delay to ensure component is fully loaded
+    }
   }, [documentData]);
+
+  const autoExtractMetadata = async () => {
+    if (!editedData.id) return;
+    
+    setIsReprocessing(true);
+    
+    try {
+      console.log('Auto-extracting metadata for document:', editedData.id);
+      
+      const { data, error } = await supabase.functions.invoke('reprocess-document', {
+        body: { documentId: editedData.id }
+      });
+
+      if (error) {
+        throw error;
+      }
+
+      console.log('Auto-extract result:', data);
+
+      // Update the edited data with the new separation  
+      const { data: updatedDoc, error: fetchError } = await supabase
+        .from('documents')
+        .select('*')
+        .eq('id', editedData.id)
+        .single();
+
+      if (fetchError) {
+        throw fetchError;
+      }
+
+      if (updatedDoc) {
+        setEditedData(prev => ({
+          ...prev,
+          textual_metadata: (updatedDoc as any).textual_metadata,
+          content: updatedDoc.content
+        }));
+        
+        if (data.separated) {
+          console.log(`Métadonnées extraites automatiquement: ${data.textualMetadataLength} caractères`);
+        }
+      }
+
+    } catch (error: any) {
+      console.error('Auto-extract error:', error);
+      // Silent error - don't show toast for auto-extraction failures
+    } finally {
+      setIsReprocessing(false);
+    }
+  };
 
   useEffect(() => {
     const hasChanged = JSON.stringify(editedData) !== JSON.stringify(documentData);
