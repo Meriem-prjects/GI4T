@@ -106,6 +106,7 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
   const [translatedContent, setTranslatedContent] = useState<string>('');
   const [validationRemarks, setValidationRemarks] = useState<string>('');
   const [isReprocessing, setIsReprocessing] = useState(false);
+  const [translatedTextualMetadata, setTranslatedTextualMetadata] = useState<string>('');
 
   useEffect(() => {
     setEditedData(documentData);
@@ -260,6 +261,9 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
         
         // DON'T change the original content - keep it intact
         // Only update metadata fields
+        
+        // Store the translated textual metadata from AI analysis
+        setTranslatedTextualMetadata(analysis.textualMetadataTranslated || '');
         
         // Apply suggested dropdown selections from AI analysis
         const suggestionIds = data.suggestionIds || {};
@@ -1551,6 +1555,50 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
                    </div>
                 </div>
               </Card>
+              
+              {/* Translated Textual Metadata section - Show only if we have translated metadata and we're in the translated tab */}
+              {translatedTextualMetadata && ((editedData.language === 'ar' && currentLanguage === 'fr') || (editedData.language === 'fr' && currentLanguage === 'ar')) && (
+                <Card className="p-4 lg:col-span-full">
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between">
+                      <Label className="text-sm font-medium flex items-center gap-2">
+                        <FileText className="h-4 w-4" />
+                        {currentLanguage === 'ar' ? 'ترجمة المعطيات النصية' : 'Traduction des métadonnées textuelles'}
+                      </Label>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => {
+                          navigator.clipboard.writeText(translatedTextualMetadata);
+                          toast({
+                            title: currentLanguage === 'ar' ? 'تم النسخ' : 'Copié',
+                            description: currentLanguage === 'ar' ? 'تم نسخ الترجمة' : 'La traduction a été copiée dans le presse-papier.',
+                          });
+                        }}
+                      >
+                        {currentLanguage === 'ar' ? 'نسخ' : 'Copier'}
+                      </Button>
+                    </div>
+                    <Textarea
+                      value={translatedTextualMetadata}
+                      readOnly
+                      className="min-h-[100px] text-sm resize-vertical bg-muted/20 border-muted-foreground/30"
+                      dir={currentLanguage === 'ar' ? 'rtl' : 'ltr'}
+                    />
+                    <div className="flex items-center justify-between text-xs">
+                      <span className="text-muted-foreground">
+                        {currentLanguage === 'ar' 
+                          ? 'الترجمة الآلية للمعطيات النصية - للقراءة فقط'
+                          : 'Traduction automatique des métadonnées textuelles - lecture seule'
+                        }
+                      </span>
+                      <span className="font-medium text-primary">
+                        {translatedTextualMetadata.length} {currentLanguage === 'ar' ? 'حرف' : 'caractères'}
+                      </span>
+                    </div>
+                  </div>
+                </Card>
+              )}
             </div>
 
             <Card className="p-6">

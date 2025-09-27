@@ -102,7 +102,7 @@ Réponds uniquement en JSON valide avec cette structure exacte :
     "defendant": "défendeur traduit en ${targetLanguage}",
     "court_level": "niveau tribunal traduit en ${targetLanguage}"
   },
-  "textualMetadataTranslated": "métadonnées textuelles traduites en français",
+  "textualMetadataTranslated": "métadonnées textuelles traduites en ${targetLanguage}",
   "translatedContent": "contenu traduit en ${targetLanguage}",
   "language": "${sourceLanguage}",
   "suggestions": {
