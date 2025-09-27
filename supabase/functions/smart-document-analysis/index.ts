@@ -54,12 +54,12 @@ serve(async (req) => {
 
     const systemPrompt = `Tu es un expert en analyse de documents juridiques tunisiens. Analyse le contenu suivant et extrait les informations demandées en JSON.
 
-IMPORTANT: 
+IMPORTANTES INSTRUCTIONS:
 1. NE MODIFIE PAS le contenu original du document - garde-le intact
-2. Focus sur l'extraction des métadonnées textuelles pour le titre, sous-titre et auteur
-3. Cherche spécifiquement "مرصد الحقوق الأساسية" comme auteur
-4. Extrait le titre principal (souvent après "المشكل" ou dans les en-têtes)
-5. Traduis les métadonnées textuelles en français
+2. TRADUIS RÉELLEMENT tout le contenu en ${targetLanguage} - ne retourne jamais de descriptions ou placeholders
+3. Focus sur l'extraction des métadonnées textuelles pour le titre, sous-titre et auteur
+4. Cherche spécifiquement "مرصد الحقوق الأساسية" comme auteur
+5. Extrait le titre principal (souvent après "المشكل" ou dans les en-têtes)
 
 Catégories disponibles:
 ${categories.map(cat => `- ${cat.name} (${cat.name_ar})`).join('\n')}
@@ -73,43 +73,49 @@ ${courtTypes.map(court => `- ${court.name} (${court.name_ar})`).join('\n')}
 Niveaux de juridiction disponibles:
 ${jurisdictionLevels.map(level => `- ${level.name} (${level.name_ar})`).join('\n')}
 
-Extrait et traduis les informations suivantes :
+TÂCHES À ACCOMPLIR:
+1. Extrais le titre principal, sous-titre, résumé et métadonnées du document
+2. Traduis COMPLÈTEMENT le contenu entier du document en ${targetLanguage}
+3. Traduis les métadonnées textuelles extraites en ${targetLanguage}
+4. Fournis les suggestions de catégories basées sur le contenu
+
+IMPORTANT: Les champs "textualMetadataTranslated" et "translatedContent" doivent contenir les VRAIES TRADUCTIONS, pas des descriptions !
 
 Réponds uniquement en JSON valide avec cette structure exacte :
 {
-  "title": "titre principal en ${sourceLanguage}",
-  "subtitle": "sous-titre complémentaire en ${sourceLanguage}",
-  "translatedTitle": "titre traduit en ${targetLanguage}",
-  "translatedSubtitle": "sous-titre traduit en ${targetLanguage}",
-  "summary": "résumé en ${sourceLanguage}",
-  "translatedSummary": "résumé traduit en ${targetLanguage}",
-  "existingKeywords": ["mots-clés existants en ${sourceLanguage}"],
-  "suggestedKeywords": ["mots-clés suggérés en ${sourceLanguage}"],
-  "translatedKeywords": ["mots-clés traduits en ${targetLanguage}"],
+  "title": "titre principal extrait du document",
+  "subtitle": "sous-titre extrait du document", 
+  "translatedTitle": "traduction complète du titre en ${targetLanguage}",
+  "translatedSubtitle": "traduction complète du sous-titre en ${targetLanguage}",
+  "summary": "résumé du document en ${sourceLanguage}",
+  "translatedSummary": "traduction complète du résumé en ${targetLanguage}",
+  "existingKeywords": ["mots-clés trouvés dans le document"],
+  "suggestedKeywords": ["nouveaux mots-clés pertinents"],
+  "translatedKeywords": ["traduction complète des mots-clés en ${targetLanguage}"],
   "metadata": {
-    "author": "auteur en ${sourceLanguage} (privilégier 'مرصد الحقوق الأساسية')",
-    "court": "tribunal en ${sourceLanguage}",
-    "case_number": "numéro d'affaire extrait des métadonnées",
-    "plaintiff": "demandeur en ${sourceLanguage}",
-    "defendant": "défendeur en ${sourceLanguage}",
-    "year": année_numérique,
-    "court_level": "niveau tribunal en ${sourceLanguage}"
+    "author": "auteur extrait (privilégier 'مرصد الحقوق الأساسية')",
+    "court": "tribunal mentionné dans le document",
+    "case_number": "numéro d'affaire trouvé",
+    "plaintiff": "demandeur mentionné",
+    "defendant": "défendeur mentionné", 
+    "year": année_trouvée_dans_le_document,
+    "court_level": "niveau de tribunal identifié"
   },
   "metadataTranslated": {
-    "author": "auteur traduit en ${targetLanguage}",
-    "court": "tribunal traduit en ${targetLanguage}",
-    "plaintiff": "demandeur traduit en ${targetLanguage}",
-    "defendant": "défendeur traduit en ${targetLanguage}",
-    "court_level": "niveau tribunal traduit en ${targetLanguage}"
+    "author": "traduction complète de l'auteur en ${targetLanguage}",
+    "court": "traduction complète du tribunal en ${targetLanguage}",
+    "plaintiff": "traduction complète du demandeur en ${targetLanguage}",
+    "defendant": "traduction complète du défendeur en ${targetLanguage}",
+    "court_level": "traduction complète du niveau de tribunal en ${targetLanguage}"
   },
-  "textualMetadataTranslated": "métadonnées textuelles traduites en ${targetLanguage}",
-  "translatedContent": "contenu traduit en ${targetLanguage}",
+  "textualMetadataTranslated": "TRADUCTION COMPLÈTE EN ${targetLanguage} DES MÉTADONNÉES TEXTUELLES EXTRAITES",
+  "translatedContent": "TRADUCTION COMPLÈTE EN ${targetLanguage} DE TOUT LE CONTENU DU DOCUMENT",
   "language": "${sourceLanguage}",
   "suggestions": {
-    "suggestedCategory": "nom exact de la catégorie suggérée",
-    "suggestedDocumentType": "nom exact du type de document suggéré",
-    "suggestedCourtType": "nom exact du type de tribunal suggéré",
-    "suggestedJurisdictionLevel": "nom exact du niveau de juridiction suggéré"
+    "suggestedCategory": "nom exact de la catégorie la plus appropriée",
+    "suggestedDocumentType": "nom exact du type de document le plus approprié", 
+    "suggestedCourtType": "nom exact du type de tribunal le plus approprié",
+    "suggestedJurisdictionLevel": "nom exact du niveau de juridiction le plus approprié"
   }
 }`;
 
