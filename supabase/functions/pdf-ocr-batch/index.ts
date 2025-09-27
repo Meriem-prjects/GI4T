@@ -259,7 +259,7 @@ async function processPdfWithOCR(pdfBuffer: ArrayBuffer, openaiApiKey: string, j
   // Level 0: Try direct text extraction with pdf-reader first (NEW STEP)
   console.log('Attempting direct PDF text extraction with pdf-reader...');
   
-  await updateJobProgress(jobId, {
+    await updateJobProgress(jobId as string, {
     current_step: 'pdf_text_extraction',
     progress: 15
   });

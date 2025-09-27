@@ -26,6 +26,7 @@ interface PageContent {
 interface DocumentData {
   id?: string;
   content: string;
+  textual_metadata?: string;
   title: string;
   title_ar?: string;
   summary: string;
@@ -1316,6 +1317,24 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
                   </div>
                 </div>
               </Card>
+              
+              {/* Textual Metadata section */}
+              {editedData.textual_metadata && (
+                <Card className="p-4 lg:col-span-full">
+                  <div className="space-y-3">
+                    <Label className="text-sm font-medium flex items-center gap-2">
+                      <FileText className="h-4 w-4" />
+                      {currentLanguage === 'ar' ? 'المعطيات النصية' : 'Métadonnées textuelles'}
+                    </Label>
+                    <div 
+                      className="p-3 bg-muted/50 rounded-md text-sm whitespace-pre-wrap max-h-32 overflow-y-auto border"
+                      dir={currentLanguage === 'ar' ? 'rtl' : 'ltr'}
+                    >
+                      {editedData.textual_metadata}
+                    </div>
+                  </div>
+                </Card>
+              )}
             </div>
 
             <Card className="p-6">

@@ -1,5 +1,5 @@
 // Import unpdf for serverless PDF text extraction
-import { extractText, getDocumentProxy } from "npm:unpdf@1.2.2";
+import { extractText, getDocumentProxy } from "https://esm.sh/unpdf@0.11.0";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',

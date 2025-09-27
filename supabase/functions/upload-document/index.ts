@@ -406,6 +406,23 @@ serve(async (req) => {
       .from('documents')
       .getPublicUrl(uploadData.path);
 
+    // Apply content separation for Arabic documents
+    let textualMetadata = '';
+    let finalContent = fileContent;
+    
+    if (fileContent && language === 'ar') {
+      const separated = separateContent(fileContent);
+      textualMetadata = separated.textualMetadata;
+      finalContent = separated.content;
+      
+      console.log('Content separated:', {
+        textualMetadataLength: textualMetadata.length,
+        contentLength: finalContent.length,
+        textualMetadataPreview: textualMetadata.substring(0, 100) + '...',
+        contentPreview: finalContent.substring(0, 100) + '...'
+      });
+    }
+
     // Save document to database with enhanced metadata
     const documentData = {
       original_filename: file.name,
@@ -414,7 +431,8 @@ serve(async (req) => {
       title_ar: analysisData.title_ar || null,
       summary: analysisData.summary || '',
       summary_ar: analysisData.summary_ar || null,
-      content: fileContent, // Store extracted content for all file types
+      content: finalContent, // Store separated main content
+      textual_metadata: textualMetadata || null, // Store separated textual metadata
       keywords: analysisData.keywords || [],
       keywords_ar: analysisData.keywords_ar || [],
       language: language, // Use the provided language
