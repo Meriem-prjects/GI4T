@@ -1,7 +1,7 @@
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 
-import { getErrorMessage, fixParentheses } from "../_shared/utils.ts";
+import { getErrorMessage } from "../_shared/utils.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -106,18 +106,15 @@ serve(async (req) => {
     const data = await response.json();
     const result = JSON.parse(data.choices[0].message.content);
 
-    // Correction des parenthèses dans le texte extrait
-    const correctedText = result.text ? fixParentheses(result.text) : '';
-
-    console.log(`OCR completed. Language: ${result.language}, Text length: ${correctedText.length || 0}`);
+    console.log(`OCR completed. Language: ${result.language}, Text length: ${result.text?.length || 0}`);
 
     return new Response(JSON.stringify({
       success: true,
-      content: correctedText,
+      content: result.text || '',
       language: result.language || 'fr',
       confidence: result.confidence || 0.9,
-      fullText: correctedText,
-      extractedText: correctedText
+      fullText: result.text || '',
+      extractedText: result.text || ''
     }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
