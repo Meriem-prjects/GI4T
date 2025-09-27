@@ -1,7 +1,7 @@
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 
-import { getErrorMessage } from "../_shared/utils.ts";
+import { getErrorMessage, fixArabicParentheses } from "../_shared/utils.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -48,14 +48,14 @@ serve(async (req) => {
         messages: [
           {
             role: 'system',
-            content: 'Tu es un expert en extraction de texte. Extrais et retranscris exactement tout le texte visible dans ce document PDF, en conservant la structure et la mise en forme autant que possible. Réponds uniquement avec le texte extrait, sans commentaire.'
+            content: 'Tu es un expert en extraction de texte et détection de langue. Extrais tout le texte visible dans ce document PDF et détecte la langue principale. Réponds au format JSON: {"text": "texte extrait", "language": "code langue (fr/ar/en)", "confidence": 0.95}'
           },
           {
             role: 'user',
             content: [
               {
                 type: 'text',
-                text: 'Extrais tout le texte de ce document PDF:'
+                text: 'Extrais le texte de ce document PDF et détecte sa langue principale:'
               },
               {
                 type: 'image_url',
@@ -67,7 +67,8 @@ serve(async (req) => {
           }
         ],
         max_tokens: 4000,
-        temperature: 0
+        temperature: 0,
+        response_format: { type: "json_object" }
       }),
     });
 
@@ -78,19 +79,23 @@ serve(async (req) => {
     }
 
     const data = await response.json();
-    const extractedText = data.choices[0].message.content;
+    const result = JSON.parse(data.choices[0].message.content);
+    
+    // Fix Arabic parentheses if needed
+    const correctedText = fixArabicParentheses(result.text || '', result.language || 'fr');
 
-    console.log(`Text extracted successfully. Length: ${extractedText.length}`);
+    console.log(`Text extracted successfully. Language: ${result.language}, Length: ${correctedText.length}`);
 
     return new Response(JSON.stringify({
       success: true,
-      content: extractedText,
+      content: correctedText,
+      language: result.language || 'fr',
       pages: [{
         pageNumber: 1,
-        content: extractedText,
-        confidence: 0.95
+        content: correctedText,
+        confidence: result.confidence || 0.95
       }],
-      fullText: extractedText,
+      fullText: correctedText,
       processedPages: 1,
       totalPages: 1
     }), {
