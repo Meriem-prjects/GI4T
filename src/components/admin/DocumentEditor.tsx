@@ -1319,22 +1319,24 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
               </Card>
               
               {/* Textual Metadata section */}
-              {editedData.textual_metadata && (
-                <Card className="p-4 lg:col-span-full">
-                  <div className="space-y-3">
-                    <Label className="text-sm font-medium flex items-center gap-2">
-                      <FileText className="h-4 w-4" />
-                      {currentLanguage === 'ar' ? 'المعطيات النصية' : 'Métadonnées textuelles'}
-                    </Label>
-                    <div 
-                      className="p-3 bg-muted/50 rounded-md text-sm whitespace-pre-wrap max-h-32 overflow-y-auto border"
-                      dir={currentLanguage === 'ar' ? 'rtl' : 'ltr'}
-                    >
-                      {editedData.textual_metadata}
-                    </div>
-                  </div>
-                </Card>
-              )}
+              <Card className="p-4 lg:col-span-full">
+                <div className="space-y-3">
+                  <Label className="text-sm font-medium flex items-center gap-2">
+                    <FileText className="h-4 w-4" />
+                    {currentLanguage === 'ar' ? 'المعطيات النصية' : 'Métadonnées textuelles'}
+                  </Label>
+                  <Textarea
+                    value={editedData.textual_metadata || ''}
+                    onChange={(e) => setEditedData(prev => ({ 
+                      ...prev, 
+                      textual_metadata: e.target.value 
+                    }))}
+                    placeholder={currentLanguage === 'ar' ? 'معطيات نصية إضافية...' : 'Métadonnées textuelles extraites du document...'}
+                    className="min-h-[100px] text-sm resize-vertical"
+                    dir={currentLanguage === 'ar' ? 'rtl' : 'ltr'}
+                  />
+                </div>
+              </Card>
             </div>
 
             <Card className="p-6">
