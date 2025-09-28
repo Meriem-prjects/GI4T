@@ -13,7 +13,7 @@ const ObservatoireSection = () => {
             <img 
               src="/Feelinx_upload/odf-logo.png" 
               alt="Observatoire des Droits" 
-              className="h-10 sm:h-14 w-auto object-contain max-w-full"
+              className="h-12 sm:h-17 w-auto object-contain max-w-full"
             />
           </div>
           
