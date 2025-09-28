@@ -10,6 +10,7 @@ import { Upload, FileText, X, Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import ProgressTracker from './ProgressTracker';
+import { MultiCategorySelector } from './MultiCategorySelector';
 // PdfToImages no longer needed - using server-side pdfRest conversion
 
 interface UploadFile {
@@ -46,7 +47,7 @@ const BatchDocumentUploader: React.FC<BatchDocumentUploaderProps> = ({ onDocumen
   const [isProcessing, setIsProcessing] = useState(false);
   const [categories, setCategories] = useState<Category[]>([]);
   const [documentTypes, setDocumentTypes] = useState<DocumentType[]>([]);
-  const [selectedCategory, setSelectedCategory] = useState<string>('');
+  const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
   const [selectedDocumentType, setSelectedDocumentType] = useState<string>('');
   const [selectedLanguage, setSelectedLanguage] = useState<string>('fr');
 
@@ -169,13 +170,13 @@ const BatchDocumentUploader: React.FC<BatchDocumentUploaderProps> = ({ onDocumen
     setUploadFiles(prev => {
       const updated = [...prev, ...newFiles];
       // Auto-process when configuration is already selected
-      if (selectedCategory && selectedDocumentType && selectedLanguage && newFiles.length > 0) {
+      if (selectedCategories.length > 0 && selectedDocumentType && selectedLanguage && newFiles.length > 0) {
         const processedDocs: any[] = [];
         (async () => {
           setIsProcessing(true);
           try {
             for (const nf of newFiles) {
-              await processFile(nf, selectedCategory, selectedDocumentType, processedDocs);
+              await processFile(nf, selectedCategories, selectedDocumentType, processedDocs);
             }
           } finally {
             setIsProcessing(false);
@@ -191,10 +192,10 @@ const BatchDocumentUploader: React.FC<BatchDocumentUploaderProps> = ({ onDocumen
   };
 
   const processAllFiles = async () => {
-    if (!selectedCategory || !selectedDocumentType || !selectedLanguage) {
+    if (selectedCategories.length === 0 || !selectedDocumentType || !selectedLanguage) {
       toast({
         title: "Configuration manquante",
-        description: "Veuillez sélectionner une langue, une catégorie et un type de document.",
+        description: "Veuillez sélectionner une langue, au moins une catégorie et un type de document.",
         variant: "destructive",
       });
       return;
@@ -208,7 +209,7 @@ const BatchDocumentUploader: React.FC<BatchDocumentUploaderProps> = ({ onDocumen
         if (uploadFile.status !== 'pending') continue;
 
         try {
-          await processFile(uploadFile, selectedCategory, selectedDocumentType, processedDocuments);
+          await processFile(uploadFile, selectedCategories, selectedDocumentType, processedDocuments);
         } catch (error) {
           console.error(`Error processing ${uploadFile.file.name}:`, error);
           setUploadFiles(prev => prev.map(f => 
@@ -284,7 +285,7 @@ const BatchDocumentUploader: React.FC<BatchDocumentUploaderProps> = ({ onDocumen
     return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
   };
 
-  const processFile = async (uploadFile: UploadFile, categoryId: string, documentTypeId: string, processedDocuments: any[]) => {
+  const processFile = async (uploadFile: UploadFile, categoryIds: string[], documentTypeId: string, processedDocuments: any[]) => {
     // Update status to processing - start at 0%
     setUploadFiles(prev => prev.map(f => 
       f.id === uploadFile.id ? { ...f, status: 'processing', progress: 0 } : f
@@ -293,7 +294,8 @@ const BatchDocumentUploader: React.FC<BatchDocumentUploaderProps> = ({ onDocumen
     // Use upload-document function with progress tracking
     const formData = new FormData();
     formData.append('file', uploadFile.file);
-    formData.append('categoryId', categoryId);
+    // Send first category for backwards compatibility, we'll handle multiple categories after upload
+    formData.append('categoryId', categoryIds[0]);
     formData.append('documentTypeId', documentTypeId);
     formData.append('language', selectedLanguage);
 
@@ -316,6 +318,29 @@ const BatchDocumentUploader: React.FC<BatchDocumentUploaderProps> = ({ onDocumen
 
     // Extract job ID from response
     const jobId = uploadResult.jobId;
+    const documentId = uploadResult.document?.id;
+    
+    // Handle multiple categories if document was created
+    if (documentId && categoryIds.length > 1) {
+      try {
+        // Clear existing categories and add new ones
+        await supabase
+          .from('document_categories')
+          .delete()
+          .eq('document_id', documentId);
+
+        const categoryInserts = categoryIds.map(catId => ({
+          document_id: documentId,
+          category_id: catId
+        }));
+
+        await supabase
+          .from('document_categories')
+          .insert(categoryInserts);
+      } catch (error) {
+        console.error('Error updating document categories:', error);
+      }
+    }
     
     if (jobId) {
       // Update file with job ID for progress tracking
@@ -501,30 +526,13 @@ const BatchDocumentUploader: React.FC<BatchDocumentUploaderProps> = ({ onDocumen
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="category">Catégorie</Label>
-            <Select value={selectedCategory} onValueChange={setSelectedCategory}>
-              <SelectTrigger>
-                <SelectValue placeholder="Sélectionner une catégorie" />
-              </SelectTrigger>
-              <SelectContent>
-                {categories.map((category) => (
-                  <SelectItem key={category.id} value={category.id}>
-                    <div className="flex items-center gap-2">
-                      <div 
-                        className="w-3 h-3 rounded-full" 
-                        style={{ backgroundColor: category.color }}
-                      />
-                      {selectedLanguage === 'ar' && category.name_ar 
-                        ? category.name_ar 
-                        : category.name
-                      }
-                      {selectedLanguage === 'ar' && category.name_ar && category.name && ` / ${category.name}`}
-                      {selectedLanguage === 'fr' && category.name_ar && ` / ${category.name_ar}`}
-                    </div>
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <MultiCategorySelector
+              categories={categories}
+              selectedCategoryIds={selectedCategories}
+              onCategoryIdsChange={setSelectedCategories}
+              showArabic={selectedLanguage === 'ar'}
+              maxCategories={5}
+            />
           </div>
         </div>
 
@@ -533,7 +541,7 @@ const BatchDocumentUploader: React.FC<BatchDocumentUploaderProps> = ({ onDocumen
           <div className="mt-6 flex justify-center">
             <Button
               onClick={processAllFiles}
-              disabled={isProcessing || !selectedCategory || !selectedDocumentType || !selectedLanguage}
+              disabled={isProcessing || selectedCategories.length === 0 || !selectedDocumentType || !selectedLanguage}
               className="w-full max-w-md"
             >
               {isProcessing ? (
