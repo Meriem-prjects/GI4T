@@ -115,6 +115,42 @@ export type Database = {
         }
         Relationships: []
       }
+      document_categories: {
+        Row: {
+          category_id: string
+          created_at: string
+          document_id: string
+          id: string
+        }
+        Insert: {
+          category_id: string
+          created_at?: string
+          document_id: string
+          id?: string
+        }
+        Update: {
+          category_id?: string
+          created_at?: string
+          document_id?: string
+          id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "document_categories_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "categories"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "document_categories_document_id_fkey"
+            columns: ["document_id"]
+            isOneToOne: false
+            referencedRelation: "documents"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       document_types: {
         Row: {
           created_at: string
