@@ -50,6 +50,33 @@ export const MultiCategorySelector: React.FC<MultiCategorySelectorProps> = ({
         Catégories ({selectedCategoryIds.length}/{maxCategories})
       </Label>
 
+      {/* Add new category */}
+      {selectedCategoryIds.length < maxCategories && availableCategories.length > 0 && (
+        <div className="flex gap-2">
+          <div className="flex-1">
+            <CategoryCombobox
+              categories={availableCategories}
+              value={newCategoryId}
+              onValueChange={setNewCategoryId}
+              placeholder="Sélectionner une catégorie à ajouter"
+              searchPlaceholder="Rechercher une catégorie..."
+              emptyText="Aucune catégorie disponible"
+              showArabic={showArabic}
+              className="dropdown-up"
+            />
+          </div>
+          <Button
+            type="button"
+            onClick={handleAddCategory}
+            disabled={!newCategoryId}
+            size="sm"
+            variant="outline"
+          >
+            <Plus className="h-4 w-4" />
+          </Button>
+        </div>
+      )}
+
       {/* Selected categories */}
       {selectedCategories.length > 0 && (
         <div className="flex flex-wrap gap-2">
@@ -72,32 +99,6 @@ export const MultiCategorySelector: React.FC<MultiCategorySelectorProps> = ({
               />
             </Badge>
           ))}
-        </div>
-      )}
-
-      {/* Add new category */}
-      {selectedCategoryIds.length < maxCategories && availableCategories.length > 0 && (
-        <div className="flex gap-2">
-          <div className="flex-1">
-            <CategoryCombobox
-              categories={availableCategories}
-              value={newCategoryId}
-              onValueChange={setNewCategoryId}
-              placeholder="Sélectionner une catégorie à ajouter"
-              searchPlaceholder="Rechercher une catégorie..."
-              emptyText="Aucune catégorie disponible"
-              showArabic={showArabic}
-            />
-          </div>
-          <Button
-            type="button"
-            onClick={handleAddCategory}
-            disabled={!newCategoryId}
-            size="sm"
-            variant="outline"
-          >
-            <Plus className="h-4 w-4" />
-          </Button>
         </div>
       )}
 

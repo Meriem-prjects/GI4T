@@ -155,7 +155,10 @@ export const CategoryCombobox: React.FC<CategoryComboboxProps> = ({
       {isOpen && (
         <div
           ref={dropdownRef}
-          className="absolute z-[100] w-full mt-1 bg-background border border-border rounded-md shadow-lg max-h-60 overflow-auto"
+          className={cn(
+            "absolute z-[100] w-full bg-background border border-border rounded-md shadow-lg max-h-60 overflow-auto",
+            className?.includes('dropdown-up') ? "bottom-full mb-1" : "top-full mt-1"
+          )}
         >
           <div className="p-2">
             {showAllOption && (
