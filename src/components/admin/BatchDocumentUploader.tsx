@@ -6,7 +6,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
-import { Upload, FileText, X, Plus, Loader2 } from 'lucide-react';
+import { Upload, FileText, X, Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import ProgressTracker from './ProgressTracker';
@@ -49,12 +49,6 @@ const BatchDocumentUploader: React.FC<BatchDocumentUploaderProps> = ({ onDocumen
   const [selectedCategory, setSelectedCategory] = useState<string>('');
   const [selectedDocumentType, setSelectedDocumentType] = useState<string>('');
   const [selectedLanguage, setSelectedLanguage] = useState<string>('fr');
-  const [newCategoryName, setNewCategoryName] = useState('');
-  const [newCategoryNameAr, setNewCategoryNameAr] = useState('');
-  const [newDocumentTypeName, setNewDocumentTypeName] = useState('');
-  const [newDocumentTypeNameAr, setNewDocumentTypeNameAr] = useState('');
-  const [showNewCategory, setShowNewCategory] = useState(false);
-  const [showNewDocumentType, setShowNewDocumentType] = useState(false);
 
   // Load categories and document types
   React.useEffect(() => {
@@ -98,70 +92,6 @@ const BatchDocumentUploader: React.FC<BatchDocumentUploaderProps> = ({ onDocumen
       console.log('Document types loaded:', data);
       setDocumentTypes(data || []);
     }
-  };
-
-  const createCategory = async () => {
-    if (!newCategoryName.trim()) return;
-
-    const { data, error } = await supabase
-      .from('categories')
-      .insert({
-        name: newCategoryName,
-        name_ar: newCategoryNameAr || null,
-        color: '#3B82F6'
-      })
-      .select()
-      .single();
-
-    if (error) {
-      toast({
-        title: "Erreur",
-        description: "Impossible de créer la catégorie.",
-        variant: "destructive",
-      });
-    } else {
-      setCategories([...categories, data]);
-      setSelectedCategory(data.id);
-      setNewCategoryName('');
-      setNewCategoryNameAr('');
-      setShowNewCategory(false);
-      toast({
-        title: "Succès",
-        description: "Catégorie créée avec succès.",
-      });
-    }
-  };
-
-  const createDocumentType = async () => {
-    if (!newDocumentTypeName.trim()) return;
-
-    const { data, error } = await supabase
-      .from('document_types')
-      .insert({
-        name: newDocumentTypeName,
-        name_ar: newDocumentTypeNameAr || null,
-        description: `Type de document: ${newDocumentTypeName}`
-      })
-      .select()
-      .single();
-
-    if (error) {
-      toast({
-        title: "Erreur",
-        description: "Impossible de créer le type de document.",
-        variant: "destructive",
-      });
-    } else {
-      setDocumentTypes([...documentTypes, data]);
-      setSelectedDocumentType(data.id);
-      setNewDocumentTypeName('');
-      setNewDocumentTypeNameAr('');
-      setShowNewDocumentType(false);
-      toast({
-        title: "Succès",
-        description: "Type de document créé avec succès.",
-      });
-     }
   };
 
   const handleDrag = useCallback((e: React.DragEvent) => {
@@ -572,121 +502,31 @@ const BatchDocumentUploader: React.FC<BatchDocumentUploaderProps> = ({ onDocumen
 
           <div className="space-y-2">
             <Label htmlFor="category">Catégorie</Label>
-            <div className="flex gap-2">
-              <Select value={selectedCategory} onValueChange={setSelectedCategory}>
-                <SelectTrigger className="flex-1">
-                  <SelectValue placeholder="Sélectionner une catégorie" />
-                </SelectTrigger>
-                <SelectContent>
-                  {categories.map((category) => (
-                    <SelectItem key={category.id} value={category.id}>
-                      <div className="flex items-center gap-2">
-                        <div 
-                          className="w-3 h-3 rounded-full" 
-                          style={{ backgroundColor: category.color }}
-                        />
-                        {selectedLanguage === 'ar' && category.name_ar 
-                          ? category.name_ar 
-                          : category.name
-                        }
-                        {selectedLanguage === 'ar' && category.name_ar && category.name && ` / ${category.name}`}
-                        {selectedLanguage === 'fr' && category.name_ar && ` / ${category.name_ar}`}
-                      </div>
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <Button
-                variant="outline"
-                size="icon"
-                onClick={() => setShowNewCategory(!showNewCategory)}
-              >
-                <Plus className="h-4 w-4" />
-              </Button>
-            </div>
+            <Select value={selectedCategory} onValueChange={setSelectedCategory}>
+              <SelectTrigger>
+                <SelectValue placeholder="Sélectionner une catégorie" />
+              </SelectTrigger>
+              <SelectContent>
+                {categories.map((category) => (
+                  <SelectItem key={category.id} value={category.id}>
+                    <div className="flex items-center gap-2">
+                      <div 
+                        className="w-3 h-3 rounded-full" 
+                        style={{ backgroundColor: category.color }}
+                      />
+                      {selectedLanguage === 'ar' && category.name_ar 
+                        ? category.name_ar 
+                        : category.name
+                      }
+                      {selectedLanguage === 'ar' && category.name_ar && category.name && ` / ${category.name}`}
+                      {selectedLanguage === 'fr' && category.name_ar && ` / ${category.name_ar}`}
+                    </div>
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
         </div>
-
-        <div className="flex gap-2 mt-4">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => setShowNewDocumentType(!showNewDocumentType)}
-          >
-            <Plus className="h-4 w-4 mr-2" />
-            Nouveau type
-          </Button>
-        </div>
-
-        {showNewCategory && (
-          <Card className="p-4 space-y-4">
-            <h4 className="font-medium">Créer une nouvelle catégorie</h4>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="new-category-name">Nom (Français)</Label>
-                <Input
-                  id="new-category-name"
-                  value={newCategoryName}
-                  onChange={(e) => setNewCategoryName(e.target.value)}
-                  placeholder="Ex: Droit du travail"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="new-category-name-ar">Nom (Arabe)</Label>
-                <Input
-                  id="new-category-name-ar"
-                  value={newCategoryNameAr}
-                  onChange={(e) => setNewCategoryNameAr(e.target.value)}
-                  placeholder="Ex: قانون العمل"
-                  dir="rtl"
-                />
-              </div>
-            </div>
-            <div className="flex gap-2">
-              <Button onClick={createCategory} disabled={!newCategoryName.trim()}>
-                Créer
-              </Button>
-              <Button variant="outline" onClick={() => setShowNewCategory(false)}>
-                Annuler
-              </Button>
-            </div>
-          </Card>
-        )}
-
-        {showNewDocumentType && (
-          <Card className="p-4 space-y-4">
-            <h4 className="font-medium">Créer un nouveau type de document</h4>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="new-document-type-name">Nom (Français)</Label>
-                <Input
-                  id="new-document-type-name"
-                  value={newDocumentTypeName}
-                  onChange={(e) => setNewDocumentTypeName(e.target.value)}
-                  placeholder="Ex: Jurisprudence"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="new-document-type-name-ar">Nom (Arabe)</Label>
-                <Input
-                  id="new-document-type-name-ar"
-                  value={newDocumentTypeNameAr}
-                  onChange={(e) => setNewDocumentTypeNameAr(e.target.value)}
-                  placeholder="Ex: فقه القضاء"
-                  dir="rtl"
-                />
-              </div>
-            </div>
-            <div className="flex gap-2">
-              <Button onClick={createDocumentType} disabled={!newDocumentTypeName.trim()}>
-                Créer
-              </Button>
-              <Button variant="outline" onClick={() => setShowNewDocumentType(false)}>
-                Annuler
-              </Button>
-            </div>
-          </Card>
-        )}
 
         {/* Process Button - placed after configuration */}
         {uploadFiles.length > 0 && (
