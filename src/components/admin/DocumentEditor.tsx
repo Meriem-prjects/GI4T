@@ -14,6 +14,8 @@ import { supabase } from '@/integrations/supabase/client';
 import { useCourtTypes } from '@/hooks/useCourtTypes';
 import { useJurisdictionLevels } from '@/hooks/useJurisdictionLevels';
 import { useSearchParams, useNavigate } from 'react-router-dom';
+import { MultiCategorySelector } from './MultiCategorySelector';
+import { useDocumentCategories, useUpdateDocumentCategories } from '@/hooks/useDocumentCategories';
 import PDFViewer from './PDFViewer';
 import { renderFormattedContent, formatContent } from '@/utils/contentFormatter';
 
@@ -37,7 +39,6 @@ interface DocumentData {
   keywords_ar?: string[];
   language: string;
   originalFileName: string;
-  category_id?: string;
   document_type_id?: string;
   file_url?: string;
   pdf_url?: string;
@@ -92,10 +93,15 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
   const [categories, setCategories] = useState<Category[]>([]);
   const [documentTypes, setDocumentTypes] = useState<DocumentType[]>([]);
   const [selectedCourtType, setSelectedCourtType] = useState<string>('');
+  const [selectedCategoryIds, setSelectedCategoryIds] = useState<string[]>([]);
   
   // Hook pour récupérer les types de tribunaux et niveaux de juridiction
   const { data: courtTypes = [] } = useCourtTypes();
   const { data: jurisdictionLevels = [] } = useJurisdictionLevels();
+  
+  // Hooks pour les catégories de documents
+  const { data: documentCategories = [] } = useDocumentCategories(editedData.id);
+  const updateDocumentCategories = useUpdateDocumentCategories();
   const [newKeyword, setNewKeyword] = useState('');
   const [newKeywordAr, setNewKeywordAr] = useState('');
   const [currentView, setCurrentView] = useState<'editor' | 'pdf' | 'pages'>('editor');
@@ -124,6 +130,11 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
     
     loadCategories();
     loadDocumentTypes();
+    
+    // Load document categories
+    if (documentCategories.length > 0) {
+      setSelectedCategoryIds(documentCategories.map(dc => dc.category_id));
+    }
     
     // Auto-extract textual metadata if document exists but has no metadata
     if (documentData.id && documentData.content && !documentData.textual_metadata) {
@@ -182,6 +193,12 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
       setIsReprocessing(false);
     }
   };
+
+  useEffect(() => {
+    if (documentCategories.length > 0) {
+      setSelectedCategoryIds(documentCategories.map(dc => dc.category_id));
+    }
+  }, [documentCategories]);
 
   useEffect(() => {
     const hasChanged = JSON.stringify(editedData) !== JSON.stringify(documentData);
@@ -281,7 +298,6 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
             summary: analysis.translatedSummary || prev.summary,
             // Keep original content unchanged
             // Apply AI suggestions for dropdown fields
-            category_id: suggestionIds.categoryId || prev.category_id,
             document_type_id: suggestionIds.documentTypeId || prev.document_type_id,
             // Metadata in Arabic (primary language)
             author_ar: analysis.metadata?.author || prev.author_ar,
@@ -328,7 +344,6 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
             summary_ar: analysis.translatedSummary || prev.summary_ar,
             // Keep original content unchanged
             // Apply AI suggestions for dropdown fields
-            category_id: suggestionIds.categoryId || prev.category_id,
             document_type_id: suggestionIds.documentTypeId || prev.document_type_id,
             // Metadata in French (primary language)
             author: analysis.metadata?.author || prev.author,
@@ -378,6 +393,16 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
           }
         }
 
+        // Update category selection if suggested
+        if (suggestionIds.categoryId) {
+          setSelectedCategoryIds(prev => {
+            if (!prev.includes(suggestionIds.categoryId)) {
+              return [...prev, suggestionIds.categoryId];
+            }
+            return prev;
+          });
+        }
+
         // Mark translated content
         setTranslatedByAI({
           fr: isPrimaryArabic, // French is translated if Arabic is primary
@@ -420,7 +445,6 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
           translated_content: translatedContent?.trim() || null,
           keywords: Array.isArray(editedData.keywords) ? editedData.keywords.filter(k => k && k.trim()) : [],
           keywords_ar: Array.isArray(editedData.keywords_ar) ? editedData.keywords_ar.filter(k => k && k.trim()) : [],
-          category_id: editedData.category_id || null,
           document_type_id: editedData.document_type_id || null,
           language: editedData.language || 'fr',
           status: 'draft' // Save as draft
@@ -459,6 +483,14 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
         }
 
         console.log('Document successfully updated in database');
+        
+        // Update document categories
+        if (editedData.id) {
+          await updateDocumentCategories.mutateAsync({
+            documentId: editedData.id,
+            categoryIds: selectedCategoryIds
+          });
+        }
       }
 
       onSave(editedData);
@@ -965,58 +997,15 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
                       />
                     </div>
 
-                    <div>
-                      <Label className="text-sm font-medium">Catégorie</Label>
-                      <Select
-                        value={editedData.category_id || ''}
-                        onValueChange={(value) => setEditedData(prev => ({
-                          ...prev,
-                          category_id: value
-                        }))}
-                      >
-                        <SelectTrigger className="mt-1 bg-background">
-                          <SelectValue placeholder="Sélectionner une catégorie" />
-                        </SelectTrigger>
-                        <SelectContent className="bg-background border border-border shadow-lg z-[100] max-h-80">
-                          <div className="p-2">
-                            <div className="relative mb-2">
-                              <Search className="absolute left-2 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
-                              <Input
-                                placeholder="Rechercher une catégorie..."
-                                className="pl-8 h-8"
-                                onChange={(e) => {
-                                  const searchValue = e.target.value.toLowerCase();
-                                  const items = document.querySelectorAll('[data-category-item-fr]');
-                                  items.forEach((item) => {
-                                    const text = item.textContent?.toLowerCase() || '';
-                                    const shouldShow = text.includes(searchValue);
-                                    (item as HTMLElement).style.display = shouldShow ? 'flex' : 'none';
-                                  });
-                                }}
-                              />
-                            </div>
-                          </div>
-                          {categories.map((category) => (
-                            <SelectItem key={category.id} value={category.id} data-category-item-fr>
-                              <div className="flex items-center space-x-2">
-                                <div
-                                  className="w-3 h-3 rounded-full flex-shrink-0"
-                                  style={{ backgroundColor: category.color }}
-                                />
-                                <div className="flex flex-col min-w-0 flex-1">
-                                  <span className="truncate">{category.name}</span>
-                                  {category.name_ar && (
-                                    <span className="text-xs text-muted-foreground truncate" dir="rtl">
-                                      {category.name_ar}
-                                    </span>
-                                  )}
-                                </div>
-                              </div>
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
+                     <div>
+                       <MultiCategorySelector
+                         categories={categories}
+                         selectedCategoryIds={selectedCategoryIds}
+                         onCategoryIdsChange={setSelectedCategoryIds}
+                         showArabic={currentLanguage === 'ar'}
+                         maxCategories={5}
+                       />
+                     </div>
 
                     <div>
                       <Label className="text-sm font-medium">Type de document</Label>
@@ -1194,61 +1183,15 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
                       />
                     </div>
 
-                    <div>
-                      <Label className="text-sm font-medium">الفئة</Label>
-                      <Select
-                        value={editedData.category_id || ''}
-                        onValueChange={(value) => setEditedData(prev => ({
-                          ...prev,
-                          category_id: value
-                        }))}
-                      >
-                        <SelectTrigger className="mt-1 bg-background" dir="rtl">
-                          <SelectValue placeholder="اختر فئة" />
-                        </SelectTrigger>
-                        <SelectContent className="bg-background border border-border shadow-lg z-[100] max-h-80">
-                          <div className="p-2">
-                            <div className="relative mb-2">
-                              <Search className="absolute left-2 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
-                              <Input
-                                placeholder="البحث عن فئة..."
-                                className="pl-8 h-8"
-                                dir="rtl"
-                                onChange={(e) => {
-                                  const searchValue = e.target.value.toLowerCase();
-                                  const items = document.querySelectorAll('[data-category-item-ar]');
-                                  items.forEach((item) => {
-                                    const text = item.textContent?.toLowerCase() || '';
-                                    const shouldShow = text.includes(searchValue);
-                                    (item as HTMLElement).style.display = shouldShow ? 'flex' : 'none';
-                                  });
-                                }}
-                              />
-                            </div>
-                          </div>
-                          {categories.map((category) => (
-                            <SelectItem key={category.id} value={category.id} data-category-item-ar>
-                              <div className="flex items-center space-x-2" dir="rtl">
-                                <div
-                                  className="w-3 h-3 rounded-full flex-shrink-0"
-                                  style={{ backgroundColor: category.color }}
-                                />
-                                <div className="flex flex-col min-w-0 flex-1">
-                                  <span className="truncate">
-                                    {category.name_ar || category.name}
-                                  </span>
-                                  {category.name_ar && (
-                                    <span className="text-xs text-muted-foreground truncate">
-                                      {category.name}
-                                    </span>
-                                  )}
-                                </div>
-                              </div>
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
+                     <div>
+                       <MultiCategorySelector
+                         categories={categories}
+                         selectedCategoryIds={selectedCategoryIds}
+                         onCategoryIdsChange={setSelectedCategoryIds}
+                         showArabic={currentLanguage === 'ar'}
+                         maxCategories={5}
+                       />
+                     </div>
 
                     <div>
                       <Label className="text-sm font-medium">نوع الوثيقة</Label>
