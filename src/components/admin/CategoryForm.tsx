@@ -49,7 +49,7 @@ const CategoryForm = ({ isOpen, onClose, category }: CategoryFormProps) => {
       description: category?.description || "",
       description_ar: category?.description_ar || "",
       color: category?.color || "#3B82F6",
-      parent_id: category?.parent_id || "",
+      parent_id: category?.parent_id || "none",
     },
   });
 
@@ -65,7 +65,7 @@ const CategoryForm = ({ isOpen, onClose, category }: CategoryFormProps) => {
         description: data.description || null,
         description_ar: data.description_ar || null,
         color: data.color,
-        parent_id: data.parent_id || null,
+        parent_id: data.parent_id === "none" ? null : (data.parent_id || null),
       };
 
       if (isEditing) {
@@ -181,15 +181,15 @@ const CategoryForm = ({ isOpen, onClose, category }: CategoryFormProps) => {
 
             <div>
               <Label htmlFor="parent_id">Catégorie parente</Label>
-              <Select
-                value={watch("parent_id") || ""}
-                onValueChange={(value) => setValue("parent_id", value || "")}
+              <Select 
+                value={watch("parent_id") || "none"}
+                onValueChange={(value) => setValue("parent_id", value === "none" ? null : value)}
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Sélectionner une catégorie parente" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">Aucune (catégorie racine)</SelectItem>
+                  <SelectItem value="none">Aucune (catégorie racine)</SelectItem>
                   {parentCategories.map((cat) => (
                     <SelectItem key={cat.id} value={cat.id}>
                       {cat.name}
