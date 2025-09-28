@@ -202,7 +202,7 @@ export const CategoryCombobox: React.FC<CategoryComboboxProps> = ({
                     style={{ backgroundColor: category.color }}
                   />
                   <div className="flex flex-col min-w-0 flex-1">
-                    <span className="truncate">
+                    <span className="text-sm truncate">
                       {showArabic && category.name_ar ? category.name_ar : category.name}
                     </span>
                     {showArabic && category.name_ar && (
