@@ -537,7 +537,7 @@ const DocumentDetail = () => {
           <div className={`max-w-none ${isArabicContent ? 'dir-rtl' : ''}`}>
             {formattedContent ? (
               <div 
-                className={`document-content space-y-6 ${isArabicContent ? 'text-right' : ''}`}
+                className={`document-content space-y-6 ${isArabicContent ? 'text-right arabic-text-serif font-arabic-serif' : ''}`}
                 dir={isArabicContent ? 'rtl' : 'ltr'}
                 dangerouslySetInnerHTML={{ __html: formattedContent }}
               />
