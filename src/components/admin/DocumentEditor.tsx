@@ -342,18 +342,30 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
             defendant: analysis.metadataTranslated?.defendant || prev.defendant,
             court_level: analysis.metadataTranslated?.court_level || prev.court_level,
             // Keep original Arabic content, don't replace it
-            keywords_ar: [
-              ...new Set([
-                ...(prev.keywords_ar || []),
-                ...(analysis.existingKeywords || []).filter(k => /[\u0600-\u06FF]/.test(k))
-              ])
-            ],
-            keywords: [
-              ...new Set([
-                ...(prev.keywords || []),
-                ...(analysis.translatedKeywords || []).filter(k => !/[\u0600-\u06FF]/.test(k))
-              ])
-            ]
+            keywords_ar: (() => {
+              const existing = (prev.keywords_ar || []).map(k => k.trim()).filter(k => k && /[\u0600-\u06FF]/.test(k));
+              const newKeys = (analysis.existingKeywords || []).map(k => k.trim()).filter(k => k && /[\u0600-\u06FF]/.test(k));
+              const combined = [...existing, ...newKeys];
+              const seen = new Set();
+              return combined.filter(k => {
+                const normalized = k.toLowerCase().trim().replace(/\s+/g, ' ');
+                if (seen.has(normalized)) return false;
+                seen.add(normalized);
+                return true;
+              });
+            })(),
+            keywords: (() => {
+              const existing = (prev.keywords || []).map(k => k.trim()).filter(k => k && !/[\u0600-\u06FF]/.test(k));
+              const newKeys = (analysis.translatedKeywords || []).map(k => k.trim()).filter(k => k && !/[\u0600-\u06FF]/.test(k));
+              const combined = [...existing, ...newKeys];
+              const seen = new Set();
+              return combined.filter(k => {
+                const normalized = k.toLowerCase().trim().replace(/\s+/g, ' ');
+                if (seen.has(normalized)) return false;
+                seen.add(normalized);
+                return true;
+              });
+            })()
           }));
           // Store translated content separately
           setTranslatedContent(analysis.translatedContent || '');
@@ -387,18 +399,30 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
             defendant_ar: analysis.metadataTranslated?.defendant || prev.defendant_ar,
             court_level_ar: analysis.metadataTranslated?.court_level || prev.court_level_ar,
             // Keep original French content, don't replace it
-            keywords: [
-              ...new Set([
-                ...(prev.keywords || []),
-                ...(analysis.existingKeywords || []).filter(k => !/[\u0600-\u06FF]/.test(k))
-              ])
-            ],
-            keywords_ar: [
-              ...new Set([
-                ...(prev.keywords_ar || []),
-                ...(analysis.translatedKeywords || []).filter(k => /[\u0600-\u06FF]/.test(k))
-              ])
-            ]
+            keywords: (() => {
+              const existing = (prev.keywords || []).map(k => k.trim()).filter(k => k && !/[\u0600-\u06FF]/.test(k));
+              const newKeys = (analysis.existingKeywords || []).map(k => k.trim()).filter(k => k && !/[\u0600-\u06FF]/.test(k));
+              const combined = [...existing, ...newKeys];
+              const seen = new Set();
+              return combined.filter(k => {
+                const normalized = k.toLowerCase().trim().replace(/\s+/g, ' ');
+                if (seen.has(normalized)) return false;
+                seen.add(normalized);
+                return true;
+              });
+            })(),
+            keywords_ar: (() => {
+              const existing = (prev.keywords_ar || []).map(k => k.trim()).filter(k => k && /[\u0600-\u06FF]/.test(k));
+              const newKeys = (analysis.translatedKeywords || []).map(k => k.trim()).filter(k => k && /[\u0600-\u06FF]/.test(k));
+              const combined = [...existing, ...newKeys];
+              const seen = new Set();
+              return combined.filter(k => {
+                const normalized = k.toLowerCase().trim().replace(/\s+/g, ' ');
+                if (seen.has(normalized)) return false;
+                seen.add(normalized);
+                return true;
+              });
+            })()
           }));
           // Store translated content separately
           setTranslatedContent(analysis.translatedContent || '');
