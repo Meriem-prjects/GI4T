@@ -378,14 +378,105 @@ serve(async (req) => {
         });
         
         if (!readerError && readerData?.success) {
-          // Use pdf-reader results regardless of text quantity
-          const extractedText = (readerData.texts || []).join('\n\n').trim();
+          // Use pdf-reader results
+          let extractedText = (readerData.texts || []).join('\n\n').trim();
           const avgCharsPerPage = extractedText.length / (readerData.numPages || 1);
           
           console.log(`PDF text extraction result: ${readerData.numPages} pages, ${extractedText.length} chars, avg ${Math.round(avgCharsPerPage)} chars/page`);
           
-          // Always use direct extraction - no more OCR fallback
-          console.log('Using PDF direct extraction result');
+          // Check spacing quality for Arabic text
+          let spacingQuality = { sufficient: true, ratio: 1.0, longestRun: 0, method: 'pdf-reader' };
+          
+          if (language === 'ar' && extractedText.length > 100) {
+            const arabicRegex = /[\u0600-\u06FF\u0750-\u077F\u08A0-\u08FF\uFB50-\uFDFF\uFE70-\uFEFF]+/g;
+            const arabicSegments = extractedText.match(arabicRegex) || [];
+            
+            if (arabicSegments.length > 0) {
+              // Calculate longest Arabic run without space
+              const longestRun = Math.max(...arabicSegments.map((seg: string) => seg.length));
+              
+              // Calculate space ratio in Arabic sections
+              const totalArabicLength = arabicSegments.join('').length;
+              const spaceCount = (extractedText.match(/[\u0600-\u06FF][\s][\u0600-\u06FF]/g) || []).length;
+              const spaceRatio = spaceCount / Math.max(1, totalArabicLength / 10); // Normalize per 10 chars
+              
+              spacingQuality = {
+                sufficient: longestRun < 25 && spaceRatio > 0.15,
+                ratio: spaceRatio,
+                longestRun: longestRun,
+                method: 'pdf-reader'
+              };
+              
+              console.log(`Arabic spacing quality: longest run=${longestRun}, space ratio=${spaceRatio.toFixed(3)}, sufficient=${spacingQuality.sufficient}`);
+            }
+          }
+          
+          // If spacing quality is insufficient, try pdf-parser
+          if (!spacingQuality.sufficient) {
+            console.log('Spacing quality insufficient, attempting pdf-parser fallback...');
+            
+            try {
+              const parserFormData = new FormData();
+              parserFormData.append('file', file);
+              
+              const { data: parserData, error: parserError } = await supabaseAdmin.functions.invoke('pdf-parser', {
+                body: parserFormData
+              });
+              
+              if (!parserError && parserData?.success && parserData.text && parserData.text.length > extractedText.length * 0.8) {
+                // pdf-parser gave better results, use it
+                extractedText = parserData.text;
+                spacingQuality.method = 'pdf-parser';
+                
+                // Recalculate spacing quality
+                if (language === 'ar') {
+                  const arabicSegments = extractedText.match(/[\u0600-\u06FF\u0750-\u077F\u08A0-\u08FF\uFB50-\uFDFF\uFE70-\uFEFF]+/g) || [];
+                  if (arabicSegments.length > 0) {
+                    spacingQuality.longestRun = Math.max(...arabicSegments.map((seg: string) => seg.length));
+                    const spaceCount = (extractedText.match(/[\u0600-\u06FF][\s][\u0600-\u06FF]/g) || []).length;
+                    spacingQuality.ratio = spaceCount / Math.max(1, arabicSegments.join('').length / 10);
+                    spacingQuality.sufficient = spacingQuality.longestRun < 25 && spacingQuality.ratio > 0.15;
+                  }
+                }
+                
+                console.log(`pdf-parser improved extraction: longest run=${spacingQuality.longestRun}, ratio=${spacingQuality.ratio.toFixed(3)}`);
+              }
+            } catch (parserException) {
+              console.error('pdf-parser fallback failed:', parserException);
+            }
+          }
+          
+          // If still insufficient, fall back to OCR
+          if (!spacingQuality.sufficient && language === 'ar') {
+            console.log('Spacing still insufficient, falling back to OCR for exact transcription...');
+            
+            try {
+              const ocrFormData = new FormData();
+              ocrFormData.append('file', file);
+              ocrFormData.append('jobId', jobData?.id || '');
+              ocrFormData.append('filename', file.name);
+              ocrFormData.append('language', language);
+              ocrFormData.append('exact_mode', 'true'); // Request exact spacing preservation
+              
+              const { data: ocrData, error: ocrError } = await supabaseAdmin.functions.invoke('pdf-ocr-batch', {
+                body: ocrFormData
+              });
+              
+              if (!ocrError && ocrData?.success && ocrData.fullText) {
+                extractedText = ocrData.fullText;
+                pageContents = ocrData.pages || [];
+                processedPages = ocrData.processedPages || readerData.numPages;
+                spacingQuality.method = 'ocr-exact';
+                
+                console.log(`OCR exact mode completed: ${ocrData.processedPages} pages, ${extractedText.length} chars`);
+              }
+            } catch (ocrException) {
+              console.error('OCR fallback failed:', ocrException);
+            }
+          }
+          
+          // Log final extraction method and quality
+          console.log(`Final extraction method: ${spacingQuality.method}, quality: longest=${spacingQuality.longestRun}, ratio=${spacingQuality.ratio.toFixed(3)}`);
           
           // Apply minimal NFKC normalization to preserve exact spacing
           const normalizedExtractedText = extractedText.normalize('NFKC');
@@ -395,15 +486,18 @@ serve(async (req) => {
            totalPagesVar = readerData.numPages || 1;
            shouldUsePDFReader = true;
            
-           // Create page contents with minimal NFKC normalization
-           pageContents = (readerData.texts || []).map((text: string, index: number) => ({
-            pageNumber: index + 1,
-            content: text.trim().normalize('NFKC'),
-            confidence: 1.0,
-            language: language // Use the provided language
-          }));
-          
-          processedPages = readerData.numPages || 1;
+           // Update page contents if not from OCR
+           if (spacingQuality.method !== 'ocr-exact') {
+             // Create page contents with minimal NFKC normalization
+             pageContents = (readerData.texts || []).map((text: string, index: number) => ({
+              pageNumber: index + 1,
+              content: text.trim().normalize('NFKC'),
+              confidence: 1.0,
+              language: language // Use the provided language
+            }));
+            
+            processedPages = readerData.numPages || 1;
+           }
           
             // Enhanced analysis data with extracted content
           analysisData.title = file.name.replace(/\.[^/.]+$/, "");
@@ -412,7 +506,7 @@ serve(async (req) => {
             : 'Document PDF traité sans texte extractible';
           analysisData.language = language; // Use the provided language
           
-          console.log('PDF direct extraction completed successfully');
+          console.log('PDF extraction completed successfully');
         } else {
           // PDF reading failed completely - save file but mark as unprocessed
           console.log('PDF text extraction failed completely, saving file without content');

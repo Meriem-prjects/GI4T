@@ -73,7 +73,7 @@ serve(async (req) => {
         messages: [
           {
             role: 'system',
-            content: 'Tu es un expert en extraction de texte et détection de langue. Extrais tout le texte visible dans cette image et détecte la langue principale du texte. Réponds au format JSON: {"text": "texte extrait", "language": "code langue (fr/ar/en)", "confidence": 0.95}'
+            content: 'Tu es un expert en extraction de texte et détection de langue. Extrais tout le texte visible dans cette image et détecte la langue principale du texte. IMPORTANT: Préserve EXACTEMENT tous les espaces entre les mots, particulièrement pour les textes arabes. N\'invente aucun texte, ne corrige pas l\'orthographe, transcris exactement ce que tu vois. Réponds au format JSON: {"text": "texte extrait", "language": "code langue (fr/ar/en)", "confidence": 0.95}'
           },
           {
             role: 'user',

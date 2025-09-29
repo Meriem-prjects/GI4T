@@ -70,19 +70,81 @@ function extractUnicodeText(pdfString: string, encoding: string): string {
       }
     }
     
-    // Extract from text array commands
+    // Extract from text array commands with spacing reconstruction
     const tjArrayMatches = block.match(/\[([^\]]+)\]\s*TJ/g) || [];
     for (const match of tjArrayMatches) {
       const arrayContent = match.match(/\[([^\]]+)\]/)?.[1] || '';
-      const stringMatches = arrayContent.match(/\(([^)]*(?:\\.[^)]*)*)\)/g) || [];
-      for (const stringMatch of stringMatches) {
-        const text = stringMatch.match(/\(([^)]*(?:\\.[^)]*)*)\)/)?.[1] || '';
-        if (text.length > 1) {
-          const processed = processUnicodeString(text);
+      
+      // Parse TJ array: mix of strings (text) and numbers (spacing)
+      // Numbers represent horizontal spacing in units of 1/1000 em
+      // Negative values move text closer, positive values add space
+      const tjTokens = [];
+      let pos = 0;
+      
+      while (pos < arrayContent.length) {
+        // Skip whitespace
+        while (pos < arrayContent.length && /\s/.test(arrayContent[pos])) pos++;
+        if (pos >= arrayContent.length) break;
+        
+        if (arrayContent[pos] === '(') {
+          // Extract string token
+          let depth = 1;
+          let start = pos + 1;
+          pos++;
+          while (pos < arrayContent.length && depth > 0) {
+            if (arrayContent[pos] === '\\' && pos + 1 < arrayContent.length) {
+              pos += 2; // Skip escaped character
+            } else if (arrayContent[pos] === '(') {
+              depth++;
+              pos++;
+            } else if (arrayContent[pos] === ')') {
+              depth--;
+              pos++;
+            } else {
+              pos++;
+            }
+          }
+          tjTokens.push({ type: 'string', value: arrayContent.slice(start, pos - 1) });
+        } else if (arrayContent[pos] === '-' || (arrayContent[pos] >= '0' && arrayContent[pos] <= '9')) {
+          // Extract number token
+          let start = pos;
+          if (arrayContent[pos] === '-') pos++;
+          while (pos < arrayContent.length && (arrayContent[pos] >= '0' && arrayContent[pos] <= '9' || arrayContent[pos] === '.')) {
+            pos++;
+          }
+          const numStr = arrayContent.slice(start, pos);
+          tjTokens.push({ type: 'number', value: parseFloat(numStr) });
+        } else {
+          pos++; // Skip unknown character
+        }
+      }
+      
+      // Reconstruct text with spacing
+      for (let i = 0; i < tjTokens.length; i++) {
+        const token = tjTokens[i];
+        if (token.type === 'string' && typeof token.value === 'string') {
+          const processed = processUnicodeString(token.value);
           if (processed && isValidText(processed)) {
-            extractedText += processed + ' ';
+            extractedText += processed;
+            
+            // Check next token for spacing
+            if (i + 1 < tjTokens.length && tjTokens[i + 1].type === 'number') {
+              const nextToken = tjTokens[i + 1];
+              if (typeof nextToken.value === 'number') {
+                const spacing = nextToken.value;
+                // Insert space if gap is significant (threshold: 120 units = ~0.12em)
+                if (Math.abs(spacing) >= 120) {
+                  extractedText += ' ';
+                }
+              }
+            }
           }
         }
+      }
+      
+      // Add space after TJ array if there's content
+      if (tjTokens.length > 0) {
+        extractedText += ' ';
       }
     }
   }
@@ -229,9 +291,9 @@ function isValidText(text: string): boolean {
 
 function cleanText(text: string): string {
   return text
-    .replace(/\s+/g, ' ') // Normalize spaces
-    .replace(/(.)\1{5,}/g, '$1$1') // Reduce excessive repetition
+    .replace(/(.)\1{5,}/g, '$1$1') // Reduce excessive repetition only
     .replace(/[^\u0600-\u06FF\u0750-\u077F\u08A0-\u08FF\uFB50-\uFDFF\uFE70-\uFEFFa-zA-ZÀ-ÿ0-9\s.,!?;:()\-'"]/g, '') // Keep only valid chars
+    .replace(/\n{3,}/g, '\n\n') // Limit consecutive newlines to 2
     .trim();
 }
 
