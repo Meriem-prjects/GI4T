@@ -19,9 +19,10 @@ serve(async (req) => {
   }
 
   try {
-    const { content, currentLanguage = 'fr' } = await req.json();
+    const { textualMetadata, content, currentLanguage = 'fr' } = await req.json();
 
     console.log('Starting smart document analysis for content length:', content?.length);
+    console.log('Textual metadata length:', textualMetadata?.length);
 
     if (!content) {
       throw new Error('Content is required for analysis');
@@ -59,10 +60,21 @@ IMPORTANTES INSTRUCTIONS POUR L'EXTRACTION DEPUIS LES MÉTADONNÉES TEXTUELLES:
 2. TRADUIS RÉELLEMENT tout le contenu en ${targetLanguage} - ne retourne jamais de descriptions ou placeholders
 
 RÈGLES D'EXTRACTION SPÉCIFIQUES:
+
+EXTRACTION DEPUIS LES MÉTADONNÉES TEXTUELLES:
 3. TITRE: Extrais le titre principal depuis les métadonnées textuelles (généralement après "المشكل القانوني" ou "المشكل" ou dans la première ligne significative)
 4. SOUS-TITRE: Extrais le sous-titre depuis les métadonnées textuelles (généralement la ligne qui suit le titre principal ou après "الحل المقدم")  
 5. AUTEUR: Cherche le premier nom propre qui apparaît dans les métadonnées textuelles. Si "مرصد الحقوق الأساسية" est présent, utilise-le. Sinon, utilise le premier nom de personne trouvé.
-6. DEMANDEUR/DÉFENDEUR: Extrais uniquement depuis le contenu principal, pas depuis les métadonnées textuelles
+6. TRIBUNAL: Extrais depuis les métadonnées textuelles
+7. CASE_NUMBER: Extrais depuis les métadonnées textuelles  
+8. YEAR: Extrais depuis les métadonnées textuelles
+9. COURT_LEVEL: Extrais depuis les métadonnées textuelles
+10. MOTS-CLÉS: Extrais UNIQUEMENT et LITTÉRALEMENT ce qui suit "اﻟﻜﻠﻤﺎت اﻟﻤﻔﺎﺗﯿﺢ" dans les métadonnées textuelles (pas de génération IA)
+11. DEMANDEUR: Extrais depuis les métadonnées textuelles
+12. DÉFENDEUR: Extrais depuis les métadonnées textuelles
+
+EXTRACTION DEPUIS LE CONTENU PRINCIPAL:
+13. RÉSUMÉ: Génère un résumé synthétique depuis le contenu principal du document
 
 Catégories disponibles:
 ${categories.map(cat => `- ${cat.name} (${cat.name_ar})`).join('\n')}
@@ -77,9 +89,9 @@ Niveaux de juridiction disponibles:
 ${jurisdictionLevels.map(level => `- ${level.name} (${level.name_ar})`).join('\n')}
 
 TÂCHES À ACCOMPLIR:
-1. Extrais le titre et sous-titre DEPUIS LES MÉTADONNÉES TEXTUELLES uniquement
-2. Extrais l'auteur comme premier nom propre des métadonnées textuelles  
-3. Extrais demandeur/défendeur depuis le contenu principal (pas métadonnées)
+1. Extrais le titre, sous-titre, auteur, tribunal, case_number, year, court_level, mots-clés, demandeur, défendeur DEPUIS LES MÉTADONNÉES TEXTUELLES uniquement
+2. Pour les mots-clés: extrais LITTÉRALEMENT uniquement ce qui suit "اﻟﻜﻠﻤﺎت اﻟﻤﻔﺎﺗﯿﺢ" (pas de génération IA)
+3. Extrais le résumé depuis le contenu principal du document
 4. Traduis COMPLÈTEMENT le contenu entier du document en ${targetLanguage}
 5. Traduis les métadonnées textuelles extraites en ${targetLanguage}
 6. Fournis les suggestions de catégories basées sur le contenu
@@ -101,8 +113,8 @@ Réponds uniquement en JSON valide avec cette structure exacte :
     "author": "premier nom propre trouvé dans les métadonnées textuelles (privilégier 'مرصد الحقوق الأساسية' si présent)",
     "court": "tribunal mentionné dans le document",
     "case_number": "numéro d'affaire trouvé",
-    "plaintiff": "demandeur mentionné dans le contenu principal",
-    "defendant": "défendeur mentionné dans le contenu principal", 
+     "plaintiff": "demandeur mentionné dans les métadonnées textuelles",
+     "defendant": "défendeur mentionné dans les métadonnées textuelles",
     "year": année_trouvée_dans_le_document,
     "court_level": "niveau de tribunal identifié"
   },
@@ -134,7 +146,13 @@ Réponds uniquement en JSON valide avec cette structure exacte :
         model: 'gpt-4o',
         messages: [
           { role: 'system', content: systemPrompt },
-          { role: 'user', content: `Analyse ce document:\n\n${content}` }
+          { role: 'user', content: `Analyse ce document en respectant les règles d'extraction:
+
+MÉTADONNÉES TEXTUELLES (extraire titre, sous-titre, auteur, tribunal, case_number, year, court_level, mots-clés après "اﻟﻜﻠﻤﺎت اﻟﻤﻔﺎﺗﯿﺢ", demandeur, défendeur):
+${textualMetadata}
+
+CONTENU PRINCIPAL (extraire résumé):
+${content}` }
         ],
         response_format: { type: "json_object" },
         temperature: 0.3,

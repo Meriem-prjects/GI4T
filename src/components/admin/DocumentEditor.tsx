@@ -292,6 +292,7 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
     try {
       const { data, error } = await supabase.functions.invoke('smart-document-analysis', {
         body: {
+          textualMetadata: editedData.textual_metadata || '',
           content: editedData.content,
           currentLanguage: editedData.language || 'fr'
         }
