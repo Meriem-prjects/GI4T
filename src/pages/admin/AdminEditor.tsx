@@ -25,12 +25,14 @@ interface DocumentData {
   pdf_url?: string;
   fullContent?: string;
   translated_content?: string;
+  textual_metadata?: string;
   author?: string;
   author_ar?: string;
   court?: string;
   court_ar?: string;
   court_category?: string;
   court_category_ar?: string;
+  court_category_type?: string;
   court_level?: string;
   court_level_ar?: string;
   case_number?: string;
@@ -40,6 +42,7 @@ interface DocumentData {
   defendant?: string;
   defendant_ar?: string;
 }
+
 
 const AdminEditor = () => {
   const [searchParams] = useSearchParams();
@@ -112,12 +115,14 @@ const AdminEditor = () => {
         pdf_url: document.pdf_url,
         fullContent: document.content,
         translated_content: document.translated_content || '',
+        textual_metadata: document.textual_metadata || '',
         author: document.author || '',
         author_ar: document.author_ar || '',
         court: document.court || '',
         court_ar: document.court_ar || '',
         court_category: document.court_category || '',
         court_category_ar: document.court_category_ar || '',
+        court_category_type: document.court_category_type || '',
         court_level: document.court_level || '',
         court_level_ar: document.court_level_ar || '',
         case_number: document.case_number || '',

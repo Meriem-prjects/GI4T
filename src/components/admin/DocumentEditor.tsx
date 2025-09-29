@@ -40,6 +40,7 @@ interface DocumentData {
   language: string;
   originalFileName: string;
   document_type_id?: string;
+  category_id?: string;
   file_url?: string;
   pdf_url?: string;
   fullContent?: string;
@@ -137,10 +138,13 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
     if (documentCategories.length > 0) {
       console.log('Loading document categories:', documentCategories);
       setSelectedCategoryIds(documentCategories.map(dc => dc.category_id));
+    } else if (documentData.category_id) {
+      // Fallback: support legacy single-category stored on documents table
+      setSelectedCategoryIds([documentData.category_id]);
     } else {
       setSelectedCategoryIds([]);
     }
-  }, [documentCategories]);
+  }, [documentCategories, documentData.category_id]);
 
   // Auto-extract textual metadata effect
   useEffect(() => {
