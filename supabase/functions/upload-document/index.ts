@@ -1,7 +1,6 @@
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.57.4';
-import { sanitizeArabicText } from "../_shared/utils.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -388,18 +387,18 @@ serve(async (req) => {
           // Always use direct extraction - no more OCR fallback
           console.log('Using PDF direct extraction result');
           
-          // Sanitize Arabic text if detected
-          const sanitizedExtractedText = language === 'ar' ? sanitizeArabicText(extractedText) : extractedText;
+          // Apply minimal NFKC normalization to preserve exact spacing
+          const normalizedExtractedText = extractedText.normalize('NFKC');
           
-           fileContent = sanitizedExtractedText.length > 0 ? sanitizedExtractedText : 'Document PDF sans texte extractible';
+           fileContent = normalizedExtractedText.length > 0 ? normalizedExtractedText : 'Document PDF sans texte extractible';
            extractionSuccess = true;
            totalPagesVar = readerData.numPages || 1;
            shouldUsePDFReader = true;
            
-           // Create page contents from extracted text (sanitize each page)
+           // Create page contents with minimal NFKC normalization
            pageContents = (readerData.texts || []).map((text: string, index: number) => ({
             pageNumber: index + 1,
-            content: language === 'ar' ? sanitizeArabicText(text.trim()) : text.trim(),
+            content: text.trim().normalize('NFKC'),
             confidence: 1.0,
             language: language // Use the provided language
           }));
@@ -483,8 +482,8 @@ serve(async (req) => {
           console.error('Image OCR error:', ocrError);
           fileContent = `Erreur OCR: ${ocrError.message}`;
         } else if (ocrData?.success && ocrData?.content && ocrData.content.length > 2) {
-          // Sanitize Arabic content from image OCR
-          fileContent = ocrData.language === 'ar' ? sanitizeArabicText(ocrData.content) : ocrData.content;
+          // Apply minimal NFKC normalization
+          fileContent = ocrData.content.normalize('NFKC');
           extractionSuccess = true;
           analysisData.language = ocrData.language || 'fr';
           console.log(`Image OCR successful: ${fileContent.length} chars, language: ${analysisData.language}`);

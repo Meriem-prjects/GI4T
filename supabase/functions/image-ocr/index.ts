@@ -1,7 +1,7 @@
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 
-import { getErrorMessage, sanitizeArabicText } from "../_shared/utils.ts";
+import { getErrorMessage } from "../_shared/utils.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -108,16 +108,16 @@ serve(async (req) => {
 
     console.log(`OCR completed. Language: ${result.language}, Text length: ${result.text?.length || 0}`);
 
-    // Sanitize Arabic text if detected
-    const sanitizedText = result.language === 'ar' ? sanitizeArabicText(result.text) : result.text;
+    // Apply minimal NFKC normalization to preserve exact spacing
+    const normalizedText = (result.text || '').normalize('NFKC');
 
     return new Response(JSON.stringify({
       success: true,
-      content: sanitizedText || '',
+      content: normalizedText,
       language: result.language || 'fr',
       confidence: result.confidence || 0.9,
-      fullText: sanitizedText || '',
-      extractedText: sanitizedText || ''
+      fullText: normalizedText,
+      extractedText: normalizedText
     }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });

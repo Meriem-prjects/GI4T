@@ -1,7 +1,6 @@
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.57.4';
-import { sanitizeArabicText } from "../_shared/utils.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -222,12 +221,12 @@ async function ocrImage(imageData: string, pageNumber: number, openaiApiKey: str
   try {
     const parsed = JSON.parse(content);
     
-    // Sanitize Arabic text if detected
-    const sanitizedContent = parsed.language === 'ar' ? sanitizeArabicText(parsed.text || '') : (parsed.text || '');
+    // Apply minimal NFKC normalization to preserve exact spacing
+    const normalizedContent = (parsed.text || '').normalize('NFKC');
     
     const result = {
       pageNumber,
-      content: sanitizedContent,
+      content: normalizedContent,
       confidence: parsed.confidence || 0.9,
       language: parsed.language || 'fr'
     };
@@ -237,12 +236,12 @@ async function ocrImage(imageData: string, pageNumber: number, openaiApiKey: str
   } catch (parseError) {
     console.warn(`Failed to parse JSON response for page ${pageNumber}, using raw content:`, parseError);
     
-    // Sanitize raw content too
-    const sanitizedRawContent = sanitizeArabicText(content);
+    // Apply minimal NFKC normalization to raw content too
+    const normalizedRawContent = content.normalize('NFKC');
     
     return {
       pageNumber,
-      content: sanitizedRawContent,
+      content: normalizedRawContent,
       confidence: 0.8,
       language: 'fr'
     };

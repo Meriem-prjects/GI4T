@@ -1,7 +1,6 @@
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.57.4';
-import { sanitizeArabicText } from '../_shared/utils.ts';
 
 const openAIApiKey = Deno.env.get('OPENAI_API_KEY');
 const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
@@ -232,24 +231,6 @@ ${content}` }
 
     console.log('Analysis completed successfully');
     console.log('Suggestion matching results:', suggestionIds);
-
-    // Sanitize Arabic text in analysis results if language is Arabic
-    if (currentLanguage === 'ar' || analysisResult.language === 'ar') {
-      analysisResult.title = sanitizeArabicText(analysisResult.title);
-      analysisResult.subtitle = analysisResult.subtitle ? sanitizeArabicText(analysisResult.subtitle) : analysisResult.subtitle;
-      analysisResult.summary = sanitizeArabicText(analysisResult.summary);
-      analysisResult.content = sanitizeArabicText(analysisResult.content);
-      if (analysisResult.existingKeywords) {
-        analysisResult.existingKeywords = analysisResult.existingKeywords.map((k: string) => sanitizeArabicText(k));
-      }
-      if (analysisResult.metadata) {
-        for (const key of Object.keys(analysisResult.metadata)) {
-          if (typeof analysisResult.metadata[key] === 'string') {
-            analysisResult.metadata[key] = sanitizeArabicText(analysisResult.metadata[key]);
-          }
-        }
-      }
-    }
 
     return new Response(JSON.stringify({
       success: true,
