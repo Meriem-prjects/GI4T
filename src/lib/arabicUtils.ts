@@ -4,37 +4,9 @@
  * Normalizes Arabic text using Unicode NFC normalization
  * This ensures consistent encoding and rendering of Arabic characters
  */
-export const normalizeArabicText = (text: string, options: {
-  removeTatweel?: boolean;
-  removeInvisibleChars?: boolean;
-  removePresentationForms?: boolean;
-} = {}): string => {
+export const normalizeArabicText = (text: string): string => {
   if (!text) return text;
-  
-  const {
-    removeTatweel = true,
-    removeInvisibleChars = false,
-    removePresentationForms = true
-  } = options;
-  
-  let normalized = text.normalize('NFC');
-  
-  // Remove tatweel (Arabic kashida/elongation character)
-  if (removeTatweel) {
-    normalized = normalized.replace(/\u0640/g, '');
-  }
-  
-  // Remove invisible characters (ZWNJ, ZWJ) - optional as they can be meaningful
-  if (removeInvisibleChars) {
-    normalized = normalized.replace(/[\u200C\u200D]/g, '');
-  }
-  
-  // Remove Presentation Forms (U+FE70–U+FEFF) from old editors, but keep BOM (FEFF) removal optional
-  if (removePresentationForms) {
-    normalized = normalized.replace(/[\uFE70-\uFEFC]/g, '');
-  }
-  
-  return normalized;
+  return text.normalize('NFC');
 };
 
 /**
