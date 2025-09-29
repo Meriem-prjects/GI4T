@@ -148,10 +148,41 @@ All colors MUST be HSL.
   }
 }
 
+/* Arabic Typography and RTL Support */
+.arabic-text {
+  font-family: 'Noto Sans Arabic', 'Amiri', sans-serif;
+  direction: rtl;
+  text-align: right;
+  font-feature-settings: "liga" 1, "calt" 1, "ccmp" 1, "locl" 1;
+  text-rendering: optimizeLegibility;
+  font-variant-ligatures: contextual;
+  word-spacing: 0.1em;
+  letter-spacing: 0.02em;
+  line-height: 1.8;
+}
+
+.arabic-text-serif {
+  font-family: 'Amiri', serif;
+  direction: rtl;
+  text-align: right;
+  font-feature-settings: "liga" 1, "calt" 1, "ccmp" 1, "locl" 1;
+  text-rendering: optimizeLegibility;
+  font-variant-ligatures: contextual;
+  word-spacing: 0.1em;
+  letter-spacing: 0.02em;
+  line-height: 1.9;
+}
+
 /* Document content styling for RTL languages */
 .document-content[dir="rtl"] {
   direction: rtl;
   text-align: right;
+  font-family: 'Noto Sans Arabic', 'Amiri', sans-serif;
+  font-feature-settings: "liga" 1, "calt" 1, "ccmp" 1, "locl" 1;
+  text-rendering: optimizeLegibility;
+  font-variant-ligatures: contextual;
+  word-spacing: 0.1em;
+  letter-spacing: 0.02em;
 }
 
 .document-content[dir="rtl"] h1,
@@ -161,11 +192,16 @@ All colors MUST be HSL.
 .document-content[dir="rtl"] h5,
 .document-content[dir="rtl"] h6 {
   text-align: right;
+  font-family: 'Noto Sans Arabic', 'Amiri', sans-serif;
+  font-feature-settings: "liga" 1, "calt" 1, "ccmp" 1;
+  word-spacing: 0.1em;
 }
 
 .document-content[dir="rtl"] p {
   text-align: right;
   line-height: 1.8;
+  word-spacing: 0.1em;
+  letter-spacing: 0.02em;
 }
 
 .document-content[dir="rtl"] ul,
@@ -176,4 +212,19 @@ All colors MUST be HSL.
 
 .document-content[dir="rtl"] li {
   text-align: right;
+  word-spacing: 0.1em;
+}
+
+/* Arabic text detection and auto-direction */
+.auto-arabic {
+  unicode-bidi: isolate;
+}
+
+.auto-arabic:lang(ar) {
+  direction: rtl;
+  text-align: right;
+  font-family: 'Noto Sans Arabic', 'Amiri', sans-serif;
+  font-feature-settings: "liga" 1, "calt" 1, "ccmp" 1, "locl" 1;
+  text-rendering: optimizeLegibility;
+  word-spacing: 0.1em;
 }

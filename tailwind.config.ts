@@ -18,6 +18,8 @@ export default {
         'poppins': ['Poppins', 'sans-serif'],
         'spartan': ['League Spartan', 'sans-serif'], 
         'inter': ['Inter', 'sans-serif'],
+        'arabic': ['Noto Sans Arabic', 'Amiri', 'sans-serif'],
+        'arabic-serif': ['Amiri', 'serif'],
       },
       colors: {
         border: "hsl(var(--border))",
