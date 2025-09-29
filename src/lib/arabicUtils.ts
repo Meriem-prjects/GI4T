@@ -29,9 +29,9 @@ export const normalizeArabicText = (text: string, options: {
     normalized = normalized.replace(/[\u200C\u200D]/g, '');
   }
   
-  // Remove Presentation Forms (U+FE70–U+FEFF) from old editors
+  // Remove Presentation Forms (U+FE70–U+FEFF) from old editors, but keep BOM (FEFF) removal optional
   if (removePresentationForms) {
-    normalized = normalized.replace(/[\uFE70-\uFEFF]/g, '');
+    normalized = normalized.replace(/[\uFE70-\uFEFC]/g, '');
   }
   
   return normalized;

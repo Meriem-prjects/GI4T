@@ -153,11 +153,11 @@ All colors MUST be HSL.
   font-family: 'Noto Sans Arabic', 'Amiri', sans-serif;
   direction: rtl;
   text-align: right;
-  font-feature-settings: "liga" 1, "calt" 1, "ccmp" 1, "locl" 1;
+  font-feature-settings: "rlig" 1, "kern" 1;
   text-rendering: optimizeLegibility;
-  font-variant-ligatures: contextual;
-  word-spacing: 0.1em;
-  letter-spacing: 0.02em;
+  font-variant-ligatures: contextual common-ligatures;
+  word-spacing: normal;
+  letter-spacing: normal;
   line-height: 1.8;
 }
 
@@ -165,11 +165,11 @@ All colors MUST be HSL.
   font-family: 'Amiri', serif;
   direction: rtl;
   text-align: right;
-  font-feature-settings: "liga" 1, "calt" 1, "ccmp" 1, "locl" 1;
+  font-feature-settings: "rlig" 1, "kern" 1;
   text-rendering: optimizeLegibility;
-  font-variant-ligatures: contextual;
-  word-spacing: 0.1em;
-  letter-spacing: 0.02em;
+  font-variant-ligatures: contextual common-ligatures;
+  word-spacing: normal;
+  letter-spacing: normal;
   line-height: 1.9;
 }
 
@@ -178,11 +178,11 @@ All colors MUST be HSL.
   direction: rtl;
   text-align: right;
   font-family: 'Noto Sans Arabic', 'Amiri', sans-serif;
-  font-feature-settings: "liga" 1, "calt" 1, "ccmp" 1, "locl" 1;
+  font-feature-settings: "rlig" 1, "kern" 1;
   text-rendering: optimizeLegibility;
-  font-variant-ligatures: contextual;
-  word-spacing: 0.1em;
-  letter-spacing: 0.02em;
+  font-variant-ligatures: contextual common-ligatures;
+  word-spacing: normal;
+  letter-spacing: normal;
 }
 
 .document-content[dir="rtl"] h1,
@@ -193,15 +193,14 @@ All colors MUST be HSL.
 .document-content[dir="rtl"] h6 {
   text-align: right;
   font-family: 'Noto Sans Arabic', 'Amiri', sans-serif;
-  font-feature-settings: "liga" 1, "calt" 1, "ccmp" 1;
-  word-spacing: 0.1em;
+  font-feature-settings: "rlig" 1, "kern" 1;
 }
 
 .document-content[dir="rtl"] p {
   text-align: right;
   line-height: 1.8;
-  word-spacing: 0.1em;
-  letter-spacing: 0.02em;
+  word-spacing: normal;
+  letter-spacing: normal;
 }
 
 .document-content[dir="rtl"] ul,
@@ -212,7 +211,7 @@ All colors MUST be HSL.
 
 .document-content[dir="rtl"] li {
   text-align: right;
-  word-spacing: 0.1em;
+  word-spacing: normal;
 }
 
 /* Arabic text styling */
