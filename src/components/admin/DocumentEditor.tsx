@@ -123,6 +123,9 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
     const docLang = documentData.language || 'fr';
     setCurrentLanguage(docLang === 'ar' ? 'ar' : 'fr');
     console.log('DocumentEditor loaded with language:', docLang, 'Setting currentLanguage to:', docLang === 'ar' ? 'ar' : 'fr');
+    console.log('Document subtitle_ar:', documentData.subtitle_ar);
+    console.log('Document subtitle_ar length:', documentData.subtitle_ar?.length);
+    console.log('Document subtitle_ar chars:', documentData.subtitle_ar?.split('').map(c => c.charCodeAt(0)));
     
     // Initialize selectedCourtType if document has court_category_type
     if (documentData.court_category_type) {
@@ -1229,7 +1232,10 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
                       </Label>
                       <Input
                         value={editedData.subtitle_ar || ''}
-                        onChange={(e) => setEditedData(prev => ({ ...prev, subtitle_ar: e.target.value }))}
+                        onChange={(e) => {
+                          console.log('Subtitle AR onChange:', e.target.value);
+                          setEditedData(prev => ({ ...prev, subtitle_ar: e.target.value }));
+                        }}
                         placeholder="العنوان الفرعي للوثيقة (اختياري)"
                         dir="rtl"
                         className="mt-1"
