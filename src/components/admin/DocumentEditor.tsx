@@ -108,7 +108,6 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
   const [currentView, setCurrentView] = useState<'editor' | 'pdf' | 'pages'>('editor');
   const [currentLanguage, setCurrentLanguage] = useState<'fr' | 'ar'>('fr');
   const [isAnalyzing, setIsAnalyzing] = useState(false);
-  const [isCorrectingSpelling, setIsCorrectingSpelling] = useState(false);
   const [translatedByAI, setTranslatedByAI] = useState<{fr: boolean, ar: boolean}>({fr: false, ar: false});
   const [currentPage, setCurrentPage] = useState(1);
   const [translatedContent, setTranslatedContent] = useState<string>('');
@@ -715,102 +714,6 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
     }
   };
 
-  const correctArabicSpelling = async () => {
-    if (!editedData.content && !editedData.textual_metadata) {
-      toast({
-        title: "Erreur",
-        description: "Aucun contenu arabe à corriger.",
-        variant: "destructive"
-      });
-      return;
-    }
-
-    setIsCorrectingSpelling(true);
-    try {
-      // Collecter tous les champs arabes
-      const arabicFields: Record<string, any> = {};
-      
-      if (editedData.title_ar) arabicFields.title_ar = editedData.title_ar;
-      if (editedData.subtitle_ar) arabicFields.subtitle_ar = editedData.subtitle_ar;
-      if (editedData.content && editedData.language === 'ar') arabicFields.content = editedData.content;
-      if (editedData.textual_metadata) arabicFields.textual_metadata = editedData.textual_metadata;
-      if (editedData.summary_ar) arabicFields.summary_ar = editedData.summary_ar;
-      if (editedData.keywords_ar && editedData.keywords_ar.length > 0) {
-        arabicFields.keywords_ar = editedData.keywords_ar;
-      }
-      if (editedData.author_ar) arabicFields.author_ar = editedData.author_ar;
-      if (editedData.court_ar) arabicFields.court_ar = editedData.court_ar;
-      if (editedData.plaintiff_ar) arabicFields.plaintiff_ar = editedData.plaintiff_ar;
-      if (editedData.defendant_ar) arabicFields.defendant_ar = editedData.defendant_ar;
-      if (editedData.court_level_ar) arabicFields.court_level_ar = editedData.court_level_ar;
-      if (editedData.court_category_type_ar) arabicFields.court_category_type_ar = editedData.court_category_type_ar;
-
-      if (Object.keys(arabicFields).length === 0) {
-        toast({
-          title: "Information",
-          description: "Aucun champ arabe à corriger.",
-          variant: "default"
-        });
-        return;
-      }
-
-      console.log('Envoi des champs arabes pour correction:', Object.keys(arabicFields));
-
-      const { data, error } = await supabase.functions.invoke('correct-arabic-spelling', {
-        body: { fields: arabicFields }
-      });
-
-      if (error) throw error;
-
-      if (data.success && data.correctedFields) {
-        const corrected = data.correctedFields;
-        
-        // Appliquer les corrections
-        setEditedData(prev => ({
-          ...prev,
-          title_ar: corrected.title_ar || prev.title_ar,
-          subtitle_ar: corrected.subtitle_ar || prev.subtitle_ar,
-          content: corrected.content || prev.content,
-          textual_metadata: corrected.textual_metadata || prev.textual_metadata,
-          summary_ar: corrected.summary_ar || prev.summary_ar,
-          keywords_ar: corrected.keywords_ar || prev.keywords_ar,
-          author_ar: corrected.author_ar || prev.author_ar,
-          court_ar: corrected.court_ar || prev.court_ar,
-          plaintiff_ar: corrected.plaintiff_ar || prev.plaintiff_ar,
-          defendant_ar: corrected.defendant_ar || prev.defendant_ar,
-          court_level_ar: corrected.court_level_ar || prev.court_level_ar,
-          court_category_type_ar: corrected.court_category_type_ar || prev.court_category_type_ar,
-        }));
-
-        setHasChanges(true);
-
-        toast({
-          title: "✓ Correction terminée",
-          description: `${Object.keys(corrected).length} champ(s) arabe(s) corrigé(s)`,
-          variant: "default"
-        });
-      }
-
-    } catch (error: any) {
-      console.error('Erreur de correction orthographique:', error);
-      
-      let errorMsg = "Impossible de corriger l'orthographe.";
-      if (error.message?.includes('429')) {
-        errorMsg = "Trop de requêtes. Veuillez patienter quelques instants.";
-      } else if (error.message?.includes('402')) {
-        errorMsg = "Crédits insuffisants. Veuillez recharger votre compte Lovable AI.";
-      }
-      
-      toast({
-        title: "Erreur de correction", 
-        description: errorMsg,
-        variant: "destructive"
-      });
-    } finally {
-      setIsCorrectingSpelling(false);
-    }
-  };
-
   const addKeyword = (language: 'fr' | 'ar' = 'fr') => {
     const keyword = language === 'fr' ? newKeyword.trim() : newKeywordAr.trim();
     const field = language === 'fr' ? 'keywords' : 'keywords_ar';
@@ -978,20 +881,6 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
               <Brain className="mr-2 h-4 w-4" />
             )}
             {isAnalyzing ? 'Analyse...' : '🤖 Analyse IA'}
-          </Button>
-
-          <Button 
-            onClick={correctArabicSpelling} 
-            disabled={isCorrectingSpelling || (!editedData.content && !editedData.textual_metadata)}
-            variant="outline"
-            className="border-green-500 text-green-600 hover:bg-green-50"
-          >
-            {isCorrectingSpelling ? (
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-            ) : (
-              <span className="mr-2">✓</span>
-            )}
-            {isCorrectingSpelling ? 'Correction...' : 'Corriger orthographe AR'}
           </Button>
 
           
@@ -1714,15 +1603,13 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
                 <div 
                   className="prose prose-sm max-w-none p-4 border rounded bg-muted/30 max-h-[600px] overflow-y-auto"
                   dir={currentLanguage === 'ar' ? 'rtl' : 'ltr'}
-                  lang={currentLanguage === 'ar' ? 'ar' : 'fr'}
                 >
                   <h4 className="font-semibold text-base" dir={currentLanguage === 'ar' ? 'rtl' : 'ltr'}>
                     {currentLanguage === 'ar' && editedData.title_ar ? editedData.title_ar : editedData.title}
                   </h4>
                   <div 
-                    className={`document-content prose prose-sm max-w-none text-sm leading-relaxed [&>h1]:text-xl [&>h1]:font-bold [&>h1]:mb-3 [&>h2]:text-lg [&>h2]:font-semibold [&>h2]:mb-2 [&>h3]:text-base [&>h3]:font-medium [&>h3]:mb-2 [&>p]:mb-2 [&>br]:block [&>br]:content-[''] [&>br]:mt-2 ${currentLanguage === 'ar' ? 'arabic-text-serif font-arabic-serif' : ''}`} 
+                    className="prose prose-sm max-w-none text-sm leading-relaxed [&>h1]:text-xl [&>h1]:font-bold [&>h1]:mb-3 [&>h2]:text-lg [&>h2]:font-semibold [&>h2]:mb-2 [&>h3]:text-base [&>h3]:font-medium [&>h3]:mb-2 [&>p]:mb-2 [&>br]:block [&>br]:content-[''] [&>br]:mt-2" 
                     dir={currentLanguage === 'ar' ? 'rtl' : 'ltr'}
-                    lang={currentLanguage === 'ar' ? 'ar' : 'fr'}
                     dangerouslySetInnerHTML={{ __html: renderFormattedContent(getCurrentContent()) }}
                   />
                 </div>

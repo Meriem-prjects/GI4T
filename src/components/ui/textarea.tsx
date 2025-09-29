@@ -11,18 +11,14 @@ const Textarea = React.forwardRef<HTMLTextAreaElement, TextareaProps>(({ classNa
   React.useEffect(() => {
     if (props.value && typeof props.value === 'string') {
       setIsArabic(isArabicText(props.value));
-    } else if (props.placeholder && typeof props.placeholder === 'string') {
-      setIsArabic(isArabicText(props.placeholder));
-    } else {
-      setIsArabic(false);
     }
-  }, [props.value, props.placeholder]);
+  }, [props.value]);
 
   return (
     <textarea
       className={cn(
         "flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50",
-        isArabic && "arabic-text-serif font-arabic-serif",
+        isArabic && "arabic-text font-arabic",
         className,
       )}
       ref={ref}
