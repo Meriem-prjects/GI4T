@@ -10,7 +10,7 @@ import {
   Heading3,
   Type
 } from 'lucide-react';
-import { normalizeArabicText, sanitizeArabicInput, isArabicText, getTextDirection } from '@/lib/arabicUtils';
+import { sanitizeArabicInput, isArabicText, getTextDirection } from '@/lib/arabicUtils';
 
 interface SimpleTextEditorProps {
   content: string;
