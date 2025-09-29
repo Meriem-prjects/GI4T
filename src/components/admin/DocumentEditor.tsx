@@ -122,7 +122,6 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
     const docLang = documentData.language || 'fr';
     setCurrentLanguage(docLang === 'ar' ? 'ar' : 'fr');
     console.log('DocumentEditor loaded with language:', docLang, 'Setting currentLanguage to:', docLang === 'ar' ? 'ar' : 'fr');
-    console.log('DocumentEditor textual_metadata loaded:', documentData.textual_metadata ? `${documentData.textual_metadata.length} characters` : 'No metadata');
     
     // Initialize selectedCourtType if document has court_category_type
     if (documentData.court_category_type) {
@@ -1515,26 +1514,12 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
                            )
                        }
                      </span>
-                      <span className={`font-medium ${(currentLanguage === editedData.language ? editedData.textual_metadata : translatedTextualMetadata) ? 'text-primary' : 'text-muted-foreground'}`}>
-                        {(() => {
-                          const currentMetadata = currentLanguage === editedData.language ? editedData.textual_metadata : translatedTextualMetadata;
-                          console.log('Textual metadata display check:', {
-                            currentLanguage,
-                            documentLanguage: editedData.language,
-                            hasTextualMetadata: !!editedData.textual_metadata,
-                            textualMetadataLength: editedData.textual_metadata?.length || 0,
-                            hasTranslatedMetadata: !!translatedTextualMetadata,
-                            translatedMetadataLength: translatedTextualMetadata.length,
-                            currentMetadata: currentMetadata?.substring(0, 50) || 'No metadata'
-                          });
-                          
-                          if (currentMetadata && currentMetadata.trim()) {
-                            return `${currentMetadata.length} caractères`;
-                          } else {
-                            return currentLanguage !== editedData.language ? 'Non disponible' : 'Non extraites';
-                          }
-                        })()}
-                      </span>
+                     <span className={`font-medium ${(currentLanguage === editedData.language ? editedData.textual_metadata : translatedTextualMetadata) ? 'text-primary' : 'text-muted-foreground'}`}>
+                       {(currentLanguage === editedData.language ? editedData.textual_metadata : translatedTextualMetadata)
+                         ? `${(currentLanguage === editedData.language ? editedData.textual_metadata!.length : translatedTextualMetadata.length)} caractères`
+                         : (currentLanguage !== editedData.language ? 'Non disponible' : 'Non extraites')
+                       }
+                     </span>
                    </div>
                 </div>
               </Card>
