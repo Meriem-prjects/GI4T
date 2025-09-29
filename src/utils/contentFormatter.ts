@@ -1,11 +1,17 @@
+// Utility functions for formatting and stripping content
+import { normalizeArabicText, isArabicText } from '@/lib/arabicUtils';
+
 /**
  * Converts simple text formatting markers to HTML for display
  */
 export const renderFormattedContent = (content: string): string => {
   if (!content) return '';
   
+  // Normalize Arabic content for consistent rendering
+  const normalizedContent = normalizeArabicText(content);
+  
   // Split content into lines to process line-by-line
-  const lines = content.split('\n');
+  const lines = normalizedContent.split('\n');
   
   const processedLines = lines.map(line => {
     // Process headings (must be at start of line)
@@ -82,6 +88,7 @@ export const stripFormattedContent = (htmlContent: string): string => {
  * Simple content formatter that only normalizes line breaks (for backward compatibility)
  */
 export const formatContent = (content: string): string => {
-  // Only normalize CRLF to LF, preserve line breaks
-  return content.replace(/\r\n/g, '\n');
+  // Normalize Arabic text and line breaks
+  const normalized = normalizeArabicText(content);
+  return normalized.replace(/\r\n/g, '\n');
 };
