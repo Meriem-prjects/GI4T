@@ -215,6 +215,43 @@ All colors MUST be HSL.
   word-spacing: 0.1em;
 }
 
+/* Arabic text styling */
+.arabic-text {
+  font-family: "Noto Sans Arabic", "Amiri", Arial, sans-serif;
+  direction: rtl;
+  text-align: right;
+  unicode-bidi: embed;
+  font-feature-settings: "rlig" 1, "kern" 1;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  font-variant-ligatures: contextual common-ligatures;
+}
+
+.font-arabic {
+  font-family: "Noto Sans Arabic", "Amiri", Arial, sans-serif;
+  font-feature-settings: "rlig" 1, "kern" 1;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  font-variant-ligatures: contextual common-ligatures;
+}
+
+/* Editor-specific Arabic styling */
+.ProseMirror {
+  font-feature-settings: "rlig" 1, "kern" 1;
+  text-rendering: optimizeLegibility;
+}
+
+.ProseMirror[dir="rtl"],
+.ProseMirror .arabic-text {
+  font-family: "Noto Sans Arabic", "Amiri", Arial, sans-serif;
+  direction: rtl;
+  text-align: right;
+  font-feature-settings: "rlig" 1, "kern" 1;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  font-variant-ligatures: contextual common-ligatures;
+}
+
 /* Arabic text detection and auto-direction */
 .auto-arabic {
   unicode-bidi: isolate;

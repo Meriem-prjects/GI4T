@@ -3,6 +3,8 @@ import { useEditor, EditorContent } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 import { TextStyle } from '@tiptap/extension-text-style';
 import { Color } from '@tiptap/extension-color';
+import { ArabicExtension } from './extensions/ArabicExtension';
+import { normalizeArabicText } from '@/lib/arabicUtils';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { 
@@ -38,15 +40,20 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({
       StarterKit,
       TextStyle,
       Color,
+      ArabicExtension.configure({
+        autoDetect: true,
+        normalizeOnPaste: true,
+      }),
     ],
-    content: content,
+    content: normalizeArabicText(content),
     onUpdate: ({ editor }) => {
       const html = editor.getHTML();
-      onChange(html);
+      onChange(normalizeArabicText(html));
     },
     editorProps: {
       attributes: {
         class: 'prose prose-sm sm:prose lg:prose-lg xl:prose-2xl mx-auto focus:outline-none min-h-[200px] p-4',
+        dir: 'auto',
       },
     },
   });
