@@ -68,11 +68,14 @@ const CategorieDetail = () => {
         
         setCategory(categoryData);
 
-        // Fetch documents for this category
+        // Fetch documents for this category using document_categories junction table
         const { data: documentsData, error: documentsError } = await supabase
           .from('documents')
-          .select('*')
-          .eq('category_id', categoryData.id)
+          .select(`
+            *,
+            document_categories!inner(category_id)
+          `)
+          .eq('document_categories.category_id', categoryData.id)
           .in('status', ['published', 'processed'])
           .order('created_at', { ascending: false });
         
