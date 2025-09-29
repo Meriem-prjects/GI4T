@@ -190,30 +190,11 @@ const SimpleTextEditor: React.FC<SimpleTextEditorProps> = ({
           ref={textareaRef}
           value={content}
           onChange={(e) => onChange(normalizeArabicText(e.target.value))}
-          onPaste={(e) => {
-            e.preventDefault();
-            const pastedText = e.clipboardData.getData('text/plain');
-            const normalizedText = normalizeArabicText(pastedText);
-            
-            const textarea = e.target as HTMLTextAreaElement;
-            const start = textarea.selectionStart;
-            const end = textarea.selectionEnd;
-            const currentValue = textarea.value;
-            
-            const newValue = currentValue.substring(0, start) + normalizedText + currentValue.substring(end);
-            onChange(newValue);
-            
-            // Set cursor position after the pasted text
-            setTimeout(() => {
-              textarea.selectionStart = textarea.selectionEnd = start + normalizedText.length;
-            }, 0);
-          }}
           placeholder={placeholder}
           className={`min-h-[400px] border-0 focus-visible:ring-0 resize-none text-sm leading-relaxed ${
             isArabic ? 'font-arabic arabic-text' : 'font-mono'
           }`}
           dir={textDirection}
-          lang={isArabic ? 'ar' : undefined}
         />
       </div>
     </div>
