@@ -1603,6 +1603,7 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
                 <div 
                   className="prose prose-sm max-w-none p-4 border rounded bg-muted/30 max-h-[600px] overflow-y-auto"
                   dir={currentLanguage === 'ar' ? 'rtl' : 'ltr'}
+                  lang={currentLanguage === 'ar' ? 'ar' : 'fr'}
                 >
                   <h4 className="font-semibold text-base" dir={currentLanguage === 'ar' ? 'rtl' : 'ltr'}>
                     {currentLanguage === 'ar' && editedData.title_ar ? editedData.title_ar : editedData.title}
@@ -1610,6 +1611,7 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
                   <div 
                     className={`document-content prose prose-sm max-w-none text-sm leading-relaxed [&>h1]:text-xl [&>h1]:font-bold [&>h1]:mb-3 [&>h2]:text-lg [&>h2]:font-semibold [&>h2]:mb-2 [&>h3]:text-base [&>h3]:font-medium [&>h3]:mb-2 [&>p]:mb-2 [&>br]:block [&>br]:content-[''] [&>br]:mt-2 ${currentLanguage === 'ar' ? 'arabic-text-serif font-arabic-serif' : ''}`} 
                     dir={currentLanguage === 'ar' ? 'rtl' : 'ltr'}
+                    lang={currentLanguage === 'ar' ? 'ar' : 'fr'}
                     dangerouslySetInnerHTML={{ __html: renderFormattedContent(getCurrentContent()) }}
                   />
                 </div>

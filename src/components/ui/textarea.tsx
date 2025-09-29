@@ -11,8 +11,12 @@ const Textarea = React.forwardRef<HTMLTextAreaElement, TextareaProps>(({ classNa
   React.useEffect(() => {
     if (props.value && typeof props.value === 'string') {
       setIsArabic(isArabicText(props.value));
+    } else if (props.placeholder && typeof props.placeholder === 'string') {
+      setIsArabic(isArabicText(props.placeholder));
+    } else {
+      setIsArabic(false);
     }
-  }, [props.value]);
+  }, [props.value, props.placeholder]);
 
   return (
     <textarea

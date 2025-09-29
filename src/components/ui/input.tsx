@@ -7,11 +7,16 @@ const Input = React.forwardRef<HTMLInputElement, React.ComponentProps<"input">>(
   ({ className, type, ...props }, ref) => {
     const [isArabic, setIsArabic] = React.useState(false);
 
-    React.useEffect(() => {
-      if (props.value && typeof props.value === 'string') {
-        setIsArabic(isArabicText(props.value));
-      }
-    }, [props.value]);
+  React.useEffect(() => {
+    if (props.value && typeof props.value === 'string') {
+      setIsArabic(isArabicText(props.value));
+    } else if (props.placeholder && typeof props.placeholder === 'string') {
+      // Fallback: detect from placeholder to apply RTL when field is empty
+      setIsArabic(isArabicText(props.placeholder));
+    } else {
+      setIsArabic(false);
+    }
+  }, [props.value, props.placeholder]);
 
     return (
       <input
