@@ -54,12 +54,15 @@ serve(async (req) => {
 
     const systemPrompt = `Tu es un expert en analyse de documents juridiques tunisiens. Analyse le contenu suivant et extrait les informations demandées en JSON.
 
-IMPORTANTES INSTRUCTIONS:
+IMPORTANTES INSTRUCTIONS POUR L'EXTRACTION DEPUIS LES MÉTADONNÉES TEXTUELLES:
 1. NE MODIFIE PAS le contenu original du document - garde-le intact
 2. TRADUIS RÉELLEMENT tout le contenu en ${targetLanguage} - ne retourne jamais de descriptions ou placeholders
-3. Focus sur l'extraction des métadonnées textuelles pour le titre, sous-titre et auteur
-4. Cherche spécifiquement "مرصد الحقوق الأساسية" comme auteur
-5. Extrait le titre principal (souvent après "المشكل" ou dans les en-têtes)
+
+RÈGLES D'EXTRACTION SPÉCIFIQUES:
+3. TITRE: Extrais le titre principal depuis les métadonnées textuelles (généralement après "المشكل القانوني" ou "المشكل" ou dans la première ligne significative)
+4. SOUS-TITRE: Extrais le sous-titre depuis les métadonnées textuelles (généralement la ligne qui suit le titre principal ou après "الحل المقدم")  
+5. AUTEUR: Cherche le premier nom propre qui apparaît dans les métadonnées textuelles. Si "مرصد الحقوق الأساسية" est présent, utilise-le. Sinon, utilise le premier nom de personne trouvé.
+6. DEMANDEUR/DÉFENDEUR: Extrais uniquement depuis le contenu principal, pas depuis les métadonnées textuelles
 
 Catégories disponibles:
 ${categories.map(cat => `- ${cat.name} (${cat.name_ar})`).join('\n')}
@@ -74,17 +77,19 @@ Niveaux de juridiction disponibles:
 ${jurisdictionLevels.map(level => `- ${level.name} (${level.name_ar})`).join('\n')}
 
 TÂCHES À ACCOMPLIR:
-1. Extrais le titre principal, sous-titre, résumé et métadonnées du document
-2. Traduis COMPLÈTEMENT le contenu entier du document en ${targetLanguage}
-3. Traduis les métadonnées textuelles extraites en ${targetLanguage}
-4. Fournis les suggestions de catégories basées sur le contenu
+1. Extrais le titre et sous-titre DEPUIS LES MÉTADONNÉES TEXTUELLES uniquement
+2. Extrais l'auteur comme premier nom propre des métadonnées textuelles  
+3. Extrais demandeur/défendeur depuis le contenu principal (pas métadonnées)
+4. Traduis COMPLÈTEMENT le contenu entier du document en ${targetLanguage}
+5. Traduis les métadonnées textuelles extraites en ${targetLanguage}
+6. Fournis les suggestions de catégories basées sur le contenu
 
 IMPORTANT: Les champs "textualMetadataTranslated" et "translatedContent" doivent contenir les VRAIES TRADUCTIONS, pas des descriptions !
 
 Réponds uniquement en JSON valide avec cette structure exacte :
 {
-  "title": "titre principal extrait du document",
-  "subtitle": "sous-titre extrait du document", 
+  "title": "titre principal extrait UNIQUEMENT des métadonnées textuelles",
+  "subtitle": "sous-titre extrait UNIQUEMENT des métadonnées textuelles", 
   "translatedTitle": "traduction complète du titre en ${targetLanguage}",
   "translatedSubtitle": "traduction complète du sous-titre en ${targetLanguage}",
   "summary": "résumé du document en ${sourceLanguage}",
@@ -93,11 +98,11 @@ Réponds uniquement en JSON valide avec cette structure exacte :
   "suggestedKeywords": ["nouveaux mots-clés pertinents"],
   "translatedKeywords": ["traduction complète des mots-clés en ${targetLanguage}"],
   "metadata": {
-    "author": "auteur extrait (privilégier 'مرصد الحقوق الأساسية')",
+    "author": "premier nom propre trouvé dans les métadonnées textuelles (privilégier 'مرصد الحقوق الأساسية' si présent)",
     "court": "tribunal mentionné dans le document",
     "case_number": "numéro d'affaire trouvé",
-    "plaintiff": "demandeur mentionné",
-    "defendant": "défendeur mentionné", 
+    "plaintiff": "demandeur mentionné dans le contenu principal",
+    "defendant": "défendeur mentionné dans le contenu principal", 
     "year": année_trouvée_dans_le_document,
     "court_level": "niveau de tribunal identifié"
   },
