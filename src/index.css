@@ -153,11 +153,11 @@ All colors MUST be HSL.
   font-family: 'Noto Sans Arabic', 'Amiri', sans-serif;
   direction: rtl;
   text-align: right;
-  font-feature-settings: "liga" 1, "calt" 1, "ccmp" 1, "locl" 1;
+  font-feature-settings: "liga" 1, "calt" 1, "ccmp" 1, "locl" 1, "rlig" 1, "init" 1, "medi" 1, "fina" 1;
   text-rendering: optimizeLegibility;
   font-variant-ligatures: contextual;
-  word-spacing: 0.1em;
-  letter-spacing: 0.02em;
+  unicode-bidi: isolate;
+  font-kerning: normal;
   line-height: 1.8;
 }
 
@@ -165,11 +165,11 @@ All colors MUST be HSL.
   font-family: 'Amiri', serif;
   direction: rtl;
   text-align: right;
-  font-feature-settings: "liga" 1, "calt" 1, "ccmp" 1, "locl" 1;
+  font-feature-settings: "liga" 1, "calt" 1, "ccmp" 1, "locl" 1, "rlig" 1, "init" 1, "medi" 1, "fina" 1;
   text-rendering: optimizeLegibility;
   font-variant-ligatures: contextual;
-  word-spacing: 0.1em;
-  letter-spacing: 0.02em;
+  unicode-bidi: isolate;
+  font-kerning: normal;
   line-height: 1.9;
 }
 
@@ -177,12 +177,12 @@ All colors MUST be HSL.
 .document-content[dir="rtl"] {
   direction: rtl;
   text-align: right;
-  font-family: 'Noto Sans Arabic', 'Amiri', sans-serif;
-  font-feature-settings: "liga" 1, "calt" 1, "ccmp" 1, "locl" 1;
+  font-family: 'Amiri', 'Noto Sans Arabic', serif;
+  font-feature-settings: "liga" 1, "calt" 1, "ccmp" 1, "locl" 1, "rlig" 1, "init" 1, "medi" 1, "fina" 1;
   text-rendering: optimizeLegibility;
   font-variant-ligatures: contextual;
-  word-spacing: 0.1em;
-  letter-spacing: 0.02em;
+  unicode-bidi: isolate;
+  font-kerning: normal;
 }
 
 .document-content[dir="rtl"] h1,
@@ -192,16 +192,13 @@ All colors MUST be HSL.
 .document-content[dir="rtl"] h5,
 .document-content[dir="rtl"] h6 {
   text-align: right;
-  font-family: 'Noto Sans Arabic', 'Amiri', sans-serif;
-  font-feature-settings: "liga" 1, "calt" 1, "ccmp" 1;
-  word-spacing: 0.1em;
+  font-family: 'Amiri', 'Noto Sans Arabic', serif;
+  font-feature-settings: "liga" 1, "calt" 1, "ccmp" 1, "rlig" 1, "init" 1, "medi" 1, "fina" 1;
 }
 
 .document-content[dir="rtl"] p {
   text-align: right;
   line-height: 1.8;
-  word-spacing: 0.1em;
-  letter-spacing: 0.02em;
 }
 
 .document-content[dir="rtl"] ul,
@@ -212,7 +209,6 @@ All colors MUST be HSL.
 
 .document-content[dir="rtl"] li {
   text-align: right;
-  word-spacing: 0.1em;
 }
 
 /* Arabic text detection and auto-direction */
@@ -223,8 +219,7 @@ All colors MUST be HSL.
 .auto-arabic:lang(ar) {
   direction: rtl;
   text-align: right;
-  font-family: 'Noto Sans Arabic', 'Amiri', sans-serif;
-  font-feature-settings: "liga" 1, "calt" 1, "ccmp" 1, "locl" 1;
+  font-family: 'Amiri', 'Noto Sans Arabic', serif;
+  font-feature-settings: "liga" 1, "calt" 1, "ccmp" 1, "locl" 1, "rlig" 1, "init" 1, "medi" 1, "fina" 1;
   text-rendering: optimizeLegibility;
-  word-spacing: 0.1em;
 }
