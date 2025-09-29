@@ -345,14 +345,13 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
             keywords_ar: [
               ...new Set([
                 ...(prev.keywords_ar || []),
-                ...(analysis.existingKeywords || []),
-                ...(analysis.suggestedKeywords || [])
+                ...(analysis.existingKeywords || []).filter(k => /[\u0600-\u06FF]/.test(k))
               ])
             ],
             keywords: [
               ...new Set([
                 ...(prev.keywords || []),
-                ...(analysis.translatedKeywords || [])
+                ...(analysis.translatedKeywords || []).filter(k => !/[\u0600-\u06FF]/.test(k))
               ])
             ]
           }));
@@ -391,14 +390,13 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
             keywords: [
               ...new Set([
                 ...(prev.keywords || []),
-                ...(analysis.existingKeywords || []),
-                ...(analysis.suggestedKeywords || [])
+                ...(analysis.existingKeywords || []).filter(k => !/[\u0600-\u06FF]/.test(k))
               ])
             ],
             keywords_ar: [
               ...new Set([
                 ...(prev.keywords_ar || []),
-                ...(analysis.translatedKeywords || [])
+                ...(analysis.translatedKeywords || []).filter(k => /[\u0600-\u06FF]/.test(k))
               ])
             ]
           }));
@@ -502,7 +500,10 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
 
         const { error } = await supabase
           .from('documents')
-          .update(fullUpdateData)
+          .update({
+            ...fullUpdateData,
+            category_id: selectedCategoryIds[0] || null // Set primary category for backward compatibility
+          })
           .eq('id', editedData.id);
 
         if (error) {

@@ -23,6 +23,15 @@ interface Document {
   keywords: string[];
   keywords_ar?: string[];
   category_id?: string;
+  document_categories?: Array<{
+    category_id: string;
+    categories: {
+      id: string;
+      name: string;
+      name_ar?: string;
+      color: string;
+    };
+  }>;
   categories?: {
     id: string;
     name: string;
@@ -58,6 +67,10 @@ const AdminValidation = () => {
         .from('documents')
         .select(`
           *,
+          document_categories (
+            category_id,
+            categories (id, name, name_ar, color)
+          ),
           categories (
             id,
             name,
@@ -282,7 +295,24 @@ const AdminValidation = () => {
                     <Globe className="w-3 h-3" />
                     {document.language === 'fr' ? 'Français' : document.language === 'ar' ? 'العربية' : document.language}
                   </Badge>
-                  {document.categories && (
+                  
+                  {/* Multiple categories from document_categories */}
+                  {document.document_categories?.map((docCat) => (
+                    <Badge 
+                      key={docCat.category_id}
+                      variant="outline" 
+                      className="text-xs"
+                      style={{ 
+                        borderColor: docCat.categories.color,
+                        color: docCat.categories.color 
+                      }}
+                    >
+                      {docCat.categories.name}
+                    </Badge>
+                  ))}
+                  
+                  {/* Fallback to single category for backward compatibility */}
+                  {!document.document_categories?.length && document.categories && (
                     <Badge 
                       variant="outline" 
                       className="text-xs"

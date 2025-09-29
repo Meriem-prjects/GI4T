@@ -40,6 +40,15 @@ interface Document {
   category_id?: string;
   document_type_id?: string;
   translated_content?: string;
+  document_categories?: Array<{
+    category_id: string;
+    categories: {
+      id: string;
+      name: string;
+      name_ar?: string;
+      color: string;
+    };
+  }>;
   categories?: {
     name: string;
     color: string;
@@ -85,6 +94,10 @@ const AdminContenus = () => {
         .from('documents')
         .select(`
           *,
+          document_categories (
+            category_id,
+            categories (id, name, name_ar, color)
+          ),
           categories (name, color),
           document_types (name)
         `)
@@ -437,9 +450,27 @@ const AdminContenus = () => {
                 </p>
               )}
 
-              {/* Category and Type */}
+              {/* Categories and Type */}
               <div className="flex flex-wrap gap-2">
-                {document.categories && (
+                {/* Multiple categories from document_categories */}
+                {document.document_categories?.map((docCat) => (
+                  <Badge 
+                    key={docCat.category_id}
+                    variant="outline" 
+                    className="text-xs"
+                    style={{ 
+                      backgroundColor: `${docCat.categories.color}20`,
+                      borderColor: docCat.categories.color,
+                      color: docCat.categories.color 
+                    }}
+                  >
+                    <Tag className="w-3 h-3 mr-1" />
+                    {docCat.categories.name}
+                  </Badge>
+                ))}
+                
+                {/* Fallback to single category for backward compatibility */}
+                {!document.document_categories?.length && document.categories && (
                   <Badge 
                     variant="outline" 
                     className="text-xs"
@@ -453,6 +484,7 @@ const AdminContenus = () => {
                     {document.categories.name}
                   </Badge>
                 )}
+                
                 {document.document_types && (
                   <Badge variant="outline" className="text-xs">
                     {document.document_types.name}
