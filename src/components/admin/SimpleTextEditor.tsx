@@ -221,7 +221,7 @@ const SimpleTextEditor: React.FC<SimpleTextEditorProps> = ({
           onPaste={handlePaste}
           placeholder={placeholder}
           className={`min-h-[400px] border-0 focus-visible:ring-0 resize-none text-sm leading-relaxed ${
-            isArabic ? 'font-arabic arabic-text' : 'font-mono'
+            isArabic ? 'font-arabic-serif arabic-text-serif' : 'font-mono'
           }`}
           dir={textDirection}
         />
