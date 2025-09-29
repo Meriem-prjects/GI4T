@@ -130,13 +130,20 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
     
     loadCategories();
     loadDocumentTypes();
-    
-    // Load document categories
+  }, [documentData]);
+
+  // Separate effect for document categories to ensure they're loaded after data is available
+  useEffect(() => {
     if (documentCategories.length > 0) {
+      console.log('Loading document categories:', documentCategories);
       setSelectedCategoryIds(documentCategories.map(dc => dc.category_id));
+    } else {
+      setSelectedCategoryIds([]);
     }
-    
-    // Auto-extract textual metadata if document exists but has no metadata
+  }, [documentCategories]);
+
+  // Auto-extract textual metadata effect
+  useEffect(() => {
     if (documentData.id && documentData.content && !documentData.textual_metadata) {
       console.log('Auto-extracting textual metadata for document:', documentData.id);
       setTimeout(() => {
