@@ -106,3 +106,6 @@ verify_jwt = false
 
 [functions.smart-document-analysis]
 verify_jwt = false
+
+[functions.correct-arabic-spelling]
+verify_jwt = false
