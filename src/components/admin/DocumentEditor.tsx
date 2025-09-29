@@ -146,15 +146,31 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
     }
   }, [documentCategories, documentData.category_id]);
 
-  // Auto-extract textual metadata effect
+  // Auto-extract textual metadata effect (run only if truly null/absent)
   useEffect(() => {
-    if (documentData.id && documentData.content && !documentData.textual_metadata) {
+    if (documentData.id && documentData.content && documentData.textual_metadata == null) {
       console.log('Auto-extracting textual metadata for document:', documentData.id);
       setTimeout(() => {
         autoExtractMetadata();
       }, 1000); // Small delay to ensure component is fully loaded
     }
   }, [documentData]);
+
+  // Fallback: ensure display by fetching textual_metadata directly when empty
+  useEffect(() => {
+    if (editedData.id && (!editedData.textual_metadata || editedData.textual_metadata.trim() === '')) {
+      supabase
+        .from('documents')
+        .select('textual_metadata')
+        .eq('id', editedData.id)
+        .single()
+        .then(({ data, error }) => {
+          if (!error && data?.textual_metadata) {
+            setEditedData(prev => ({ ...prev, textual_metadata: data.textual_metadata }));
+          }
+        });
+    }
+  }, [editedData.id]);
 
   const autoExtractMetadata = async () => {
     if (!editedData.id) return;
@@ -1503,7 +1519,7 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
                           : 'bg-muted/30 border-muted-foreground/30 text-muted-foreground'
                       }`}
                       dir={currentLanguage === 'ar' ? 'rtl' : 'ltr'}
-                      readOnly={currentLanguage !== editedData.language || !editedData.textual_metadata}
+                      readOnly={currentLanguage !== editedData.language}
                     />
                    <div className="flex items-center justify-between text-xs">
                      <span className="text-muted-foreground">
