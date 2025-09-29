@@ -148,6 +148,16 @@ const AdminContenus = () => {
 
   const updateDocumentStatus = async (documentId: string, newStatus: string) => {
     try {
+      // Si on veut publier (processed), on doit d'abord passer par pending_validation
+      if (newStatus === 'processed') {
+        toast({
+          title: "Publication impossible",
+          description: "Les documents doivent d'abord être validés. Utilisez 'Faire valider' puis attendez la validation.",
+          variant: "destructive",
+        });
+        return;
+      }
+
       const { error } = await supabase
         .from('documents')
         .update({ status: newStatus })
@@ -163,7 +173,7 @@ const AdminContenus = () => {
 
       toast({
         title: "Statut mis à jour",
-        description: `Le document a été ${newStatus === 'processed' ? 'publié' : 'mis en brouillon'}`,
+        description: `Le document a été mis en brouillon`,
       });
     } catch (error) {
       console.error('Error updating document status:', error);
@@ -395,24 +405,14 @@ const AdminContenus = () => {
                         Faire valider
                       </DropdownMenuItem>
                     )}
-                    <DropdownMenuItem
-                      onClick={() => updateDocumentStatus(
-                        document.id, 
-                        document.status === 'processed' ? 'draft' : 'processed'
-                      )}
-                    >
-                      {document.status === 'processed' ? (
-                        <>
-                          <Clock className="w-4 h-4 mr-2" />
-                          Mettre en brouillon
-                        </>
-                      ) : (
-                        <>
-                          <CheckCircle className="w-4 h-4 mr-2" />
-                          Publier
-                        </>
-                      )}
-                    </DropdownMenuItem>
+                    {document.status === 'processed' && (
+                      <DropdownMenuItem
+                        onClick={() => updateDocumentStatus(document.id, 'draft')}
+                      >
+                        <Clock className="w-4 h-4 mr-2" />
+                        Mettre en brouillon
+                      </DropdownMenuItem>
+                    )}
                     <DropdownMenuItem
                       onClick={() => {
                         setDocumentToDelete(document.id);
