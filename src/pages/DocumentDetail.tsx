@@ -117,11 +117,14 @@ const DocumentDetail = () => {
 
         console.log('Found matching category:', matchingCategory);
 
-        // Then, find the document by title slug and category
+        // Then, find the document by title slug and category using document_categories junction table
         const { data: documents, error: documentsError } = await supabase
           .from('documents')
-          .select('*')
-          .eq('category_id', matchingCategory.id);
+          .select(`
+            *,
+            document_categories!inner(category_id)
+          `)
+          .eq('document_categories.category_id', matchingCategory.id);
 
         if (documentsError) {
           console.error('Error fetching documents:', documentsError);
@@ -148,16 +151,14 @@ const DocumentDetail = () => {
         setDocument(matchingDocument);
         setCategory(matchingCategory);
 
-        // Fetch suggested documents (same category, excluding current)
+        // Fetch suggested documents (same category, excluding current) using document_categories junction table
         const { data: suggestedData } = await supabase
           .from('documents')
           .select(`
             id, title, title_ar, summary, document_type, created_at, page_count,
-            categories (
-              name, name_ar
-            )
+            document_categories!inner(category_id)
           `)
-          .eq('category_id', matchingCategory.id)
+          .eq('document_categories.category_id', matchingCategory.id)
           .neq('id', matchingDocument.id)
           .in('status', ['published', 'processed'])
           .limit(5);
