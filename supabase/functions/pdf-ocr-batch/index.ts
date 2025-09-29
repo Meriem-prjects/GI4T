@@ -1,6 +1,7 @@
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.57.4';
+import { sanitizeArabicText } from "../_shared/utils.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -129,8 +130,8 @@ async function getExistingPages(jobId: string): Promise<number[]> {
 }
 
 // OCR a single image using OpenAI Vision API with enhanced prompts and rate limiting
-async function ocrImage(imageData: string, pageNumber: number, openaiApiKey: string, exactMode: boolean = false, retryCount = 0): Promise<PageContent> {
-  console.log(`Starting OCR for page ${pageNumber} (exact mode: ${exactMode})...`);
+async function ocrImage(imageData: string, pageNumber: number, openaiApiKey: string, retryCount = 0): Promise<PageContent> {
+  console.log(`Starting OCR for page ${pageNumber}...`);
   
   // Add delay to prevent rate limiting
   if (retryCount > 0) {
@@ -142,19 +143,8 @@ async function ocrImage(imageData: string, pageNumber: number, openaiApiKey: str
     await new Promise(resolve => setTimeout(resolve, 1000));
   }
   
-  // Enhanced prompt for better OCR accuracy - with exact mode option
-  const systemPrompt = exactMode 
-    ? `Tu es un expert OCR spécialisé dans l'extraction EXACTE de texte juridique et administratif en français et en arabe.
-  INSTRUCTIONS CRITIQUES POUR MODE EXACT:
-  - Préserve EXACTEMENT tous les espaces entre les mots - ne les supprime jamais
-  - Préserve EXACTEMENT tous les retours à la ligne et paragraphes
-  - N'invente AUCUN texte, n'ajoute AUCUNE correction automatique
-  - Transcris EXACTEMENT ce que tu vois, caractère par caractère
-  - Pour les documents arabes, préserve TOUS les espaces entre les mots arabes
-  - Ne compacte JAMAIS les espaces multiples en un seul espace
-  - Ignore les filigranes et marques d'eau
-  - Réponds au format JSON strict: {"text": "texte exact transcrit", "language": "fr|ar|mixed", "confidence": 0.XX}`
-    : `Tu es un expert OCR spécialisé dans l'extraction de texte juridique et administratif en français et en arabe. 
+  // Enhanced prompt for better OCR accuracy
+  const systemPrompt = `Tu es un expert OCR spécialisé dans l'extraction de texte juridique et administratif en français et en arabe. 
   INSTRUCTIONS CRITIQUES:
   - Extrais TOUT le texte visible avec une précision maximale
   - Préserve la mise en forme, les paragraphes et la structure
@@ -205,7 +195,7 @@ async function ocrImage(imageData: string, pageNumber: number, openaiApiKey: str
     // Enhanced retry logic with exponential backoff
     if (retryCount < 3 && (response.status === 429 || response.status >= 500)) {
       console.log(`Retrying OCR for page ${pageNumber} (attempt ${retryCount + 1})...`);
-      return ocrImage(imageData, pageNumber, openaiApiKey, exactMode, retryCount + 1);
+      return ocrImage(imageData, pageNumber, openaiApiKey, retryCount + 1);
     }
     
     // For rate limiting, throw a specific error
@@ -232,12 +222,12 @@ async function ocrImage(imageData: string, pageNumber: number, openaiApiKey: str
   try {
     const parsed = JSON.parse(content);
     
-    // Apply minimal NFKC normalization to preserve exact spacing
-    const normalizedContent = (parsed.text || '').normalize('NFKC');
+    // Sanitize Arabic text if detected
+    const sanitizedContent = parsed.language === 'ar' ? sanitizeArabicText(parsed.text || '') : (parsed.text || '');
     
     const result = {
       pageNumber,
-      content: normalizedContent,
+      content: sanitizedContent,
       confidence: parsed.confidence || 0.9,
       language: parsed.language || 'fr'
     };
@@ -247,12 +237,12 @@ async function ocrImage(imageData: string, pageNumber: number, openaiApiKey: str
   } catch (parseError) {
     console.warn(`Failed to parse JSON response for page ${pageNumber}, using raw content:`, parseError);
     
-    // Apply minimal NFKC normalization to raw content too
-    const normalizedRawContent = content.normalize('NFKC');
+    // Sanitize raw content too
+    const sanitizedRawContent = sanitizeArabicText(content);
     
     return {
       pageNumber,
-      content: normalizedRawContent,
+      content: sanitizedRawContent,
       confidence: 0.8,
       language: 'fr'
     };
@@ -260,8 +250,8 @@ async function ocrImage(imageData: string, pageNumber: number, openaiApiKey: str
 }
 
 // Enhanced fallback processing chain for PDFs with resume support
-async function processPdfWithOCR(pdfBuffer: ArrayBuffer, openaiApiKey: string, jobId: string, filename?: string, isResume: boolean = false, preservedLanguage: string = 'fr', exactMode: boolean = false): Promise<BatchOCRResult> {
-  console.log(`Starting enhanced PDF OCR processing with multi-level fallback (exact mode: ${exactMode})...`);
+async function processPdfWithOCR(pdfBuffer: ArrayBuffer, openaiApiKey: string, jobId: string, filename?: string, isResume: boolean = false, preservedLanguage: string = 'fr'): Promise<BatchOCRResult> {
+  console.log('Starting enhanced PDF OCR processing with multi-level fallback...');
   
   // Check if PDF might be password-protected
   const pdfBytes = new Uint8Array(pdfBuffer);
@@ -297,34 +287,14 @@ async function processPdfWithOCR(pdfBuffer: ArrayBuffer, openaiApiKey: string, j
     if (readerResponse.ok) {
       const readerResult = await readerResponse.json();
       
-        if (readerResult.success && readerResult.texts && readerResult.texts.length > 0) {
+      if (readerResult.success && readerResult.texts && readerResult.texts.length > 0) {
         const fullText = readerResult.texts.join('\n\n').trim();
         const avgCharsPerPage = fullText.length / readerResult.numPages;
         
         console.log(`PDF text extraction successful: ${readerResult.numPages} pages, ${fullText.length} chars, avg ${Math.round(avgCharsPerPage)} chars/page`);
         
-        // In exact mode for Arabic, check spacing quality even if text is sufficient
-        let skipOCR = avgCharsPerPage > 50 && fullText.length > 100;
-        
-        if (skipOCR && exactMode && preservedLanguage === 'ar') {
-          // Check Arabic spacing quality
-          const arabicSegments = fullText.match(/[\u0600-\u06FF\u0750-\u077F\u08A0-\u08FF\uFB50-\uFDFF\uFE70-\uFEFF]+/g) || [];
-          if (arabicSegments.length > 0) {
-            const longestRun = Math.max(...arabicSegments.map((seg: string) => seg.length));
-            const spaceCount = (fullText.match(/[\u0600-\u06FF][\s][\u0600-\u06FF]/g) || []).length;
-            const spaceRatio = spaceCount / Math.max(1, arabicSegments.join('').length / 10);
-            
-            console.log(`Exact mode spacing check: longest run=${longestRun}, space ratio=${spaceRatio.toFixed(3)}`);
-            
-            // If spacing is insufficient, continue to OCR even though text was found
-            if (longestRun >= 25 || spaceRatio < 0.15) {
-              skipOCR = false;
-              console.log('Spacing quality insufficient in exact mode, proceeding to OCR...');
-            }
-          }
-        }
-        
-        if (skipOCR) {
+        // Check if text extraction is sufficient (>50 chars per page average)
+        if (avgCharsPerPage > 50 && fullText.length > 100) {
           console.log('Direct text extraction sufficient, skipping OCR processing');
           
           // Create page content from extracted text
@@ -461,7 +431,7 @@ async function processPdfWithOCR(pdfBuffer: ArrayBuffer, openaiApiKey: string, j
     // Process images sequentially to prevent rate limiting (reduced from batch processing)
     for (const image of imagesToProcess) {
       try {
-        const pageContent = await ocrImage(image.imageData, image.pageNumber, openaiApiKey, exactMode);
+        const pageContent = await ocrImage(image.imageData, image.pageNumber, openaiApiKey);
         pages.push(pageContent);
         languages[pageContent.language] = (languages[pageContent.language] || 0) + 1;
         
@@ -695,7 +665,6 @@ serve(async (req) => {
     jobId = providedJobId || crypto.randomUUID(); // Ensure jobId is always a string
     const filename = formData.get('filename') as string || file?.name || 'unknown.pdf';
     const preservedLanguage = (formData.get('language') as string) || 'fr';
-    const exactMode = (formData.get('exact_mode') as string) === 'true';
 
     let pdfBuffer: ArrayBuffer;
     let isResume = false;
@@ -741,7 +710,7 @@ serve(async (req) => {
       });
     }
 
-    const result = await processPdfWithOCR(pdfBuffer, openaiApiKey, jobId, filename, isResume, preservedLanguage, exactMode);
+    const result = await processPdfWithOCR(pdfBuffer, openaiApiKey, jobId, filename, isResume, preservedLanguage);
 
     if (!result.success) {
       throw new Error(result.error || 'Failed to process PDF with OCR');

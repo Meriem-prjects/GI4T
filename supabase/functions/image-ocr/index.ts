@@ -1,7 +1,7 @@
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 
-import { getErrorMessage } from "../_shared/utils.ts";
+import { getErrorMessage, sanitizeArabicText } from "../_shared/utils.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -73,7 +73,7 @@ serve(async (req) => {
         messages: [
           {
             role: 'system',
-            content: 'Tu es un expert en extraction de texte et détection de langue. Extrais tout le texte visible dans cette image et détecte la langue principale du texte. IMPORTANT: Préserve EXACTEMENT tous les espaces entre les mots, particulièrement pour les textes arabes. N\'invente aucun texte, ne corrige pas l\'orthographe, transcris exactement ce que tu vois. Réponds au format JSON: {"text": "texte extrait", "language": "code langue (fr/ar/en)", "confidence": 0.95}'
+            content: 'Tu es un expert en extraction de texte et détection de langue. Extrais tout le texte visible dans cette image et détecte la langue principale du texte. Réponds au format JSON: {"text": "texte extrait", "language": "code langue (fr/ar/en)", "confidence": 0.95}'
           },
           {
             role: 'user',
@@ -108,16 +108,16 @@ serve(async (req) => {
 
     console.log(`OCR completed. Language: ${result.language}, Text length: ${result.text?.length || 0}`);
 
-    // Apply minimal NFKC normalization to preserve exact spacing
-    const normalizedText = (result.text || '').normalize('NFKC');
+    // Sanitize Arabic text if detected
+    const sanitizedText = result.language === 'ar' ? sanitizeArabicText(result.text) : result.text;
 
     return new Response(JSON.stringify({
       success: true,
-      content: normalizedText,
+      content: sanitizedText || '',
       language: result.language || 'fr',
       confidence: result.confidence || 0.9,
-      fullText: normalizedText,
-      extractedText: normalizedText
+      fullText: sanitizedText || '',
+      extractedText: sanitizedText || ''
     }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
