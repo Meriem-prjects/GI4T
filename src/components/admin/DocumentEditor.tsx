@@ -18,6 +18,7 @@ import { MultiCategorySelector } from './MultiCategorySelector';
 import { useDocumentCategories, useUpdateDocumentCategories } from '@/hooks/useDocumentCategories';
 import PDFViewer from './PDFViewer';
 import { renderFormattedContent, formatContent } from '@/utils/contentFormatter';
+import { normalizeArabicText } from '@/lib/arabicUtils';
 
 interface PageContent {
   pageNumber: number;
@@ -114,6 +115,7 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
   const [validationRemarks, setValidationRemarks] = useState<string>('');
   const [isReprocessing, setIsReprocessing] = useState(false);
   const [translatedTextualMetadata, setTranslatedTextualMetadata] = useState<string>('');
+  const [isCleaningArabic, setIsCleaningArabic] = useState(false);
 
   useEffect(() => {
     setEditedData(documentData);
@@ -796,6 +798,76 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
     return data.publicUrl;
   };
 
+  const cleanArabicDocument = async () => {
+    if (!editedData.id) {
+      toast({
+        title: "Erreur",
+        description: "Document non sauvegardé",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    setIsCleaningArabic(true);
+    try {
+      // Normalize all Arabic fields
+      const cleaned = {
+        ...editedData,
+        title_ar: editedData.title_ar ? normalizeArabicText(editedData.title_ar) : editedData.title_ar,
+        subtitle_ar: editedData.subtitle_ar ? normalizeArabicText(editedData.subtitle_ar) : editedData.subtitle_ar,
+        content: editedData.language === 'ar' && editedData.content ? normalizeArabicText(editedData.content) : editedData.content,
+        textual_metadata: editedData.language === 'ar' && editedData.textual_metadata ? normalizeArabicText(editedData.textual_metadata) : editedData.textual_metadata,
+        summary_ar: editedData.summary_ar ? normalizeArabicText(editedData.summary_ar) : editedData.summary_ar,
+        keywords_ar: editedData.keywords_ar?.map(k => normalizeArabicText(k)),
+        author_ar: editedData.author_ar ? normalizeArabicText(editedData.author_ar) : editedData.author_ar,
+        court_ar: editedData.court_ar ? normalizeArabicText(editedData.court_ar) : editedData.court_ar,
+        plaintiff_ar: editedData.plaintiff_ar ? normalizeArabicText(editedData.plaintiff_ar) : editedData.plaintiff_ar,
+        defendant_ar: editedData.defendant_ar ? normalizeArabicText(editedData.defendant_ar) : editedData.defendant_ar,
+        court_level_ar: editedData.court_level_ar ? normalizeArabicText(editedData.court_level_ar) : editedData.court_level_ar,
+        court_category_type_ar: editedData.court_category_type_ar ? normalizeArabicText(editedData.court_category_type_ar) : editedData.court_category_type_ar,
+      };
+
+      // Save to database
+      const { error } = await supabase
+        .from('documents')
+        .update({
+          title_ar: cleaned.title_ar,
+          subtitle_ar: cleaned.subtitle_ar,
+          content: cleaned.content,
+          textual_metadata: cleaned.textual_metadata,
+          summary_ar: cleaned.summary_ar,
+          keywords_ar: cleaned.keywords_ar,
+          author_ar: cleaned.author_ar,
+          court_ar: cleaned.court_ar,
+          plaintiff_ar: cleaned.plaintiff_ar,
+          defendant_ar: cleaned.defendant_ar,
+          court_level_ar: cleaned.court_level_ar,
+          court_category_type_ar: cleaned.court_category_type_ar,
+        })
+        .eq('id', editedData.id);
+
+      if (error) throw error;
+
+      setEditedData(cleaned);
+      setHasChanges(false);
+      
+      toast({
+        title: "Nettoyage réussi",
+        description: "Tous les champs arabes ont été normalisés",
+        variant: "default"
+      });
+    } catch (error: any) {
+      console.error('Arabic cleanup error:', error);
+      toast({
+        title: "Erreur de nettoyage",
+        description: error.message || "Impossible de nettoyer les champs arabes",
+        variant: "destructive"
+      });
+    } finally {
+      setIsCleaningArabic(false);
+    }
+  };
+
   return (
     <div className="space-y-6" dir={currentLanguage === 'ar' ? 'rtl' : 'ltr'}>
       {/* Header */}
@@ -881,6 +953,20 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
               <Brain className="mr-2 h-4 w-4" />
             )}
             {isAnalyzing ? 'Analyse...' : '🤖 Analyse IA'}
+          </Button>
+
+          <Button 
+            onClick={cleanArabicDocument} 
+            disabled={isCleaningArabic || !editedData.id}
+            variant="outline"
+            title="Normalise tous les champs arabes (NFKC + nettoyage)"
+          >
+            {isCleaningArabic ? (
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+            ) : (
+              <span className="mr-2">🧹</span>
+            )}
+            {isCleaningArabic ? 'Nettoyage...' : 'Nettoyer AR'}
           </Button>
 
           

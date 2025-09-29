@@ -1,4 +1,5 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { sanitizeArabicText } from "../_shared/utils.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -265,9 +266,12 @@ serve(async (req) => {
     
     console.log(`Extracted text length: ${extractedText.length} characters`);
 
+    // Sanitize Arabic text if detected
+    const sanitizedText = sanitizeArabicText(extractedText);
+
     return new Response(JSON.stringify({ 
       success: true,
-      text: extractedText,
+      text: sanitizedText,
       filename: file.name,
       size: file.size
     }), {
