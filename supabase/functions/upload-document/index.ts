@@ -388,18 +388,16 @@ serve(async (req) => {
           // Always use direct extraction - no more OCR fallback
           console.log('Using PDF direct extraction result');
           
-          // Sanitize Arabic text if detected
-          const sanitizedExtractedText = language === 'ar' ? sanitizeArabicText(extractedText) : extractedText;
+          // DO NOT sanitize here - keep original spacing
+          fileContent = extractedText.length > 0 ? extractedText : 'Document PDF sans texte extractible';
+          extractionSuccess = true;
+          totalPagesVar = readerData.numPages || 1;
+          shouldUsePDFReader = true;
           
-           fileContent = sanitizedExtractedText.length > 0 ? sanitizedExtractedText : 'Document PDF sans texte extractible';
-           extractionSuccess = true;
-           totalPagesVar = readerData.numPages || 1;
-           shouldUsePDFReader = true;
-           
-           // Create page contents from extracted text (sanitize each page)
-           pageContents = (readerData.texts || []).map((text: string, index: number) => ({
+          // Create page contents WITHOUT sanitization
+          pageContents = (readerData.texts || []).map((text: string, index: number) => ({
             pageNumber: index + 1,
-            content: language === 'ar' ? sanitizeArabicText(text.trim()) : text.trim(),
+            content: text.trim(), // Keep original text
             confidence: 1.0,
             language: language // Use the provided language
           }));
@@ -483,8 +481,8 @@ serve(async (req) => {
           console.error('Image OCR error:', ocrError);
           fileContent = `Erreur OCR: ${ocrError.message}`;
         } else if (ocrData?.success && ocrData?.content && ocrData.content.length > 2) {
-          // Sanitize Arabic content from image OCR
-          fileContent = ocrData.language === 'ar' ? sanitizeArabicText(ocrData.content) : ocrData.content;
+          // DO NOT sanitize OCR content - keep original spacing
+          fileContent = ocrData.content;
           extractionSuccess = true;
           analysisData.language = ocrData.language || 'fr';
           console.log(`Image OCR successful: ${fileContent.length} chars, language: ${analysisData.language}`);
@@ -546,6 +544,21 @@ serve(async (req) => {
       });
     }
 
+    // Apply conservative sanitization ONLY ONCE at the end for Arabic content
+    if (language === 'ar') {
+      console.log('Applying final Arabic sanitization...');
+      finalContent = sanitizeArabicText(finalContent);
+      textualMetadata = sanitizeArabicText(textualMetadata);
+      
+      // Also sanitize page contents
+      if (pageContents && pageContents.length > 0) {
+        pageContents = pageContents.map(page => ({
+          ...page,
+          content: sanitizeArabicText(page.content)
+        }));
+      }
+    }
+
     // Save document to database with enhanced metadata
     const documentData = {
       original_filename: file.name,
@@ -554,8 +567,8 @@ serve(async (req) => {
       title_ar: analysisData.title_ar || null,
       summary: analysisData.summary || '',
       summary_ar: analysisData.summary_ar || null,
-      content: finalContent, // Store separated main content
-      textual_metadata: textualMetadata || null, // Store separated textual metadata
+      content: finalContent, // Store separated main content (sanitized if Arabic)
+      textual_metadata: textualMetadata || null, // Store separated textual metadata (sanitized if Arabic)
       keywords: analysisData.keywords || [],
       keywords_ar: analysisData.keywords_ar || [],
       language: language, // Use the provided language

@@ -108,16 +108,17 @@ serve(async (req) => {
 
     console.log(`OCR completed. Language: ${result.language}, Text length: ${result.text?.length || 0}`);
 
-    // Sanitize Arabic text if detected
-    const sanitizedText = result.language === 'ar' ? sanitizeArabicText(result.text) : result.text;
+    // DO NOT sanitize here - return raw OCR text to preserve spacing
+    // Sanitization will be done in upload-document at the end
+    const ocrText = result.text || '';
 
     return new Response(JSON.stringify({
       success: true,
-      content: sanitizedText || '',
+      content: ocrText, // Return raw OCR text
       language: result.language || 'fr',
       confidence: result.confidence || 0.9,
-      fullText: sanitizedText || '',
-      extractedText: sanitizedText || ''
+      fullText: ocrText,
+      extractedText: ocrText
     }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });

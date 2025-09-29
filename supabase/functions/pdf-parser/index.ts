@@ -71,19 +71,34 @@ function extractUnicodeText(pdfString: string, encoding: string): string {
       }
     }
     
-    // Extract from text array commands
+    // Extract from text array commands with spacing support
     const tjArrayMatches = block.match(/\[([^\]]+)\]\s*TJ/g) || [];
     for (const match of tjArrayMatches) {
       const arrayContent = match.match(/\[([^\]]+)\]/)?.[1] || '';
-      const stringMatches = arrayContent.match(/\(([^)]*(?:\\.[^)]*)*)\)/g) || [];
-      for (const stringMatch of stringMatches) {
-        const text = stringMatch.match(/\(([^)]*(?:\\.[^)]*)*)\)/)?.[1] || '';
-        if (text.length > 1) {
+      
+      // Parse TJ array with space insertion based on numeric values
+      const elements = arrayContent.match(/\(([^)]*(?:\\.[^)]*)*)\)|(-?\d+(?:\.\d+)?)/g) || [];
+      let lineText = '';
+      
+      for (const elem of elements) {
+        if (elem.startsWith('(')) {
+          // Text string
+          const text = elem.match(/\(([^)]*(?:\\.[^)]*)*)\)/)?.[1] || '';
           const processed = processUnicodeString(text);
-          if (processed && isValidText(processed)) {
-            extractedText += processed + ' ';
+          if (processed) {
+            lineText += processed;
+          }
+        } else {
+          // Numeric spacing value
+          const spacing = parseFloat(elem);
+          if (Math.abs(spacing) >= 120) { // Threshold for space
+            lineText += ' ';
           }
         }
+      }
+      
+      if (lineText.trim().length > 0 && isValidText(lineText)) {
+        extractedText += lineText + '\n'; // Keep line breaks
       }
     }
   }
@@ -230,10 +245,8 @@ function isValidText(text: string): boolean {
 
 function cleanText(text: string): string {
   return text
-    .replace(/\s+/g, ' ') // Normalize spaces
-    .replace(/(.)\1{5,}/g, '$1$1') // Reduce excessive repetition
-    .replace(/[^\u0600-\u06FF\u0750-\u077F\u08A0-\u08FF\uFB50-\uFDFF\uFE70-\uFEFFa-zA-ZÀ-ÿ0-9\s.,!?;:()\-'"]/g, '') // Keep only valid chars
-    .trim();
+    .replace(/(.)\1{5,}/g, '$1$1') // Reduce excessive repetition only
+    .trim(); // Trim only start/end
 }
 
 serve(async (req) => {
@@ -266,12 +279,12 @@ serve(async (req) => {
     
     console.log(`Extracted text length: ${extractedText.length} characters`);
 
-    // Sanitize Arabic text if detected
-    const sanitizedText = sanitizeArabicText(extractedText);
+    // DO NOT sanitize here - return raw extraction to preserve spacing
+    // Sanitization will be done in upload-document at the end
 
     return new Response(JSON.stringify({ 
       success: true,
-      text: sanitizedText,
+      text: extractedText, // Return raw text without sanitization
       filename: file.name,
       size: file.size
     }), {
