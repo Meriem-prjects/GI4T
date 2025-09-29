@@ -10,7 +10,7 @@ import {
   Heading3,
   Type
 } from 'lucide-react';
-import { normalizeArabicText, isArabicText, getTextDirection } from '@/lib/arabicUtils';
+import { normalizeArabicText, sanitizeArabicInput, isArabicText, getTextDirection } from '@/lib/arabicUtils';
 
 interface SimpleTextEditorProps {
   content: string;
@@ -51,7 +51,7 @@ const SimpleTextEditor: React.FC<SimpleTextEditorProps> = ({
       prefix + selectedText + suffix + 
       content.substring(end);
     
-    onChange(normalizeArabicText(newContent));
+    onChange(sanitizeArabicInput(newContent));
     
     // Set cursor position after the inserted formatting
     setTimeout(() => {
@@ -101,7 +101,7 @@ const SimpleTextEditor: React.FC<SimpleTextEditorProps> = ({
       newLine + 
       content.substring(lineEnd);
     
-    onChange(normalizeArabicText(newContent));
+    onChange(sanitizeArabicInput(newContent));
     
     // Set cursor position
     setTimeout(() => {
@@ -132,6 +132,34 @@ const SimpleTextEditor: React.FC<SimpleTextEditorProps> = ({
       {children}
     </Button>
   );
+
+  const handlePaste = (e: React.ClipboardEvent<HTMLTextAreaElement>) => {
+    e.preventDefault();
+    const clipboardData = e.clipboardData.getData('text/plain');
+    const sanitizedText = sanitizeArabicInput(clipboardData);
+    
+    if (!textareaRef.current) return;
+    
+    const textarea = textareaRef.current;
+    const start = textarea.selectionStart;
+    const end = textarea.selectionEnd;
+    
+    const newContent = 
+      content.substring(0, start) + 
+      sanitizedText + 
+      content.substring(end);
+    
+    onChange(newContent);
+    
+    // Set cursor position after the pasted content
+    setTimeout(() => {
+      textarea.focus();
+      textarea.setSelectionRange(
+        start + sanitizedText.length,
+        start + sanitizedText.length
+      );
+    }, 0);
+  };
 
   return (
     <div className={`border rounded-lg ${className}`}>
@@ -189,7 +217,8 @@ const SimpleTextEditor: React.FC<SimpleTextEditorProps> = ({
         <Textarea
           ref={textareaRef}
           value={content}
-          onChange={(e) => onChange(normalizeArabicText(e.target.value))}
+          onChange={(e) => onChange(sanitizeArabicInput(e.target.value))}
+          onPaste={handlePaste}
           placeholder={placeholder}
           className={`min-h-[400px] border-0 focus-visible:ring-0 resize-none text-sm leading-relaxed ${
             isArabic ? 'font-arabic arabic-text' : 'font-mono'

@@ -1,5 +1,5 @@
 // Utility functions for formatting and stripping content
-import { normalizeArabicText, isArabicText } from '@/lib/arabicUtils';
+import { sanitizeArabicInput, normalizeArabicText, isArabicText } from '@/lib/arabicUtils';
 
 /**
  * Converts simple text formatting markers to HTML for display
@@ -7,11 +7,11 @@ import { normalizeArabicText, isArabicText } from '@/lib/arabicUtils';
 export const renderFormattedContent = (content: string): string => {
   if (!content) return '';
   
-  // Normalize Arabic content for consistent rendering
-  const normalizedContent = normalizeArabicText(content);
+  // Sanitize Arabic content for consistent rendering
+  const sanitizedContent = sanitizeArabicInput(content);
   
   // Split content into lines to process line-by-line
-  const lines = normalizedContent.split('\n');
+  const lines = sanitizedContent.split('\n');
   
   const processedLines = lines.map(line => {
     // Process headings (must be at start of line)
