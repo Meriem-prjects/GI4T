@@ -89,19 +89,26 @@ Niveaux de juridiction disponibles:
 ${jurisdictionLevels.map(level => `- ${level.name} (${level.name_ar})`).join('\n')}
 
 TÂCHES À ACCOMPLIR:
-1. Extrais le titre, sous-titre, auteur, tribunal, case_number, year, court_level, mots-clés, demandeur, défendeur DEPUIS LES MÉTADONNÉES TEXTUELLES uniquement
+1. TITRES ET SOUS-TITRES: Utilise à la fois les métadonnées textuelles ET le contenu principal pour proposer un titre et un sous-titre pertinents et informatifs
 2. Pour les mots-clés: extrais LITTÉRALEMENT uniquement ce qui suit "اﻟﻜﻠﻤﺎت اﻟﻤﻔﺎﺗﯿﺢ" (pas de génération IA)
-3. Extrais le résumé depuis le contenu principal du document
-4. Traduis COMPLÈTEMENT le contenu entier du document en ${targetLanguage}
-5. Traduis les métadonnées textuelles extraites en ${targetLanguage}
-6. Fournis les suggestions de catégories basées sur le contenu
+3. Extrais auteur, tribunal, case_number, year, court_level, demandeur, défendeur DEPUIS LES MÉTADONNÉES TEXTUELLES uniquement
+4. Extrais le résumé depuis le contenu principal du document
+5. Traduis COMPLÈTEMENT le contenu entier du document en ${targetLanguage}
+6. Traduis les métadonnées textuelles extraites en ${targetLanguage}
+7. Fournis les suggestions de catégories basées sur le contenu
+
+STRATÉGIE POUR TITRE ET SOUS-TITRE:
+- Analyse d'abord les métadonnées textuelles pour identifier les éléments de base
+- Enrichis avec le contenu principal pour créer des titres plus informatifs et contextuels
+- Assure-toi que le titre reflète l'essence juridique du document
+- Le sous-titre doit compléter le titre avec des informations spécifiques (cour, date, parties, etc.)
 
 IMPORTANT: Les champs "textualMetadataTranslated" et "translatedContent" doivent contenir les VRAIES TRADUCTIONS, pas des descriptions !
 
 Réponds uniquement en JSON valide avec cette structure exacte :
 {
-  "title": "titre principal extrait UNIQUEMENT des métadonnées textuelles",
-  "subtitle": "sous-titre extrait UNIQUEMENT des métadonnées textuelles", 
+  "title": "titre principal proposé en analysant les métadonnées textuelles ET le contenu principal",
+  "subtitle": "sous-titre proposé en analysant les métadonnées textuelles ET le contenu principal", 
   "translatedTitle": "traduction complète du titre en ${targetLanguage}",
   "translatedSubtitle": "traduction complète du sous-titre en ${targetLanguage}",
   "summary": "résumé du document en ${sourceLanguage}",
