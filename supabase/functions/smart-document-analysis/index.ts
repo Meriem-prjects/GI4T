@@ -1,7 +1,7 @@
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.57.4';
-import { sanitizeArabicText } from '../_shared/utils.ts';
+import { sanitizeArabicText, arabicSpellChecker } from '../_shared/utils.ts';
 
 const openAIApiKey = Deno.env.get('OPENAI_API_KEY');
 const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
@@ -59,23 +59,24 @@ serve(async (req) => {
 IMPORTANTES INSTRUCTIONS POUR L'EXTRACTION DEPUIS LES MÉTADONNÉES TEXTUELLES:
 1. NE MODIFIE PAS le contenu original du document - garde-le intact
 2. TRADUIS RÉELLEMENT tout le contenu en ${targetLanguage} - ne retourne jamais de descriptions ou placeholders
+3. CORRIGE AUTOMATIQUEMENT les fautes d'orthographe arabes, notamment les problèmes d'espacement (ex: "المشكلالقانوني" → "المشكل القانوني", "الحلالمقدّم" → "الحل المقدّم")
 
 RÈGLES D'EXTRACTION SPÉCIFIQUES:
 
 EXTRACTION DEPUIS LES MÉTADONNÉES TEXTUELLES:
-3. TITRE: Extrais le titre principal depuis les métadonnées textuelles (généralement après "المشكل القانوني" ou "المشكل" ou dans la première ligne significative)
-4. SOUS-TITRE: Extrais le sous-titre depuis les métadonnées textuelles (généralement la ligne qui suit le titre principal ou après "الحل المقدم")  
-5. AUTEUR: Cherche le premier nom propre qui apparaît dans les métadonnées textuelles. Si "مرصد الحقوق الأساسية" est présent, utilise-le. Sinon, utilise le premier nom de personne trouvé.
-6. TRIBUNAL: Extrais depuis les métadonnées textuelles
-7. CASE_NUMBER: Extrais depuis les métadonnées textuelles  
-8. YEAR: Extrais depuis les métadonnées textuelles
-9. COURT_LEVEL: Extrais depuis les métadonnées textuelles
-10. MOTS-CLÉS: Extrais UNIQUEMENT et LITTÉRALEMENT ce qui suit "اﻟﻜﻠﻤﺎت اﻟﻤﻔﺎﺗﯿﺢ" dans les métadonnées textuelles (pas de génération IA)
-11. DEMANDEUR: Extrais depuis les métadonnées textuelles
-12. DÉFENDEUR: Extrais depuis les métadonnées textuelles
+4. TITRE: Extrais le titre principal depuis les métadonnées textuelles (généralement après "المشكل القانوني" ou "المشكل" ou dans la première ligne significative)
+5. SOUS-TITRE: Extrais le sous-titre depuis les métadonnées textuelles (généralement la ligne qui suit le titre principal ou après "الحل المقدم")
+6. AUTEUR: Cherche le premier nom propre qui apparaît dans les métadonnées textuelles. Si "مرصد الحقوق الأساسية" est présent, utilise-le. Sinon, utilise le premier nom de personne trouvé.
+7. TRIBUNAL: Extrais depuis les métadonnées textuelles
+8. CASE_NUMBER: Extrais depuis les métadonnées textuelles  
+9. YEAR: Extrais depuis les métadonnées textuelles
+10. COURT_LEVEL: Extrais depuis les métadonnées textuelles
+11. MOTS-CLÉS: Extrais UNIQUEMENT et LITTÉRALEMENT ce qui suit "اﻟﻜﻠﻤﺎت اﻟﻤﻔﺎﺗﯿﺢ" dans les métadonnées textuelles (pas de génération IA)
+12. DEMANDEUR: Extrais depuis les métadonnées textuelles
+13. DÉFENDEUR: Extrais depuis les métadonnées textuelles
 
 EXTRACTION DEPUIS LE CONTENU PRINCIPAL:
-13. RÉSUMÉ: Génère un résumé synthétique depuis le contenu principal du document
+14. RÉSUMÉ: Génère un résumé synthétique depuis le contenu principal du document
 
 Catégories disponibles:
 ${categories.map(cat => `- ${cat.name} (${cat.name_ar})`).join('\n')}
@@ -144,6 +145,12 @@ Réponds uniquement en JSON valide avec cette structure exacte :
   }
 }`;
 
+    // Apply spell checker before sending to AI if Arabic
+    const correctedTextualMetadata = isPrimaryArabic ? arabicSpellChecker(textualMetadata) : textualMetadata;
+    const correctedContent = isPrimaryArabic ? arabicSpellChecker(content) : content;
+    
+    console.log('Applied Arabic spell checker before AI analysis');
+
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
       headers: {
@@ -157,10 +164,10 @@ Réponds uniquement en JSON valide avec cette structure exacte :
           { role: 'user', content: `Analyse ce document en respectant les règles d'extraction:
 
 MÉTADONNÉES TEXTUELLES (extraire titre, sous-titre, auteur, tribunal, case_number, year, court_level, mots-clés après "اﻟﻜﻠﻤﺎت اﻟﻤﻔﺎﺗﯿﺢ", demandeur, défendeur):
-${textualMetadata}
+${correctedTextualMetadata}
 
 CONTENU PRINCIPAL (extraire résumé):
-${content}` }
+${correctedContent}` }
         ],
         response_format: { type: "json_object" },
         temperature: 0.3,
@@ -233,22 +240,69 @@ ${content}` }
     console.log('Analysis completed successfully');
     console.log('Suggestion matching results:', suggestionIds);
 
-    // Sanitize Arabic text in analysis results if language is Arabic
+    // Apply spell checker and sanitize Arabic text in analysis results if language is Arabic
     if (currentLanguage === 'ar' || analysisResult.language === 'ar') {
-      analysisResult.title = sanitizeArabicText(analysisResult.title);
-      analysisResult.subtitle = analysisResult.subtitle ? sanitizeArabicText(analysisResult.subtitle) : analysisResult.subtitle;
-      analysisResult.summary = sanitizeArabicText(analysisResult.summary);
-      analysisResult.content = sanitizeArabicText(analysisResult.content);
+      // Apply spell checker first, then sanitize
+      analysisResult.title = sanitizeArabicText(arabicSpellChecker(analysisResult.title));
+      analysisResult.subtitle = analysisResult.subtitle ? sanitizeArabicText(arabicSpellChecker(analysisResult.subtitle)) : analysisResult.subtitle;
+      analysisResult.summary = sanitizeArabicText(arabicSpellChecker(analysisResult.summary));
+      analysisResult.content = sanitizeArabicText(arabicSpellChecker(analysisResult.content));
+      
       if (analysisResult.existingKeywords) {
-        analysisResult.existingKeywords = analysisResult.existingKeywords.map((k: string) => sanitizeArabicText(k));
+        analysisResult.existingKeywords = analysisResult.existingKeywords.map((k: string) => 
+          sanitizeArabicText(arabicSpellChecker(k))
+        );
       }
+      
+      if (analysisResult.suggestedKeywords) {
+        analysisResult.suggestedKeywords = analysisResult.suggestedKeywords.map((k: string) => 
+          sanitizeArabicText(arabicSpellChecker(k))
+        );
+      }
+      
+      if (analysisResult.translatedKeywords) {
+        analysisResult.translatedKeywords = analysisResult.translatedKeywords.map((k: string) => 
+          sanitizeArabicText(arabicSpellChecker(k))
+        );
+      }
+      
       if (analysisResult.metadata) {
         for (const key of Object.keys(analysisResult.metadata)) {
           if (typeof analysisResult.metadata[key] === 'string') {
-            analysisResult.metadata[key] = sanitizeArabicText(analysisResult.metadata[key]);
+            analysisResult.metadata[key] = sanitizeArabicText(arabicSpellChecker(analysisResult.metadata[key]));
           }
         }
       }
+      
+      if (analysisResult.metadataTranslated) {
+        for (const key of Object.keys(analysisResult.metadataTranslated)) {
+          if (typeof analysisResult.metadataTranslated[key] === 'string') {
+            analysisResult.metadataTranslated[key] = sanitizeArabicText(arabicSpellChecker(analysisResult.metadataTranslated[key]));
+          }
+        }
+      }
+      
+      if (analysisResult.textualMetadataTranslated) {
+        analysisResult.textualMetadataTranslated = sanitizeArabicText(arabicSpellChecker(analysisResult.textualMetadataTranslated));
+      }
+      
+      if (analysisResult.translatedContent) {
+        analysisResult.translatedContent = sanitizeArabicText(arabicSpellChecker(analysisResult.translatedContent));
+      }
+      
+      if (analysisResult.translatedTitle) {
+        analysisResult.translatedTitle = sanitizeArabicText(arabicSpellChecker(analysisResult.translatedTitle));
+      }
+      
+      if (analysisResult.translatedSubtitle) {
+        analysisResult.translatedSubtitle = sanitizeArabicText(arabicSpellChecker(analysisResult.translatedSubtitle));
+      }
+      
+      if (analysisResult.translatedSummary) {
+        analysisResult.translatedSummary = sanitizeArabicText(arabicSpellChecker(analysisResult.translatedSummary));
+      }
+      
+      console.log('Applied spell checker and sanitization to all Arabic analysis results');
     }
 
     return new Response(JSON.stringify({
