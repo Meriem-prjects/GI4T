@@ -1,47 +1,86 @@
 // Arabic text utilities for normalization and detection
 
 /**
- * Normalizes Arabic text using NFKC normalization plus cleanup
- * - Uses NFKC to convert presentation forms to base characters
- * - Strips control characters (ZWJ, ZWNJ, LRM, RLM, tatweel)
- * - Remaps non-standard Arabic characters (Persian kaf/yeh, alternate heh)
- * - Reorders diacritics (Shadda before vowel marks)
+ * Conservative Arabic text sanitization (matches backend behavior)
+ * - Uses NFD normalization (preserves visual display)
+ * - Keeps ZWJ, ZWNJ, tatweel (essential for Arabic ligatures)
+ * - Only removes BOM and truly unnecessary control characters
+ * - Minimal character remapping (only Persian variants)
  */
-export const normalizeArabicText = (text: string): string => {
-  if (!text) return text;
+export const sanitizeArabicText = (text: string | null | undefined): string => {
+  if (!text) return '';
   
-  // Step 1: NFKC normalization (converts presentation forms to base forms)
-  let normalized = text.normalize('NFKC');
+  // NFD normalization (gentle, preserves display)
+  let sanitized = text.normalize('NFD');
   
-  // Step 2: Strip problematic control characters
-  normalized = normalized
-    .replace(/[\u200B-\u200F]/g, '') // ZWSP, ZWNJ, ZWJ, LRM, RLM, etc.
-    .replace(/\u0640/g, '');          // Arabic Tatweel
+  // Remove only BOM and some unnecessary control characters
+  sanitized = sanitized
+    .replace(/\uFEFF/g, '') // BOM
+    .replace(/[\u200E\u200F]/g, ''); // LRM/RLM only (keep ZWJ/ZWNJ)
   
-  // Step 3: Remap non-standard Arabic characters to standard forms
-  const charMap: Record<string, string> = {
-    // Persian/Urdu Kaf → Arabic Kaf
-    '\u06A9': '\u0643',  // ک → ك
-    '\u06AF': '\u0643',  // گ → ك
-    // Persian/Urdu Yeh → Arabic Yeh
-    '\u06CC': '\u064A',  // ی → ي
-    '\u06D2': '\u064A',  // ے → ي
-    // Alternate Heh forms → Arabic Heh
-    '\u06C1': '\u0647',  // ہ → ه
-    '\u06BE': '\u0647',  // ھ → ه
-    '\uFEEB': '\u0647',  // ﻫ → ه (presentation form)
-    '\uFEEC': '\u0647',  // ﻬ → ه (presentation form)
+  // Minimal selective conversion of problematic presentation forms
+  const minimalCharMap: Record<string, string> = {
+    '\u06A9': '\u0643', // Persian Kaf → Arabic Kaf
+    '\u06CC': '\u064A', // Persian Yeh → Arabic Yeh
   };
   
-  for (const [from, to] of Object.entries(charMap)) {
-    normalized = normalized.replace(new RegExp(from, 'g'), to);
+  for (const [from, to] of Object.entries(minimalCharMap)) {
+    sanitized = sanitized.replace(new RegExp(from, 'g'), to);
   }
   
-  // Step 4: Reorder diacritics (Shadda \u0651 should come before vowel marks)
-  // Match: vowel mark followed by shadda, then swap them
-  normalized = normalized.replace(/([\u064B-\u0650\u0652])(\u0651)/g, '$2$1');
+  return sanitized;
+};
+
+/**
+ * Arabic spell checker for spacing issues
+ * Corrects common Arabic spacing errors like "المشكلالقانوني" → "المشكل القانوني"
+ * Should only be used on explicit user action (e.g., "Nettoyer l'arabe" button)
+ */
+export const arabicSpellChecker = (text: string): string => {
+  if (!text || !isArabicText(text)) return text;
   
-  return normalized;
+  let corrected = text;
+  let corrections = 0;
+  
+  // Pattern 1: ال + word + ال + word (e.g., "المشكلالقانوني" → "المشكل القانوني")
+  const pattern1Regex = /(ال[\u0621-\u064A]+)(ال[\u0621-\u064A]+)/g;
+  corrected = corrected.replace(pattern1Regex, (match, p1, p2) => {
+    corrections++;
+    return `${p1} ${p2}`;
+  });
+  
+  // Pattern 2: word + ال + word (e.g., "الحلالمقدّم" → "الحل المقدّم")
+  const pattern2Regex = /([\u0621-\u064A]+)(ال[\u0621-\u064A]+)/g;
+  corrected = corrected.replace(pattern2Regex, (match, p1, p2, offset) => {
+    // Only apply if not at start of text and previous char is not a space
+    if (offset > 0 && text[offset - 1] !== ' ') {
+      corrections++;
+      return `${p1} ${p2}`;
+    }
+    return match;
+  });
+  
+  // Pattern 3: Multiple consecutive words without spaces (e.g., "القانونالمدنيالمغربي")
+  const pattern3Regex = /(ال[\u0621-\u064A]+)(ال[\u0621-\u064A]+)(ال[\u0621-\u064A]+)/g;
+  corrected = corrected.replace(pattern3Regex, (match, p1, p2, p3) => {
+    corrections++;
+    return `${p1} ${p2} ${p3}`;
+  });
+  
+  if (corrections > 0) {
+    console.log(`[arabicSpellChecker] Applied ${corrections} spacing corrections`);
+  }
+  
+  return corrected;
+};
+
+/**
+ * Aggressive normalization (deprecated, use sanitizeArabicText instead)
+ * Kept for backward compatibility only
+ */
+export const normalizeArabicText = (text: string): string => {
+  console.warn('[normalizeArabicText] DEPRECATED: Use sanitizeArabicText() instead');
+  return sanitizeArabicText(text);
 };
 
 /**
