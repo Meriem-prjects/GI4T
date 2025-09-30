@@ -415,23 +415,56 @@ serve(async (req) => {
           console.log(`   - Char count: ${charCount}`);
           console.log(`   - Avg word length: ${avgWordLength.toFixed(1)} chars`);
           
-          // Normal Arabic word length is ~4-8 chars. If average is >15, likely glued text
+          // Analyze individual word lengths to detect glued words
+          const words = extractedText.split(/\s+/).filter(w => w.length > 0);
+          const longWords = words.filter(w => w.length > 15);
+          const veryLongWords = words.filter(w => w.length > 25);
+          
+          console.log(`   - Words >15 chars: ${longWords.length} (${(longWords.length/wordCount*100).toFixed(1)}%)`);
+          console.log(`   - Words >25 chars: ${veryLongWords.length} (${(veryLongWords.length/wordCount*100).toFixed(1)}%)`);
+          
+          if (longWords.length > 0) {
+            console.log(`   - Sample long words: ${longWords.slice(0, 3).map(w => `"${w}" (${w.length})`).join(', ')}`);
+          }
+          
+          // Normal Arabic word length is ~4-8 chars. Adjusted thresholds for Arabic
           let qualityScore = 100;
-          if (avgWordLength > 15) {
-            qualityScore = 30; // Poor quality
-            console.warn(`⚠️ Poor extraction quality detected (avg word length: ${avgWordLength.toFixed(1)}, expected: 4-8)`);
-            console.warn(`   This suggests words are glued together. Consider using OCR.`);
+          extractionQuality = 100;
+          
+          // More aggressive quality detection for Arabic
+          if (language === 'ar') {
+            // If >20% of words are very long (>15 chars), likely glued text
+            const longWordRatio = longWords.length / Math.max(wordCount, 1);
             
-            // For Arabic documents with poor quality, force OCR
-            if (language === 'ar') {
-              console.log('🔄 Forcing OCR for Arabic document due to poor quality...');
-              throw new Error('Poor extraction quality detected, forcing OCR');
+            if (avgWordLength > 12 || longWordRatio > 0.2) {
+              qualityScore = 25; // Very poor quality
+              extractionQuality = 25;
+              console.error(`❌ Very poor extraction quality for Arabic text`);
+              console.error(`   - Avg word length: ${avgWordLength.toFixed(1)} (expected: 4-8)`);
+              console.error(`   - Long words ratio: ${(longWordRatio * 100).toFixed(1)}% (expected: <20%)`);
+              console.error(`   - Text appears to have many glued words, forcing OCR...`);
+              
+              throw new Error('Poor Arabic extraction quality detected - words are glued together, forcing OCR');
+            } else if (avgWordLength > 9 || longWordRatio > 0.1) {
+              qualityScore = 50; // Moderate quality
+              extractionQuality = 50;
+              console.warn(`⚠️ Moderate extraction quality for Arabic text (avg: ${avgWordLength.toFixed(1)}, long words: ${(longWordRatio * 100).toFixed(1)}%)`);
+            } else {
+              console.log(`✅ Good extraction quality for Arabic text (avg: ${avgWordLength.toFixed(1)})`);
             }
-          } else if (avgWordLength > 10) {
-            qualityScore = 60; // Moderate quality
-            console.log(`ℹ️ Moderate extraction quality (avg word length: ${avgWordLength.toFixed(1)})`);
           } else {
-            console.log(`✅ Good extraction quality (avg word length: ${avgWordLength.toFixed(1)})`);
+            // Non-Arabic quality check (more lenient)
+            if (avgWordLength > 15) {
+              qualityScore = 40;
+              extractionQuality = 40;
+              console.warn(`⚠️ Poor extraction quality (avg word length: ${avgWordLength.toFixed(1)})`);
+            } else if (avgWordLength > 10) {
+              qualityScore = 70;
+              extractionQuality = 70;
+              console.log(`ℹ️ Moderate extraction quality (avg word length: ${avgWordLength.toFixed(1)})`);
+            } else {
+              console.log(`✅ Good extraction quality (avg word length: ${avgWordLength.toFixed(1)})`);
+            }
           }
           
           console.log(`📈 Quality score: ${qualityScore}/100`);

@@ -73,6 +73,8 @@ function extractUnicodeText(pdfString: string, encoding: string): string {
     
     // Extract from text array commands with spacing support
     const tjArrayMatches = block.match(/\[([^\]]+)\]\s*TJ/g) || [];
+    console.log(`[${encoding}] Found ${tjArrayMatches.length} TJ arrays in block`);
+    
     for (const match of tjArrayMatches) {
       const arrayContent = match.match(/\[([^\]]+)\]/)?.[1] || '';
       
@@ -80,26 +82,49 @@ function extractUnicodeText(pdfString: string, encoding: string): string {
       const elements = arrayContent.match(/\(([^)]*(?:\\.[^)]*)*)\)|(-?\d+(?:\.\d+)?)/g) || [];
       let lineText = '';
       
-      for (const elem of elements) {
+      console.log(`[TJ Array] Processing ${elements.length} elements`);
+      
+      for (let i = 0; i < elements.length; i++) {
+        const elem = elements[i];
         if (elem.startsWith('(')) {
           // Text string
           const text = elem.match(/\(([^)]*(?:\\.[^)]*)*)\)/)?.[1] || '';
           const processed = processUnicodeString(text);
           if (processed) {
             lineText += processed;
+            console.log(`[TJ Array ${i}] Text: "${processed}"`);
           }
         } else {
-          // Numeric spacing value - lower threshold for better space detection
+          // Numeric spacing value - DRASTICALLY reduced threshold for Arabic
           const spacing = parseFloat(elem);
-          if (Math.abs(spacing) >= 80) { // Reduced from 120 to 80 for better Arabic space detection
+          console.log(`[TJ Array ${i}] Spacing value: ${spacing}`);
+          
+          // Reduced from 80 to 35 for much better Arabic space detection
+          if (Math.abs(spacing) >= 35) {
             lineText += ' ';
-            console.log(`[TJ Array] Space inserted at spacing: ${spacing}`);
+            console.log(`[TJ Array ${i}] ✓ Space inserted (spacing: ${spacing}, threshold: 35)`);
+          } else {
+            console.log(`[TJ Array ${i}] ✗ No space (spacing: ${spacing} < 35)`);
           }
         }
       }
       
       if (lineText.trim().length > 0 && isValidText(lineText)) {
         extractedText += lineText + '\n'; // Keep line breaks
+        console.log(`[TJ Array] Final line text: "${lineText.substring(0, 100)}..."`);
+      }
+    }
+    
+    // Also detect text positioning commands (Td, TD, Tm) which indicate spaces
+    const positioningRegex = /(-?\d+(?:\.\d+)?)\s+(-?\d+(?:\.\d+)?)\s+T[dm]/g;
+    let posMatch;
+    while ((posMatch = positioningRegex.exec(block)) !== null) {
+      const xOffset = parseFloat(posMatch[1]);
+      const yOffset = parseFloat(posMatch[2]);
+      
+      // Significant horizontal movement indicates a space
+      if (Math.abs(xOffset) > 10) {
+        console.log(`[Positioning] Detected space via Td/TD command (xOffset: ${xOffset})`);
       }
     }
   }
@@ -246,13 +271,50 @@ function isValidText(text: string): boolean {
 
 function cleanText(text: string): string {
   console.log(`[cleanText] Input: ${text.length} chars`);
-  const cleaned = text
+  
+  let cleaned = text
     .replace(/\0/g, '') // Remove null bytes
     .replace(/[\x00-\x08\x0B-\x0C\x0E-\x1F\x7F]/g, '') // Remove control chars except \n, \r, \t
     .replace(/(.)\1{5,}/g, '$1$1') // Reduce excessive repetition only
     .trim(); // Trim only start/end
+  
+  // Post-processing: Add intelligent space insertion for Arabic text
+  cleaned = addIntelligentArabicSpaces(cleaned);
+  
   console.log(`[cleanText] Output: ${cleaned.length} chars, line breaks preserved`);
   return cleaned;
+}
+
+// Intelligent space insertion for Arabic text based on linguistic patterns
+function addIntelligentArabicSpaces(text: string): string {
+  console.log('[Arabic Post-Processing] Analyzing text for missing spaces...');
+  
+  // Pattern 1: Insert space before "ال" (the definite article) when it's glued to previous word
+  // Match: "wordال" -> "word ال"
+  text = text.replace(/([^\s])(\u0627\u0644[\u0621-\u064A]+)/g, '$1 $2');
+  
+  // Pattern 2: Insert space after long words (>15 chars) that are likely glued
+  // This catches cases like "المشكلالقانوني" and tries to split intelligently
+  const arabicWordRegex = /[\u0600-\u06FF]{16,}/g;
+  text = text.replace(arabicWordRegex, (match) => {
+    console.log(`[Arabic Post-Processing] Found long word (${match.length} chars): "${match}"`);
+    
+    // Try to split at natural boundaries: "ال", "في", "من", "على"
+    let split = match
+      .replace(/(\u0627\u0644[\u0621-\u064A]{2,})/g, ' $1') // Before "ال..."
+      .replace(/(\u0641\u064A)/g, ' $1') // Before "في"
+      .replace(/(\u0645\u0646)/g, ' $1') // Before "من"
+      .replace(/(\u0639\u0644\u0649)/g, ' $1'); // Before "على"
+    
+    console.log(`[Arabic Post-Processing] Split result: "${split}"`);
+    return split;
+  });
+  
+  // Pattern 3: Clean up multiple spaces
+  text = text.replace(/\s{2,}/g, ' ');
+  
+  console.log('[Arabic Post-Processing] Completed');
+  return text;
 }
 
 serve(async (req) => {
