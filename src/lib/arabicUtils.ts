@@ -22,6 +22,9 @@ export const sanitizeArabicText = (text: string): string => {
   const minimalCharMap: Record<string, string> = {
     '\u06A9': '\u0643', // Persian Kaf → Arabic Kaf
     '\u06CC': '\u064A', // Persian Yeh → Arabic Yeh
+    '\uFB6B': '\u0647', // ﮫ → ه (HEH presentation form)
+    '\uFEEB': '\u0647', // ﻫ → ه (HEH initial form)
+    '\uFEEC': '\u0647', // ﻬ → ه (HEH medial form)
   };
   
   for (const [from, to] of Object.entries(minimalCharMap)) {
