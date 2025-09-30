@@ -49,7 +49,7 @@ const BatchDocumentUploader: React.FC<BatchDocumentUploaderProps> = ({ onDocumen
   const [documentTypes, setDocumentTypes] = useState<DocumentType[]>([]);
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
   const [selectedDocumentType, setSelectedDocumentType] = useState<string>('');
-  const [selectedLanguage, setSelectedLanguage] = useState<string>('fr');
+  const [selectedLanguage, setSelectedLanguage] = useState<string>('ar');
 
   // Load categories and document types
   React.useEffect(() => {
