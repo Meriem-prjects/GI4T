@@ -289,31 +289,53 @@ function cleanText(text: string): string {
 function addIntelligentArabicSpaces(text: string): string {
   console.log('[Arabic Post-Processing] Analyzing text for missing spaces...');
   
-  // Pattern 1: Insert space before "ال" (the definite article) when it's glued to previous word
-  // Match: "wordال" -> "word ال"
-  text = text.replace(/([^\s])(\u0627\u0644[\u0621-\u064A]+)/g, '$1 $2');
-  
-  // Pattern 2: Insert space after long words (>15 chars) that are likely glued
-  // This catches cases like "المشكلالقانوني" and tries to split intelligently
-  const arabicWordRegex = /[\u0600-\u06FF]{16,}/g;
-  text = text.replace(arabicWordRegex, (match) => {
-    console.log(`[Arabic Post-Processing] Found long word (${match.length} chars): "${match}"`);
-    
-    // Try to split at natural boundaries: "ال", "في", "من", "على"
-    let split = match
-      .replace(/(\u0627\u0644[\u0621-\u064A]{2,})/g, ' $1') // Before "ال..."
-      .replace(/(\u0641\u064A)/g, ' $1') // Before "في"
-      .replace(/(\u0645\u0646)/g, ' $1') // Before "من"
-      .replace(/(\u0639\u0644\u0649)/g, ' $1'); // Before "على"
-    
-    console.log(`[Arabic Post-Processing] Split result: "${split}"`);
-    return split;
-  });
-  
-  // Pattern 3: Clean up multiple spaces
-  text = text.replace(/\s{2,}/g, ' ');
+  // Apply the dedicated Arabic glue fixer
+  text = arabicGlueFixer(text);
   
   console.log('[Arabic Post-Processing] Completed');
+  return text;
+}
+
+// Dedicated Arabic glue fixer for "لال" → "ل ال" and related issues
+function arabicGlueFixer(text: string): string {
+  console.log('[Arabic Glue Fixer] Processing text...');
+  
+  // Unicode character classes including presentation forms
+  const LAM_CLASS = '[\\u0644\\uFEEB-\\uFEEE]';  // ل and its presentation forms
+  const ALEF_CLASS = '[\\u0627\\uFE8D\\uFE8E]';  // ا and its presentation forms
+  const ALIF_LAM = `(?:${ALEF_CLASS}(?:\\u0644|[\\uFEEB-\\uFEEE]))`;  // ال combinations
+  
+  // Arabic letter range (including all forms and diacritics)
+  const ARABIC_ALL_CLASS = '[\\u0600-\\u06FF\\u0750-\\u077F\\u08A0-\\u08FF\\uFB50-\\uFDFF\\uFE70-\\uFEFF]';
+  const ARABIC_OR_DIGIT = '[\\u0600-\\u06FF\\u0750-\\u077F\\u08A0-\\u08FF\\uFB50-\\uFDFF\\uFE70-\\uFEFF0-9]';
+  
+  let replacementCount = 0;
+  let spaceBeforeAlCount = 0;
+  
+  // Rule 1: Fix "لال" → "ل ال" (Lam + Alif-Lam combination)
+  // This handles cases like "المشكلالقانوني" where ل+ال are glued
+  const lamAlifLamRegex = new RegExp(`(${LAM_CLASS})(${ALIF_LAM})`, 'gu');
+  text = text.replace(lamAlifLamRegex, (match, lam, alifLam) => {
+    replacementCount++;
+    console.log(`[Glue Fix ${replacementCount}] "${match}" → "${lam} ${alifLam}"`);
+    return `${lam} ${alifLam}`;
+  });
+  
+  // Rule 2: Insert space before "ال" when glued to preceding Arabic character or digit
+  // This handles "wordال" → "word ال"
+  const gluedAlifLamRegex = new RegExp(`(${ARABIC_OR_DIGIT})((?:${ALIF_LAM})${ARABIC_ALL_CLASS}+)`, 'gu');
+  text = text.replace(gluedAlifLamRegex, (match, before, alifLamWord) => {
+    // Don't add space if there's already one
+    if (match.includes(' ')) return match;
+    spaceBeforeAlCount++;
+    console.log(`[Space Before ال ${spaceBeforeAlCount}] "${match}" → "${before} ${alifLamWord}"`);
+    return `${before} ${alifLamWord}`;
+  });
+  
+  // Rule 3: Clean up multiple spaces
+  text = text.replace(/\s{2,}/g, ' ');
+  
+  console.log(`[Arabic Glue Fixer] Completed: ${replacementCount} لال fixes, ${spaceBeforeAlCount} space insertions`);
   return text;
 }
 

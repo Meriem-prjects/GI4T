@@ -132,6 +132,49 @@ function deepSanitize(value: any): any {
   return value;
 }
 
+// Dedicated Arabic glue fixer for "لال" → "ل ال" and related issues
+function arabicGlueFixer(text: string): string {
+  console.log('[Arabic Glue Fixer] Processing text...');
+  
+  // Unicode character classes including presentation forms
+  const LAM_CLASS = '[\\u0644\\uFEEB-\\uFEEE]';  // ل and its presentation forms
+  const ALEF_CLASS = '[\\u0627\\uFE8D\\uFE8E]';  // ا and its presentation forms
+  const ALIF_LAM = `(?:${ALEF_CLASS}(?:\\u0644|[\\uFEEB-\\uFEEE]))`;  // ال combinations
+  
+  // Arabic letter range (including all forms and diacritics)
+  const ARABIC_ALL_CLASS = '[\\u0600-\\u06FF\\u0750-\\u077F\\u08A0-\\u08FF\\uFB50-\\uFDFF\\uFE70-\\uFEFF]';
+  const ARABIC_OR_DIGIT = '[\\u0600-\\u06FF\\u0750-\\u077F\\u08A0-\\u08FF\\uFB50-\\uFDFF\\uFE70-\\uFEFF0-9]';
+  
+  let replacementCount = 0;
+  let spaceBeforeAlCount = 0;
+  
+  // Rule 1: Fix "لال" → "ل ال" (Lam + Alif-Lam combination)
+  // This handles cases like "المشكلالقانوني" where ل+ال are glued
+  const lamAlifLamRegex = new RegExp(`(${LAM_CLASS})(${ALIF_LAM})`, 'gu');
+  text = text.replace(lamAlifLamRegex, (match, lam, alifLam) => {
+    replacementCount++;
+    console.log(`[Glue Fix ${replacementCount}] "${match}" → "${lam} ${alifLam}"`);
+    return `${lam} ${alifLam}`;
+  });
+  
+  // Rule 2: Insert space before "ال" when glued to preceding Arabic character or digit
+  // This handles "wordال" → "word ال"
+  const gluedAlifLamRegex = new RegExp(`(${ARABIC_OR_DIGIT})((?:${ALIF_LAM})${ARABIC_ALL_CLASS}+)`, 'gu');
+  text = text.replace(gluedAlifLamRegex, (match, before, alifLamWord) => {
+    // Don't add space if there's already one
+    if (match.includes(' ')) return match;
+    spaceBeforeAlCount++;
+    console.log(`[Space Before ال ${spaceBeforeAlCount}] "${match}" → "${before} ${alifLamWord}"`);
+    return `${before} ${alifLamWord}`;
+  });
+  
+  // Rule 3: Clean up multiple spaces
+  text = text.replace(/\s{2,}/g, ' ');
+  
+  console.log(`[Arabic Glue Fixer] Completed: ${replacementCount} لال fixes, ${spaceBeforeAlCount} space insertions`);
+  return text;
+}
+
 // Function to separate content based on Arabic keyword "المشكل" 
 function separateContent(text: string): { textualMetadata: string; content: string } {
   // Enhanced keyword detection with more variations and better encoding handling
@@ -611,15 +654,21 @@ serve(async (req) => {
 
     // Apply conservative sanitization ONLY ONCE at the end for Arabic content
     if (language === 'ar') {
-      console.log('Applying final Arabic sanitization...');
+      console.log('Applying final Arabic glue fixing and sanitization...');
+      
+      // Apply Arabic glue fixer FIRST to fix spacing issues
+      finalContent = arabicGlueFixer(finalContent);
+      textualMetadata = arabicGlueFixer(textualMetadata);
+      
+      // Then apply conservative sanitization
       finalContent = sanitizeArabicText(finalContent);
       textualMetadata = sanitizeArabicText(textualMetadata);
       
-      // Also sanitize page contents
+      // Also fix and sanitize page contents
       if (pageContents && pageContents.length > 0) {
         pageContents = pageContents.map(page => ({
           ...page,
-          content: sanitizeArabicText(page.content)
+          content: sanitizeArabicText(arabicGlueFixer(page.content))
         }));
       }
     }
