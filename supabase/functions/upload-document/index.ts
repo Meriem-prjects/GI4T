@@ -135,43 +135,44 @@ function deepSanitize(value: any): any {
 // Dedicated Arabic glue fixer for "لال" → "ل ال" and related issues
 function arabicGlueFixer(text: string): string {
   console.log('[Arabic Glue Fixer] Processing text...');
-  
+
+  // 0) Normalize Lam-Alef ligatures (ﻻ, ﻼ, and variants) → "لا"
+  const lamAlefLigature = /[\uFEFB\uFEFC\uFEF5-\uFEFA]/g; // madda/hamza variants included
+  let ligCount = 0;
+  text = text.replace(lamAlefLigature, (m) => { ligCount++; return 'لا'; });
+  if (ligCount > 0) console.log(`[Arabic Glue Fixer] Expanded ${ligCount} Lam-Alef ligature(s)`);
+
   // Unicode character classes including presentation forms
-  const LAM_CLASS = '[\\u0644\\uFEEB-\\uFEEE]';  // ل and its presentation forms
-  const ALEF_CLASS = '[\\u0627\\uFE8D\\uFE8E]';  // ا and its presentation forms
-  const ALIF_LAM = `(?:${ALEF_CLASS}(?:\\u0644|[\\uFEEB-\\uFEEE]))`;  // ال combinations
-  
+  const LAM = '(?:\u0644|[\uFEEB-\uFEEE])';  // ل and its presentation forms
+  const ALEF = '(?:\u0627|\uFE8D|\uFE8E)';   // ا and its presentation forms
+  const OPTIONAL = '[\u200C\u200D\u0640\u064B-\u065F\u0670]*'; // joiners/diacritics/tatweel
+
   // Arabic letter range (including all forms and diacritics)
-  const ARABIC_ALL_CLASS = '[\\u0600-\\u06FF\\u0750-\\u077F\\u08A0-\\u08FF\\uFB50-\\uFDFF\\uFE70-\\uFEFF]';
-  const ARABIC_OR_DIGIT = '[\\u0600-\\u06FF\\u0750-\\u077F\\u08A0-\\u08FF\\uFB50-\\uFDFF\\uFE70-\\uFEFF0-9]';
-  
-  let replacementCount = 0;
-  let spaceBeforeAlCount = 0;
-  
-  // Rule 1: Fix "لال" → "ل ال" (Lam + Alif-Lam combination)
-  // This handles cases like "المشكلالقانوني" where ل+ال are glued
-  const lamAlifLamRegex = new RegExp(`(${LAM_CLASS})(${ALIF_LAM})`, 'gu');
-  text = text.replace(lamAlifLamRegex, (match, lam, alifLam) => {
-    replacementCount++;
-    console.log(`[Glue Fix ${replacementCount}] "${match}" → "${lam} ${alifLam}"`);
-    return `${lam} ${alifLam}`;
+  const ARABIC_ALL = '[\u0600-\u06FF\u0750-\u077F\u08A0-\u08FF\uFB50-\uFDFF\uFE70-\uFEFF]';
+  const ARABIC_OR_DIGIT = '[\u0600-\u06FF\u0750-\u077F\u08A0-\u08FF\uFB50-\uFDFF\uFE70-\uFEFF0-9]';
+
+  let lamAlFixes = 0;
+  let spaceBeforeAlFixes = 0;
+
+  // Rule 1: Fix "لال" (Lam + Alef + Lam) possibly with joiners → "ل ال"
+  const lamAlefLam = new RegExp(`(${LAM})${OPTIONAL}(${ALEF})${OPTIONAL}(${LAM})`, 'gu');
+  text = text.replace(lamAlefLam, (_m, l1, a, l2) => {
+    lamAlFixes++;
+    return `${l1} ${a}${l2}`; // ل ال
   });
-  
-  // Rule 2: Insert space before "ال" when glued to preceding Arabic character or digit
-  // This handles "wordال" → "word ال"
-  const gluedAlifLamRegex = new RegExp(`(${ARABIC_OR_DIGIT})((?:${ALIF_LAM})${ARABIC_ALL_CLASS}+)`, 'gu');
-  text = text.replace(gluedAlifLamRegex, (match, before, alifLamWord) => {
-    // Don't add space if there's already one
-    if (match.includes(' ')) return match;
-    spaceBeforeAlCount++;
-    console.log(`[Space Before ال ${spaceBeforeAlCount}] "${match}" → "${before} ${alifLamWord}"`);
-    return `${before} ${alifLamWord}`;
+
+  // Rule 2: Insert space before "ال" when glued to a preceding Arabic char or digit
+  const alifLamSeq = `(?:${ALEF})${OPTIONAL}(?:${LAM})`;
+  const gluedBeforeAl = new RegExp(`(${ARABIC_OR_DIGIT})(${alifLamSeq}(?:${ARABIC_ALL})+)`, 'gu');
+  text = text.replace(gluedBeforeAl, (_m, before, alWord) => {
+    spaceBeforeAlFixes++;
+    return `${before} ${alWord}`;
   });
-  
-  // Rule 3: Clean up multiple spaces
+
+  // Cleanup: collapse multiple spaces
   text = text.replace(/\s{2,}/g, ' ');
-  
-  console.log(`[Arabic Glue Fixer] Completed: ${replacementCount} لال fixes, ${spaceBeforeAlCount} space insertions`);
+
+  console.log(`[Arabic Glue Fixer] Completed: ${lamAlFixes} "لال" fixes, ${spaceBeforeAlFixes} space insertions`);
   return text;
 }
 
