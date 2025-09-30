@@ -71,60 +71,19 @@ function extractUnicodeText(pdfString: string, encoding: string): string {
       }
     }
     
-    // Extract from text array commands with spacing support
+    // Extract from text array commands
     const tjArrayMatches = block.match(/\[([^\]]+)\]\s*TJ/g) || [];
-    console.log(`[${encoding}] Found ${tjArrayMatches.length} TJ arrays in block`);
-    
     for (const match of tjArrayMatches) {
       const arrayContent = match.match(/\[([^\]]+)\]/)?.[1] || '';
-      
-      // Parse TJ array with space insertion based on numeric values
-      const elements = arrayContent.match(/\(([^)]*(?:\\.[^)]*)*)\)|(-?\d+(?:\.\d+)?)/g) || [];
-      let lineText = '';
-      
-      console.log(`[TJ Array] Processing ${elements.length} elements`);
-      
-      for (let i = 0; i < elements.length; i++) {
-        const elem = elements[i];
-        if (elem.startsWith('(')) {
-          // Text string
-          const text = elem.match(/\(([^)]*(?:\\.[^)]*)*)\)/)?.[1] || '';
+      const stringMatches = arrayContent.match(/\(([^)]*(?:\\.[^)]*)*)\)/g) || [];
+      for (const stringMatch of stringMatches) {
+        const text = stringMatch.match(/\(([^)]*(?:\\.[^)]*)*)\)/)?.[1] || '';
+        if (text.length > 1) {
           const processed = processUnicodeString(text);
-          if (processed) {
-            lineText += processed;
-            console.log(`[TJ Array ${i}] Text: "${processed}"`);
-          }
-        } else {
-          // Numeric spacing value - DRASTICALLY reduced threshold for Arabic
-          const spacing = parseFloat(elem);
-          console.log(`[TJ Array ${i}] Spacing value: ${spacing}`);
-          
-          // Reduced from 80 to 35 for much better Arabic space detection
-          if (Math.abs(spacing) >= 35) {
-            lineText += ' ';
-            console.log(`[TJ Array ${i}] ✓ Space inserted (spacing: ${spacing}, threshold: 35)`);
-          } else {
-            console.log(`[TJ Array ${i}] ✗ No space (spacing: ${spacing} < 35)`);
+          if (processed && isValidText(processed)) {
+            extractedText += processed + ' ';
           }
         }
-      }
-      
-      if (lineText.trim().length > 0 && isValidText(lineText)) {
-        extractedText += lineText + '\n'; // Keep line breaks
-        console.log(`[TJ Array] Final line text: "${lineText.substring(0, 100)}..."`);
-      }
-    }
-    
-    // Also detect text positioning commands (Td, TD, Tm) which indicate spaces
-    const positioningRegex = /(-?\d+(?:\.\d+)?)\s+(-?\d+(?:\.\d+)?)\s+T[dm]/g;
-    let posMatch;
-    while ((posMatch = positioningRegex.exec(block)) !== null) {
-      const xOffset = parseFloat(posMatch[1]);
-      const yOffset = parseFloat(posMatch[2]);
-      
-      // Significant horizontal movement indicates a space
-      if (Math.abs(xOffset) > 10) {
-        console.log(`[Positioning] Detected space via Td/TD command (xOffset: ${xOffset})`);
       }
     }
   }
@@ -270,74 +229,11 @@ function isValidText(text: string): boolean {
 }
 
 function cleanText(text: string): string {
-  console.log(`[cleanText] Input: ${text.length} chars`);
-  
-  let cleaned = text
-    .replace(/\0/g, '') // Remove null bytes
-    .replace(/[\x00-\x08\x0B-\x0C\x0E-\x1F\x7F]/g, '') // Remove control chars except \n, \r, \t
-    .replace(/(.)\1{5,}/g, '$1$1') // Reduce excessive repetition only
-    .trim(); // Trim only start/end
-  
-  // Post-processing: Add intelligent space insertion for Arabic text
-  cleaned = addIntelligentArabicSpaces(cleaned);
-  
-  console.log(`[cleanText] Output: ${cleaned.length} chars, line breaks preserved`);
-  return cleaned;
-}
-
-// Intelligent space insertion for Arabic text based on linguistic patterns
-function addIntelligentArabicSpaces(text: string): string {
-  console.log('[Arabic Post-Processing] Analyzing text for missing spaces...');
-  
-  // Apply the dedicated Arabic glue fixer
-  text = arabicGlueFixer(text);
-  
-  console.log('[Arabic Post-Processing] Completed');
-  return text;
-}
-
-// Dedicated Arabic glue fixer for "لال" → "ل ال" and related issues
-function arabicGlueFixer(text: string): string {
-  console.log('[Arabic Glue Fixer] Processing text...');
-
-  // 0) Normalize Lam-Alef ligatures (ﻻ, ﻼ, and variants) → "لا"
-  const lamAlefLigature = /[\uFEFB\uFEFC\uFEF5-\uFEFA]/g; // madda/hamza variants included
-  let ligCount = 0;
-  text = text.replace(lamAlefLigature, (m) => { ligCount++; return 'لا'; });
-  if (ligCount > 0) console.log(`[Arabic Glue Fixer] Expanded ${ligCount} Lam-Alef ligature(s)`);
-
-  // Unicode character classes including presentation forms
-  const LAM = '(?:\u0644|[\uFEEB-\uFEEE])';  // ل and its presentation forms
-  const ALEF = '(?:\u0627|\uFE8D|\uFE8E)';   // ا and its presentation forms
-  const OPTIONAL = '[\u200C\u200D\u0640\u064B-\u065F\u0670]*'; // joiners/diacritics/tatweel
-
-  // Arabic letter range (including all forms and diacritics)
-  const ARABIC_ALL = '[\u0600-\u06FF\u0750-\u077F\u08A0-\u08FF\uFB50-\uFDFF\uFE70-\uFEFF]';
-  const ARABIC_OR_DIGIT = '[\u0600-\u06FF\u0750-\u077F\u08A0-\u08FF\uFB50-\uFDFF\uFE70-\uFEFF0-9]';
-
-  let lamAlFixes = 0;
-  let spaceBeforeAlFixes = 0;
-
-  // Rule 1: Fix "لال" (Lam + Alef + Lam) possibly with joiners → "ل ال"
-  const lamAlefLam = new RegExp(`(${LAM})${OPTIONAL}(${ALEF})${OPTIONAL}(${LAM})`, 'gu');
-  text = text.replace(lamAlefLam, (_m, l1, a, l2) => {
-    lamAlFixes++;
-    return `${l1} ${a}${l2}`; // ل ال
-  });
-
-  // Rule 2: Insert space before "ال" when glued to a preceding Arabic char or digit
-  const alifLamSeq = `(?:${ALEF})${OPTIONAL}(?:${LAM})`;
-  const gluedBeforeAl = new RegExp(`(${ARABIC_OR_DIGIT})(${alifLamSeq}(?:${ARABIC_ALL})+)`, 'gu');
-  text = text.replace(gluedBeforeAl, (_m, before, alWord) => {
-    spaceBeforeAlFixes++;
-    return `${before} ${alWord}`;
-  });
-
-  // Cleanup: collapse multiple spaces
-  text = text.replace(/\s{2,}/g, ' ');
-
-  console.log(`[Arabic Glue Fixer] Completed: ${lamAlFixes} "لال" fixes, ${spaceBeforeAlFixes} space insertions`);
-  return text;
+  return text
+    .replace(/\s+/g, ' ') // Normalize spaces
+    .replace(/(.)\1{5,}/g, '$1$1') // Reduce excessive repetition
+    .replace(/[^\u0600-\u06FF\u0750-\u077F\u08A0-\u08FF\uFB50-\uFDFF\uFE70-\uFEFFa-zA-ZÀ-ÿ0-9\s.,!?;:()\-'"]/g, '') // Keep only valid chars
+    .trim();
 }
 
 serve(async (req) => {
@@ -370,12 +266,12 @@ serve(async (req) => {
     
     console.log(`Extracted text length: ${extractedText.length} characters`);
 
-    // DO NOT sanitize here - return raw extraction to preserve spacing
-    // Sanitization will be done in upload-document at the end
+    // Sanitize Arabic text if detected
+    const sanitizedText = sanitizeArabicText(extractedText);
 
     return new Response(JSON.stringify({ 
       success: true,
-      text: extractedText, // Return raw text without sanitization
+      text: sanitizedText,
       filename: file.name,
       size: file.size
     }), {

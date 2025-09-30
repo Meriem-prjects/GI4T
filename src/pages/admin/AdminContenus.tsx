@@ -101,6 +101,7 @@ const AdminContenus = () => {
           categories (name, color),
           document_types (name)
         `)
+        .neq('status', 'pending_validation')
         .order('created_at', { ascending: false });
 
       if (error) throw error;
@@ -170,10 +171,9 @@ const AdminContenus = () => {
         )
       );
 
-      const statusMessage = newStatus === 'draft' ? 'Brouillon (à corriger)' : newStatus;
       toast({
         title: "Statut mis à jour",
-        description: `Le document a été mis en ${statusMessage}`,
+        description: `Le document a été mis en brouillon`,
       });
     } catch (error) {
       console.error('Error updating document status:', error);
@@ -194,12 +194,8 @@ const AdminContenus = () => {
 
       if (error) throw error;
 
-      // Update document status in the list instead of removing it
-      setDocuments(prev => 
-        prev.map(doc => 
-          doc.id === documentId ? { ...doc, status: 'pending_validation' } : doc
-        )
-      );
+      // Remove document from current list since it's no longer visible in contents
+      setDocuments(prev => prev.filter(doc => doc.id !== documentId));
       
       toast({
         title: "Document soumis pour validation",
@@ -317,7 +313,6 @@ const AdminContenus = () => {
               <SelectContent>
                 <SelectItem value="all">Tous les statuts</SelectItem>
                 <SelectItem value="draft">Brouillons</SelectItem>
-                <SelectItem value="pending_validation">En validation</SelectItem>
                 <SelectItem value="processed">Publiés</SelectItem>
                 <SelectItem value="processing">En traitement</SelectItem>
               </SelectContent>
@@ -408,14 +403,6 @@ const AdminContenus = () => {
                       <DropdownMenuItem onClick={() => submitForValidation(document.id)}>
                         <CheckCircle className="w-4 h-4 mr-2" />
                         Faire valider
-                      </DropdownMenuItem>
-                    )}
-                    {document.status === 'pending_validation' && (
-                      <DropdownMenuItem
-                        onClick={() => updateDocumentStatus(document.id, 'draft')}
-                      >
-                        <Clock className="w-4 h-4 mr-2" />
-                        Retour à l'édition
                       </DropdownMenuItem>
                     )}
                     {document.status === 'processed' && (

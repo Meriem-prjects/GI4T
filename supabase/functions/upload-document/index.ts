@@ -132,50 +132,6 @@ function deepSanitize(value: any): any {
   return value;
 }
 
-// Dedicated Arabic glue fixer for "لال" → "ل ال" and related issues
-function arabicGlueFixer(text: string): string {
-  console.log('[Arabic Glue Fixer] Processing text...');
-
-  // 0) Normalize Lam-Alef ligatures (ﻻ, ﻼ, and variants) → "لا"
-  const lamAlefLigature = /[\uFEFB\uFEFC\uFEF5-\uFEFA]/g; // madda/hamza variants included
-  let ligCount = 0;
-  text = text.replace(lamAlefLigature, (m) => { ligCount++; return 'لا'; });
-  if (ligCount > 0) console.log(`[Arabic Glue Fixer] Expanded ${ligCount} Lam-Alef ligature(s)`);
-
-  // Unicode character classes including presentation forms
-  const LAM = '(?:\u0644|[\uFEEB-\uFEEE])';  // ل and its presentation forms
-  const ALEF = '(?:\u0627|\uFE8D|\uFE8E)';   // ا and its presentation forms
-  const OPTIONAL = '[\u200C\u200D\u0640\u064B-\u065F\u0670]*'; // joiners/diacritics/tatweel
-
-  // Arabic letter range (including all forms and diacritics)
-  const ARABIC_ALL = '[\u0600-\u06FF\u0750-\u077F\u08A0-\u08FF\uFB50-\uFDFF\uFE70-\uFEFF]';
-  const ARABIC_OR_DIGIT = '[\u0600-\u06FF\u0750-\u077F\u08A0-\u08FF\uFB50-\uFDFF\uFE70-\uFEFF0-9]';
-
-  let lamAlFixes = 0;
-  let spaceBeforeAlFixes = 0;
-
-  // Rule 1: Fix "لال" (Lam + Alef + Lam) possibly with joiners → "ل ال"
-  const lamAlefLam = new RegExp(`(${LAM})${OPTIONAL}(${ALEF})${OPTIONAL}(${LAM})`, 'gu');
-  text = text.replace(lamAlefLam, (_m, l1, a, l2) => {
-    lamAlFixes++;
-    return `${l1} ${a}${l2}`; // ل ال
-  });
-
-  // Rule 2: Insert space before "ال" when glued to a preceding Arabic char or digit
-  const alifLamSeq = `(?:${ALEF})${OPTIONAL}(?:${LAM})`;
-  const gluedBeforeAl = new RegExp(`(${ARABIC_OR_DIGIT})(${alifLamSeq}(?:${ARABIC_ALL})+)`, 'gu');
-  text = text.replace(gluedBeforeAl, (_m, before, alWord) => {
-    spaceBeforeAlFixes++;
-    return `${before} ${alWord}`;
-  });
-
-  // Cleanup: collapse multiple spaces
-  text = text.replace(/\s{2,}/g, ' ');
-
-  console.log(`[Arabic Glue Fixer] Completed: ${lamAlFixes} "لال" fixes, ${spaceBeforeAlFixes} space insertions`);
-  return text;
-}
-
 // Function to separate content based on Arabic keyword "المشكل" 
 function separateContent(text: string): { textualMetadata: string; content: string } {
   // Enhanced keyword detection with more variations and better encoding handling
@@ -342,7 +298,6 @@ serve(async (req) => {
     let pageContents: any[] | null = null;
     let processedPages: number | null = null;
     let totalPagesVar: number | null = null;
-    let extractionQuality = 100; // Track extraction quality (0-100)
     
           // Initialize analysis data at the beginning
     let analysisData = {
@@ -433,85 +388,23 @@ serve(async (req) => {
           // Always use direct extraction - no more OCR fallback
           console.log('Using PDF direct extraction result');
           
-          // DO NOT sanitize here - keep original spacing
-          fileContent = extractedText.length > 0 ? extractedText : 'Document PDF sans texte extractible';
-          extractionSuccess = true;
-          totalPagesVar = readerData.numPages || 1;
-          shouldUsePDFReader = true;
+          // Sanitize Arabic text if detected
+          const sanitizedExtractedText = language === 'ar' ? sanitizeArabicText(extractedText) : extractedText;
           
-          // Create page contents WITHOUT sanitization
-          pageContents = (readerData.texts || []).map((text: string, index: number) => ({
+           fileContent = sanitizedExtractedText.length > 0 ? sanitizedExtractedText : 'Document PDF sans texte extractible';
+           extractionSuccess = true;
+           totalPagesVar = readerData.numPages || 1;
+           shouldUsePDFReader = true;
+           
+           // Create page contents from extracted text (sanitize each page)
+           pageContents = (readerData.texts || []).map((text: string, index: number) => ({
             pageNumber: index + 1,
-            content: text.trim(), // Keep original text
+            content: language === 'ar' ? sanitizeArabicText(text.trim()) : text.trim(),
             confidence: 1.0,
             language: language // Use the provided language
           }));
           
           processedPages = readerData.numPages || 1;
-          
-          // Quality check: detect if text has many words glued together (Arabic issue)
-          const wordCount = extractedText.split(/\s+/).filter(w => w.length > 0).length;
-          const charCount = extractedText.length;
-          const avgWordLength = charCount / Math.max(wordCount, 1);
-          
-          console.log(`📊 Extraction quality analysis:`);
-          console.log(`   - Word count: ${wordCount}`);
-          console.log(`   - Char count: ${charCount}`);
-          console.log(`   - Avg word length: ${avgWordLength.toFixed(1)} chars`);
-          
-          // Analyze individual word lengths to detect glued words
-          const words = extractedText.split(/\s+/).filter(w => w.length > 0);
-          const longWords = words.filter(w => w.length > 15);
-          const veryLongWords = words.filter(w => w.length > 25);
-          
-          console.log(`   - Words >15 chars: ${longWords.length} (${(longWords.length/wordCount*100).toFixed(1)}%)`);
-          console.log(`   - Words >25 chars: ${veryLongWords.length} (${(veryLongWords.length/wordCount*100).toFixed(1)}%)`);
-          
-          if (longWords.length > 0) {
-            console.log(`   - Sample long words: ${longWords.slice(0, 3).map(w => `"${w}" (${w.length})`).join(', ')}`);
-          }
-          
-          // Normal Arabic word length is ~4-8 chars. Adjusted thresholds for Arabic
-          let qualityScore = 100;
-          extractionQuality = 100;
-          
-          // More aggressive quality detection for Arabic
-          if (language === 'ar') {
-            // If >20% of words are very long (>15 chars), likely glued text
-            const longWordRatio = longWords.length / Math.max(wordCount, 1);
-            
-            if (avgWordLength > 12 || longWordRatio > 0.2) {
-              qualityScore = 25; // Very poor quality
-              extractionQuality = 25;
-              console.error(`❌ Very poor extraction quality for Arabic text`);
-              console.error(`   - Avg word length: ${avgWordLength.toFixed(1)} (expected: 4-8)`);
-              console.error(`   - Long words ratio: ${(longWordRatio * 100).toFixed(1)}% (expected: <20%)`);
-              console.error(`   - Text appears to have many glued words, forcing OCR...`);
-              
-              throw new Error('Poor Arabic extraction quality detected - words are glued together, forcing OCR');
-            } else if (avgWordLength > 9 || longWordRatio > 0.1) {
-              qualityScore = 50; // Moderate quality
-              extractionQuality = 50;
-              console.warn(`⚠️ Moderate extraction quality for Arabic text (avg: ${avgWordLength.toFixed(1)}, long words: ${(longWordRatio * 100).toFixed(1)}%)`);
-            } else {
-              console.log(`✅ Good extraction quality for Arabic text (avg: ${avgWordLength.toFixed(1)})`);
-            }
-          } else {
-            // Non-Arabic quality check (more lenient)
-            if (avgWordLength > 15) {
-              qualityScore = 40;
-              extractionQuality = 40;
-              console.warn(`⚠️ Poor extraction quality (avg word length: ${avgWordLength.toFixed(1)})`);
-            } else if (avgWordLength > 10) {
-              qualityScore = 70;
-              extractionQuality = 70;
-              console.log(`ℹ️ Moderate extraction quality (avg word length: ${avgWordLength.toFixed(1)})`);
-            } else {
-              console.log(`✅ Good extraction quality (avg word length: ${avgWordLength.toFixed(1)})`);
-            }
-          }
-          
-          console.log(`📈 Quality score: ${qualityScore}/100`);
           
             // Enhanced analysis data with extracted content
           analysisData.title = file.name.replace(/\.[^/.]+$/, "");
@@ -590,8 +483,8 @@ serve(async (req) => {
           console.error('Image OCR error:', ocrError);
           fileContent = `Erreur OCR: ${ocrError.message}`;
         } else if (ocrData?.success && ocrData?.content && ocrData.content.length > 2) {
-          // DO NOT sanitize OCR content - keep original spacing
-          fileContent = ocrData.content;
+          // Sanitize Arabic content from image OCR
+          fileContent = ocrData.language === 'ar' ? sanitizeArabicText(ocrData.content) : ocrData.content;
           extractionSuccess = true;
           analysisData.language = ocrData.language || 'fr';
           console.log(`Image OCR successful: ${fileContent.length} chars, language: ${analysisData.language}`);
@@ -653,27 +546,6 @@ serve(async (req) => {
       });
     }
 
-    // Apply conservative sanitization ONLY ONCE at the end for Arabic content
-    if (language === 'ar') {
-      console.log('Applying final Arabic glue fixing and sanitization...');
-      
-      // Apply Arabic glue fixer FIRST to fix spacing issues
-      finalContent = arabicGlueFixer(finalContent);
-      textualMetadata = arabicGlueFixer(textualMetadata);
-      
-      // Then apply conservative sanitization
-      finalContent = sanitizeArabicText(finalContent);
-      textualMetadata = sanitizeArabicText(textualMetadata);
-      
-      // Also fix and sanitize page contents
-      if (pageContents && pageContents.length > 0) {
-        pageContents = pageContents.map(page => ({
-          ...page,
-          content: sanitizeArabicText(arabicGlueFixer(page.content))
-        }));
-      }
-    }
-
     // Save document to database with enhanced metadata
     const documentData = {
       original_filename: file.name,
@@ -682,8 +554,8 @@ serve(async (req) => {
       title_ar: analysisData.title_ar || null,
       summary: analysisData.summary || '',
       summary_ar: analysisData.summary_ar || null,
-      content: finalContent, // Store separated main content (sanitized if Arabic)
-      textual_metadata: textualMetadata || null, // Store separated textual metadata (sanitized if Arabic)
+      content: finalContent, // Store separated main content
+      textual_metadata: textualMetadata || null, // Store separated textual metadata
       keywords: analysisData.keywords || [],
       keywords_ar: analysisData.keywords_ar || [],
       language: language, // Use the provided language
@@ -692,7 +564,7 @@ serve(async (req) => {
       category_id: categoryId || null,
       document_type_id: documentTypeId || null,
       user_id: null, // Public upload - no user required
-      status: 'draft', // Always start as draft - must go through validation workflow
+      status: extractionSuccess ? 'processed' : 'failed',
       // Enhanced metadata fields
       document_type: analysisData.document_type,
       main_topics: analysisData.main_topics || [],

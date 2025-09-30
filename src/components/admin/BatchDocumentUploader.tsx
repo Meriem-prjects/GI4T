@@ -49,7 +49,7 @@ const BatchDocumentUploader: React.FC<BatchDocumentUploaderProps> = ({ onDocumen
   const [documentTypes, setDocumentTypes] = useState<DocumentType[]>([]);
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
   const [selectedDocumentType, setSelectedDocumentType] = useState<string>('');
-  const [selectedLanguage, setSelectedLanguage] = useState<string>('ar');
+  const [selectedLanguage, setSelectedLanguage] = useState<string>('fr');
 
   // Load categories and document types
   React.useEffect(() => {
@@ -497,7 +497,6 @@ const BatchDocumentUploader: React.FC<BatchDocumentUploaderProps> = ({ onDocumen
                 <SelectValue placeholder="Sélectionner une langue" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="ar">العربية (Arabe)</SelectItem>
                 <SelectItem value="fr">Français</SelectItem>
                 <SelectItem value="ar">العربية</SelectItem>
                 <SelectItem value="en">English</SelectItem>
