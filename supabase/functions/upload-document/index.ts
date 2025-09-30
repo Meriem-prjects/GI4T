@@ -692,7 +692,7 @@ serve(async (req) => {
       category_id: categoryId || null,
       document_type_id: documentTypeId || null,
       user_id: null, // Public upload - no user required
-      status: extractionSuccess ? 'processed' : 'failed',
+      status: 'draft', // Always start as draft - must go through validation workflow
       // Enhanced metadata fields
       document_type: analysisData.document_type,
       main_topics: analysisData.main_topics || [],

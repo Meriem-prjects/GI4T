@@ -497,6 +497,7 @@ const BatchDocumentUploader: React.FC<BatchDocumentUploaderProps> = ({ onDocumen
                 <SelectValue placeholder="Sélectionner une langue" />
               </SelectTrigger>
               <SelectContent>
+                <SelectItem value="ar">العربية (Arabe)</SelectItem>
                 <SelectItem value="fr">Français</SelectItem>
                 <SelectItem value="ar">العربية</SelectItem>
                 <SelectItem value="en">English</SelectItem>
