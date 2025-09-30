@@ -13,6 +13,7 @@ export const ensureString = (value: string | undefined | null, fallback = ''): s
  * - Strips control characters (ZWJ, ZWNJ, LRM, RLM, tatweel)
  * - Remaps non-standard Arabic characters to standard forms
  * - Reorders diacritics (Shadda before vowel marks)
+ * - Fixes broken intra-word spaces (deglue pass)
  * - Separates glued words using linguistic patterns
  */
 export const sanitizeArabicText = (text: string | null | undefined): string => {
@@ -41,11 +42,30 @@ export const sanitizeArabicText = (text: string | null | undefined): string => {
   // Step 4: Reorder diacritics
   sanitized = sanitized.replace(/([\u064B-\u0650\u0652])(\u0651)/g, '$2$1');
   
-  // Step 5: Separate glued Arabic words
+  // Step 5: DEGLUE PASS - Fix broken intra-word spaces
+  // Join broken "ا ل" back to "ال"
+  sanitized = sanitized.replace(/ا\s+ل/g, 'ال');
+  
+  // Remove spaces between letter and diacritics
+  sanitized = sanitized.replace(/([\u0621-\u064A])\s+([\u064B-\u0652\u0670])/g, '$1$2');
+  
+  // Fix common broken patterns like "ا لع ا رض" -> "العارض"
+  // Pattern: broken definite article at start
+  sanitized = sanitized.replace(/ا\s*ل\s*([\u0621-\u064A])/g, 'ال$1');
+  
+  // Pattern: single spaces within 3-6 letter Arabic words (likely broken words)
+  // Match: Arabic letter, space, 1-5 more (letter + optional space) combos
+  sanitized = sanitized.replace(/([\u0621-\u064A])\s+([\u0621-\u064A])\s+([\u0621-\u064A])\s+([\u0621-\u064A])/g, '$1$2$3$4');
+  sanitized = sanitized.replace(/([\u0621-\u064A])\s+([\u0621-\u064A])\s+([\u0621-\u064A])/g, '$1$2$3');
+  
+  // Step 6: Separate glued Arabic words
   sanitized = separateGluedArabicWords(sanitized);
   
-  // Step 6: Clean orphan diacritics at word boundaries
+  // Step 7: Clean orphan diacritics at word boundaries
   sanitized = sanitized.replace(/\s+[\u064B-\u0652\u0670]+\s+/g, ' ');
+  
+  // Step 8: Final cleanup - compact multiple spaces
+  sanitized = sanitized.replace(/\s+/g, ' ').trim();
   
   return sanitized;
 };
@@ -61,27 +81,39 @@ const separateGluedArabicWords = (text: string): string => {
   // Match: Arabic letters followed by ال followed by Arabic letters
   result = result.replace(/([\u0600-\u06FF])(ال[\u0600-\u06FF])/g, '$1 $2');
   
-  // Pattern 2: Separate common prepositions (ل، في، من، إلى، على) glued to words
+  // Pattern 2: Separate common prepositions (ل، في، من، إلى، على، ب) glued to words
   result = result.replace(/([\u0600-\u06FF])(ل[\u0600-\u06FF]{2,})/g, '$1 $2');
   result = result.replace(/([\u0600-\u06FF])(في[\u0600-\u06FF]{2,})/g, '$1 $2');
   result = result.replace(/([\u0600-\u06FF])(من[\u0600-\u06FF]{2,})/g, '$1 $2');
   result = result.replace(/([\u0600-\u06FF])(إلى[\u0600-\u06FF]{2,})/g, '$1 $2');
   result = result.replace(/([\u0600-\u06FF])(على[\u0600-\u06FF]{2,})/g, '$1 $2');
+  result = result.replace(/([\u0600-\u06FF])(ب[\u0600-\u06FF]{3,})/g, '$1 $2');
   
-  // Pattern 3: Separate year numbers (19XX, 20XX) glued to Arabic words
-  result = result.replace(/([\u0600-\u06FF])((?:19|20)\d{2})/g, '$1 $2');
-  result = result.replace(/((?:19|20)\d{2})([\u0600-\u06FF])/g, '$1 $2');
+  // Pattern 3: Separate ALL numbers (not just years) from Arabic words
+  result = result.replace(/([\u0600-\u06FF])(\d+)/g, '$1 $2');
+  result = result.replace(/(\d+)([\u0600-\u06FF])/g, '$1 $2');
   
-  // Pattern 4: Separate when Arabic word ends and another starts with common patterns
+  // Pattern 4: Force space around punctuation
+  result = result.replace(/([\u0600-\u06FF])([(){}\[\]«»"""',،:;؛\-–—])/g, '$1 $2');
+  result = result.replace(/([(){}\[\]«»"""',،:;؛\-–—])([\u0600-\u06FF])/g, '$1 $2');
+  
+  // Pattern 5: Separate when Arabic word ends and another starts with common patterns
   // Detect: consonant + vowel + consonant + ال (definite article start)
   result = result.replace(/([\u0621-\u064A][\u064B-\u0652]?[\u0621-\u064A])(ال[\u0621-\u064A])/g, '$1 $2');
   
-  // Pattern 5: Separate لسنة (li-sanat = "for the year") when glued
+  // Pattern 6: Separate لسنة (li-sanat = "for the year") when glued
   result = result.replace(/([\u0600-\u06FF])(لسنة)/g, '$1 $2');
   
-  // Pattern 6: Separate when we have multiple capital-like patterns (e.g., القضاء الإداري)
+  // Pattern 7: Separate when we have multiple capital-like patterns (e.g., القضاء الإداري)
   // Detect sequences of 4+ Arabic letters followed by ال followed by 4+ letters
   result = result.replace(/([\u0621-\u064A]{4,})(ال[\u0621-\u064A]{4,})/g, '$1 $2');
+  
+  // Pattern 8: Add space between long glued Arabic blocks (6+ letters each)
+  result = result.replace(/([\u0621-\u064A]{6,})([\u0621-\u064A]{6,})/g, '$1 $2');
+  
+  // Final: normalize spaces around punctuation
+  result = result.replace(/\s*([،:;؛])\s*/g, '$1 ');
+  result = result.replace(/\s*([.!?])\s*/g, '$1 ');
   
   return result;
 };

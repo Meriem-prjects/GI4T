@@ -109,7 +109,32 @@ serve(async (req) => {
     console.log(`OCR completed. Language: ${result.language}, Text length: ${result.text?.length || 0}`);
 
     // Sanitize Arabic text if detected
-    const sanitizedText = result.language === 'ar' ? sanitizeArabicText(result.text) : result.text;
+    let sanitizedText = result.language === 'ar' ? sanitizeArabicText(result.text) : result.text;
+    
+    // Apply AI spacing correction for Arabic texts <= 12k chars
+    if (result.language === 'ar' && sanitizedText && sanitizedText.length <= 12000) {
+      try {
+        console.log('Applying AI spacing correction for Arabic OCR text...');
+        const spacingResponse = await fetch(`${Deno.env.get('SUPABASE_URL')}/functions/v1/arabic-spacing-fixer`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')}`
+          },
+          body: JSON.stringify({ text: sanitizedText })
+        });
+        
+        if (spacingResponse.ok) {
+          const spacingData = await spacingResponse.json();
+          if (spacingData?.success && spacingData.correctedText) {
+            sanitizedText = spacingData.correctedText;
+            console.log(`AI spacing correction applied (method: ${spacingData.method})`);
+          }
+        }
+      } catch (spacingErr) {
+        console.warn('AI spacing correction failed, using heuristic result:', spacingErr);
+      }
+    }
 
     return new Response(JSON.stringify({
       success: true,

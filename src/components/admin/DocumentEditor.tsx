@@ -116,6 +116,7 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
   const [isReprocessing, setIsReprocessing] = useState(false);
   const [translatedTextualMetadata, setTranslatedTextualMetadata] = useState<string>('');
   const [isCleaningArabic, setIsCleaningArabic] = useState(false);
+  const [isCorrectingSpacing, setIsCorrectingSpacing] = useState(false);
 
   useEffect(() => {
     setEditedData(documentData);
@@ -868,6 +869,61 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
     }
   };
 
+  const correctArabicSpacing = async () => {
+    if (!editedData.content || editedData.language !== 'ar') {
+      toast({
+        title: "Erreur",
+        description: "Le document doit être en arabe et avoir du contenu",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    if (editedData.content.length > 12000) {
+      toast({
+        title: "Texte trop long",
+        description: "La correction IA est limitée à 12 000 caractères. Utilisez 'Nettoyer AR' pour les heuristiques seulement.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    setIsCorrectingSpacing(true);
+    try {
+      console.log('Calling AI spacing correction for content...');
+      
+      const { data, error } = await supabase.functions.invoke('arabic-spacing-fixer', {
+        body: { text: editedData.content }
+      });
+
+      if (error) throw error;
+
+      if (data?.success && data.correctedText) {
+        setEditedData(prev => ({
+          ...prev,
+          content: data.correctedText
+        }));
+        
+        toast({
+          title: "Correction réussie",
+          description: `Espacement corrigé (méthode: ${data.method || 'AI'})`,
+          variant: "default"
+        });
+      } else {
+        throw new Error('Pas de texte corrigé retourné');
+      }
+    } catch (error: any) {
+      console.error('Arabic spacing correction error:', error);
+      toast({
+        title: "Erreur de correction",
+        description: error.message || "Impossible de corriger l'espacement",
+        variant: "destructive"
+      });
+    } finally {
+      setIsCorrectingSpacing(false);
+    }
+  };
+
   return (
     <div className="space-y-6" dir={currentLanguage === 'ar' ? 'rtl' : 'ltr'}>
       {/* Header */}
@@ -967,6 +1023,20 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
               <span className="mr-2">🧹</span>
             )}
             {isCleaningArabic ? 'Nettoyage...' : 'Nettoyer AR'}
+          </Button>
+
+          <Button 
+            onClick={correctArabicSpacing} 
+            disabled={isCorrectingSpacing || editedData.language !== 'ar' || !editedData.content || editedData.content.length > 12000}
+            variant="outline"
+            title="Corrige l'espacement arabe avec IA (max 12k chars)"
+          >
+            {isCorrectingSpacing ? (
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+            ) : (
+              <Search className="mr-2 h-4 w-4" />
+            )}
+            {isCorrectingSpacing ? 'Correction...' : 'Corriger espacement (AR)'}
           </Button>
 
           

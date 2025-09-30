@@ -389,7 +389,24 @@ serve(async (req) => {
           console.log('Using PDF direct extraction result');
           
           // Sanitize Arabic text if detected
-          const sanitizedExtractedText = language === 'ar' ? sanitizeArabicText(extractedText) : extractedText;
+          let sanitizedExtractedText = language === 'ar' ? sanitizeArabicText(extractedText) : extractedText;
+          
+          // Apply AI spacing correction for Arabic texts <= 12k chars
+          if (language === 'ar' && sanitizedExtractedText.length > 0 && sanitizedExtractedText.length <= 12000) {
+            try {
+              console.log('Applying AI spacing correction for Arabic text...');
+              const { data: spacingData, error: spacingError } = await supabaseAdmin.functions.invoke('arabic-spacing-fixer', {
+                body: { text: sanitizedExtractedText }
+              });
+              
+              if (!spacingError && spacingData?.success && spacingData.correctedText) {
+                sanitizedExtractedText = spacingData.correctedText;
+                console.log(`AI spacing correction applied (method: ${spacingData.method})`);
+              }
+            } catch (spacingErr) {
+              console.warn('AI spacing correction failed, using heuristic result:', spacingErr);
+            }
+          }
           
            fileContent = sanitizedExtractedText.length > 0 ? sanitizedExtractedText : 'Document PDF sans texte extractible';
            extractionSuccess = true;
@@ -397,12 +414,29 @@ serve(async (req) => {
            shouldUsePDFReader = true;
            
            // Create page contents from extracted text (sanitize each page)
-           pageContents = (readerData.texts || []).map((text: string, index: number) => ({
-            pageNumber: index + 1,
-            content: language === 'ar' ? sanitizeArabicText(text.trim()) : text.trim(),
-            confidence: 1.0,
-            language: language // Use the provided language
-          }));
+           pageContents = (readerData.texts || []).map((text: string, index: number) => {
+             let pageContent = language === 'ar' ? sanitizeArabicText(text.trim()) : text.trim();
+             
+             // Apply AI correction to each page for Arabic texts
+             if (language === 'ar' && pageContent.length > 0 && pageContent.length <= 12000) {
+               try {
+                 supabaseAdmin.functions.invoke('arabic-spacing-fixer', {
+                   body: { text: pageContent }
+                 }).then(({ data }) => {
+                   if (data?.success && data.correctedText) {
+                     pageContent = data.correctedText;
+                   }
+                 }).catch(() => {});
+               } catch {}
+             }
+             
+             return {
+               pageNumber: index + 1,
+               content: pageContent,
+               confidence: 1.0,
+               language: language
+             };
+           });
           
           processedPages = readerData.numPages || 1;
           
