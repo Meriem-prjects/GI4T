@@ -585,7 +585,7 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
       const { error } = await supabase
         .from('documents')
         .update({ 
-          status: 'published',
+          status: 'processed',
           updated_at: new Date().toISOString()
         })
         .eq('id', editedData.id);

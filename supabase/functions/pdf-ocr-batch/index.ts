@@ -335,7 +335,7 @@ async function processPdfWithOCR(pdfBuffer: ArrayBuffer, openaiApiKey: string, j
                 language: preservedLanguage,
                 processed_pages: pages.length,
                 total_pages: pages.length,
-                status: 'processed'
+                status: 'draft' // Always draft after processing, must go through validation
               })
               .eq('processing_job_id', jobId);
           }
@@ -518,7 +518,7 @@ async function processPdfWithOCR(pdfBuffer: ArrayBuffer, openaiApiKey: string, j
             language: preservedLanguage,
             processed_pages: totalProcessed,
             total_pages: conversionResult.images.length,
-            status: isFullyCompleted ? 'processed' : 'processing'
+            status: 'draft' // Always draft after processing, must go through validation
           })
           .eq('processing_job_id', jobId);
       } catch (dbError) {
