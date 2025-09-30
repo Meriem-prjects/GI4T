@@ -18,24 +18,22 @@ export const normalizeArabicText = (text: string): string => {
     .replace(/[\u200B-\u200F]/g, '') // ZWSP, ZWNJ, ZWJ, LRM, RLM, etc.
     .replace(/\u0640/g, '');          // Arabic Tatweel
   
-  // Step 3: Convert ALL Arabic presentation forms to canonical base forms
-  // This ensures proper contextual ligatures by the browser's text rendering engine
-  const presentationToBase: Record<string, string> = {
-    // Heh presentation forms → ه (U+0647)
-    '\uFEEB': '\u0647', '\uFEEC': '\u0647', '\uFEED': '\u0647', '\uFEEE': '\u0647',
-    '\uFBA4': '\u0647', '\uFBA5': '\u0647',
-    '\uFB6A': '\u0647', '\uFB6B': '\u0647', '\uFB6C': '\u0647', '\uFB6D': '\u0647',
-    // Feh presentation forms → ف (U+0641)
-    '\uFED1': '\u0641', '\uFED2': '\u0641', '\uFED3': '\u0641', '\uFED4': '\u0641',
-    // Qaf presentation forms → ق (U+0642)
-    '\uFED5': '\u0642', '\uFED6': '\u0642', '\uFED7': '\u0642', '\uFED8': '\u0642',
-    // Persian/Urdu characters to Arabic equivalents
-    '\u06A9': '\u0643', '\u06AF': '\u0643',  // ک گ → ك
-    '\u06CC': '\u064A', '\u06D2': '\u064A',  // ی ے → ي
-    '\u06C1': '\u0647', '\u06BE': '\u0647',  // ہ ھ → ه
+  // Step 3: Remap non-standard Arabic characters to standard forms
+  const charMap: Record<string, string> = {
+    // Persian/Urdu Kaf → Arabic Kaf
+    '\u06A9': '\u0643',  // ک → ك
+    '\u06AF': '\u0643',  // گ → ك
+    // Persian/Urdu Yeh → Arabic Yeh
+    '\u06CC': '\u064A',  // ی → ي
+    '\u06D2': '\u064A',  // ے → ي
+    // Alternate Heh forms → Arabic Heh
+    '\u06C1': '\u0647',  // ہ → ه
+    '\u06BE': '\u0647',  // ھ → ه
+    '\uFEEB': '\u0647',  // ﻫ → ه (presentation form)
+    '\uFEEC': '\u0647',  // ﻬ → ه (presentation form)
   };
   
-  for (const [from, to] of Object.entries(presentationToBase)) {
+  for (const [from, to] of Object.entries(charMap)) {
     normalized = normalized.replace(new RegExp(from, 'g'), to);
   }
   
