@@ -298,6 +298,7 @@ serve(async (req) => {
     let pageContents: any[] | null = null;
     let processedPages: number | null = null;
     let totalPagesVar: number | null = null;
+    let extractionQuality = 100; // Track extraction quality (0-100)
     
           // Initialize analysis data at the beginning
     let analysisData = {
@@ -403,6 +404,37 @@ serve(async (req) => {
           }));
           
           processedPages = readerData.numPages || 1;
+          
+          // Quality check: detect if text has many words glued together (Arabic issue)
+          const wordCount = extractedText.split(/\s+/).filter(w => w.length > 0).length;
+          const charCount = extractedText.length;
+          const avgWordLength = charCount / Math.max(wordCount, 1);
+          
+          console.log(`📊 Extraction quality analysis:`);
+          console.log(`   - Word count: ${wordCount}`);
+          console.log(`   - Char count: ${charCount}`);
+          console.log(`   - Avg word length: ${avgWordLength.toFixed(1)} chars`);
+          
+          // Normal Arabic word length is ~4-8 chars. If average is >15, likely glued text
+          let qualityScore = 100;
+          if (avgWordLength > 15) {
+            qualityScore = 30; // Poor quality
+            console.warn(`⚠️ Poor extraction quality detected (avg word length: ${avgWordLength.toFixed(1)}, expected: 4-8)`);
+            console.warn(`   This suggests words are glued together. Consider using OCR.`);
+            
+            // For Arabic documents with poor quality, force OCR
+            if (language === 'ar') {
+              console.log('🔄 Forcing OCR for Arabic document due to poor quality...');
+              throw new Error('Poor extraction quality detected, forcing OCR');
+            }
+          } else if (avgWordLength > 10) {
+            qualityScore = 60; // Moderate quality
+            console.log(`ℹ️ Moderate extraction quality (avg word length: ${avgWordLength.toFixed(1)})`);
+          } else {
+            console.log(`✅ Good extraction quality (avg word length: ${avgWordLength.toFixed(1)})`);
+          }
+          
+          console.log(`📈 Quality score: ${qualityScore}/100`);
           
             // Enhanced analysis data with extracted content
           analysisData.title = file.name.replace(/\.[^/.]+$/, "");

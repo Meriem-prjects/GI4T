@@ -89,10 +89,11 @@ function extractUnicodeText(pdfString: string, encoding: string): string {
             lineText += processed;
           }
         } else {
-          // Numeric spacing value
+          // Numeric spacing value - lower threshold for better space detection
           const spacing = parseFloat(elem);
-          if (Math.abs(spacing) >= 120) { // Threshold for space
+          if (Math.abs(spacing) >= 80) { // Reduced from 120 to 80 for better Arabic space detection
             lineText += ' ';
+            console.log(`[TJ Array] Space inserted at spacing: ${spacing}`);
           }
         }
       }
@@ -244,9 +245,14 @@ function isValidText(text: string): boolean {
 }
 
 function cleanText(text: string): string {
-  return text
+  console.log(`[cleanText] Input: ${text.length} chars`);
+  const cleaned = text
+    .replace(/\0/g, '') // Remove null bytes
+    .replace(/[\x00-\x08\x0B-\x0C\x0E-\x1F\x7F]/g, '') // Remove control chars except \n, \r, \t
     .replace(/(.)\1{5,}/g, '$1$1') // Reduce excessive repetition only
     .trim(); // Trim only start/end
+  console.log(`[cleanText] Output: ${cleaned.length} chars, line breaks preserved`);
+  return cleaned;
 }
 
 serve(async (req) => {
