@@ -18,7 +18,7 @@ import { MultiCategorySelector } from './MultiCategorySelector';
 import { useDocumentCategories, useUpdateDocumentCategories } from '@/hooks/useDocumentCategories';
 import PDFViewer from './PDFViewer';
 import { renderFormattedContent, formatContent } from '@/utils/contentFormatter';
-import { sanitizeArabicText, normalizeArabicText } from '@/lib/arabicUtils';
+import { normalizeArabicText } from '@/lib/arabicUtils';
 
 interface PageContent {
   pageNumber: number;
@@ -810,7 +810,7 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
 
     setIsCleaningArabic(true);
     try {
-      // Apply full normalization (sanitization + spacing fixes) to all Arabic fields
+      // Normalize all Arabic fields
       const cleaned = {
         ...editedData,
         title_ar: editedData.title_ar ? normalizeArabicText(editedData.title_ar) : editedData.title_ar,
@@ -826,8 +826,6 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
         court_level_ar: editedData.court_level_ar ? normalizeArabicText(editedData.court_level_ar) : editedData.court_level_ar,
         court_category_type_ar: editedData.court_category_type_ar ? normalizeArabicText(editedData.court_category_type_ar) : editedData.court_category_type_ar,
       };
-      
-      console.log('[cleanArabicDocument] Applied spacing fixes to all Arabic fields');
 
       // Save to database
       const { error } = await supabase

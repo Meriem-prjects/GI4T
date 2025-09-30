@@ -10,7 +10,7 @@ import {
   Heading3,
   Type
 } from 'lucide-react';
-import { sanitizeArabicText, isArabicText, getTextDirection } from '@/lib/arabicUtils';
+import { normalizeArabicText, isArabicText, getTextDirection } from '@/lib/arabicUtils';
 
 interface SimpleTextEditorProps {
   content: string;
@@ -51,7 +51,7 @@ const SimpleTextEditor: React.FC<SimpleTextEditorProps> = ({
       prefix + selectedText + suffix + 
       content.substring(end);
     
-    onChange(sanitizeArabicText(newContent));
+    onChange(normalizeArabicText(newContent));
     
     // Set cursor position after the inserted formatting
     setTimeout(() => {
@@ -101,7 +101,7 @@ const SimpleTextEditor: React.FC<SimpleTextEditorProps> = ({
       newLine + 
       content.substring(lineEnd);
     
-    onChange(sanitizeArabicText(newContent));
+    onChange(normalizeArabicText(newContent));
     
     // Set cursor position
     setTimeout(() => {
@@ -189,7 +189,7 @@ const SimpleTextEditor: React.FC<SimpleTextEditorProps> = ({
         <Textarea
           ref={textareaRef}
           value={content}
-          onChange={(e) => onChange(sanitizeArabicText(e.target.value))}
+          onChange={(e) => onChange(normalizeArabicText(e.target.value))}
           placeholder={placeholder}
           className={`min-h-[400px] border-0 focus-visible:ring-0 resize-none text-sm leading-relaxed ${
             isArabic ? 'font-arabic arabic-text' : 'font-mono'

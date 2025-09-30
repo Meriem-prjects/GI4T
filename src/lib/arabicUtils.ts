@@ -1,103 +1,47 @@
 // Arabic text utilities for normalization and detection
 
 /**
- * Conservative Arabic text sanitization (matches backend approach)
- * - Uses NFD normalization (preserves visual display)
- * - Keeps ZWJ, ZWNJ, tatweel (essential for Arabic ligatures)
- * - Only removes BOM and truly unnecessary control characters
- * - Minimal character remapping (only Persian variants)
- */
-export const sanitizeArabicText = (text: string): string => {
-  if (!text) return text;
-  
-  // NFD normalization (gentle, preserves display)
-  let sanitized = text.normalize('NFD');
-  
-  // Remove only BOM and some unnecessary control characters
-  sanitized = sanitized
-    .replace(/\uFEFF/g, '') // BOM
-    .replace(/[\u200E\u200F]/g, ''); // LRM/RLM only (keep ZWJ/ZWNJ)
-  
-  // Minimal selective conversion of problematic presentation forms
-  const minimalCharMap: Record<string, string> = {
-    '\u06A9': '\u0643', // Persian Kaf → Arabic Kaf
-    '\u06CC': '\u064A', // Persian Yeh → Arabic Yeh
-    '\uFB6B': '\u0647', // ﮫ → ه (HEH presentation form)
-    '\uFEEB': '\u0647', // ﻫ → ه (HEH initial form)
-    '\uFEEC': '\u0647', // ﻬ → ه (HEH medial form)
-  };
-  
-  for (const [from, to] of Object.entries(minimalCharMap)) {
-    sanitized = sanitized.replace(new RegExp(from, 'g'), to);
-  }
-  
-  return sanitized;
-};
-
-/**
- * Fixes common Arabic spacing issues
- * Specifically targets "لال" → "ل ال" and glued "ال" patterns
- */
-export const arabicGlueFixer = (text: string): string => {
-  if (!text) return text;
-  
-  // Normalize any Lam-Alef ligatures to separated form first
-  const ligatureMap: Record<string, string> = {
-    '\uFEFB': 'لا', // ﻻ → لا
-    '\uFEFC': 'لا', // ﻼ → لا
-    '\uFEF7': 'لأ', // ﻷ → لأ
-    '\uFEF8': 'لأ', // ﻸ → لأ
-    '\uFEF9': 'لإ', // ﻹ → لإ
-    '\uFEFA': 'لإ', // ﻺ → لإ
-    '\uFEF5': 'لآ', // ﻵ → لآ
-    '\uFEF6': 'لآ', // ﻶ → لآ
-  };
-  
-  let fixed = text;
-  for (const [ligature, expanded] of Object.entries(ligatureMap)) {
-    fixed = fixed.replace(new RegExp(ligature, 'g'), expanded);
-  }
-  
-  // Define character classes for matching
-  const LAM = '[\\u0644\\uFEEB-\\uFEEE]'; // Lam and its presentation forms
-  const ALEF = '[\\u0627\\uFE8D\\uFE8E]'; // Alef and its presentation forms
-  const OPTIONAL = '[\\u200C\\u200D\\u0640\\u064B-\\u065F\\u0670]*'; // ZWJ, ZWNJ, tatweel, diacritics
-  const ARABIC_ALL = '[\\u0600-\\u06FF\\u0750-\\u077F\\u08A0-\\u08FF\\uFB50-\\uFDFF\\uFE70-\\uFEFF]';
-  const ARABIC_OR_DIGIT = '[\\u0600-\\u06FF\\u0750-\\u077F\\u08A0-\\u08FF\\uFB50-\\uFDFF\\uFE70-\\uFEFF\\u0660-\\u0669]';
-  
-  // Alif-Lam sequence (ال with optional diacritics/joiners between)
-  const alifLamSeq = `${ALEF}${OPTIONAL}${LAM}`;
-  
-  // Rule 1: Fix "لال" → "ل ال" (Lam + Alef + Lam → Lam + space + Alef + Lam)
-  const rule1Regex = new RegExp(`(${LAM})${OPTIONAL}(${ALEF})${OPTIONAL}(${LAM})`, 'gu');
-  const beforeRule1 = fixed;
-  fixed = fixed.replace(rule1Regex, '$1 $2$3');
-  if (fixed !== beforeRule1) {
-    console.log(`[arabicGlueFixer] Rule 1 (لال → ل ال): ${(beforeRule1.match(rule1Regex) || []).length} fixes`);
-  }
-  
-  // Rule 2: Add space before "ال" if glued to preceding Arabic character or digit
-  // Match: (Arabic char or digit)(ال + word)
-  const rule2Regex = new RegExp(`(${ARABIC_OR_DIGIT})(${alifLamSeq}(?:${ARABIC_ALL})+)`, 'gu');
-  const beforeRule2 = fixed;
-  fixed = fixed.replace(rule2Regex, '$1 $2');
-  if (fixed !== beforeRule2) {
-    console.log(`[arabicGlueFixer] Rule 2 (wordال → word ال): ${(beforeRule2.match(rule2Regex) || []).length} fixes`);
-  }
-  
-  // Clean up any multiple spaces created
-  fixed = fixed.replace(/\s{2,}/g, ' ');
-  
-  return fixed;
-};
-
-/**
- * Full Arabic text normalization (sanitization + spacing fixes)
- * This is the main function to use for client-side Arabic text processing
+ * Normalizes Arabic text using NFKC normalization plus cleanup
+ * - Uses NFKC to convert presentation forms to base characters
+ * - Strips control characters (ZWJ, ZWNJ, LRM, RLM, tatweel)
+ * - Remaps non-standard Arabic characters (Persian kaf/yeh, alternate heh)
+ * - Reorders diacritics (Shadda before vowel marks)
  */
 export const normalizeArabicText = (text: string): string => {
   if (!text) return text;
-  return arabicGlueFixer(sanitizeArabicText(text));
+  
+  // Step 1: NFKC normalization (converts presentation forms to base forms)
+  let normalized = text.normalize('NFKC');
+  
+  // Step 2: Strip problematic control characters
+  normalized = normalized
+    .replace(/[\u200B-\u200F]/g, '') // ZWSP, ZWNJ, ZWJ, LRM, RLM, etc.
+    .replace(/\u0640/g, '');          // Arabic Tatweel
+  
+  // Step 3: Remap non-standard Arabic characters to standard forms
+  const charMap: Record<string, string> = {
+    // Persian/Urdu Kaf → Arabic Kaf
+    '\u06A9': '\u0643',  // ک → ك
+    '\u06AF': '\u0643',  // گ → ك
+    // Persian/Urdu Yeh → Arabic Yeh
+    '\u06CC': '\u064A',  // ی → ي
+    '\u06D2': '\u064A',  // ے → ي
+    // Alternate Heh forms → Arabic Heh
+    '\u06C1': '\u0647',  // ہ → ه
+    '\u06BE': '\u0647',  // ھ → ه
+    '\uFEEB': '\u0647',  // ﻫ → ه (presentation form)
+    '\uFEEC': '\u0647',  // ﻬ → ه (presentation form)
+  };
+  
+  for (const [from, to] of Object.entries(charMap)) {
+    normalized = normalized.replace(new RegExp(from, 'g'), to);
+  }
+  
+  // Step 4: Reorder diacritics (Shadda \u0651 should come before vowel marks)
+  // Match: vowel mark followed by shadda, then swap them
+  normalized = normalized.replace(/([\u064B-\u0650\u0652])(\u0651)/g, '$2$1');
+  
+  return normalized;
 };
 
 /**
