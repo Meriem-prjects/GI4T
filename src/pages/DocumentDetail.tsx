@@ -345,7 +345,13 @@ const DocumentDetail = () => {
             </>
           )}
           <BreadcrumbItem>
-            <BreadcrumbPage className="max-w-[200px] truncate">{currentTitle}</BreadcrumbPage>
+            <BreadcrumbPage className="max-w-[200px] truncate">
+              {isArabicContent ? (
+                <span dir="rtl" className="arabic-text">{currentTitle}</span>
+              ) : (
+                currentTitle
+              )}
+            </BreadcrumbPage>
           </BreadcrumbItem>
         </BreadcrumbList>
       </Breadcrumb>
@@ -355,12 +361,18 @@ const DocumentDetail = () => {
         <div className="lg:col-span-3">
           {/* Document Header */}
           <div className={`text-center mb-12`}>
-            <h1 className={`text-3xl md:text-4xl font-bold mb-4 leading-tight ${isArabicContent ? 'dir-rtl' : ''}`}>
+            <h1 
+              className={`text-3xl md:text-4xl font-bold mb-4 leading-tight ${isArabicContent ? 'arabic-text' : ''}`}
+              {...(isArabicContent ? { dir: 'rtl' } : {})}
+            >
               {currentTitle}
             </h1>
             
             {currentSummary && (
-              <p className={`text-lg text-muted-foreground mb-8 max-w-4xl mx-auto ${isArabicContent ? 'dir-rtl' : ''}`}>
+              <p 
+                className={`text-lg text-muted-foreground mb-8 max-w-4xl mx-auto ${isArabicContent ? 'arabic-text' : ''}`}
+                {...(isArabicContent ? { dir: 'rtl' } : {})}
+              >
                 {currentSummary}
               </p>
             )}
@@ -391,7 +403,9 @@ const DocumentDetail = () => {
                     <div className={`flex items-center gap-3 ${isArabicContent ? 'justify-start flex-row-reverse' : 'justify-center md:justify-start'}`}>
                       <User className="w-5 h-5 text-muted-foreground" />
                       <span className="font-medium">{isArabicContent ? 'المؤلف:' : 'Auteur:'}</span>
-                      <span>{currentAuthor}</span>
+                      <span className={isArabicContent ? 'arabic-text' : ''} {...(isArabicContent ? { dir: 'rtl' } : {})}>
+                        {currentAuthor}
+                      </span>
                     </div>
                   )}
                 </div>
@@ -401,7 +415,9 @@ const DocumentDetail = () => {
                     <div className={`flex items-center gap-3 ${isArabicContent ? 'justify-start flex-row-reverse' : 'justify-center md:justify-start'}`}>
                       <Building2 className="w-5 h-5 text-muted-foreground" />
                       <span className="font-medium">{isArabicContent ? 'نوع المحكمة:' : 'Type de tribunal:'}</span>
-                      <span>{currentCourt}</span>
+                      <span className={isArabicContent ? 'arabic-text' : ''} {...(isArabicContent ? { dir: 'rtl' } : {})}>
+                        {currentCourt}
+                      </span>
                     </div>
                   )}
 

@@ -157,6 +157,9 @@ All colors MUST be HSL.
   text-rendering: optimizeLegibility;
   font-variant-ligatures: contextual;
   line-height: 1.8;
+  letter-spacing: normal;
+  word-spacing: normal;
+  font-kerning: normal;
 }
 
 .arabic-text-serif {
