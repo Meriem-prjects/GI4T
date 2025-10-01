@@ -279,11 +279,11 @@ const DocumentDetail = () => {
   // Detect if we're displaying Arabic content
   const isArabicContent = showOriginal && document.language === 'ar';
   
-  // Use Arabic fields when displaying Arabic content, with normalization for consistent spacing
-  const currentTitle = normalizeArabicText(isArabicContent && document.title_ar ? document.title_ar : document.title);
-  const currentSummary = normalizeArabicText(isArabicContent && document.summary_ar ? document.summary_ar : document.summary);
-  const currentAuthor = normalizeArabicText(isArabicContent && document.author_ar ? document.author_ar : document.author);
-  const currentCourt = normalizeArabicText(isArabicContent && document.court_ar ? document.court_ar : document.court);
+  // Use Arabic fields when displaying Arabic content (no normalization needed for display)
+  const currentTitle = isArabicContent && document.title_ar ? document.title_ar : document.title;
+  const currentSummary = isArabicContent && document.summary_ar ? document.summary_ar : document.summary;
+  const currentAuthor = isArabicContent && document.author_ar ? document.author_ar : document.author;
+  const currentCourt = isArabicContent && document.court_ar ? document.court_ar : document.court;
   
   // Format court level: replace underscores with spaces and translate for Arabic
   const formatCourtLevel = (level: string | null) => {
