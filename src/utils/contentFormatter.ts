@@ -7,11 +7,9 @@ import { normalizeArabicText, isArabicText } from '@/lib/arabicUtils';
 export const renderFormattedContent = (content: string): string => {
   if (!content) return '';
   
-  // Normalize Arabic content for consistent rendering
-  const normalizedContent = normalizeArabicText(content);
-  
   // Split content into lines to process line-by-line
-  const lines = normalizedContent.split('\n');
+  // Note: Content is already normalized by the editor, so we don't normalize again
+  const lines = content.split('\n');
   
   const processedLines = lines.map(line => {
     // Process headings (must be at start of line)
@@ -88,7 +86,6 @@ export const stripFormattedContent = (htmlContent: string): string => {
  * Simple content formatter that only normalizes line breaks (for backward compatibility)
  */
 export const formatContent = (content: string): string => {
-  // Normalize Arabic text and line breaks
-  const normalized = normalizeArabicText(content);
-  return normalized.replace(/\r\n/g, '\n');
+  // Only normalize line breaks - content is already normalized by the editor
+  return content.replace(/\r\n/g, '\n');
 };
