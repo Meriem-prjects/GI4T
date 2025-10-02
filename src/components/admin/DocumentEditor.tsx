@@ -97,6 +97,9 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
   const [selectedCourtType, setSelectedCourtType] = useState<string>('');
   const [selectedCategoryIds, setSelectedCategoryIds] = useState<string[]>([]);
   
+  // Track if we've already normalized data on load to avoid re-normalizing
+  const hasNormalizedOnLoad = React.useRef(false);
+  
   // Hook pour récupérer les types de tribunaux et niveaux de juridiction
   const { data: courtTypes = [] } = useCourtTypes();
   const { data: jurisdictionLevels = [] } = useJurisdictionLevels();
@@ -133,6 +136,28 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
     // Initialize selectedCourtType if document has court_category_type
     if (documentData.court_category_type) {
       setSelectedCourtType(documentData.court_category_type);
+    }
+    
+    // Normalize Arabic fields on initial load (only once)
+    if (!hasNormalizedOnLoad.current && documentData.id) {
+      hasNormalizedOnLoad.current = true;
+      
+      setEditedData(prev => ({
+        ...prev,
+        title_ar: prev.title_ar ? normalizeArabicText(prev.title_ar) : prev.title_ar,
+        subtitle_ar: prev.subtitle_ar ? normalizeArabicText(prev.subtitle_ar) : prev.subtitle_ar,
+        summary_ar: prev.summary_ar ? normalizeArabicText(prev.summary_ar) : prev.summary_ar,
+        author_ar: prev.author_ar ? normalizeArabicText(prev.author_ar) : prev.author_ar,
+        court_ar: prev.court_ar ? normalizeArabicText(prev.court_ar) : prev.court_ar,
+        plaintiff_ar: prev.plaintiff_ar ? normalizeArabicText(prev.plaintiff_ar) : prev.plaintiff_ar,
+        defendant_ar: prev.defendant_ar ? normalizeArabicText(prev.defendant_ar) : prev.defendant_ar,
+        textual_metadata: (prev.language === 'ar' && prev.textual_metadata) 
+          ? normalizeArabicText(prev.textual_metadata) 
+          : prev.textual_metadata,
+        content: (prev.language === 'ar' && prev.content) 
+          ? normalizeArabicText(prev.content) 
+          : prev.content
+      }));
     }
     
     loadCategories();
@@ -1682,7 +1707,9 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
                         if (currentLanguage === editedData.language) {
                           setEditedData(prev => ({
                             ...prev,
-                            textual_metadata: e.target.value
+                            textual_metadata: currentLanguage === 'ar' 
+                              ? normalizeArabicText(e.target.value)
+                              : e.target.value
                           }));
                         }
                       }}
