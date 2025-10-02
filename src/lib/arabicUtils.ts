@@ -44,22 +44,15 @@ export const normalizeArabicText = (text: string): string => {
   normalized = normalized.replace(/([\u064B-\u0650\u0652])(\u0651)/g, '$2$1');
   
   // Step 5: DEGLUE PASS - Fix broken intra-word spaces
-  // Extended space class to capture all Unicode spaces, control characters, and Bidi markers
-  const SPACE_CLASS = '[\\s\\u00A0\\u200B-\\u200F\\u2060\\u2066-\\u2069\\u061C\\u202A-\\u202E\\u202C\\u00AD\\u2000-\\u200A\\u202F\\u205F\\u3000\\uFEFF]+';
+  // Join broken "ا ل" back to "ال"
+  normalized = normalized.replace(/ا\s+ل/g, 'ال');
   
-  // Join broken "ا ل" back to "ال" (captures even Bidi markers like ALM, isolates, etc.)
-  normalized = normalized.replace(new RegExp(`ا${SPACE_CLASS}ل`, 'g'), 'ال');
-  
-  // Remove spaces/controls between letter and diacritics
-  normalized = normalized.replace(new RegExp(`([\\u0621-\\u064A])${SPACE_CLASS}([\\u064B-\\u0652\\u0670])`, 'g'), '$1$2');
+  // Remove spaces between letter and diacritics
+  normalized = normalized.replace(/([\u0621-\u064A])\s+([\u064B-\u0652\u0670])/g, '$1$2');
   
   // Fix common broken patterns like "ا لع ا رض" -> "العارض"
-  // Pattern: broken definite article at start (with extended space detection)
-  const SPACE_CLASS_OPTIONAL = SPACE_CLASS.replace('+', '*');
-  normalized = normalized.replace(
-    new RegExp(`ا${SPACE_CLASS_OPTIONAL}ل${SPACE_CLASS_OPTIONAL}([\\u0621-\\u064A])`, 'g'), 
-    'ال$1'
-  );
+  // Pattern: broken definite article at start
+  normalized = normalized.replace(/ا\s*ل\s*([\u0621-\u064A])/g, 'ال$1');
   
   // Pattern: single spaces within 3-6 letter Arabic words (likely broken words)
   normalized = normalized.replace(/([\u0621-\u064A])\s+([\u0621-\u064A])\s+([\u0621-\u064A])\s+([\u0621-\u064A])/g, '$1$2$3$4');

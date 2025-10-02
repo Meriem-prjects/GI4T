@@ -514,11 +514,6 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
   const handleSave = async () => {
     try {
       if (editedData.id) {
-        // Normalize Arabic summary before saving to ensure "ا ل" becomes "ال"
-        const normalizedSummaryAr = editedData.summary_ar 
-          ? normalizeArabicText(editedData.summary_ar.trim()) 
-          : null;
-        
         // Prepare and validate data
         const updateData = {
           title: editedData.title?.trim() || '',
@@ -526,7 +521,7 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
           subtitle: editedData.subtitle?.trim() || null,
           subtitle_ar: editedData.subtitle_ar?.trim() || null,
           summary: editedData.summary?.trim() || null,
-          summary_ar: normalizedSummaryAr,
+          summary_ar: editedData.summary_ar?.trim() || null,
           content: editedData.content || '',
           translated_content: translatedContent?.trim() || null,
           keywords: Array.isArray(editedData.keywords) ? editedData.keywords.filter(k => k && k.trim()) : [],
