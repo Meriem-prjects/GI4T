@@ -43,15 +43,19 @@ export const sanitizeArabicText = (text: string | null | undefined): string => {
   sanitized = sanitized.replace(/([\u064B-\u0650\u0652])(\u0651)/g, '$2$1');
   
   // Step 5: DEGLUE PASS - Fix broken intra-word spaces
-  // Join broken "ا ل" back to "ال"
-  sanitized = sanitized.replace(/ا\s+ل/g, 'ال');
+  // Join broken "ا ل" back to "ال" (with enhanced space detection for all Unicode spaces)
+  const spacePattern = '[\\s\\u200B-\\u200F\\u00A0\\u2000-\\u200A\\u202F\\u205F\\u3000]+';
+  sanitized = sanitized.replace(new RegExp(`ا${spacePattern}ل`, 'g'), 'ال');
   
   // Remove spaces between letter and diacritics
   sanitized = sanitized.replace(/([\u0621-\u064A])\s+([\u064B-\u0652\u0670])/g, '$1$2');
   
   // Fix common broken patterns like "ا لع ا رض" -> "العارض"
-  // Pattern: broken definite article at start
-  sanitized = sanitized.replace(/ا\s*ل\s*([\u0621-\u064A])/g, 'ال$1');
+  // Pattern: broken definite article at start (with enhanced space detection)
+  sanitized = sanitized.replace(
+    new RegExp(`ا${spacePattern.replace('+', '*')}ل${spacePattern.replace('+', '*')}([\\u0621-\\u064A])`, 'g'), 
+    'ال$1'
+  );
   
   // Pattern: single spaces within 3-6 letter Arabic words (likely broken words)
   // Match: Arabic letter, space, 1-5 more (letter + optional space) combos
