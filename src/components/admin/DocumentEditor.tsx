@@ -1605,13 +1605,12 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
                     value={currentLanguage === 'ar' ? (editedData.summary_ar || '') : (editedData.summary || '')}
                     onChange={(e) => setEditedData(prev => ({
                       ...prev,
-                      [currentLanguage === 'ar' ? 'summary_ar' : 'summary']: 
-                        currentLanguage === 'ar' ? normalizeArabicText(e.target.value) : e.target.value
+                      [currentLanguage === 'ar' ? 'summary_ar' : 'summary']: e.target.value
                     }))}
                     placeholder={currentLanguage === 'ar' ? 'ملخص الوثيقة' : 'Résumé du document'}
                     rows={4}
                     dir={currentLanguage === 'ar' ? 'rtl' : 'ltr'}
-                    className="resize-none w-full leading-relaxed"
+                    className="resize-none w-full"
                     required={editedData.language === currentLanguage}
                   />
                 </div>
