@@ -328,7 +328,7 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
             subtitle_ar: analysis.subtitle || prev.subtitle_ar,
             title: analysis.translatedTitle || prev.title,
             subtitle: analysis.translatedSubtitle || prev.subtitle,
-            summary_ar: analysis.summary || prev.summary_ar,
+            summary_ar: analysis.summary ? normalizeArabicText(analysis.summary) : prev.summary_ar,
             summary: analysis.translatedSummary || prev.summary,
             // Keep original content unchanged
             // Apply AI suggestions for dropdown fields
@@ -386,7 +386,7 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
             title_ar: analysis.translatedTitle || prev.title_ar,
             subtitle_ar: analysis.translatedSubtitle || prev.subtitle_ar,
             summary: analysis.summary || prev.summary,
-            summary_ar: analysis.translatedSummary || prev.summary_ar,
+            summary_ar: analysis.translatedSummary ? normalizeArabicText(analysis.translatedSummary) : prev.summary_ar,
             // Keep original content unchanged
             // Apply AI suggestions for dropdown fields
             document_type_id: suggestionIds.documentTypeId || prev.document_type_id,
