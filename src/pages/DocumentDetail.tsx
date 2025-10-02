@@ -10,6 +10,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Separator } from "@/components/ui/separator";
 import { createSlug, createCategorySlug, createDocumentPath } from "@/lib/urlUtils";
 import { renderFormattedContent } from "@/utils/contentFormatter";
+import { normalizeArabicText } from "@/lib/arabicUtils";
 
 interface Document {
   id: string;
@@ -279,10 +280,10 @@ const DocumentDetail = () => {
   const isArabicContent = showOriginal && document.language === 'ar';
   
   // Use Arabic fields when displaying Arabic content
-  const currentTitle = isArabicContent && document.title_ar ? document.title_ar : document.title;
-  const currentSummary = isArabicContent && document.summary_ar ? document.summary_ar : document.summary;
-  const currentAuthor = isArabicContent && document.author_ar ? document.author_ar : document.author;
-  const currentCourt = isArabicContent && document.court_ar ? document.court_ar : document.court;
+  const currentTitle = isArabicContent && document.title_ar ? normalizeArabicText(document.title_ar) : document.title;
+  const currentSummary = isArabicContent && document.summary_ar ? normalizeArabicText(document.summary_ar) : document.summary;
+  const currentAuthor = isArabicContent && document.author_ar ? normalizeArabicText(document.author_ar) : document.author;
+  const currentCourt = isArabicContent && document.court_ar ? normalizeArabicText(document.court_ar) : document.court;
   
   // Format court level: replace underscores with spaces and translate for Arabic
   const formatCourtLevel = (level: string | null) => {
