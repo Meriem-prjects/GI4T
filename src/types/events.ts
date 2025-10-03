@@ -20,8 +20,6 @@ export interface Event {
   governorate_id?: string;
   governorate?: Governorate;
   event_date: string;
-  latitude?: number;
-  longitude?: number;
   people_impacted?: number;
   available_places?: number;
   registration_enabled?: boolean;
@@ -58,8 +56,6 @@ export interface EventFormData {
   description_ar?: string;
   governorate_id?: string;
   event_date: string;
-  latitude?: number;
-  longitude?: number;
   people_impacted?: number;
   available_places?: number;
   registration_enabled?: boolean;

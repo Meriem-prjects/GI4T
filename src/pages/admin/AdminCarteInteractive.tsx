@@ -4,7 +4,6 @@ import { Map, Edit, Calendar, Users, MapPin } from "lucide-react";
 import { useEvents } from "@/hooks/useEvents";
 import { useGovernorates } from "@/hooks/useGovernorates";
 import { EventEditor } from "@/components/admin/EventEditor";
-import { GovernorateMap } from "@/components/map/GovernorateMap";
 
 const AdminCarteInteractive = () => {
   const { events } = useEvents();
@@ -121,10 +120,15 @@ const AdminCarteInteractive = () => {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <GovernorateMap
-                governorates={governorates}
-                events={events}
-              />
+              <div className="flex items-center justify-center h-[600px] text-muted-foreground border-2 border-dashed rounded-lg">
+                <div className="text-center space-y-2">
+                  <Map className="w-12 h-12 mx-auto text-muted-foreground/50" />
+                  <p className="font-medium">Carte des gouvernorats</p>
+                  <p className="text-sm">
+                    La carte interactive sera affichée ici avec les gouvernorats colorés selon le nombre d'événements
+                  </p>
+                </div>
+              </div>
             </CardContent>
           </Card>
         </TabsContent>

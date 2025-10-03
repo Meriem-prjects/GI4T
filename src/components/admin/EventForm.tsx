@@ -148,36 +148,6 @@ export const EventForm = ({ initialData, onSubmit, onCancel, isLoading }: EventF
               />
             </div>
           </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="latitude">Latitude</Label>
-              <Input
-                id="latitude"
-                type="number"
-                step="0.000001"
-                value={formData.latitude || ''}
-                onChange={(e) =>
-                  setFormData({ ...formData, latitude: parseFloat(e.target.value) || undefined })
-                }
-                placeholder="Ex: 36.8065"
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="longitude">Longitude</Label>
-              <Input
-                id="longitude"
-                type="number"
-                step="0.000001"
-                value={formData.longitude || ''}
-                onChange={(e) =>
-                  setFormData({ ...formData, longitude: parseFloat(e.target.value) || undefined })
-                }
-                placeholder="Ex: 10.1815"
-              />
-            </div>
-          </div>
         </CardContent>
       </Card>
 

@@ -1,6 +1,6 @@
 import { Governorate } from "@/types/events";
 
-// Coordonnées GeoJSON simplifiées des 24 gouvernorats tunisiens
+// Placeholder GeoJSON data - À remplacer avec les vraies coordonnées
 export const tunisiaGovernorates: Governorate[] = [
   {
     id: "tunis",
@@ -14,7 +14,7 @@ export const tunisiaGovernorates: Governorate[] = [
       properties: { name: "Tunis", code: "TN-11" },
       geometry: {
         type: "Polygon",
-        coordinates: [[[10.05, 36.85], [10.25, 36.85], [10.30, 36.80], [10.25, 36.75], [10.15, 36.70], [10.05, 36.72], [10.00, 36.78], [10.05, 36.85]]]
+        coordinates: [[[10.0, 36.8], [10.2, 36.8], [10.2, 36.7], [10.0, 36.7], [10.0, 36.8]]]
       }
     }
   },
@@ -30,7 +30,7 @@ export const tunisiaGovernorates: Governorate[] = [
       properties: { name: "Ariana", code: "TN-12" },
       geometry: {
         type: "Polygon",
-        coordinates: [[[10.05, 36.85], [10.00, 36.92], [10.10, 37.00], [10.22, 36.98], [10.30, 36.90], [10.25, 36.85], [10.05, 36.85]]]
+        coordinates: [[[10.1, 36.9], [10.3, 36.9], [10.3, 36.8], [10.1, 36.8], [10.1, 36.9]]]
       }
     }
   },
@@ -46,7 +46,7 @@ export const tunisiaGovernorates: Governorate[] = [
       properties: { name: "Ben Arous", code: "TN-13" },
       geometry: {
         type: "Polygon",
-        coordinates: [[[10.05, 36.72], [10.15, 36.70], [10.30, 36.65], [10.35, 36.58], [10.28, 36.50], [10.15, 36.52], [10.05, 36.60], [10.05, 36.72]]]
+        coordinates: [[[10.1, 36.7], [10.3, 36.7], [10.3, 36.6], [10.1, 36.6], [10.1, 36.7]]]
       }
     }
   },
@@ -62,7 +62,7 @@ export const tunisiaGovernorates: Governorate[] = [
       properties: { name: "Manouba", code: "TN-14" },
       geometry: {
         type: "Polygon",
-        coordinates: [[[9.80, 36.95], [10.00, 36.92], [10.05, 36.85], [10.00, 36.78], [9.85, 36.75], [9.75, 36.80], [9.75, 36.88], [9.80, 36.95]]]
+        coordinates: [[[9.9, 36.9], [10.1, 36.9], [10.1, 36.7], [9.9, 36.7], [9.9, 36.9]]]
       }
     }
   },
@@ -78,7 +78,7 @@ export const tunisiaGovernorates: Governorate[] = [
       properties: { name: "Nabeul", code: "TN-21" },
       geometry: {
         type: "Polygon",
-        coordinates: [[[10.35, 36.58], [10.95, 36.62], [11.10, 36.50], [11.05, 36.30], [10.85, 36.15], [10.60, 36.20], [10.45, 36.35], [10.35, 36.58]]]
+        coordinates: [[[10.5, 36.5], [11.0, 36.5], [11.0, 36.2], [10.5, 36.2], [10.5, 36.5]]]
       }
     }
   },
@@ -94,7 +94,7 @@ export const tunisiaGovernorates: Governorate[] = [
       properties: { name: "Zaghouan", code: "TN-22" },
       geometry: {
         type: "Polygon",
-        coordinates: [[[10.05, 36.60], [10.15, 36.52], [10.28, 36.50], [10.45, 36.35], [10.35, 36.15], [10.15, 36.10], [9.95, 36.25], [9.90, 36.45], [10.05, 36.60]]]
+        coordinates: [[[10.0, 36.5], [10.5, 36.5], [10.5, 36.2], [10.0, 36.2], [10.0, 36.5]]]
       }
     }
   },
@@ -110,7 +110,7 @@ export const tunisiaGovernorates: Governorate[] = [
       properties: { name: "Bizerte", code: "TN-23" },
       geometry: {
         type: "Polygon",
-        coordinates: [[[9.45, 37.35], [9.85, 37.28], [10.10, 37.00], [10.00, 36.92], [9.80, 36.95], [9.55, 37.05], [9.40, 37.18], [9.45, 37.35]]]
+        coordinates: [[[9.5, 37.3], [10.0, 37.3], [10.0, 36.9], [9.5, 36.9], [9.5, 37.3]]]
       }
     }
   },
@@ -126,7 +126,7 @@ export const tunisiaGovernorates: Governorate[] = [
       properties: { name: "Béja", code: "TN-31" },
       geometry: {
         type: "Polygon",
-        coordinates: [[[9.15, 36.85], [9.55, 36.88], [9.75, 36.80], [9.75, 36.60], [9.50, 36.48], [9.20, 36.52], [9.05, 36.68], [9.15, 36.85]]]
+        coordinates: [[[9.0, 36.8], [9.5, 36.8], [9.5, 36.5], [9.0, 36.5], [9.0, 36.8]]]
       }
     }
   },
@@ -142,7 +142,7 @@ export const tunisiaGovernorates: Governorate[] = [
       properties: { name: "Jendouba", code: "TN-32" },
       geometry: {
         type: "Polygon",
-        coordinates: [[[8.40, 37.05], [8.85, 37.00], [9.15, 36.85], [9.05, 36.68], [8.75, 36.65], [8.45, 36.75], [8.35, 36.92], [8.40, 37.05]]]
+        coordinates: [[[8.5, 37.0], [9.0, 37.0], [9.0, 36.5], [8.5, 36.5], [8.5, 37.0]]]
       }
     }
   },
@@ -158,7 +158,7 @@ export const tunisiaGovernorates: Governorate[] = [
       properties: { name: "Le Kef", code: "TN-33" },
       geometry: {
         type: "Polygon",
-        coordinates: [[[8.35, 36.28], [8.75, 36.25], [9.05, 36.18], [9.20, 36.00], [8.95, 35.88], [8.55, 35.92], [8.35, 36.05], [8.35, 36.28]]]
+        coordinates: [[[8.5, 36.5], [9.0, 36.5], [9.0, 36.0], [8.5, 36.0], [8.5, 36.5]]]
       }
     }
   },
@@ -174,7 +174,7 @@ export const tunisiaGovernorates: Governorate[] = [
       properties: { name: "Siliana", code: "TN-34" },
       geometry: {
         type: "Polygon",
-        coordinates: [[[9.05, 36.68], [9.20, 36.52], [9.50, 36.48], [9.65, 36.30], [9.55, 36.10], [9.20, 36.00], [9.05, 36.18], [8.95, 36.45], [9.05, 36.68]]]
+        coordinates: [[[9.0, 36.5], [9.5, 36.5], [9.5, 36.0], [9.0, 36.0], [9.0, 36.5]]]
       }
     }
   },
@@ -190,7 +190,7 @@ export const tunisiaGovernorates: Governorate[] = [
       properties: { name: "Sousse", code: "TN-51" },
       geometry: {
         type: "Polygon",
-        coordinates: [[[10.35, 36.15], [10.60, 36.20], [10.75, 36.05], [10.78, 35.85], [10.65, 35.70], [10.45, 35.75], [10.30, 35.95], [10.35, 36.15]]]
+        coordinates: [[[10.3, 36.0], [10.8, 36.0], [10.8, 35.7], [10.3, 35.7], [10.3, 36.0]]]
       }
     }
   },
@@ -206,7 +206,7 @@ export const tunisiaGovernorates: Governorate[] = [
       properties: { name: "Monastir", code: "TN-52" },
       geometry: {
         type: "Polygon",
-        coordinates: [[[10.65, 35.70], [10.95, 35.75], [11.10, 35.62], [11.08, 35.45], [10.88, 35.42], [10.70, 35.52], [10.65, 35.70]]]
+        coordinates: [[[10.6, 35.8], [11.0, 35.8], [11.0, 35.5], [10.6, 35.5], [10.6, 35.8]]]
       }
     }
   },
@@ -222,7 +222,7 @@ export const tunisiaGovernorates: Governorate[] = [
       properties: { name: "Mahdia", code: "TN-53" },
       geometry: {
         type: "Polygon",
-        coordinates: [[[10.88, 35.42], [11.08, 35.45], [11.15, 35.30], [11.10, 35.10], [10.95, 35.05], [10.75, 35.18], [10.70, 35.35], [10.88, 35.42]]]
+        coordinates: [[[10.8, 35.7], [11.2, 35.7], [11.2, 35.3], [10.8, 35.3], [10.8, 35.7]]]
       }
     }
   },
@@ -238,7 +238,7 @@ export const tunisiaGovernorates: Governorate[] = [
       properties: { name: "Sfax", code: "TN-61" },
       geometry: {
         type: "Polygon",
-        coordinates: [[[10.45, 35.05], [10.95, 35.05], [11.10, 34.85], [11.05, 34.55], [10.75, 34.40], [10.45, 34.52], [10.35, 34.80], [10.45, 35.05]]]
+        coordinates: [[[10.5, 35.0], [11.0, 35.0], [11.0, 34.5], [10.5, 34.5], [10.5, 35.0]]]
       }
     }
   },
@@ -254,7 +254,7 @@ export const tunisiaGovernorates: Governorate[] = [
       properties: { name: "Kairouan", code: "TN-41" },
       geometry: {
         type: "Polygon",
-        coordinates: [[[9.55, 36.10], [9.95, 36.25], [10.15, 36.10], [10.35, 36.15], [10.30, 35.95], [10.45, 35.75], [10.25, 35.55], [9.85, 35.60], [9.60, 35.78], [9.55, 36.10]]]
+        coordinates: [[[9.5, 35.8], [10.3, 35.8], [10.3, 35.3], [9.5, 35.3], [9.5, 35.8]]]
       }
     }
   },
@@ -270,7 +270,7 @@ export const tunisiaGovernorates: Governorate[] = [
       properties: { name: "Kasserine", code: "TN-42" },
       geometry: {
         type: "Polygon",
-        coordinates: [[[8.55, 35.92], [8.95, 35.88], [9.20, 35.75], [9.45, 35.50], [9.35, 35.15], [9.05, 34.95], [8.65, 35.05], [8.45, 35.35], [8.55, 35.92]]]
+        coordinates: [[[8.5, 35.5], [9.5, 35.5], [9.5, 34.8], [8.5, 34.8], [8.5, 35.5]]]
       }
     }
   },
@@ -286,7 +286,7 @@ export const tunisiaGovernorates: Governorate[] = [
       properties: { name: "Sidi Bouzid", code: "TN-43" },
       geometry: {
         type: "Polygon",
-        coordinates: [[[9.20, 35.75], [9.60, 35.78], [9.85, 35.60], [10.10, 35.40], [10.05, 35.10], [9.75, 34.95], [9.35, 35.15], [9.20, 35.75]]]
+        coordinates: [[[9.0, 35.3], [10.0, 35.3], [10.0, 34.8], [9.0, 34.8], [9.0, 35.3]]]
       }
     }
   },
@@ -302,7 +302,7 @@ export const tunisiaGovernorates: Governorate[] = [
       properties: { name: "Gabès", code: "TN-71" },
       geometry: {
         type: "Polygon",
-        coordinates: [[[9.85, 34.35], [10.35, 34.28], [10.45, 34.05], [10.35, 33.75], [10.05, 33.68], [9.75, 33.85], [9.70, 34.15], [9.85, 34.35]]]
+        coordinates: [[[9.8, 34.0], [10.5, 34.0], [10.5, 33.5], [9.8, 33.5], [9.8, 34.0]]]
       }
     }
   },
@@ -318,7 +318,7 @@ export const tunisiaGovernorates: Governorate[] = [
       properties: { name: "Médenine", code: "TN-82" },
       geometry: {
         type: "Polygon",
-        coordinates: [[[10.35, 33.75], [10.85, 33.68], [11.05, 33.45], [11.00, 33.15], [10.65, 33.00], [10.30, 33.05], [10.20, 33.35], [10.35, 33.75]]]
+        coordinates: [[[10.3, 33.5], [11.0, 33.5], [11.0, 33.0], [10.3, 33.0], [10.3, 33.5]]]
       }
     }
   },
@@ -334,7 +334,7 @@ export const tunisiaGovernorates: Governorate[] = [
       properties: { name: "Tataouine", code: "TN-83" },
       geometry: {
         type: "Polygon",
-        coordinates: [[[9.45, 32.85], [10.30, 33.05], [10.65, 33.00], [11.00, 32.80], [11.05, 32.45], [10.75, 32.15], [10.25, 32.05], [9.75, 32.25], [9.45, 32.55], [9.45, 32.85]]]
+        coordinates: [[[9.5, 33.0], [11.0, 33.0], [11.0, 32.0], [9.5, 32.0], [9.5, 33.0]]]
       }
     }
   },
@@ -350,7 +350,7 @@ export const tunisiaGovernorates: Governorate[] = [
       properties: { name: "Gafsa", code: "TN-72" },
       geometry: {
         type: "Polygon",
-        coordinates: [[[8.15, 34.55], [8.65, 34.60], [9.05, 34.50], [9.35, 34.25], [9.25, 33.95], [8.85, 33.85], [8.35, 34.05], [8.15, 34.35], [8.15, 34.55]]]
+        coordinates: [[[8.0, 34.5], [9.5, 34.5], [9.5, 33.8], [8.0, 33.8], [8.0, 34.5]]]
       }
     }
   },
@@ -366,7 +366,7 @@ export const tunisiaGovernorates: Governorate[] = [
       properties: { name: "Tozeur", code: "TN-73" },
       geometry: {
         type: "Polygon",
-        coordinates: [[[7.65, 34.55], [8.15, 34.55], [8.35, 34.05], [8.25, 33.75], [7.95, 33.70], [7.60, 33.85], [7.55, 34.20], [7.65, 34.55]]]
+        coordinates: [[[7.5, 34.5], [8.5, 34.5], [8.5, 33.8], [7.5, 33.8], [7.5, 34.5]]]
       }
     }
   },
@@ -382,7 +382,7 @@ export const tunisiaGovernorates: Governorate[] = [
       properties: { name: "Kébili", code: "TN-74" },
       geometry: {
         type: "Polygon",
-        coordinates: [[[8.25, 33.75], [8.85, 33.85], [9.25, 33.65], [9.45, 33.35], [9.45, 32.85], [9.45, 32.55], [9.15, 32.40], [8.65, 32.55], [8.25, 32.85], [7.95, 33.15], [7.95, 33.70], [8.25, 33.75]]]
+        coordinates: [[[8.0, 33.8], [9.5, 33.8], [9.5, 33.0], [8.0, 33.0], [8.0, 33.8]]]
       }
     }
   }
