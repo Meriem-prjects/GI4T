@@ -306,7 +306,7 @@ const SearchResults = () => {
       <div className="flex flex-col lg:flex-row gap-6">
         {/* Left Sidebar - Filters */}
         <div className="w-full lg:w-80 space-y-6">
-          <Card className="lg:sticky lg:top-4 lg:max-h-[calc(100vh-2rem)] lg:overflow-y-auto">
+          <Card className="lg:sticky lg:top-4 lg:max-h-[calc(100vh-2rem)] lg:overflow-y-auto scrollbar-thin">
             <CardHeader className="pb-4">
               <CardTitle className="text-lg flex items-center gap-2">
                 <Filter className="w-5 h-5" />
@@ -430,7 +430,7 @@ const SearchResults = () => {
               {/* Droits Fondamentaux */}
               <div>
                 <Label className="text-sm font-medium mb-3 block">Droits Fondamentaux</Label>
-                <div className="space-y-3 max-h-48 overflow-y-auto">
+                <div className="space-y-3 max-h-48 overflow-y-auto scrollbar-thin">
                   {categories.map((category) => (
                     <div key={category.id} className="flex items-center space-x-2">
                       <Checkbox 
