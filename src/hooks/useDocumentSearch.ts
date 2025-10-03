@@ -179,25 +179,20 @@ export const useDocumentSearch = (filters: DocumentSearchFilters) => {
           };
         }) || [];
 
-      // Keep only consultable documents (must have at least one category)
-      const consultableResults = results.filter((doc) => doc.primaryCategory);
-
       // Apply category filter in memory (since it requires joining through document_categories)
-      let filteredResults = consultableResults;
+      let filteredResults = results;
       if (categories && categories.length > 0) {
-        filteredResults = consultableResults.filter((doc) =>
+        filteredResults = results.filter((doc) =>
           doc.categories.some((cat) => categories.includes(cat.id))
         );
       }
 
-      const total = filteredResults.length;
-
       return {
         results: filteredResults,
-        total,
+        total: count || 0,
         page,
         pageSize,
-        totalPages: Math.ceil(total / pageSize),
+        totalPages: Math.ceil((count || 0) / pageSize),
       };
     },
   });
