@@ -107,75 +107,8 @@ export const GovernorateMap = ({
     });
   }, [governorates, events, mapLoaded, selectedGovernorateId, onGovernorateClick]);
 
-  // Ajouter les marqueurs d'événements
-  useEffect(() => {
-    if (!mapInstanceRef.current || !mapLoaded) return;
-
-    const map = mapInstanceRef.current;
-
-    // Supprimer les anciens marqueurs
-    markersRef.current.forEach((marker) => marker.remove());
-    markersRef.current = [];
-
-    // Ajouter les nouveaux marqueurs
-    events.forEach((event) => {
-      if (event.latitude && event.longitude) {
-        const iconColor = event.type === "action_realisee" ? "#22C55E" : "#3B82F6";
-        const iconHtml = `
-          <div style="
-            background-color: ${iconColor};
-            width: 24px;
-            height: 24px;
-            border-radius: 50%;
-            border: 2px solid white;
-            box-shadow: 0 2px 6px rgba(0,0,0,0.3);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: white;
-            font-size: 12px;
-          ">
-            ${event.type === "action_realisee" ? "✓" : "📅"}
-          </div>
-        `;
-
-        const marker = L.marker([event.latitude, event.longitude], {
-          icon: L.divIcon({
-            html: iconHtml,
-            className: "custom-event-marker",
-            iconSize: [24, 24],
-            iconAnchor: [12, 12],
-          }),
-        });
-
-        marker.bindPopup(
-          `<div style="font-family: Inter, sans-serif; min-width: 200px;">
-            <div style="font-weight: bold; margin-bottom: 4px;">
-              ${event.title}
-            </div>
-            <div style="font-size: 11px; color: #666;">
-              📍 ${event.governorate?.name || ""}
-            </div>
-            <div style="font-size: 11px; color: #666;">
-              📅 ${new Date(event.event_date).toLocaleDateString("fr-FR")}
-            </div>
-            ${
-              event.type === "action_realisee"
-                ? `<div style="font-size: 11px; color: #22C55E; margin-top: 4px;">
-                    ✅ ${event.people_impacted || 0} personnes touchées
-                  </div>`
-                : `<div style="font-size: 11px; color: #3B82F6; margin-top: 4px;">
-                    🎫 ${event.available_places || 0} places disponibles
-                  </div>`
-            }
-          </div>`
-        );
-
-        marker.addTo(map);
-        markersRef.current.push(marker);
-      }
-    });
-  }, [events, mapLoaded]);
+  // Les marqueurs d'événements ne sont plus affichés sur la carte
+  // L'affichage se fait uniquement via les contours des gouvernorats
 
   return (
     <div className="relative">
@@ -192,18 +125,11 @@ export const GovernorateMap = ({
           </div>
         </div>
       )}
-      {/* Légende */}
-      <div className="absolute bottom-4 left-4 bg-white rounded-lg shadow-lg p-3 text-xs space-y-2">
-        <div className="font-semibold mb-2">Légende</div>
-        <div className="space-y-1">
-          <div className="flex items-center gap-2">
-            <div className="w-5 h-5 rounded-full bg-green-500 flex items-center justify-center text-white text-[10px]">✓</div>
-            <span>Action réalisée</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <div className="w-5 h-5 rounded-full bg-blue-500 flex items-center justify-center text-white text-[10px]">📅</div>
-            <span>Événement à venir</span>
-          </div>
+      {/* Légende simplifiée */}
+      <div className="absolute bottom-4 left-4 bg-white rounded-lg shadow-lg p-3 text-xs">
+        <div className="font-semibold mb-2">Carte des gouvernorats</div>
+        <div className="text-muted-foreground text-[11px]">
+          Survolez un gouvernorat pour voir les informations
         </div>
       </div>
     </div>
