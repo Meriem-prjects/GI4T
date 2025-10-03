@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { Search, Filter, Grid3X3, List, Loader2, Sparkles, ChevronDown, ChevronUp } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -36,6 +36,8 @@ const SearchResults = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [useAI, setUseAI] = useState(false);
   const [expandedSummaries, setExpandedSummaries] = useState<Set<string>>(new Set());
+  const [showStickySearch, setShowStickySearch] = useState(false);
+  const searchBarRef = useRef<HTMLDivElement>(null);
 
   // Get search query from URL params on component mount
   useEffect(() => {
@@ -44,6 +46,26 @@ const SearchResults = () => {
       setSearchQuery(decodeURIComponent(queryFromUrl));
     }
   }, [searchParams]);
+
+  // Detect when main search bar is out of view
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        setShowStickySearch(!entry.isIntersecting);
+      },
+      { threshold: 0 }
+    );
+
+    if (searchBarRef.current) {
+      observer.observe(searchBarRef.current);
+    }
+
+    return () => {
+      if (searchBarRef.current) {
+        observer.unobserve(searchBarRef.current);
+      }
+    };
+  }, []);
 
   // Set default year range when yearRange is loaded
   useEffect(() => {
@@ -218,7 +240,7 @@ const SearchResults = () => {
       </Breadcrumb>
 
       {/* Search Bar */}
-      <div className="max-w-4xl mx-auto mb-6">
+      <div ref={searchBarRef} className="max-w-4xl mx-auto mb-6">
         <div className="relative">
           <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-muted-foreground" size={20} />
           <Input
@@ -284,7 +306,7 @@ const SearchResults = () => {
       <div className="flex flex-col lg:flex-row gap-6">
         {/* Left Sidebar - Filters */}
         <div className="w-full lg:w-80 space-y-6">
-          <Card>
+          <Card className="lg:sticky lg:top-4 lg:max-h-[calc(100vh-2rem)] lg:overflow-y-auto">
             <CardHeader className="pb-4">
               <CardTitle className="text-lg flex items-center gap-2">
                 <Filter className="w-5 h-5" />
@@ -300,6 +322,41 @@ const SearchResults = () => {
               </Button>
             </CardHeader>
             <CardContent className="space-y-6">
+              {/* Sticky Search Bar */}
+              {showStickySearch && (
+                <div className="pb-4 border-b">
+                  <Label className="text-sm font-medium mb-2 block">Recherche</Label>
+                  <div className="relative">
+                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground" size={16} />
+                    <Input
+                      placeholder="Rechercher..."
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') {
+                          setCurrentPage(1);
+                        }
+                      }}
+                      className="pl-9 text-sm"
+                    />
+                  </div>
+                  <div className="flex items-center gap-2 mt-2">
+                    <Switch
+                      id="ai-search-sticky"
+                      checked={useAI}
+                      onCheckedChange={(checked) => {
+                        setUseAI(checked);
+                        setCurrentPage(1);
+                      }}
+                      className="scale-75"
+                    />
+                    <Label htmlFor="ai-search-sticky" className="text-xs cursor-pointer flex items-center gap-1">
+                      <Sparkles className={`h-3 w-3 ${useAI ? 'text-primary' : 'text-muted-foreground'}`} />
+                      IA
+                    </Label>
+                  </div>
+                </div>
+              )}
               {/* Tribunal */}
               <div>
                 <Label className="text-sm font-medium mb-2 block">Type de Tribunal</Label>
