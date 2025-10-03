@@ -21,29 +21,30 @@ const MediathequeLayout = () => {
               </Link>
             </div>
             
-            <div className="flex items-center ml-auto">
-              <div className="hidden sm:flex items-center space-x-2 sm:space-x-4">
-                <Link to="/acces-aux-droits/carte-interactive" className="text-sm font-medium text-foreground hover:text-primary transition-colors duration-200">
-                  Carte interactive
-                </Link>
-                <Link to="/acces-aux-droits/mediatheque" className="text-sm font-medium text-foreground hover:text-primary transition-colors duration-200">
-                  Médiathèque
-                </Link>
-                <Link to="/acces-aux-droits/actualites" className="text-sm font-medium text-foreground hover:text-primary transition-colors duration-200">
-                  Actualités
-                </Link>
-                <Link to="/acces-aux-droits">
-                  <Button variant="outline" size="sm" className="text-xs sm:text-sm">
-                    <Home className="h-4 w-4" />
-                  </Button>
-                </Link>
-                <Button variant="outline" size="sm" className="text-xs sm:text-sm">العربية</Button>
-                <Link to="/observatoire">
-                  <Button variant="outline" size="sm" className="text-xs sm:text-sm">
-                    Observatoire
-                  </Button>
-                </Link>
-              </div>
+            <nav className="hidden md:flex items-center space-x-6 absolute left-1/2 transform -translate-x-1/2">
+              <Link to="/acces-aux-droits/carte-interactive" className="text-sm font-medium text-foreground hover:text-primary transition-colors duration-200">
+                Carte interactive
+              </Link>
+              <Link to="/acces-aux-droits/mediatheque" className="text-sm font-medium text-foreground hover:text-primary transition-colors duration-200">
+                Médiathèque
+              </Link>
+              <Link to="/acces-aux-droits/actualites" className="text-sm font-medium text-foreground hover:text-primary transition-colors duration-200">
+                Actualités
+              </Link>
+            </nav>
+
+            <div className="flex items-center space-x-2 sm:space-x-4 ml-auto">
+              <Link to="/acces-aux-droits">
+                <Button variant="outline" size="sm" className="text-xs sm:text-sm">
+                  <Home className="h-4 w-4" />
+                </Button>
+              </Link>
+              <Button variant="outline" size="sm" className="text-xs sm:text-sm">العربية</Button>
+              <Link to="/observatoire">
+                <Button variant="outline" size="sm" className="text-xs sm:text-sm">
+                  Observatoire
+                </Button>
+              </Link>
             </div>
           </div>
         </div>
