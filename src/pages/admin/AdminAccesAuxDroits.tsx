@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Routes, Route } from "react-router-dom";
 import AdminSidebar from "@/components/admin/AdminSidebar";
 import AdminDashboard from "@/components/admin/AdminDashboard";
+import AdminCarteInteractive from "./AdminCarteInteractive";
 import { cn } from "@/lib/utils";
 
 const AdminAccesAuxDroits = () => {
@@ -46,7 +47,7 @@ const AdminAccesAuxDroits = () => {
             <Route path="guides-pratiques" element={<div className="p-6">Guides pratiques - Guides step-by-step - En développement</div>} />
             
             {/* Carte interactive */}
-            <Route path="carte-interactive" element={<div className="p-6">Carte interactive - Localiser les services - En développement</div>} />
+            <Route path="carte-interactive" element={<AdminCarteInteractive />} />
             <Route path="adresses-utiles" element={<div className="p-6">Adresses utiles - Organismes et contacts - En développement</div>} />
           </Routes>
         </div>

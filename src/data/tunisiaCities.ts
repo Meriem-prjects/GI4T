@@ -1,0 +1,152 @@
+import { City } from '@/types/map';
+
+export const tunisiaCities: City[] = [
+  {
+    id: 'tunis',
+    name: 'Tunis',
+    region: 'Tunis',
+    image: 'https://images.unsplash.com/photo-1585852134052-6a44d2c2f41e?w=400',
+    description: 'Capitale de la Tunisie, Tunis est une ville moderne mêlant histoire et modernité. Sa médina, classée au patrimoine mondial de l\'UNESCO, offre une expérience authentique avec ses souks colorés et son architecture préservée.',
+    position: { lat: 36.8065, lng: 10.1815 },
+    type: 'activity',
+    rating: 4.5,
+    services: ['Médina UNESCO', 'Musées', 'Souks', 'Restaurants'],
+    phone: '+216 71 123 456',
+    hours: 'Ouvert tous les jours'
+  },
+  {
+    id: 'carthage',
+    name: 'Carthage',
+    region: 'Tunis',
+    image: 'https://images.unsplash.com/photo-1591825805989-4b6b8e3a0de1?w=400',
+    description: 'Site archéologique majeur, Carthage était autrefois une puissante cité punique puis romaine. Les ruines des thermes d\'Antonin, du théâtre romain et des villas antiques témoignent de sa grandeur passée.',
+    position: { lat: 36.8531, lng: 10.3231 },
+    type: 'activity',
+    rating: 4.8,
+    services: ['Sites archéologiques', 'Musées', 'Visites guidées'],
+    phone: '+216 71 234 567',
+    hours: '9h00 - 18h00'
+  },
+  {
+    id: 'sidi-bou-said',
+    name: 'Sidi Bou Saïd',
+    region: 'Tunis',
+    image: 'https://images.unsplash.com/photo-1548986015-d86d202c27ab?w=400',
+    description: 'Village pittoresque perché sur une falaise, célèbre pour ses maisons blanches et bleues, ses portes cloutées et ses ruelles fleuries. Un lieu enchanteur offrant une vue magnifique sur la Méditerranée.',
+    position: { lat: 36.8678, lng: 10.3406 },
+    type: 'activity',
+    rating: 4.9,
+    services: ['Cafés traditionnels', 'Artisanat', 'Vue panoramique'],
+    phone: '+216 71 345 678',
+    hours: 'Ouvert tous les jours'
+  },
+  {
+    id: 'sousse',
+    name: 'Sousse',
+    region: 'Sahel',
+    image: 'https://images.unsplash.com/photo-1548013146-72479768bada?w=400',
+    description: 'Station balnéaire animée avec une médina exceptionnelle classée UNESCO. La Ribat, forteresse du IXe siècle, et le musée archéologique sont des incontournables. Plages magnifiques et vie nocturne dynamique.',
+    position: { lat: 35.8256, lng: 10.6369 },
+    type: 'hotel',
+    price: '80 TND',
+    rating: 4.6,
+    services: ['Hôtels', 'Plages', 'Médina', 'Restaurants'],
+    phone: '+216 73 456 789',
+    hours: '24h/24'
+  },
+  {
+    id: 'monastir',
+    name: 'Monastir',
+    region: 'Sahel',
+    image: 'https://images.unsplash.com/photo-1566073771259-6a8506099945?w=400',
+    description: 'Ville côtière historique abritant le majestueux Ribat de Monastir, un des mieux conservés de Tunisie. Le mausolée d\'Habib Bourguiba et la marina moderne complètent l\'offre touristique.',
+    position: { lat: 35.7643, lng: 10.8113 },
+    type: 'activity',
+    rating: 4.4,
+    services: ['Ribat historique', 'Marina', 'Mausolée', 'Golf'],
+    phone: '+216 73 567 890',
+    hours: '8h00 - 19h00'
+  },
+  {
+    id: 'kairouan',
+    name: 'Kairouan',
+    region: 'Centre',
+    image: 'https://images.unsplash.com/photo-1583511655857-d19b40a7a54e?w=400',
+    description: 'Quatrième ville sainte de l\'Islam, Kairouan abrite la Grande Mosquée, chef-d\'œuvre de l\'architecture islamique. La médina et les bassins des Aghlabides témoignent de son riche patrimoine spirituel et culturel.',
+    position: { lat: 35.6781, lng: 10.0963 },
+    type: 'activity',
+    rating: 4.7,
+    services: ['Grande Mosquée', 'Médina', 'Artisanat', 'Pâtisseries'],
+    phone: '+216 77 678 901',
+    hours: '8h00 - 17h00'
+  },
+  {
+    id: 'tozeur',
+    name: 'Tozeur',
+    region: 'Sud-Ouest',
+    image: 'https://images.unsplash.com/photo-1547036967-23d11aacaee0?w=400',
+    description: 'Oasis spectaculaire aux portes du désert du Sahara. Architecture unique en briques apparentes, palmeraies luxuriantes et proximité des décors de Star Wars. Point de départ idéal pour explorer le désert.',
+    position: { lat: 33.9197, lng: 8.1335 },
+    type: 'guesthouse',
+    price: '120 TND',
+    rating: 4.5,
+    services: ['Maisons d\'hôtes', 'Excursions désert', 'Palmeraie', '4x4'],
+    phone: '+216 76 789 012',
+    hours: '24h/24'
+  },
+  {
+    id: 'douz',
+    name: 'Douz',
+    region: 'Sud',
+    image: 'https://images.unsplash.com/photo-1509316785289-025f5b846b35?w=400',
+    description: 'Surnommée "la porte du Sahara", Douz est le point de départ des expéditions dans le grand désert. Festival international du Sahara, balades à dos de chameau et nuits sous les étoiles dans les dunes.',
+    position: { lat: 33.4664, lng: 9.0203 },
+    type: 'guesthouse',
+    price: '100 TND',
+    rating: 4.6,
+    services: ['Campements', 'Excursions chamelières', 'Festival', 'Dunes'],
+    phone: '+216 75 890 123',
+    hours: '24h/24'
+  },
+  {
+    id: 'matmata',
+    name: 'Matmata',
+    region: 'Sud',
+    image: 'https://images.unsplash.com/photo-1583511655857-d19b40a7a54e?w=400',
+    description: 'Village unique au monde avec ses habitations troglodytes creusées dans le sol. Ces maisons souterraines ont servi de décor à Star Wars. Une architecture millénaire parfaitement adaptée au climat désertique.',
+    position: { lat: 33.5447, lng: 9.9658 },
+    type: 'guesthouse',
+    price: '90 TND',
+    rating: 4.8,
+    services: ['Habitations troglodytes', 'Hôtel Star Wars', 'Visites guidées'],
+    phone: '+216 75 901 234',
+    hours: '24h/24'
+  },
+  {
+    id: 'djerba',
+    name: 'Djerba',
+    region: 'Sud-Est',
+    image: 'https://images.unsplash.com/photo-1590073844006-33379778ae09?w=400',
+    description: 'Île paradisiaque de la Méditerranée, Djerba séduit par ses plages de sable fin, son climat doux toute l\'année et son patrimoine culturel riche. La synagogue de la Ghriba et les villages traditionnels valent le détour.',
+    position: { lat: 33.8076, lng: 10.8451 },
+    type: 'hotel',
+    price: '150 TND',
+    rating: 4.7,
+    services: ['Hôtels de luxe', 'Plages', 'Thalasso', 'Sports nautiques'],
+    phone: '+216 75 012 345',
+    hours: '24h/24'
+  }
+];
+
+export const routePath: string[] = [
+  'tunis',
+  'carthage',
+  'sidi-bou-said',
+  'sousse',
+  'monastir',
+  'kairouan',
+  'tozeur',
+  'douz',
+  'matmata',
+  'djerba'
+];
