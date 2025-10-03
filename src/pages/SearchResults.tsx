@@ -10,6 +10,7 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Breadcrumb, BreadcrumbList, BreadcrumbItem, BreadcrumbLink, BreadcrumbPage, BreadcrumbSeparator } from "@/components/ui/breadcrumb";
 import { useDocumentSearch } from "@/hooks/useDocumentSearch";
 import { useSearchFilters } from "@/hooks/useSearchFilters";
@@ -82,9 +83,10 @@ const SearchResults = () => {
 
   // Reset all filters
   const resetFilters = () => {
+    setSearchQuery("");
     setSelectedCourtType("all");
-    setYearFrom(yearRange.minYear.toString());
-    setYearTo(yearRange.maxYear.toString());
+    setYearFrom("");
+    setYearTo("");
     setSelectedCategories([]);
     setSelectedJurisdictionLevel("all");
     setSelectedDocumentType("all");
@@ -114,6 +116,43 @@ const SearchResults = () => {
       if (type) filters.push(type.name);
     }
     return filters;
+  };
+
+  const generateMatchExplanation = (doc: any, query: string, similarity: number) => {
+    const matchedFields = [];
+    const queryLower = query.toLowerCase();
+    
+    // Check what fields matched
+    if (doc.title?.toLowerCase().includes(queryLower) || doc.title_ar?.includes(query)) {
+      matchedFields.push("le titre");
+    }
+    if (doc.summary?.toLowerCase().includes(queryLower) || doc.summary_ar?.includes(query)) {
+      matchedFields.push("le résumé");
+    }
+    if (doc.keywords?.some((k: string) => k.toLowerCase().includes(queryLower)) || 
+        doc.keywords_ar?.some((k: string) => k.includes(query))) {
+      matchedFields.push("les mots-clés");
+    }
+    
+    // Generate explanation based on similarity score
+    let explanation = "";
+    if (similarity >= 0.7) {
+      explanation = "Très forte correspondance sémantique";
+    } else if (similarity >= 0.5) {
+      explanation = "Bonne correspondance sémantique";
+    } else if (similarity >= 0.3) {
+      explanation = "Correspondance sémantique modérée";
+    } else {
+      explanation = "Correspondance sémantique faible";
+    }
+    
+    if (matchedFields.length > 0) {
+      explanation += ` basée sur ${matchedFields.join(", ")}`;
+    }
+    
+    explanation += ". L'IA a analysé le contexte et le sens de votre requête pour trouver ce document pertinent.";
+    
+    return explanation;
   };
 
   const activeFilters = getActiveFilters();
@@ -437,10 +476,19 @@ const SearchResults = () => {
                         </span>
                         <div className="flex items-center gap-2">
                           {useAI && (result as any).similarity && (
-                            <Badge variant="default" className="text-xs gap-1">
-                              <Sparkles className="h-3 w-3" />
-                              {Math.round((result as any).similarity * 100)}%
-                            </Badge>
+                            <TooltipProvider>
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <Badge variant="default" className="text-xs gap-1 cursor-help">
+                                    <Sparkles className="h-3 w-3" />
+                                    {Math.round((result as any).similarity * 100)}%
+                                  </Badge>
+                                </TooltipTrigger>
+                                <TooltipContent className="max-w-xs">
+                                  <p className="text-sm">{generateMatchExplanation(result, searchQuery, (result as any).similarity)}</p>
+                                </TooltipContent>
+                              </Tooltip>
+                            </TooltipProvider>
                           )}
                           {result.year && (
                             <Badge variant="outline" className="text-xs">
