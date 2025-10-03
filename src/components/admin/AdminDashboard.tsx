@@ -12,6 +12,8 @@ import {
   Edit,
   Eye
 } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 
 interface AdminDashboardProps {
   type: "observatoire" | "acces-aux-droits";
@@ -32,13 +34,55 @@ const AdminDashboard = ({ type }: AdminDashboardProps) => {
 
   const sectionTitle = type === "observatoire" ? "Observatoire des Droits" : "Accès aux Droits";
 
-  // Mock data - à remplacer par de vraies données plus tard
-  const stats = {
-    published: 156,
-    pending: 23,
-    rejected: 8,
-    activeUsers: 42
-  };
+  // Récupérer les statistiques réelles
+  const { data: stats, isLoading } = useQuery({
+    queryKey: ["dashboard-stats"],
+    queryFn: async () => {
+      // Compter les documents publiés (status = 'processed')
+      const { count: publishedCount } = await supabase
+        .from("documents")
+        .select("*", { count: "exact", head: true })
+        .eq("status", "processed");
+
+      // Compter les documents en attente (status = 'pending_validation')
+      const { count: pendingCount } = await supabase
+        .from("documents")
+        .select("*", { count: "exact", head: true })
+        .eq("status", "pending_validation");
+
+      // Compter les documents rejetés (status = 'draft')
+      const { count: rejectedCount } = await supabase
+        .from("documents")
+        .select("*", { count: "exact", head: true })
+        .eq("status", "draft");
+
+      // Compter les utilisateurs actifs
+      const { count: usersCount } = await supabase
+        .from("profiles")
+        .select("*", { count: "exact", head: true });
+
+      return {
+        published: publishedCount || 0,
+        pending: pendingCount || 0,
+        rejected: rejectedCount || 0,
+        activeUsers: usersCount || 0,
+      };
+    },
+  });
+
+  // Récupérer les dernières activités
+  const { data: recentActivities } = useQuery({
+    queryKey: ["recent-activities"],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("activity_logs")
+        .select("*")
+        .order("created_at", { ascending: false })
+        .limit(5);
+
+      return data || [];
+    },
+  });
 
   const recentActions = [
     {
@@ -79,10 +123,16 @@ const AdminDashboard = ({ type }: AdminDashboardProps) => {
             <FileText className={`w-4 h-4 ${themeColors.primary}`} />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{stats.published}</div>
-            <p className="text-xs text-muted-foreground">
-              +12% par rapport au mois dernier
-            </p>
+            {isLoading ? (
+              <div className="text-2xl font-bold animate-pulse">...</div>
+            ) : (
+              <>
+                <div className="text-2xl font-bold">{stats?.published}</div>
+                <p className="text-xs text-muted-foreground">
+                  Documents validés et publiés
+                </p>
+              </>
+            )}
           </CardContent>
         </Card>
 
@@ -92,10 +142,16 @@ const AdminDashboard = ({ type }: AdminDashboardProps) => {
             <Clock className="w-4 h-4 text-orange-500" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{stats.pending}</div>
-            <p className="text-xs text-muted-foreground">
-              Nécessitent une validation
-            </p>
+            {isLoading ? (
+              <div className="text-2xl font-bold animate-pulse">...</div>
+            ) : (
+              <>
+                <div className="text-2xl font-bold">{stats?.pending}</div>
+                <p className="text-xs text-muted-foreground">
+                  Nécessitent une validation
+                </p>
+              </>
+            )}
           </CardContent>
         </Card>
 
@@ -105,10 +161,16 @@ const AdminDashboard = ({ type }: AdminDashboardProps) => {
             <XCircle className="w-4 h-4 text-red-500" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{stats.rejected}</div>
-            <p className="text-xs text-muted-foreground">
-              À corriger et resoumetter
-            </p>
+            {isLoading ? (
+              <div className="text-2xl font-bold animate-pulse">...</div>
+            ) : (
+              <>
+                <div className="text-2xl font-bold">{stats?.rejected}</div>
+                <p className="text-xs text-muted-foreground">
+                  À corriger et resoumettre
+                </p>
+              </>
+            )}
           </CardContent>
         </Card>
 
@@ -118,10 +180,16 @@ const AdminDashboard = ({ type }: AdminDashboardProps) => {
             <Users className={`w-4 h-4 ${themeColors.primary}`} />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{stats.activeUsers}</div>
-            <p className="text-xs text-muted-foreground">
-              Connectés ce mois-ci
-            </p>
+            {isLoading ? (
+              <div className="text-2xl font-bold animate-pulse">...</div>
+            ) : (
+              <>
+                <div className="text-2xl font-bold">{stats?.activeUsers}</div>
+                <p className="text-xs text-muted-foreground">
+                  Comptes utilisateurs créés
+                </p>
+              </>
+            )}
           </CardContent>
         </Card>
       </div>
@@ -135,33 +203,43 @@ const AdminDashboard = ({ type }: AdminDashboardProps) => {
               Alertes
             </CardTitle>
           </CardHeader>
-          <CardContent className="space-y-4">
-            <div className={`${themeColors.bg} p-4 rounded-lg border-l-4 border-orange-500`}>
-              <div className="flex items-start justify-between">
-                <div>
-                  <h4 className="font-medium">Contenus bloqués pour indexation</h4>
-                  <p className="text-sm text-muted-foreground mt-1">
-                    5 contenus nécessitent des métadonnées complètes
-                  </p>
+          <CardContent>
+            <div className="space-y-4">
+              {stats?.pending ? (
+                <div className={`${themeColors.bg} p-4 rounded-lg border-l-4 border-orange-500`}>
+                  <div className="flex items-start justify-between">
+                    <div>
+                      <h4 className="font-medium">Contenus en attente de validation</h4>
+                      <p className="text-sm text-muted-foreground mt-1">
+                        {stats.pending} document{stats.pending > 1 ? 's' : ''} nécessite{stats.pending > 1 ? 'nt' : ''} une validation
+                      </p>
+                    </div>
+                    <Button size="sm" variant="outline">
+                      Voir détails
+                    </Button>
+                  </div>
                 </div>
-                <Button size="sm" variant="outline">
-                  Voir détails
-                </Button>
-              </div>
-            </div>
+              ) : (
+                <div className={`${themeColors.bg} p-4 rounded-lg`}>
+                  <p className="text-sm text-muted-foreground">Aucune alerte pour le moment</p>
+                </div>
+              )}
 
-            <div className={`${themeColors.bg} p-4 rounded-lg border-l-4 border-blue-500`}>
-              <div className="flex items-start justify-between">
-                <div>
-                  <h4 className="font-medium">Comptes inactifs</h4>
-                  <p className="text-sm text-muted-foreground mt-1">
-                    3 utilisateurs inactifs depuis plus de 6 mois
-                  </p>
+              {stats?.rejected && stats.rejected > 0 && (
+                <div className={`${themeColors.bg} p-4 rounded-lg border-l-4 border-red-500`}>
+                  <div className="flex items-start justify-between">
+                    <div>
+                      <h4 className="font-medium">Contenus rejetés</h4>
+                      <p className="text-sm text-muted-foreground mt-1">
+                        {stats.rejected} document{stats.rejected > 1 ? 's' : ''} à corriger
+                      </p>
+                    </div>
+                    <Button size="sm" variant="outline">
+                      Gérer
+                    </Button>
+                  </div>
                 </div>
-                <Button size="sm" variant="outline">
-                  Gérer
-                </Button>
-              </div>
+              )}
             </div>
           </CardContent>
         </Card>
@@ -197,26 +275,32 @@ const AdminDashboard = ({ type }: AdminDashboardProps) => {
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
-            {recentActions.map((action, index) => (
-              <div key={index} className="flex items-center justify-between p-3 rounded-lg border">
-                <div className="flex items-center space-x-3">
-                  <div className="w-8 h-8 bg-muted rounded-full flex items-center justify-center">
-                    <span className="text-sm font-medium">
-                      {action.user.split(' ').map(n => n[0]).join('')}
-                    </span>
+            {recentActivities && recentActivities.length > 0 ? (
+              recentActivities.map((activity, index) => (
+                <div key={index} className="flex items-center justify-between p-3 rounded-lg border">
+                  <div className="flex items-center space-x-3">
+                    <div className="w-8 h-8 bg-muted rounded-full flex items-center justify-center">
+                      <span className="text-sm font-medium">
+                        {activity.action?.charAt(0).toUpperCase() || 'A'}
+                      </span>
+                    </div>
+                    <div>
+                      <p className="font-medium">{activity.entity_type}</p>
+                      <p className="text-sm text-muted-foreground">
+                        {activity.action}
+                      </p>
+                    </div>
                   </div>
-                  <div>
-                    <p className="font-medium">{action.user}</p>
-                    <p className="text-sm text-muted-foreground">
-                      {action.action} {action.content && `• ${action.content}`}
-                    </p>
+                  <div className="text-right text-sm text-muted-foreground">
+                    {new Date(activity.created_at).toLocaleDateString('fr-FR')}
                   </div>
                 </div>
-                <div className="text-right text-sm text-muted-foreground">
-                  {action.time}
-                </div>
+              ))
+            ) : (
+              <div className="text-center text-muted-foreground py-4">
+                Aucune activité récente
               </div>
-            ))}
+            )}
           </div>
         </CardContent>
       </Card>
