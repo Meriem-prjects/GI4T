@@ -507,53 +507,58 @@ const SearchResults = () => {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
                 {searchResults.map((result) => (
                   <Card key={result.id} className="hover:shadow-lg transition-shadow flex flex-col min-h-[320px]">
-                      <CardHeader className="pb-4">
-                        <div className="flex items-center justify-between mb-2 flex-wrap gap-2">
+                      <CardHeader className="pb-4 space-y-3">
+                        {/* Ligne 1: Tribunal et année */}
+                        <div className="flex items-start justify-between gap-2">
                           <span className="text-sm text-muted-foreground">
                             {result.court || "Tribunal non spécifié"} {result.court_level && `• ${result.court_level}`}
                           </span>
-                          <div className="flex items-center gap-2">
-                            {useAI && (result as any).similarity && (
-                              <Tooltip delayDuration={0}>
-                                <TooltipTrigger asChild>
-                                  <div className="inline-flex">
-                                    <Badge variant="default" className="text-xs gap-1 cursor-help">
-                                      <Sparkles className="h-3 w-3" />
-                                      {Math.round((result as any).similarity * 100)}%
-                                    </Badge>
-                                  </div>
-                                </TooltipTrigger>
-                                <TooltipContent side="top" className="max-w-sm p-4 bg-popover">
-                                  <p className="text-sm leading-relaxed text-popover-foreground">
-                                    {generateMatchExplanation(result, searchQuery, (result as any).similarity)}
-                                  </p>
-                                </TooltipContent>
-                              </Tooltip>
-                            )}
-                            {result.year && (
-                              <Badge variant="outline" className="text-xs">
-                                {result.year}
-                              </Badge>
-                            )}
+                          {result.year && (
+                            <Badge variant="outline" className="text-xs shrink-0">
+                              {result.year}
+                            </Badge>
+                          )}
+                        </div>
+
+                        {/* Ligne 2: Score de matching AI (si applicable) */}
+                        {useAI && (result as any).similarity && (
+                          <div>
+                            <Tooltip delayDuration={0}>
+                              <TooltipTrigger asChild>
+                                <div className="inline-flex">
+                                  <Badge variant="default" className="text-xs gap-1 cursor-help">
+                                    <Sparkles className="h-3 w-3" />
+                                    {Math.round((result as any).similarity * 100)}%
+                                  </Badge>
+                                </div>
+                              </TooltipTrigger>
+                              <TooltipContent side="top" className="max-w-sm p-4 bg-popover">
+                                <p className="text-sm leading-relaxed text-popover-foreground">
+                                  {generateMatchExplanation(result, searchQuery, (result as any).similarity)}
+                                </p>
+                              </TooltipContent>
+                            </Tooltip>
                           </div>
-                      </div>
-                      {result.primaryCategory ? (
-                        <Link
-                          to={createDocumentPath(result.primaryCategory.name, result.title)}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="cursor-pointer"
-                        >
-                          <CardTitle className="text-lg hover:text-primary line-clamp-2 cursor-pointer">
+                        )}
+
+                        {/* Ligne 3: Titre */}
+                        {result.primaryCategory ? (
+                          <Link
+                            to={createDocumentPath(result.primaryCategory.name, result.title)}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="cursor-pointer"
+                          >
+                            <CardTitle className="text-lg hover:text-primary line-clamp-2 cursor-pointer">
+                              {result.title}
+                            </CardTitle>
+                          </Link>
+                        ) : (
+                          <CardTitle className="text-lg line-clamp-2">
                             {result.title}
                           </CardTitle>
-                        </Link>
-                      ) : (
-                        <CardTitle className="text-lg line-clamp-2">
-                          {result.title}
-                        </CardTitle>
-                      )}
-                    </CardHeader>
+                        )}
+                      </CardHeader>
                     <CardContent className="pt-0 flex-1 flex flex-col justify-between">
                       {result.summary && (
                         <div className="mb-4">
