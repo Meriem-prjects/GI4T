@@ -23,6 +23,19 @@ const AccesAuxDroits = () => {
                 <p className="text-xs sm:text-sm text-muted-foreground hidden sm:block">Espace citoyen - Connaître et exercer vos droits</p>
               </div>
             </div>
+            
+            <nav className="hidden md:flex items-center space-x-6">
+              <Link to="/acces-aux-droits/carte-interactive" className="text-sm font-medium text-foreground hover:text-primary transition-colors duration-200">
+                Carte interactive
+              </Link>
+              <Link to="/acces-aux-droits/mediatheque" className="text-sm font-medium text-foreground hover:text-primary transition-colors duration-200">
+                Médiathèque
+              </Link>
+              <Link to="/acces-aux-droits/actualites" className="text-sm font-medium text-foreground hover:text-primary transition-colors duration-200">
+                Actualités
+              </Link>
+            </nav>
+            
             <div className="flex items-center ml-auto">
               <div className="hidden sm:flex items-center space-x-2 sm:space-x-4">
                 <Button variant="outline" size="sm" className="text-xs sm:text-sm">العربية</Button>
