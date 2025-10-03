@@ -504,7 +504,7 @@ const SearchResults = () => {
             </div>
           ) : (
             <TooltipProvider>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+              <div className={`grid gap-6 mb-8 ${viewMode === "list" ? "grid-cols-1" : "grid-cols-1 md:grid-cols-2"}`}>
                 {searchResults.map((result) => (
                   <Card key={result.id} className="hover:shadow-lg transition-shadow flex flex-col min-h-[320px]">
                       <CardHeader className="pb-4 space-y-3">
