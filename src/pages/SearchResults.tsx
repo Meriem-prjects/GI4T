@@ -39,6 +39,8 @@ const SearchResults = () => {
   const [expandedSummaries, setExpandedSummaries] = useState<Set<string>>(new Set());
   const [showStickySearch, setShowStickySearch] = useState(false);
   const [categoriesOpen, setCategoriesOpen] = useState(false);
+  const [courtTypeOpen, setCourtTypeOpen] = useState(false);
+  const [jurisdictionOpen, setJurisdictionOpen] = useState(false);
   const searchBarRef = useRef<HTMLDivElement>(null);
 
   // Get search query from URL params on component mount
@@ -360,25 +362,37 @@ const SearchResults = () => {
                 </div>
               )}
               {/* Tribunal */}
-              <div>
-                <Label className="text-sm font-medium mb-2 block">Type de Tribunal</Label>
-                <Select value={selectedCourtType} onValueChange={(value) => {
-                  setSelectedCourtType(value);
-                  setCurrentPage(1);
-                }}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Tous les tribunaux" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">Tous les tribunaux</SelectItem>
-                    {courtTypes.map((court) => (
-                      <SelectItem key={court.id} value={court.name}>
-                        {court.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
+              <Collapsible open={courtTypeOpen} onOpenChange={setCourtTypeOpen}>
+                <CollapsibleTrigger className="flex items-center justify-between w-full hover:bg-muted/50 p-2 rounded-md transition-colors">
+                  <Label className="text-sm font-medium cursor-pointer">Type de Tribunal</Label>
+                  {courtTypeOpen ? (
+                    <ChevronUp className="h-4 w-4 text-muted-foreground" />
+                  ) : (
+                    <ChevronDown className="h-4 w-4 text-muted-foreground" />
+                  )}
+                </CollapsibleTrigger>
+                <CollapsibleContent className="mt-3">
+                  <RadioGroup value={selectedCourtType} onValueChange={(value) => {
+                    setSelectedCourtType(value);
+                    setCurrentPage(1);
+                  }}>
+                    <div className="space-y-3 max-h-48 overflow-y-auto scrollbar-thin">
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="all" id="court-all" />
+                        <Label htmlFor="court-all" className="text-sm cursor-pointer">Tous les tribunaux</Label>
+                      </div>
+                      {courtTypes.map((court) => (
+                        <div key={court.id} className="flex items-center space-x-2">
+                          <RadioGroupItem value={court.name} id={`court-${court.id}`} />
+                          <Label htmlFor={`court-${court.id}`} className="text-sm cursor-pointer">
+                            {court.name}
+                          </Label>
+                        </div>
+                      ))}
+                    </div>
+                  </RadioGroup>
+                </CollapsibleContent>
+              </Collapsible>
 
               {/* Période */}
               <div>
@@ -458,25 +472,37 @@ const SearchResults = () => {
               </Collapsible>
 
               {/* Niveau de Juridiction */}
-              <div>
-                <Label className="text-sm font-medium mb-3 block">Niveau de Juridiction</Label>
-                <Select value={selectedJurisdictionLevel} onValueChange={(value) => {
-                  setSelectedJurisdictionLevel(value);
-                  setCurrentPage(1);
-                }}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Tous les niveaux" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">Tous les niveaux</SelectItem>
-                    {jurisdictionLevels.map((level) => (
-                      <SelectItem key={level.id} value={level.id}>
-                        {level.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
+              <Collapsible open={jurisdictionOpen} onOpenChange={setJurisdictionOpen}>
+                <CollapsibleTrigger className="flex items-center justify-between w-full hover:bg-muted/50 p-2 rounded-md transition-colors">
+                  <Label className="text-sm font-medium cursor-pointer">Niveau de Juridiction</Label>
+                  {jurisdictionOpen ? (
+                    <ChevronUp className="h-4 w-4 text-muted-foreground" />
+                  ) : (
+                    <ChevronDown className="h-4 w-4 text-muted-foreground" />
+                  )}
+                </CollapsibleTrigger>
+                <CollapsibleContent className="mt-3">
+                  <RadioGroup value={selectedJurisdictionLevel} onValueChange={(value) => {
+                    setSelectedJurisdictionLevel(value);
+                    setCurrentPage(1);
+                  }}>
+                    <div className="space-y-3 max-h-48 overflow-y-auto scrollbar-thin">
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="all" id="jurisdiction-all" />
+                        <Label htmlFor="jurisdiction-all" className="text-sm cursor-pointer">Tous les niveaux</Label>
+                      </div>
+                      {jurisdictionLevels.map((level) => (
+                        <div key={level.id} className="flex items-center space-x-2">
+                          <RadioGroupItem value={level.id} id={`jurisdiction-${level.id}`} />
+                          <Label htmlFor={`jurisdiction-${level.id}`} className="text-sm cursor-pointer">
+                            {level.name}
+                          </Label>
+                        </div>
+                      ))}
+                    </div>
+                  </RadioGroup>
+                </CollapsibleContent>
+              </Collapsible>
 
               {/* Type de Document */}
               <div>
