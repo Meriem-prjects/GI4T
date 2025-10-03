@@ -7,13 +7,35 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "sonner";
 import { Shield } from "lucide-react";
+import { setupInitialAdmin } from "@/utils/setupAdmin";
 
 const AdminLogin = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
+  const [settingUpAdmin, setSettingUpAdmin] = useState(false);
   const { signIn } = useAuth();
   const navigate = useNavigate();
+
+  const handleSetupInitialAdmin = async () => {
+    setSettingUpAdmin(true);
+    try {
+      const result = await setupInitialAdmin();
+      if (result.success) {
+        toast.success("Administrateur créé avec succès", {
+          description: "Email: ceo@feelinx.dev",
+        });
+      } else {
+        toast.error("Erreur lors de la création", {
+          description: result.error?.message || "Une erreur est survenue",
+        });
+      }
+    } catch (error) {
+      toast.error("Une erreur est survenue");
+    } finally {
+      setSettingUpAdmin(false);
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -83,6 +105,21 @@ const AdminLogin = () => {
               {loading ? "Connexion..." : "Se connecter"}
             </Button>
           </form>
+          
+          <div className="mt-4 pt-4 border-t">
+            <Button
+              type="button"
+              variant="outline"
+              className="w-full"
+              onClick={handleSetupInitialAdmin}
+              disabled={settingUpAdmin}
+            >
+              {settingUpAdmin ? "Création en cours..." : "Créer l'admin initial"}
+            </Button>
+            <p className="text-xs text-muted-foreground mt-2 text-center">
+              Email: ceo@feelinx.dev - Mot de passe: azerty
+            </p>
+          </div>
         </CardContent>
       </Card>
     </div>

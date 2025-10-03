@@ -112,3 +112,6 @@ verify_jwt = false
 
 [functions.arabic-spacing-fixer]
 verify_jwt = false
+
+[functions.setup-initial-admin]
+verify_jwt = false
