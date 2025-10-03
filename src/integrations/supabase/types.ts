@@ -386,6 +386,145 @@ export type Database = {
           },
         ]
       }
+      event_registrations: {
+        Row: {
+          email: string
+          event_id: string
+          first_name: string
+          id: string
+          last_name: string
+          phone: string | null
+          registered_at: string | null
+        }
+        Insert: {
+          email: string
+          event_id: string
+          first_name: string
+          id?: string
+          last_name: string
+          phone?: string | null
+          registered_at?: string | null
+        }
+        Update: {
+          email?: string
+          event_id?: string
+          first_name?: string
+          id?: string
+          last_name?: string
+          phone?: string | null
+          registered_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "event_registrations_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      events: {
+        Row: {
+          available_places: number | null
+          created_at: string | null
+          created_by: string | null
+          description: string
+          description_ar: string | null
+          event_date: string
+          governorate_id: string | null
+          id: string
+          images: string[] | null
+          people_impacted: number | null
+          registration_enabled: boolean | null
+          status: string | null
+          title: string
+          title_ar: string | null
+          type: Database["public"]["Enums"]["event_type"]
+          updated_at: string | null
+        }
+        Insert: {
+          available_places?: number | null
+          created_at?: string | null
+          created_by?: string | null
+          description: string
+          description_ar?: string | null
+          event_date: string
+          governorate_id?: string | null
+          id?: string
+          images?: string[] | null
+          people_impacted?: number | null
+          registration_enabled?: boolean | null
+          status?: string | null
+          title: string
+          title_ar?: string | null
+          type: Database["public"]["Enums"]["event_type"]
+          updated_at?: string | null
+        }
+        Update: {
+          available_places?: number | null
+          created_at?: string | null
+          created_by?: string | null
+          description?: string
+          description_ar?: string | null
+          event_date?: string
+          governorate_id?: string | null
+          id?: string
+          images?: string[] | null
+          people_impacted?: number | null
+          registration_enabled?: boolean | null
+          status?: string | null
+          title?: string
+          title_ar?: string | null
+          type?: Database["public"]["Enums"]["event_type"]
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "events_governorate_id_fkey"
+            columns: ["governorate_id"]
+            isOneToOne: false
+            referencedRelation: "governorates"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      governorates: {
+        Row: {
+          area_km2: number | null
+          code: string
+          created_at: string | null
+          geojson: Json
+          id: string
+          name: string
+          name_ar: string | null
+          population: number | null
+          updated_at: string | null
+        }
+        Insert: {
+          area_km2?: number | null
+          code: string
+          created_at?: string | null
+          geojson: Json
+          id?: string
+          name: string
+          name_ar?: string | null
+          population?: number | null
+          updated_at?: string | null
+        }
+        Update: {
+          area_km2?: number | null
+          code?: string
+          created_at?: string | null
+          geojson?: Json
+          id?: string
+          name?: string
+          name_ar?: string | null
+          population?: number | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       jurisdiction_levels: {
         Row: {
           created_at: string
@@ -667,6 +806,7 @@ export type Database = {
       }
     }
     Enums: {
+      event_type: "action_realisee" | "evenement_a_venir"
       user_role: "admin" | "editor" | "validator"
     }
     CompositeTypes: {
@@ -795,6 +935,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
+      event_type: ["action_realisee", "evenement_a_venir"],
       user_role: ["admin", "editor", "validator"],
     },
   },

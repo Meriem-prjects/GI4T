@@ -1,59 +1,114 @@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { TunisiaRouteMap } from "@/components/map/TunisiaRouteMap";
-import { Map, Edit, Settings } from "lucide-react";
+import { Map, Edit, Calendar, Users, MapPin } from "lucide-react";
+import { useEvents } from "@/hooks/useEvents";
+import { useGovernorates } from "@/hooks/useGovernorates";
+import { EventEditor } from "@/components/admin/EventEditor";
 
 const AdminCarteInteractive = () => {
+  const { events } = useEvents();
+  const { governorates } = useGovernorates();
+
+  // Calculs des statistiques
+  const totalEvents = events.length;
+  const actionsRealisees = events.filter(e => e.type === 'action_realisee').length;
+  const evenementsAVenir = events.filter(e => e.type === 'evenement_a_venir').length;
+  const totalPeopleImpacted = events
+    .filter(e => e.type === 'action_realisee')
+    .reduce((sum, e) => sum + (e.people_impacted || 0), 0);
+  const totalRegistrations = events
+    .filter(e => e.type === 'evenement_a_venir')
+    .reduce((sum, e) => sum + (e.available_places || 0), 0);
+  const governoratesCovered = new Set(events.map(e => e.governorate_id).filter(Boolean)).size;
+
   return (
     <div className="p-6 space-y-6">
       {/* Header */}
       <div>
         <h2 className="text-2xl font-bold text-foreground mb-2">Gestion Carte Interactive</h2>
         <p className="text-muted-foreground">
-          Gérer les points d'intérêt et le parcours touristique en Tunisie
+          Gérer les événements et actions par gouvernorat en Tunisie
         </p>
       </div>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
         <Card>
           <CardHeader className="pb-3">
-            <CardDescription>Total des destinations</CardDescription>
-            <CardTitle className="text-3xl">10</CardTitle>
+            <CardDescription className="flex items-center gap-1">
+              <Calendar className="w-3 h-3" />
+              Total événements
+            </CardDescription>
+            <CardTitle className="text-2xl">{totalEvents}</CardTitle>
           </CardHeader>
         </Card>
         
         <Card>
           <CardHeader className="pb-3">
-            <CardDescription>Activités touristiques</CardDescription>
-            <CardTitle className="text-3xl">6</CardTitle>
+            <CardDescription className="flex items-center gap-1">
+              ✅ Actions réalisées
+            </CardDescription>
+            <CardTitle className="text-2xl text-green-600">{actionsRealisees}</CardTitle>
           </CardHeader>
         </Card>
         
         <Card>
           <CardHeader className="pb-3">
-            <CardDescription>Hébergements</CardDescription>
-            <CardTitle className="text-3xl">4</CardTitle>
+            <CardDescription className="flex items-center gap-1">
+              📅 À venir
+            </CardDescription>
+            <CardTitle className="text-2xl text-blue-600">{evenementsAVenir}</CardTitle>
+          </CardHeader>
+        </Card>
+
+        <Card>
+          <CardHeader className="pb-3">
+            <CardDescription className="flex items-center gap-1">
+              <Users className="w-3 h-3" />
+              Personnes touchées
+            </CardDescription>
+            <CardTitle className="text-2xl">{totalPeopleImpacted}</CardTitle>
+          </CardHeader>
+        </Card>
+
+        <Card>
+          <CardHeader className="pb-3">
+            <CardDescription className="flex items-center gap-1">
+              <Users className="w-3 h-3" />
+              Places disponibles
+            </CardDescription>
+            <CardTitle className="text-2xl">{totalRegistrations}</CardTitle>
+          </CardHeader>
+        </Card>
+
+        <Card>
+          <CardHeader className="pb-3">
+            <CardDescription className="flex items-center gap-1">
+              <MapPin className="w-3 h-3" />
+              Gouvernorats couverts
+            </CardDescription>
+            <CardTitle className="text-2xl">{governoratesCovered}/{governorates.length}</CardTitle>
           </CardHeader>
         </Card>
       </div>
 
       {/* Tabs */}
-      <Tabs defaultValue="preview" className="space-y-6">
-        <TabsList className="grid w-full max-w-md grid-cols-3">
-          <TabsTrigger value="preview" className="flex items-center gap-2">
-            <Map className="w-4 h-4" />
-            <span className="hidden sm:inline">Preview</span>
-          </TabsTrigger>
+      <Tabs defaultValue="edit" className="space-y-6">
+        <TabsList className="grid w-full max-w-md grid-cols-2">
           <TabsTrigger value="edit" className="flex items-center gap-2">
             <Edit className="w-4 h-4" />
             <span className="hidden sm:inline">Édition</span>
           </TabsTrigger>
-          <TabsTrigger value="settings" className="flex items-center gap-2">
-            <Settings className="w-4 h-4" />
-            <span className="hidden sm:inline">Paramètres</span>
+          <TabsTrigger value="preview" className="flex items-center gap-2">
+            <Map className="w-4 h-4" />
+            <span className="hidden sm:inline">Preview</span>
           </TabsTrigger>
         </TabsList>
+
+        {/* Edit Tab */}
+        <TabsContent value="edit" className="space-y-4">
+          <EventEditor />
+        </TabsContent>
 
         {/* Preview Tab */}
         <TabsContent value="preview" className="space-y-4">
@@ -61,44 +116,18 @@ const AdminCarteInteractive = () => {
             <CardHeader>
               <CardTitle>Aperçu de la carte interactive</CardTitle>
               <CardDescription>
-                Visualisez le parcours touristique et les destinations en Tunisie
+                Visualisez les événements par gouvernorat sur la carte de Tunisie
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <TunisiaRouteMap />
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        {/* Edit Tab */}
-        <TabsContent value="edit" className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle>Édition des destinations</CardTitle>
-              <CardDescription>
-                Ajouter, modifier ou supprimer des destinations
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="flex items-center justify-center h-64 text-muted-foreground">
-                Formulaire d'édition - En développement
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        {/* Settings Tab */}
-        <TabsContent value="settings" className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle>Paramètres de la carte</CardTitle>
-              <CardDescription>
-                Configurer les options d'affichage et de comportement
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="flex items-center justify-center h-64 text-muted-foreground">
-                Paramètres de configuration - En développement
+              <div className="flex items-center justify-center h-[600px] text-muted-foreground border-2 border-dashed rounded-lg">
+                <div className="text-center space-y-2">
+                  <Map className="w-12 h-12 mx-auto text-muted-foreground/50" />
+                  <p className="font-medium">Carte des gouvernorats</p>
+                  <p className="text-sm">
+                    La carte interactive sera affichée ici avec les gouvernorats colorés selon le nombre d'événements
+                  </p>
+                </div>
               </div>
             </CardContent>
           </Card>
