@@ -8,6 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Checkbox } from "@/components/ui/checkbox";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
@@ -37,6 +38,7 @@ const SearchResults = () => {
   const [useAI, setUseAI] = useState(false);
   const [expandedSummaries, setExpandedSummaries] = useState<Set<string>>(new Set());
   const [showStickySearch, setShowStickySearch] = useState(false);
+  const [categoriesOpen, setCategoriesOpen] = useState(false);
   const searchBarRef = useRef<HTMLDivElement>(null);
 
   // Get search query from URL params on component mount
@@ -428,23 +430,32 @@ const SearchResults = () => {
               </div>
 
               {/* Droits Fondamentaux */}
-              <div>
-                <Label className="text-sm font-medium mb-3 block">Droits Fondamentaux</Label>
-                <div className="space-y-3 max-h-48 overflow-y-auto scrollbar-thin">
-                  {categories.map((category) => (
-                    <div key={category.id} className="flex items-center space-x-2">
-                      <Checkbox 
-                        id={category.id}
-                        checked={selectedCategories.includes(category.id)}
-                        onCheckedChange={() => toggleCategory(category.id)}
-                      />
-                      <Label htmlFor={category.id} className="text-sm cursor-pointer">
-                        {category.name}
-                      </Label>
-                    </div>
-                  ))}
-                </div>
-              </div>
+              <Collapsible open={categoriesOpen} onOpenChange={setCategoriesOpen}>
+                <CollapsibleTrigger className="flex items-center justify-between w-full hover:bg-muted/50 p-2 rounded-md transition-colors">
+                  <Label className="text-sm font-medium cursor-pointer">Droits Fondamentaux</Label>
+                  {categoriesOpen ? (
+                    <ChevronUp className="h-4 w-4 text-muted-foreground" />
+                  ) : (
+                    <ChevronDown className="h-4 w-4 text-muted-foreground" />
+                  )}
+                </CollapsibleTrigger>
+                <CollapsibleContent className="mt-3">
+                  <div className="space-y-3 max-h-48 overflow-y-auto scrollbar-thin">
+                    {categories.map((category) => (
+                      <div key={category.id} className="flex items-center space-x-2">
+                        <Checkbox 
+                          id={category.id}
+                          checked={selectedCategories.includes(category.id)}
+                          onCheckedChange={() => toggleCategory(category.id)}
+                        />
+                        <Label htmlFor={category.id} className="text-sm cursor-pointer">
+                          {category.name}
+                        </Label>
+                      </div>
+                    ))}
+                  </div>
+                </CollapsibleContent>
+              </Collapsible>
 
               {/* Niveau de Juridiction */}
               <div>
