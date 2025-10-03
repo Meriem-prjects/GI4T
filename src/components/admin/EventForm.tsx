@@ -30,6 +30,8 @@ export const EventForm = ({ initialData, onSubmit, onCancel, isLoading }: EventF
     available_places: initialData?.available_places,
     registration_enabled: initialData?.registration_enabled || false,
     images: initialData?.images || [],
+    latitude: initialData?.latitude,
+    longitude: initialData?.longitude,
   });
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -145,6 +147,32 @@ export const EventForm = ({ initialData, onSubmit, onCancel, isLoading }: EventF
                 value={formData.event_date}
                 onChange={(e) => setFormData({ ...formData, event_date: e.target.value })}
                 required
+              />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="latitude">Latitude</Label>
+              <Input
+                id="latitude"
+                type="number"
+                step="0.000001"
+                value={formData.latitude || ''}
+                onChange={(e) => setFormData({ ...formData, latitude: e.target.value ? parseFloat(e.target.value) : undefined })}
+                placeholder="Ex: 36.8065"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="longitude">Longitude</Label>
+              <Input
+                id="longitude"
+                type="number"
+                step="0.000001"
+                value={formData.longitude || ''}
+                onChange={(e) => setFormData({ ...formData, longitude: e.target.value ? parseFloat(e.target.value) : undefined })}
+                placeholder="Ex: 10.1815"
               />
             </div>
           </div>

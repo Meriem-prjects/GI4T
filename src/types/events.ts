@@ -24,6 +24,8 @@ export interface Event {
   available_places?: number;
   registration_enabled?: boolean;
   images?: string[];
+  latitude?: number;
+  longitude?: number;
   status?: string;
   created_by?: string;
   created_at?: string;
@@ -60,4 +62,6 @@ export interface EventFormData {
   available_places?: number;
   registration_enabled?: boolean;
   images?: string[];
+  latitude?: number;
+  longitude?: number;
 }
