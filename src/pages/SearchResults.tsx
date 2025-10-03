@@ -359,7 +359,7 @@ const SearchResults = () => {
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
               {searchResults.map((result) => (
-                <Card key={result.id} className="hover:shadow-lg transition-shadow h-full">
+                <Card key={result.id} className="hover:shadow-lg transition-shadow flex flex-col h-[320px]">
                     <CardHeader className="pb-4">
                       <div className="flex items-center justify-between mb-2 flex-wrap gap-2">
                         <span className="text-sm text-muted-foreground">
@@ -371,7 +371,7 @@ const SearchResults = () => {
                           </Badge>
                         )}
                       </div>
-                      <CardTitle className="text-lg hover:text-primary">
+                      <CardTitle className="text-lg hover:text-primary line-clamp-2">
                         {result.title}
                       </CardTitle>
                       {result.summary && (
@@ -380,28 +380,28 @@ const SearchResults = () => {
                         </CardDescription>
                       )}
                     </CardHeader>
-                    <CardContent className="pt-0">
-                      <div className="flex items-center justify-between flex-wrap gap-2">
-                        <div className="flex gap-2 flex-wrap">
-                          {result.categories.slice(0, 3).map((category) => (
-                            <Badge 
-                              key={category.id} 
-                              variant="outline" 
-                              className="text-xs"
-                              style={{ 
-                                borderColor: category.color || undefined,
-                                color: category.color || undefined
-                              }}
-                            >
-                              {category.name}
-                            </Badge>
-                          ))}
-                          {result.categories.length > 3 && (
-                            <Badge variant="outline" className="text-xs">
-                              +{result.categories.length - 3}
-                            </Badge>
-                          )}
-                        </div>
+                    <CardContent className="pt-0 flex-1 flex flex-col justify-between">
+                      <div className="flex gap-2 flex-wrap mb-4">
+                        {result.categories.slice(0, 3).map((category) => (
+                          <Badge 
+                            key={category.id} 
+                            variant="outline" 
+                            className="text-xs"
+                            style={{ 
+                              borderColor: category.color || undefined,
+                              color: category.color || undefined
+                            }}
+                          >
+                            {category.name}
+                          </Badge>
+                        ))}
+                        {result.categories.length > 3 && (
+                          <Badge variant="outline" className="text-xs">
+                            +{result.categories.length - 3}
+                          </Badge>
+                        )}
+                      </div>
+                      <div className="flex justify-end">
                         {result.primaryCategory ? (
                           <Link
                             to={createDocumentPath(result.primaryCategory.name, result.title)}
