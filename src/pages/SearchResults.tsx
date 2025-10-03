@@ -18,6 +18,9 @@ import { format } from "date-fns";
 const SearchResults = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   
+  // Fetch filter options first to get year range
+  const { categories, courtTypes, jurisdictionLevels, documentTypes, yearRange, isLoading: filtersLoading } = useSearchFilters();
+
   // State for filters
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCourtType, setSelectedCourtType] = useState("all");
@@ -38,8 +41,13 @@ const SearchResults = () => {
     }
   }, [searchParams]);
 
-  // Fetch filter options
-  const { categories, courtTypes, jurisdictionLevels, documentTypes, isLoading: filtersLoading } = useSearchFilters();
+  // Set default year range when yearRange is loaded
+  useEffect(() => {
+    if (yearRange && !yearFrom && !yearTo) {
+      setYearFrom(yearRange.minYear.toString());
+      setYearTo(yearRange.maxYear.toString());
+    }
+  }, [yearRange]);
 
   // Fetch search results
   const { data: searchData, isLoading: searchLoading } = useDocumentSearch({
@@ -72,8 +80,8 @@ const SearchResults = () => {
   // Reset all filters
   const resetFilters = () => {
     setSelectedCourtType("all");
-    setYearFrom("");
-    setYearTo("");
+    setYearFrom(yearRange.minYear.toString());
+    setYearTo(yearRange.maxYear.toString());
     setSelectedCategories([]);
     setSelectedJurisdictionLevel("all");
     setSelectedDocumentType("all");
@@ -214,30 +222,48 @@ const SearchResults = () => {
               <div>
                 <Label className="text-sm font-medium mb-2 block">Période</Label>
                 <div className="flex gap-2">
-                  <Input 
-                    type="number" 
-                    placeholder="2009"
-                    min="1900"
-                    max="2100"
-                    className="text-sm" 
-                    value={yearFrom}
-                    onChange={(e) => {
-                      setYearFrom(e.target.value);
+                  <Select 
+                    value={yearFrom} 
+                    onValueChange={(value) => {
+                      setYearFrom(value);
                       setCurrentPage(1);
                     }}
-                  />
-                  <Input 
-                    type="number" 
-                    placeholder="2012"
-                    min="1900"
-                    max="2100"
-                    className="text-sm"
-                    value={yearTo}
-                    onChange={(e) => {
-                      setYearTo(e.target.value);
+                  >
+                    <SelectTrigger className="text-sm">
+                      <SelectValue placeholder="De" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {Array.from(
+                        { length: yearRange.maxYear - yearRange.minYear + 1 },
+                        (_, i) => yearRange.minYear + i
+                      ).map((year) => (
+                        <SelectItem key={year} value={year.toString()}>
+                          {year}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <Select 
+                    value={yearTo} 
+                    onValueChange={(value) => {
+                      setYearTo(value);
                       setCurrentPage(1);
                     }}
-                  />
+                  >
+                    <SelectTrigger className="text-sm">
+                      <SelectValue placeholder="À" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {Array.from(
+                        { length: yearRange.maxYear - yearRange.minYear + 1 },
+                        (_, i) => yearRange.minYear + i
+                      ).map((year) => (
+                        <SelectItem key={year} value={year.toString()}>
+                          {year}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
               </div>
 

@@ -58,20 +58,50 @@ export const useSearchFilters = () => {
     },
   });
 
+  // Fetch year range (min and max years)
+  const yearRangeQuery = useQuery({
+    queryKey: ["year-range"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("documents")
+        .select("year")
+        .not("year", "is", null)
+        .order("year", { ascending: true })
+        .limit(1);
+
+      const { data: maxData, error: maxError } = await supabase
+        .from("documents")
+        .select("year")
+        .not("year", "is", null)
+        .order("year", { ascending: false })
+        .limit(1);
+
+      if (error || maxError) throw error || maxError;
+      
+      const minYear = data?.[0]?.year || new Date().getFullYear() - 50;
+      const maxYear = maxData?.[0]?.year || new Date().getFullYear();
+
+      return { minYear, maxYear };
+    },
+  });
+
   return {
     categories: categoriesQuery.data || [],
     courtTypes: courtTypesQuery.data || [],
     jurisdictionLevels: jurisdictionLevelsQuery.data || [],
     documentTypes: documentTypesQuery.data || [],
+    yearRange: yearRangeQuery.data || { minYear: new Date().getFullYear() - 50, maxYear: new Date().getFullYear() },
     isLoading:
       categoriesQuery.isLoading ||
       courtTypesQuery.isLoading ||
       jurisdictionLevelsQuery.isLoading ||
-      documentTypesQuery.isLoading,
+      documentTypesQuery.isLoading ||
+      yearRangeQuery.isLoading,
     isError:
       categoriesQuery.isError ||
       courtTypesQuery.isError ||
       jurisdictionLevelsQuery.isError ||
-      documentTypesQuery.isError,
+      documentTypesQuery.isError ||
+      yearRangeQuery.isError,
   };
 };
