@@ -20,7 +20,7 @@ const ObservatoireHeader = () => {
           </div>
           <div className="flex items-center ml-auto">
             <div className="hidden sm:flex items-center space-x-2 sm:space-x-4">
-              <Link to="/">
+              <Link to="/observatoire">
                 <Button variant="outline" size="sm" className="text-xs sm:text-sm">
                   <Home className="h-4 w-4" />
                 </Button>
