@@ -19,8 +19,7 @@ const AccesAuxDroits = () => {
             <div className="flex items-center space-x-2 sm:space-x-4">
               <img src="/Feelinx_upload/logo-acces-aux-droits.png" alt="Accès aux Droits Logo" className="h-3 sm:h-6" />
               <div>
-                <h1 className="text-base sm:text-2xl font-bold text-foreground">Accès aux Droits</h1>
-                <p className="text-xs sm:text-sm text-muted-foreground hidden sm:block">Espace citoyen - Connaître et exercer vos droits</p>
+              <h1 className="text-base sm:text-2xl font-bold text-foreground">Accès aux Droits</h1>
               </div>
             </div>
             
