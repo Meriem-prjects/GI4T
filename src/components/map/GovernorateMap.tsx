@@ -49,7 +49,7 @@ export const GovernorateMap = ({
     };
   }, []);
 
-  // Dessiner les gouvernorats
+  // Dessiner les contours des gouvernorats
   useEffect(() => {
     if (!mapInstanceRef.current || !mapLoaded) return;
 
@@ -60,7 +60,7 @@ export const GovernorateMap = ({
     layersRef.current.forEach((layer) => layer.remove());
     layersRef.current = [];
 
-    // Ajouter les gouvernorats
+    // Ajouter les gouvernorats (uniquement les contours)
     governorates.forEach((gov) => {
       const eventCount = eventCounts[gov.id] || 0;
       const color = getGovernorateColor(eventCount);
@@ -69,9 +69,9 @@ export const GovernorateMap = ({
       const layer = L.geoJSON(gov.geojson as any, {
         style: {
           fillColor: color,
-          fillOpacity: isSelected ? 0.7 : 0.5,
-          color: isSelected ? "#1653BE" : "#333",
-          weight: isSelected ? 3 : 1,
+          fillOpacity: isSelected ? 0.3 : 0.15,
+          color: "#666",
+          weight: 1.5,
         },
         onEachFeature: (feature, layer) => {
           // Popup au survol
@@ -193,35 +193,15 @@ export const GovernorateMap = ({
         </div>
       )}
       {/* Légende */}
-      <div className="absolute bottom-4 left-4 bg-white rounded-lg shadow-lg p-3 text-xs space-y-1">
-        <div className="font-semibold mb-2">Nombre d'événements</div>
-        <div className="flex items-center gap-2">
-          <div className="w-4 h-4 rounded" style={{ backgroundColor: "#E5E7EB" }}></div>
-          <span>0</span>
-        </div>
-        <div className="flex items-center gap-2">
-          <div className="w-4 h-4 rounded" style={{ backgroundColor: "#FEF3C7" }}></div>
-          <span>1-3</span>
-        </div>
-        <div className="flex items-center gap-2">
-          <div className="w-4 h-4 rounded" style={{ backgroundColor: "#FCD34D" }}></div>
-          <span>4-6</span>
-        </div>
-        <div className="flex items-center gap-2">
-          <div className="w-4 h-4 rounded" style={{ backgroundColor: "#F59E0B" }}></div>
-          <span>7-10</span>
-        </div>
-        <div className="flex items-center gap-2">
-          <div className="w-4 h-4 rounded" style={{ backgroundColor: "#DC2626" }}></div>
-          <span>11+</span>
-        </div>
-        <div className="border-t pt-2 mt-2">
+      <div className="absolute bottom-4 left-4 bg-white rounded-lg shadow-lg p-3 text-xs space-y-2">
+        <div className="font-semibold mb-2">Légende</div>
+        <div className="space-y-1">
           <div className="flex items-center gap-2">
-            <div className="w-4 h-4 rounded-full bg-green-500"></div>
+            <div className="w-5 h-5 rounded-full bg-green-500 flex items-center justify-center text-white text-[10px]">✓</div>
             <span>Action réalisée</span>
           </div>
           <div className="flex items-center gap-2">
-            <div className="w-4 h-4 rounded-full bg-blue-500"></div>
+            <div className="w-5 h-5 rounded-full bg-blue-500 flex items-center justify-center text-white text-[10px]">📅</div>
             <span>Événement à venir</span>
           </div>
         </div>
