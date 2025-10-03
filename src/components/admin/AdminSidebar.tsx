@@ -114,8 +114,8 @@ const AdminSidebar = ({ type, isCollapsed = false, onToggle }: AdminSidebarProps
         bg: "bg-[hsl(var(--justclic-yellow-dark))]",
         hover: "hover:bg-black/10", 
         active: "bg-black/20",
-        text: "text-black",
-        textMuted: "text-gray-800",
+        text: "text-white",
+        textMuted: "text-white/80",
         groupHover: "hover:bg-black/10"
       };
 
