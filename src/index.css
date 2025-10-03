@@ -34,6 +34,7 @@ All colors MUST be HSL.
     --justclic-blue-light: 212 100% 94%;
     --justclic-yellow: 46 87% 65%;
     --justclic-yellow-light: 46 100% 88%;
+    --justclic-yellow-dark: 43 74% 49%;
 
     /* Gradients */
     --gradient-blue: linear-gradient(135deg, hsl(var(--justclic-blue-light)), hsl(var(--justclic-blue)));

@@ -33,12 +33,21 @@ const AdminAccesAuxDroits = () => {
           <Routes>
             <Route index element={<AdminDashboard type="acces-aux-droits" />} />
             <Route path="utilisateurs" element={<div className="p-6">Utilisateurs - En développement</div>} />
-            <Route path="contenus" element={<div className="p-6">Contenus - En développement</div>} />
-            <Route path="editeur" element={<div className="p-6">Éditeur - En développement</div>} />
-            <Route path="validation" element={<div className="p-6">Validation - En développement</div>} />
-            <Route path="historique" element={<div className="p-6">Historique - En développement</div>} />
-            <Route path="mediatheque" element={<div className="p-6">Médiathèque - En développement</div>} />
             <Route path="parametres" element={<div className="p-6">Paramètres - En développement</div>} />
+            
+            {/* Médiathèque */}
+            <Route path="mediatheque" element={<div className="p-6">Médiathèque - Vidéos et témoignages - En développement</div>} />
+            <Route path="albums-photos" element={<div className="p-6">Albums photos - Galerie événements - En développement</div>} />
+            
+            {/* Actualités */}
+            <Route path="actualites" element={<div className="p-6">Actualités - Dernières nouvelles - En développement</div>} />
+            <Route path="ressources-pratiques" element={<div className="p-6">Ressources pratiques - Modèles et formulaires - En développement</div>} />
+            <Route path="liens-utiles" element={<div className="p-6">Liens utiles - Sites externes - En développement</div>} />
+            <Route path="guides-pratiques" element={<div className="p-6">Guides pratiques - Guides step-by-step - En développement</div>} />
+            
+            {/* Carte interactive */}
+            <Route path="carte-interactive" element={<div className="p-6">Carte interactive - Localiser les services - En développement</div>} />
+            <Route path="adresses-utiles" element={<div className="p-6">Adresses utiles - Organismes et contacts - En développement</div>} />
           </Routes>
         </div>
       </main>
