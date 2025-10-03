@@ -477,15 +477,17 @@ const SearchResults = () => {
                           </span>
                           <div className="flex items-center gap-2">
                             {useAI && (result as any).similarity && (
-                              <Tooltip delayDuration={200}>
+                              <Tooltip delayDuration={0}>
                                 <TooltipTrigger asChild>
-                                  <Badge variant="default" className="text-xs gap-1 cursor-help">
-                                    <Sparkles className="h-3 w-3" />
-                                    {Math.round((result as any).similarity * 100)}%
-                                  </Badge>
+                                  <div className="inline-flex">
+                                    <Badge variant="default" className="text-xs gap-1 cursor-help">
+                                      <Sparkles className="h-3 w-3" />
+                                      {Math.round((result as any).similarity * 100)}%
+                                    </Badge>
+                                  </div>
                                 </TooltipTrigger>
-                                <TooltipContent side="top" className="max-w-sm p-3">
-                                  <p className="text-sm leading-relaxed">
+                                <TooltipContent side="top" className="max-w-sm p-4 bg-popover">
+                                  <p className="text-sm leading-relaxed text-popover-foreground">
                                     {generateMatchExplanation(result, searchQuery, (result as any).similarity)}
                                   </p>
                                 </TooltipContent>
@@ -498,9 +500,22 @@ const SearchResults = () => {
                             )}
                           </div>
                       </div>
-                      <CardTitle className="text-lg hover:text-primary line-clamp-2">
-                        {result.title}
-                      </CardTitle>
+                      {result.primaryCategory ? (
+                        <Link
+                          to={createDocumentPath(result.primaryCategory.name, result.title)}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="cursor-pointer"
+                        >
+                          <CardTitle className="text-lg hover:text-primary line-clamp-2 cursor-pointer">
+                            {result.title}
+                          </CardTitle>
+                        </Link>
+                      ) : (
+                        <CardTitle className="text-lg line-clamp-2">
+                          {result.title}
+                        </CardTitle>
+                      )}
                       {result.summary && (
                         <CardDescription className="text-sm line-clamp-2">
                           {result.summary}
