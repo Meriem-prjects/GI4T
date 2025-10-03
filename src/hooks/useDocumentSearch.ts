@@ -95,7 +95,7 @@ export const useDocumentSearch = (filters: DocumentSearchFilters) => {
         `,
           { count: "exact" }
         )
-        .eq("status", "processed"); // Only show published documents
+        .eq("published", true); // Only show published documents
 
       // Text search - search in title, summary, keywords
       if (query && query.trim()) {

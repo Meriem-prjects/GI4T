@@ -224,6 +224,7 @@ export type Database = {
           plaintiff_ar: string | null
           processed_pages: number | null
           processing_job_id: string | null
+          published: boolean | null
           status: string | null
           subtitle: string | null
           subtitle_ar: string | null
@@ -283,6 +284,7 @@ export type Database = {
           plaintiff_ar?: string | null
           processed_pages?: number | null
           processing_job_id?: string | null
+          published?: boolean | null
           status?: string | null
           subtitle?: string | null
           subtitle_ar?: string | null
@@ -342,6 +344,7 @@ export type Database = {
           plaintiff_ar?: string | null
           processed_pages?: number | null
           processing_job_id?: string | null
+          published?: boolean | null
           status?: string | null
           subtitle?: string | null
           subtitle_ar?: string | null
