@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Menu } from "lucide-react";
+import { Menu, Home } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
@@ -20,6 +20,11 @@ const ObservatoireHeader = () => {
           </div>
           <div className="flex items-center ml-auto">
             <div className="hidden sm:flex items-center space-x-2 sm:space-x-4">
+              <Link to="/">
+                <Button variant="outline" size="sm" className="text-xs sm:text-sm">
+                  <Home className="h-4 w-4" />
+                </Button>
+              </Link>
               <Button variant="outline" size="sm" className="text-xs sm:text-sm">العربية</Button>
               <Link to="/acces-aux-droits">
                 <Button variant="ghost" size="sm" className="text-xs sm:text-sm">Accès aux Droits</Button>
