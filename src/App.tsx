@@ -23,9 +23,7 @@ import LiensUtiles from "./pages/LiensUtiles";
 import AlbumsPhotos from "./pages/AlbumsPhotos";
 import AdressesUtiles from "./pages/AdressesUtiles";
 import ActualitesAccesDroits from "./pages/ActualitesAccesDroits";
-import CarteInteractiveLayout from "./layouts/CarteInteractiveLayout";
-import MediathequeLayout from "./layouts/MediathequeLayout";
-import ActualitesLayout from "./layouts/ActualitesLayout";
+import AccesAuxDroitsLayout from "./layouts/AccesAuxDroitsLayout";
 import ObservatoireLayout from "./layouts/ObservatoireLayout";
 import InformationLayout from "./layouts/InformationLayout";
 import QuiSommesNous from "./pages/QuiSommesNous";
@@ -66,23 +64,13 @@ const App = () => (
           {/* Route générale observatoire en dernier */}
           <Route path="/observatoire" element={<Observatoire />} />
           
-          {/* Accès aux droits interface */}
-          <Route path="/acces-aux-droits" element={<AccesAuxDroits />} />
-          
-          {/* Carte Interactive Section */}
-          <Route element={<CarteInteractiveLayout />}>
+          {/* Accès aux droits interface - Unified Layout */}
+          <Route element={<AccesAuxDroitsLayout />}>
+            <Route path="/acces-aux-droits" element={<AccesAuxDroits />} />
             <Route path="/acces-aux-droits/carte-interactive" element={<CarteInteractive />} />
             <Route path="/acces-aux-droits/adresses-utiles" element={<AdressesUtiles />} />
-          </Route>
-          
-          {/* Mediatheque Section */}
-          <Route element={<MediathequeLayout />}>
             <Route path="/acces-aux-droits/mediatheque" element={<Mediatheque />} />
             <Route path="/acces-aux-droits/albums-photos" element={<AlbumsPhotos />} />
-          </Route>
-          
-          {/* Actualites Section */}
-          <Route element={<ActualitesLayout />}>
             <Route path="/acces-aux-droits/actualites" element={<ActualitesAccesDroits />} />
             <Route path="/acces-aux-droits/ressources-pratiques" element={<RessourcesPratiques />} />
             <Route path="/acces-aux-droits/liens-utiles" element={<LiensUtiles />} />
