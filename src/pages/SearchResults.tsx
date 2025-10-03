@@ -21,8 +21,8 @@ const SearchResults = () => {
   // State for filters
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCourtType, setSelectedCourtType] = useState("all");
-  const [dateFrom, setDateFrom] = useState("");
-  const [dateTo, setDateTo] = useState("");
+  const [yearFrom, setYearFrom] = useState("");
+  const [yearTo, setYearTo] = useState("");
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
   const [selectedJurisdictionLevel, setSelectedJurisdictionLevel] = useState("all");
   const [selectedDocumentType, setSelectedDocumentType] = useState("all");
@@ -45,8 +45,8 @@ const SearchResults = () => {
   const { data: searchData, isLoading: searchLoading } = useDocumentSearch({
     query: searchQuery,
     courtType: selectedCourtType !== "all" ? selectedCourtType : undefined,
-    dateFrom,
-    dateTo,
+    yearFrom,
+    yearTo,
     categories: selectedCategories.length > 0 ? selectedCategories : undefined,
     jurisdictionLevel: selectedJurisdictionLevel !== "all" ? selectedJurisdictionLevel : undefined,
     documentType: selectedDocumentType !== "all" ? selectedDocumentType : undefined,
@@ -72,8 +72,8 @@ const SearchResults = () => {
   // Reset all filters
   const resetFilters = () => {
     setSelectedCourtType("all");
-    setDateFrom("");
-    setDateTo("");
+    setYearFrom("");
+    setYearTo("");
     setSelectedCategories([]);
     setSelectedJurisdictionLevel("all");
     setSelectedDocumentType("all");
@@ -87,8 +87,9 @@ const SearchResults = () => {
       const court = courtTypes.find(c => c.id === selectedCourtType);
       if (court) filters.push(court.name);
     }
-    if (dateFrom || dateTo) {
-      filters.push("Période personnalisée");
+    if (yearFrom || yearTo) {
+      const yearText = yearFrom && yearTo ? `${yearFrom} - ${yearTo}` : yearFrom ? `À partir de ${yearFrom}` : `Jusqu'à ${yearTo}`;
+      filters.push(yearText);
     }
     selectedCategories.forEach(catId => {
       const category = categories.find(c => c.id === catId);
@@ -214,20 +215,26 @@ const SearchResults = () => {
                 <Label className="text-sm font-medium mb-2 block">Période</Label>
                 <div className="flex gap-2">
                   <Input 
-                    type="date" 
+                    type="number" 
+                    placeholder="2009"
+                    min="1900"
+                    max="2100"
                     className="text-sm" 
-                    value={dateFrom}
+                    value={yearFrom}
                     onChange={(e) => {
-                      setDateFrom(e.target.value);
+                      setYearFrom(e.target.value);
                       setCurrentPage(1);
                     }}
                   />
                   <Input 
-                    type="date" 
+                    type="number" 
+                    placeholder="2012"
+                    min="1900"
+                    max="2100"
                     className="text-sm"
-                    value={dateTo}
+                    value={yearTo}
                     onChange={(e) => {
-                      setDateTo(e.target.value);
+                      setYearTo(e.target.value);
                       setCurrentPage(1);
                     }}
                   />
@@ -363,11 +370,11 @@ const SearchResults = () => {
                     <CardHeader className="pb-4">
                       <div className="flex items-center justify-between mb-2 flex-wrap gap-2">
                         <span className="text-sm text-muted-foreground">
-                          {result.court || "Tribunal non spécifié"} {result.year && `• ${result.year}`}
+                          {result.court || "Tribunal non spécifié"} {result.court_level && `• ${result.court_level}`}
                         </span>
-                        {result.case_number && (
+                        {result.year && (
                           <Badge variant="outline" className="text-xs">
-                            N° {result.case_number}
+                            {result.year}
                           </Badge>
                         )}
                       </div>

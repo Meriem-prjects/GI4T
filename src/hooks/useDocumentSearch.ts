@@ -4,8 +4,8 @@ import { supabase } from "@/integrations/supabase/client";
 export interface DocumentSearchFilters {
   query?: string;
   courtType?: string;
-  dateFrom?: string;
-  dateTo?: string;
+  yearFrom?: string;
+  yearTo?: string;
   categories?: string[];
   jurisdictionLevel?: string;
   documentType?: string;
@@ -52,8 +52,8 @@ export const useDocumentSearch = (filters: DocumentSearchFilters) => {
       const {
         query,
         courtType,
-        dateFrom,
-        dateTo,
+        yearFrom,
+        yearTo,
         categories,
         jurisdictionLevel,
         documentType,
@@ -111,14 +111,12 @@ export const useDocumentSearch = (filters: DocumentSearchFilters) => {
         );
       }
 
-      // Date range filters
-      if (dateFrom) {
-        const yearFrom = new Date(dateFrom).getFullYear();
-        queryBuilder = queryBuilder.gte("year", yearFrom);
+      // Year range filters
+      if (yearFrom) {
+        queryBuilder = queryBuilder.gte("year", parseInt(yearFrom));
       }
-      if (dateTo) {
-        const yearTo = new Date(dateTo).getFullYear();
-        queryBuilder = queryBuilder.lte("year", yearTo);
+      if (yearTo) {
+        queryBuilder = queryBuilder.lte("year", parseInt(yearTo));
       }
 
       // Jurisdiction level filter
