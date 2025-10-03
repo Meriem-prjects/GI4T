@@ -405,6 +405,8 @@ const SearchResults = () => {
                         {result.primaryCategory ? (
                           <Link
                             to={createDocumentPath(result.primaryCategory.name, result.title)}
+                            target="_blank"
+                            rel="noopener noreferrer"
                           >
                             <Button variant="outline" size="sm" className="hover:bg-primary hover:text-primary-foreground">
                               Consulter
