@@ -56,28 +56,42 @@ serve(async (req) => {
 
     console.log('Query embedding generated');
 
-    // Perform vector similarity search
-    let rpcQuery = supabase.rpc('match_documents', {
-      query_embedding: queryEmbedding,
-      match_threshold: 0.7,
-      match_count: limit * 2, // Get more results to filter
-    });
+    // Try multiple thresholds for better recall
+    let matches: any[] = [];
+    let usedThreshold = 0;
+    const thresholds = [0.5, 0.4, 0.3];
+    
+    for (const threshold of thresholds) {
+      console.log(`Trying threshold: ${threshold}`);
+      
+      const { data, error: searchError } = await supabase.rpc('match_documents', {
+        query_embedding: queryEmbedding,
+        match_threshold: threshold,
+        match_count: limit * 2,
+      });
 
-    const { data: matches, error: searchError } = await rpcQuery;
+      if (searchError) {
+        console.error('Search error:', searchError);
+        throw new Error(`Search failed: ${searchError.message}`);
+      }
 
-    if (searchError) {
-      console.error('Search error:', searchError);
-      throw new Error(`Search failed: ${searchError.message}`);
+      if (data && data.length > 0) {
+        matches = data;
+        usedThreshold = threshold;
+        console.log(`Found ${data.length} documents with threshold ${threshold}`);
+        break;
+      }
     }
 
     if (!matches || matches.length === 0) {
+      console.log('No matches found with any threshold');
       return new Response(
-        JSON.stringify({ results: [], total: 0 }),
+        JSON.stringify({ results: [], total: 0, noResults: true }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
-    console.log(`Found ${matches.length} matches before filtering`);
+    console.log(`Found ${matches.length} matches before filtering (threshold: ${usedThreshold})`);
 
     // Fetch full document details
     const documentIds = matches.map((m: any) => m.id);
@@ -165,6 +179,8 @@ serve(async (req) => {
       JSON.stringify({ 
         results,
         total: results.length,
+        noResults: results.length === 0,
+        threshold: usedThreshold,
         aiPowered: true
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }

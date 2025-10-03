@@ -618,9 +618,26 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
 
       if (error) throw error;
 
+      // Generate embeddings for AI search
+      try {
+        console.log('Generating embeddings for published document:', editedData.id);
+        const { error: embeddingError } = await supabase.functions.invoke('generate-document-embeddings', {
+          body: { documentId: editedData.id }
+        });
+        
+        if (embeddingError) {
+          console.error('Embedding generation error:', embeddingError);
+        } else {
+          console.log('Embeddings generated successfully');
+        }
+      } catch (embError) {
+        console.error('Embedding generation failed:', embError);
+        // Don't block publication if embedding fails
+      }
+
       toast({
         title: "Document publié",
-        description: "Le document a été publié avec succès.",
+        description: "Le document a été publié et indexé pour la recherche IA.",
       });
 
       navigate('/admin/observatoire/validation');

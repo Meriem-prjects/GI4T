@@ -87,14 +87,20 @@ export const useDocumentSearch = (filters: DocumentSearchFilters) => {
             throw error;
           }
 
-          return {
-            results: data.results || [],
-            total: data.total || 0,
-            page,
-            pageSize,
-            totalPages: Math.ceil((data.total || 0) / pageSize),
-            aiPowered: true,
-          };
+          // If AI returns no results, fall back to classic search
+          if (data.noResults) {
+            console.log('No AI results found, falling back to classic search');
+            // Continue to classic search below
+          } else {
+            return {
+              results: data.results || [],
+              total: data.total || 0,
+              page,
+              pageSize,
+              totalPages: Math.ceil((data.total || 0) / pageSize),
+              aiPowered: true,
+            };
+          }
         } catch (error) {
           console.error('AI search failed, falling back to traditional search:', error);
           // Continue with traditional search below
