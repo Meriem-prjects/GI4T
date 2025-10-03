@@ -119,38 +119,61 @@ const SearchResults = () => {
   };
 
   const generateMatchExplanation = (doc: any, query: string, similarity: number) => {
-    const matchedFields = [];
     const queryLower = query.toLowerCase();
+    const matchedElements: string[] = [];
+    const scorePercent = Math.round(similarity * 100);
     
-    // Check what fields matched
+    // Analyze what matched in the document
     if (doc.title?.toLowerCase().includes(queryLower) || doc.title_ar?.includes(query)) {
-      matchedFields.push("le titre");
+      matchedElements.push(`le titre "${doc.title?.substring(0, 60)}..."`);
     }
+    
     if (doc.summary?.toLowerCase().includes(queryLower) || doc.summary_ar?.includes(query)) {
-      matchedFields.push("le résumé");
+      matchedElements.push("le résumé du document");
     }
+    
     if (doc.keywords?.some((k: string) => k.toLowerCase().includes(queryLower)) || 
         doc.keywords_ar?.some((k: string) => k.includes(query))) {
-      matchedFields.push("les mots-clés");
+      const matchingKeywords = doc.keywords?.filter((k: string) => 
+        k.toLowerCase().includes(queryLower)
+      ).slice(0, 2).join(", ");
+      if (matchingKeywords) {
+        matchedElements.push(`les mots-clés (${matchingKeywords})`);
+      }
     }
     
-    // Generate explanation based on similarity score
-    let explanation = "";
+    if (doc.categories?.length > 0) {
+      const categoryNames = doc.categories.slice(0, 2).map((c: any) => c.name).join(", ");
+      matchedElements.push(`les catégories (${categoryNames})`);
+    }
+    
+    // Build contextual explanation
+    let explanation = `Score de ${scorePercent}% : `;
+    
     if (similarity >= 0.7) {
-      explanation = "Très forte correspondance sémantique";
+      explanation += `Excellente correspondance. L'IA a détecté une forte pertinence sémantique entre votre recherche "${query}" et ce document`;
     } else if (similarity >= 0.5) {
-      explanation = "Bonne correspondance sémantique";
+      explanation += `Bonne correspondance. Votre recherche "${query}" est bien liée à ce document`;
     } else if (similarity >= 0.3) {
-      explanation = "Correspondance sémantique modérée";
+      explanation += `Correspondance modérée. Votre recherche "${query}" partage des concepts avec ce document`;
     } else {
-      explanation = "Correspondance sémantique faible";
+      explanation += `Correspondance partielle. Certains éléments de votre recherche "${query}" correspondent à ce document`;
     }
     
-    if (matchedFields.length > 0) {
-      explanation += ` basée sur ${matchedFields.join(", ")}`;
+    if (matchedElements.length > 0) {
+      explanation += `, notamment dans ${matchedElements.join(", ")}.`;
+    } else {
+      explanation += ` à travers l'analyse sémantique du contenu complet.`;
     }
     
-    explanation += ". L'IA a analysé le contexte et le sens de votre requête pour trouver ce document pertinent.";
+    // Add context about the score
+    if (similarity >= 0.7) {
+      explanation += ` Ce score élevé indique que le document traite directement de votre sujet.`;
+    } else if (similarity >= 0.5) {
+      explanation += ` Ce score indique une pertinence solide pour votre recherche.`;
+    } else if (similarity >= 0.3) {
+      explanation += ` Ce score suggère une pertinence partielle qui peut nécessiter une vérification.`;
+    }
     
     return explanation;
   };
