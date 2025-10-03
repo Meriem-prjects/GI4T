@@ -1,9 +1,9 @@
 import { Button } from "@/components/ui/button";
 import { Link, Outlet } from "react-router-dom";
-import AccesAuxDroitsNav from "@/components/AccesAuxDroitsNav";
+import CarteInteractiveNav from "@/components/CarteInteractiveNav";
 import Footer from "@/components/Footer";
 
-const AccesAuxDroitsLayout = () => {
+const CarteInteractiveLayout = () => {
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
@@ -44,7 +44,7 @@ const AccesAuxDroitsLayout = () => {
       </header>
 
       {/* Navigation */}
-      <AccesAuxDroitsNav />
+      <CarteInteractiveNav />
 
       {/* Page Content */}
       <Outlet />
@@ -55,4 +55,4 @@ const AccesAuxDroitsLayout = () => {
   );
 };
 
-export default AccesAuxDroitsLayout;
+export default CarteInteractiveLayout;

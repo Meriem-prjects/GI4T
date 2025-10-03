@@ -21,7 +21,11 @@ import Mediatheque from "./pages/Mediatheque";
 import Publications from "./pages/Publications";
 import LiensUtiles from "./pages/LiensUtiles";
 import AlbumsPhotos from "./pages/AlbumsPhotos";
-import AccesAuxDroitsLayout from "./layouts/AccesAuxDroitsLayout";
+import AdressesUtiles from "./pages/AdressesUtiles";
+import ActualitesAccesDroits from "./pages/ActualitesAccesDroits";
+import CarteInteractiveLayout from "./layouts/CarteInteractiveLayout";
+import MediathequeLayout from "./layouts/MediathequeLayout";
+import ActualitesLayout from "./layouts/ActualitesLayout";
 import ObservatoireLayout from "./layouts/ObservatoireLayout";
 import InformationLayout from "./layouts/InformationLayout";
 import QuiSommesNous from "./pages/QuiSommesNous";
@@ -64,14 +68,26 @@ const App = () => (
           
           {/* Accès aux droits interface */}
           <Route path="/acces-aux-droits" element={<AccesAuxDroits />} />
-          <Route element={<AccesAuxDroitsLayout />}>
-            <Route path="/acces-aux-droits/guides-pratiques" element={<GuidesPratiques />} />
-            <Route path="/acces-aux-droits/ressources-pratiques" element={<RessourcesPratiques />} />
+          
+          {/* Carte Interactive Section */}
+          <Route element={<CarteInteractiveLayout />}>
             <Route path="/acces-aux-droits/carte-interactive" element={<CarteInteractive />} />
+            <Route path="/acces-aux-droits/adresses-utiles" element={<AdressesUtiles />} />
+          </Route>
+          
+          {/* Mediatheque Section */}
+          <Route element={<MediathequeLayout />}>
             <Route path="/acces-aux-droits/mediatheque" element={<Mediatheque />} />
-            <Route path="/acces-aux-droits/publications" element={<Publications />} />
-            <Route path="/acces-aux-droits/liens-utiles" element={<LiensUtiles />} />
             <Route path="/acces-aux-droits/albums-photos" element={<AlbumsPhotos />} />
+          </Route>
+          
+          {/* Actualites Section */}
+          <Route element={<ActualitesLayout />}>
+            <Route path="/acces-aux-droits/actualites" element={<ActualitesAccesDroits />} />
+            <Route path="/acces-aux-droits/ressources-pratiques" element={<RessourcesPratiques />} />
+            <Route path="/acces-aux-droits/liens-utiles" element={<LiensUtiles />} />
+            <Route path="/acces-aux-droits/guides-pratiques" element={<GuidesPratiques />} />
+            <Route path="/acces-aux-droits/publications" element={<Publications />} />
           </Route>
           
           {/* Information interface */}

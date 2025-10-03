@@ -1,42 +1,12 @@
 import { Button } from "@/components/ui/button";
-import { BookOpen, FileText, MapPin, Video, ExternalLink, Camera } from "lucide-react";
+import { Video, Camera } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
 import { cn } from "@/lib/utils";
 
-const AccesAuxDroitsNav = () => {
+const MediathequeNav = () => {
   const location = useLocation();
 
   const navItems = [
-    {
-      path: "/acces-aux-droits/guides-pratiques",
-      label: "Guides",
-      icon: BookOpen,
-      description: "Guides step-by-step"
-    },
-    {
-      path: "/acces-aux-droits/ressources-pratiques", 
-      label: "Ressources pratiques",
-      icon: FileText,
-      description: "Modèles et formulaires"
-    },
-    {
-      path: "/acces-aux-droits/carte-interactive",
-      label: "Carte interactive", 
-      icon: MapPin,
-      description: "Campagne d'information"
-    },
-    {
-      path: "/acces-aux-droits/publications",
-      label: "Publications",
-      icon: BookOpen,
-      description: "Documents officiels"
-    },
-    {
-      path: "/acces-aux-droits/liens-utiles",
-      label: "Liens utiles",
-      icon: ExternalLink,
-      description: "Sites externes"
-    },
     {
       path: "/acces-aux-droits/mediatheque",
       label: "Médiathèque",
@@ -86,4 +56,4 @@ const AccesAuxDroitsNav = () => {
   );
 };
 
-export default AccesAuxDroitsNav;
+export default MediathequeNav;

@@ -5,7 +5,6 @@ import { Input } from "@/components/ui/input";
 import { Search, BookOpen, Map, Video, FileText, Scale, Menu } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
-import AccesAuxDroitsNav from "@/components/AccesAuxDroitsNav";
 import Footer from "@/components/Footer";
 
 const AccesAuxDroits = () => {
@@ -81,10 +80,6 @@ const AccesAuxDroits = () => {
           </Sheet>
         </div>
       </header>
-
-      {/* Navigation */}
-      <AccesAuxDroitsNav />
-
 
       {/* Quick Access Cards */}
       <section className="py-8 sm:py-16">
