@@ -1,5 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { Link, Outlet } from "react-router-dom";
+import { Home } from "lucide-react";
 import CarteInteractiveNav from "@/components/CarteInteractiveNav";
 import Footer from "@/components/Footer";
 
@@ -8,7 +9,7 @@ const CarteInteractiveLayout = () => {
     <div className="min-h-screen bg-background">
       {/* Header */}
       <header className="border-b bg-card animate-fade-in">
-        <div className="container mx-auto px-4 py-4">
+        <div className="container mx-auto px-4 py-2 sm:py-4">
           <div className="flex items-center justify-between flex-wrap gap-4">
             <div className="flex items-center space-x-2 sm:space-x-4">
               <Link to="/acces-aux-droits" className="flex items-center space-x-2 sm:space-x-4 hover:opacity-80 transition-opacity duration-200">
@@ -32,6 +33,11 @@ const CarteInteractiveLayout = () => {
             </nav>
 
             <div className="flex items-center space-x-2 sm:space-x-4">
+              <Link to="/acces-aux-droits">
+                <Button variant="outline" size="sm" className="text-xs sm:text-sm">
+                  <Home className="h-4 w-4" />
+                </Button>
+              </Link>
               <Button variant="outline" size="sm" className="text-xs sm:text-sm">العربية</Button>
               <Link to="/observatoire">
                 <Button variant="outline" size="sm" className="text-xs sm:text-sm">
