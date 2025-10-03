@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { Link, useSearchParams } from "react-router-dom";
-import { Search, Filter, Grid3X3, List, Loader2 } from "lucide-react";
+import { Search, Filter, Grid3X3, List, Loader2, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -9,6 +9,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
+import { Switch } from "@/components/ui/switch";
 import { Breadcrumb, BreadcrumbList, BreadcrumbItem, BreadcrumbLink, BreadcrumbPage, BreadcrumbSeparator } from "@/components/ui/breadcrumb";
 import { useDocumentSearch } from "@/hooks/useDocumentSearch";
 import { useSearchFilters } from "@/hooks/useSearchFilters";
@@ -32,6 +33,7 @@ const SearchResults = () => {
   const [viewMode, setViewMode] = useState("grid");
   const [sortBy, setSortBy] = useState<"recent" | "relevance">("recent");
   const [currentPage, setCurrentPage] = useState(1);
+  const [useAI, setUseAI] = useState(false);
 
   // Get search query from URL params on component mount
   useEffect(() => {
@@ -61,6 +63,7 @@ const SearchResults = () => {
     sortBy,
     page: currentPage,
     pageSize: 10,
+    useAI,
   });
 
   const searchResults = searchData?.results || [];
@@ -143,23 +146,48 @@ const SearchResults = () => {
         <div className="relative">
           <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-muted-foreground" size={20} />
           <Input
-            placeholder="Recherche intelligente..."
+            placeholder={useAI ? "Recherche intelligente avec IA... Posez votre question en langage naturel" : "Rechercher des documents..."}
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             onKeyDown={(e) => {
               if (e.key === 'Enter') {
-                window.location.href = `/observatoire/search-results?q=${encodeURIComponent(searchQuery)}`;
+                setCurrentPage(1);
               }
             }}
             className="pl-12 pr-32 py-4 text-base bg-background rounded-lg border"
           />
           <Button 
             className="absolute right-2 top-1/2 transform -translate-y-1/2 px-6"
-            onClick={() => window.location.href = `/observatoire/search-results?q=${encodeURIComponent(searchQuery)}`}
+            onClick={() => setCurrentPage(1)}
           >
             Rechercher
           </Button>
         </div>
+        
+        {/* AI Toggle */}
+        <div className="flex items-center justify-center gap-3 mt-4">
+          <Label htmlFor="ai-search" className="flex items-center gap-2 cursor-pointer">
+            <Sparkles className={`h-4 w-4 ${useAI ? 'text-primary' : 'text-muted-foreground'}`} />
+            <span className="text-sm font-medium">Recherche intelligente IA</span>
+          </Label>
+          <Switch
+            id="ai-search"
+            checked={useAI}
+            onCheckedChange={(checked) => {
+              setUseAI(checked);
+              setCurrentPage(1);
+            }}
+          />
+        </div>
+
+        {useAI && (
+          <div className="mt-3 p-3 bg-primary/5 rounded-lg border border-primary/20">
+            <p className="text-sm text-muted-foreground text-center">
+              💡 <strong>Mode IA activé :</strong> Posez vos questions en langage naturel. 
+              L'IA comprendra le contexte et trouvera les documents pertinents même sans mots-clés exacts.
+            </p>
+          </div>
+        )}
       </div>
 
       {/* Active Filters */}
@@ -339,15 +367,25 @@ const SearchResults = () => {
               {searchLoading ? (
                 <div className="flex items-center gap-2">
                   <Loader2 className="w-4 h-4 animate-spin" />
-                  <span className="text-sm text-muted-foreground">Recherche en cours...</span>
+                  <span className="text-sm text-muted-foreground">
+                    {useAI ? "Analyse IA en cours..." : "Recherche en cours..."}
+                  </span>
                 </div>
               ) : (
-                <span className="text-sm text-muted-foreground">
-                  {totalResults} décision{totalResults !== 1 ? 's' : ''} trouvée{totalResults !== 1 ? 's' : ''}
-                  {searchQuery && (
-                    <span className="font-medium"> pour "{searchQuery}"</span>
+                <div className="flex items-center gap-2">
+                  <span className="text-sm text-muted-foreground">
+                    {totalResults} décision{totalResults !== 1 ? 's' : ''} trouvée{totalResults !== 1 ? 's' : ''}
+                    {searchQuery && (
+                      <span className="font-medium"> pour "{searchQuery}"</span>
+                    )}
+                  </span>
+                  {useAI && searchData?.aiPowered && (
+                    <Badge variant="default" className="ml-2 gap-1">
+                      <Sparkles className="h-3 w-3" />
+                      IA
+                    </Badge>
                   )}
-                </span>
+                </div>
               )}
               <div className="flex items-center gap-2">
                 <Button 
@@ -397,11 +435,19 @@ const SearchResults = () => {
                         <span className="text-sm text-muted-foreground">
                           {result.court || "Tribunal non spécifié"} {result.court_level && `• ${result.court_level}`}
                         </span>
-                        {result.year && (
-                          <Badge variant="outline" className="text-xs">
-                            {result.year}
-                          </Badge>
-                        )}
+                        <div className="flex items-center gap-2">
+                          {useAI && (result as any).similarity && (
+                            <Badge variant="default" className="text-xs gap-1">
+                              <Sparkles className="h-3 w-3" />
+                              {Math.round((result as any).similarity * 100)}%
+                            </Badge>
+                          )}
+                          {result.year && (
+                            <Badge variant="outline" className="text-xs">
+                              {result.year}
+                            </Badge>
+                          )}
+                        </div>
                       </div>
                       <CardTitle className="text-lg hover:text-primary line-clamp-2">
                         {result.title}

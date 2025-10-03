@@ -12,6 +12,7 @@ export interface DocumentSearchFilters {
   sortBy?: "recent" | "relevance";
   page?: number;
   pageSize?: number;
+  useAI?: boolean; // Enable AI semantic search
 }
 
 export interface DocumentSearchResult {
@@ -60,7 +61,45 @@ export const useDocumentSearch = (filters: DocumentSearchFilters) => {
         sortBy = "recent",
         page = 1,
         pageSize = 10,
+        useAI = false,
       } = filters;
+
+      // If AI search is enabled and query exists, use AI semantic search
+      if (useAI && query && query.trim()) {
+        try {
+          const { data, error } = await supabase.functions.invoke('ai-semantic-search', {
+            body: {
+              query,
+              filters: {
+                courtType,
+                yearFrom,
+                yearTo,
+                jurisdictionLevel,
+                documentType,
+              },
+              limit: pageSize,
+            },
+          });
+
+          if (error) {
+            console.error('AI search error:', error);
+            // Fall back to traditional search
+            throw error;
+          }
+
+          return {
+            results: data.results || [],
+            total: data.total || 0,
+            page,
+            pageSize,
+            totalPages: Math.ceil((data.total || 0) / pageSize),
+            aiPowered: true,
+          };
+        } catch (error) {
+          console.error('AI search failed, falling back to traditional search:', error);
+          // Continue with traditional search below
+        }
+      }
 
       // Start building the query - only published documents
       let queryBuilder = supabase
@@ -191,6 +230,7 @@ export const useDocumentSearch = (filters: DocumentSearchFilters) => {
         page,
         pageSize,
         totalPages: Math.ceil((count || 0) / pageSize),
+        aiPowered: false,
       };
     },
   });
