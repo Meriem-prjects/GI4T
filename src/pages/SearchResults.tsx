@@ -466,36 +466,37 @@ const SearchResults = () => {
               <p className="text-sm text-muted-foreground mt-2">Essayez de modifier vos critères de recherche</p>
             </div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-              {searchResults.map((result) => (
-                <Card key={result.id} className="hover:shadow-lg transition-shadow flex flex-col h-[320px]">
-                    <CardHeader className="pb-4">
-                      <div className="flex items-center justify-between mb-2 flex-wrap gap-2">
-                        <span className="text-sm text-muted-foreground">
-                          {result.court || "Tribunal non spécifié"} {result.court_level && `• ${result.court_level}`}
-                        </span>
-                        <div className="flex items-center gap-2">
-                          {useAI && (result as any).similarity && (
-                            <TooltipProvider>
-                              <Tooltip>
+            <TooltipProvider>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+                {searchResults.map((result) => (
+                  <Card key={result.id} className="hover:shadow-lg transition-shadow flex flex-col h-[320px]">
+                      <CardHeader className="pb-4">
+                        <div className="flex items-center justify-between mb-2 flex-wrap gap-2">
+                          <span className="text-sm text-muted-foreground">
+                            {result.court || "Tribunal non spécifié"} {result.court_level && `• ${result.court_level}`}
+                          </span>
+                          <div className="flex items-center gap-2">
+                            {useAI && (result as any).similarity && (
+                              <Tooltip delayDuration={200}>
                                 <TooltipTrigger asChild>
                                   <Badge variant="default" className="text-xs gap-1 cursor-help">
                                     <Sparkles className="h-3 w-3" />
                                     {Math.round((result as any).similarity * 100)}%
                                   </Badge>
                                 </TooltipTrigger>
-                                <TooltipContent className="max-w-xs">
-                                  <p className="text-sm">{generateMatchExplanation(result, searchQuery, (result as any).similarity)}</p>
+                                <TooltipContent side="top" className="max-w-sm p-3">
+                                  <p className="text-sm leading-relaxed">
+                                    {generateMatchExplanation(result, searchQuery, (result as any).similarity)}
+                                  </p>
                                 </TooltipContent>
                               </Tooltip>
-                            </TooltipProvider>
-                          )}
-                          {result.year && (
-                            <Badge variant="outline" className="text-xs">
-                              {result.year}
-                            </Badge>
-                          )}
-                        </div>
+                            )}
+                            {result.year && (
+                              <Badge variant="outline" className="text-xs">
+                                {result.year}
+                              </Badge>
+                            )}
+                          </div>
                       </div>
                       <CardTitle className="text-lg hover:text-primary line-clamp-2">
                         {result.title}
@@ -548,6 +549,7 @@ const SearchResults = () => {
                   </Card>
               ))}
             </div>
+            </TooltipProvider>
           )}
 
           {/* Pagination */}
