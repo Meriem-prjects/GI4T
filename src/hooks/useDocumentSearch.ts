@@ -107,7 +107,7 @@ export const useDocumentSearch = (filters: DocumentSearchFilters) => {
       // Court type filter
       if (courtType && courtType !== "all") {
         queryBuilder = queryBuilder.or(
-          `court.ilike.%${courtType}%,court_category.ilike.%${courtType}%`
+          `court.ilike.%${courtType}%,court_category.ilike.%${courtType}%,court_category_type.ilike.%${courtType}%`
         );
       }
 

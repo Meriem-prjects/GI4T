@@ -92,8 +92,7 @@ const SearchResults = () => {
   const getActiveFilters = () => {
     const filters: string[] = [];
     if (selectedCourtType !== "all") {
-      const court = courtTypes.find(c => c.id === selectedCourtType);
-      if (court) filters.push(court.name);
+      filters.push(selectedCourtType);
     }
     if (yearFrom || yearTo) {
       const yearText = yearFrom && yearTo ? `${yearFrom} - ${yearTo}` : yearFrom ? `À partir de ${yearFrom}` : `Jusqu'à ${yearTo}`;
@@ -210,7 +209,7 @@ const SearchResults = () => {
                   <SelectContent>
                     <SelectItem value="all">Tous les tribunaux</SelectItem>
                     {courtTypes.map((court) => (
-                      <SelectItem key={court.id} value={court.id}>
+                      <SelectItem key={court.id} value={court.name}>
                         {court.name}
                       </SelectItem>
                     ))}
