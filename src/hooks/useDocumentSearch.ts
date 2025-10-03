@@ -34,6 +34,12 @@ export interface DocumentSearchResult {
     name_ar?: string;
     color?: string;
   }>;
+  primaryCategory?: {
+    id: string;
+    name: string;
+    name_ar?: string;
+    color?: string;
+  };
   document_type?: string;
   court_level?: string;
   court_category?: string;
@@ -146,28 +152,32 @@ export const useDocumentSearch = (filters: DocumentSearchFilters) => {
 
       // Transform the data to match our interface
       const results: DocumentSearchResult[] =
-        data?.map((doc: any) => ({
-          id: doc.id,
-          title: doc.title,
-          title_ar: doc.title_ar,
-          case_number: doc.case_number,
-          court: doc.court,
-          court_ar: doc.court_ar,
-          year: doc.year,
-          summary: doc.summary,
-          summary_ar: doc.summary_ar,
-          keywords: doc.keywords,
-          keywords_ar: doc.keywords_ar,
-          status: doc.status,
-          created_at: doc.created_at,
-          document_type: doc.document_type,
-          court_level: doc.court_level,
-          court_category: doc.court_category,
-          categories:
-            doc.document_categories
-              ?.map((dc: any) => dc.categories)
-              .filter(Boolean) || [],
-        })) || [];
+        data?.map((doc: any) => {
+          const categories = doc.document_categories
+            ?.map((dc: any) => dc.categories)
+            .filter(Boolean) || [];
+          
+          return {
+            id: doc.id,
+            title: doc.title,
+            title_ar: doc.title_ar,
+            case_number: doc.case_number,
+            court: doc.court,
+            court_ar: doc.court_ar,
+            year: doc.year,
+            summary: doc.summary,
+            summary_ar: doc.summary_ar,
+            keywords: doc.keywords,
+            keywords_ar: doc.keywords_ar,
+            status: doc.status,
+            created_at: doc.created_at,
+            document_type: doc.document_type,
+            court_level: doc.court_level,
+            court_category: doc.court_category,
+            categories,
+            primaryCategory: categories[0] || null,
+          };
+        }) || [];
 
       // Apply category filter in memory (since it requires joining through document_categories)
       let filteredResults = results;

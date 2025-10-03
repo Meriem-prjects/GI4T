@@ -12,6 +12,7 @@ import { Badge } from "@/components/ui/badge";
 import { Breadcrumb, BreadcrumbList, BreadcrumbItem, BreadcrumbLink, BreadcrumbPage, BreadcrumbSeparator } from "@/components/ui/breadcrumb";
 import { useDocumentSearch } from "@/hooks/useDocumentSearch";
 import { useSearchFilters } from "@/hooks/useSearchFilters";
+import { createDocumentPath } from "@/lib/urlUtils";
 import { format } from "date-fns";
 
 const SearchResults = () => {
@@ -358,8 +359,7 @@ const SearchResults = () => {
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
               {searchResults.map((result) => (
-                <Link key={result.id} to={`/observatoire/decision/${result.id}`} className="block">
-                  <Card className="hover:shadow-lg transition-shadow cursor-pointer h-full">
+                <Card key={result.id} className="hover:shadow-lg transition-shadow h-full">
                     <CardHeader className="pb-4">
                       <div className="flex items-center justify-between mb-2 flex-wrap gap-2">
                         <span className="text-sm text-muted-foreground">
@@ -402,13 +402,22 @@ const SearchResults = () => {
                             </Badge>
                           )}
                         </div>
-                        <Button variant="outline" size="sm" className="hover:bg-primary hover:text-primary-foreground">
-                          Consulter
-                        </Button>
+                        {result.primaryCategory ? (
+                          <Link
+                            to={createDocumentPath(result.primaryCategory.name, result.title)}
+                          >
+                            <Button variant="outline" size="sm" className="hover:bg-primary hover:text-primary-foreground">
+                              Consulter
+                            </Button>
+                          </Link>
+                        ) : (
+                          <Button variant="outline" size="sm" disabled>
+                            Consulter
+                          </Button>
+                        )}
                       </div>
                     </CardContent>
                   </Card>
-                </Link>
               ))}
             </div>
           )}
