@@ -92,7 +92,7 @@ const AdminSidebar = ({ type, isCollapsed = false, onToggle }: AdminSidebarProps
 
   return (
     <aside className={cn(
-      "flex flex-col transition-all duration-300 border-r border-slate-200",
+      "flex flex-col transition-all duration-300 border-r border-slate-200 sticky top-0 h-screen",
       themeColors.bg,
       isCollapsed ? "w-16" : "w-64"
     )}>
@@ -121,7 +121,7 @@ const AdminSidebar = ({ type, isCollapsed = false, onToggle }: AdminSidebarProps
       </div>
 
       {/* Navigation */}
-      <nav className="flex-1 p-2 space-y-1">
+      <nav className="flex-1 p-2 space-y-1 overflow-y-auto">
         {navigationItems.map((item) => {
           const isActive = location.pathname === item.href || 
             (item.href === basePath && location.pathname.startsWith(basePath + "/"));
