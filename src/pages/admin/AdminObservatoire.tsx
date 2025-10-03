@@ -1,16 +1,21 @@
 import { useState } from "react";
 import { Routes, Route } from "react-router-dom";
+import { useAuth } from "@/contexts/AuthContext";
 import AdminSidebar from "@/components/admin/AdminSidebar";
 import AdminDashboard from "@/components/admin/AdminDashboard";
 import AdminEditor from "./AdminEditor";
 import AdminContenus from "./AdminContenus";
 import AdminValidation from "./AdminValidation";
 import AdminParametres from "./AdminParametres";
+import AdminUsersManagement from "@/components/admin/AdminUsersManagement";
 import PDFAOptimizer from "@/components/admin/PDFAOptimizer";
 import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
+import { LogOut, User } from "lucide-react";
 
 const AdminObservatoire = () => {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const { user, signOut } = useAuth();
 
   return (
     <div className="min-h-screen bg-slate-50 flex">
@@ -31,13 +36,23 @@ const AdminObservatoire = () => {
                 Administration Observatoire des Droits
               </h1>
             </div>
+            <div className="flex items-center gap-4">
+              <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                <User className="h-4 w-4" />
+                <span>{user?.email}</span>
+              </div>
+              <Button variant="outline" size="sm" onClick={signOut}>
+                <LogOut className="h-4 w-4 mr-2" />
+                Déconnexion
+              </Button>
+            </div>
           </div>
         </div>
         
         <div className="bg-slate-50">
           <Routes>
             <Route index element={<AdminDashboard type="observatoire" />} />
-            <Route path="utilisateurs" element={<div className="p-6">Utilisateurs - En développement</div>} />
+            <Route path="utilisateurs" element={<AdminUsersManagement />} />
             <Route path="contenus" element={<AdminContenus />} />
             <Route path="editeur" element={<AdminEditor />} />
             <Route path="pdfa-optimizer" element={<PDFAOptimizer />} />
