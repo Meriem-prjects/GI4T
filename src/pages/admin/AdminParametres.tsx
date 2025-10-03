@@ -9,7 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Plus, Edit, Trash2, Building, Scale, FileText, Globe, Users, Shield } from "lucide-react";
+import { Plus, Edit, Trash2, Building, Scale, FileText, Globe, Users, Shield, Sparkles } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useCategories, useDeleteCategory } from "@/hooks/useCategories";
 import { useCourtTypes, useDeleteCourtType } from "@/hooks/useCourtTypes";
@@ -19,6 +19,7 @@ import CategoryForm from "@/components/admin/CategoryForm";
 import { CourtTypeForm } from "@/components/admin/CourtTypeForm";
 import { JurisdictionLevelForm } from "@/components/admin/JurisdictionLevelForm";
 import { DocumentTypeForm } from "@/components/admin/DocumentTypeForm";
+import { EmbeddingsManager } from "@/components/admin/EmbeddingsManager";
 
 const AdminParametres = () => {
   const { toast } = useToast();
@@ -547,13 +548,17 @@ const AdminParametres = () => {
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-        <TabsList className="grid w-full grid-cols-6">
+        <TabsList className="grid w-full grid-cols-7">
           <TabsTrigger value="court-types">Tribunaux</TabsTrigger>
           <TabsTrigger value="categories">Catégories</TabsTrigger>
           <TabsTrigger value="document-types">Types Fiches</TabsTrigger>
           <TabsTrigger value="languages">Langues</TabsTrigger>
           <TabsTrigger value="users">Utilisateurs</TabsTrigger>
           <TabsTrigger value="jurisdiction-levels">Juridictions</TabsTrigger>
+          <TabsTrigger value="embeddings">
+            <Sparkles className="w-4 h-4 mr-2" />
+            Recherche IA
+          </TabsTrigger>
         </TabsList>
 
         <TabsContent value="court-types" className="space-y-4">
@@ -578,6 +583,10 @@ const AdminParametres = () => {
 
         <TabsContent value="jurisdiction-levels" className="space-y-4">
           {renderJurisdictionLevelsTab()}
+        </TabsContent>
+
+        <TabsContent value="embeddings" className="space-y-4">
+          <EmbeddingsManager />
         </TabsContent>
       </Tabs>
 
