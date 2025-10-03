@@ -26,10 +26,14 @@ serve(async (req) => {
     const { 
       query, 
       filters = {},
-      limit = 10 
+      limit = 20 
     } = await req.json();
 
-    console.log('AI semantic search query:', query);
+    // Normalize the query to avoid issues with trailing spaces, multiple spaces, etc.
+    const normalizedQuery = query.trim().replace(/\s+/g, ' ').toLowerCase();
+
+    console.log('AI semantic search - Original query:', query);
+    console.log('AI semantic search - Normalized query:', normalizedQuery);
     console.log('Filters:', filters);
 
     // Generate embedding for the search query
@@ -41,7 +45,7 @@ serve(async (req) => {
       },
       body: JSON.stringify({
         model: 'text-embedding-3-small',
-        input: query,
+        input: normalizedQuery,
       }),
     });
 
@@ -56,18 +60,22 @@ serve(async (req) => {
 
     console.log('Query embedding generated');
 
-    // Try multiple thresholds for better recall
+    // Try multiple thresholds for better recall with increasing match_count
     let matches: any[] = [];
     let usedThreshold = 0;
-    const thresholds = [0.5, 0.4, 0.3];
+    const thresholds = [
+      { threshold: 0.5, match_count: 20 },
+      { threshold: 0.4, match_count: 30 },
+      { threshold: 0.3, match_count: 40 }
+    ];
     
-    for (const threshold of thresholds) {
-      console.log(`Trying threshold: ${threshold}`);
+    for (const { threshold, match_count } of thresholds) {
+      console.log(`Trying threshold: ${threshold} with match_count: ${match_count}`);
       
       const { data, error: searchError } = await supabase.rpc('match_documents', {
         query_embedding: queryEmbedding,
         match_threshold: threshold,
-        match_count: limit * 2,
+        match_count: match_count,
       });
 
       if (searchError) {
@@ -79,6 +87,7 @@ serve(async (req) => {
         matches = data;
         usedThreshold = threshold;
         console.log(`Found ${data.length} documents with threshold ${threshold}`);
+        console.log('Sample similarity scores:', data.slice(0, 5).map((d: any) => ({ id: d.id, similarity: d.similarity })));
         break;
       }
     }

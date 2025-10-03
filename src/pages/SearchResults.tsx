@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { Link, useSearchParams } from "react-router-dom";
-import { Search, Filter, Grid3X3, List, Loader2, Sparkles } from "lucide-react";
+import { Search, Filter, Grid3X3, List, Loader2, Sparkles, ChevronDown, ChevronUp } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -35,6 +35,7 @@ const SearchResults = () => {
   const [sortBy, setSortBy] = useState<"recent" | "relevance">("recent");
   const [currentPage, setCurrentPage] = useState(1);
   const [useAI, setUseAI] = useState(false);
+  const [expandedSummaries, setExpandedSummaries] = useState<Set<string>>(new Set());
 
   // Get search query from URL params on component mount
   useEffect(() => {
@@ -91,6 +92,19 @@ const SearchResults = () => {
     setSelectedJurisdictionLevel("all");
     setSelectedDocumentType("all");
     setCurrentPage(1);
+  };
+
+  // Toggle summary expansion
+  const toggleSummary = (docId: string) => {
+    setExpandedSummaries(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(docId)) {
+        newSet.delete(docId);
+      } else {
+        newSet.add(docId);
+      }
+      return newSet;
+    });
   };
 
   // Get active filters for display
@@ -492,7 +506,7 @@ const SearchResults = () => {
             <TooltipProvider>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
                 {searchResults.map((result) => (
-                  <Card key={result.id} className="hover:shadow-lg transition-shadow flex flex-col h-[320px]">
+                  <Card key={result.id} className="hover:shadow-lg transition-shadow flex flex-col min-h-[320px]">
                       <CardHeader className="pb-4">
                         <div className="flex items-center justify-between mb-2 flex-wrap gap-2">
                           <span className="text-sm text-muted-foreground">
@@ -539,13 +553,36 @@ const SearchResults = () => {
                           {result.title}
                         </CardTitle>
                       )}
-                      {result.summary && (
-                        <CardDescription className="text-sm line-clamp-2">
-                          {result.summary}
-                        </CardDescription>
-                      )}
                     </CardHeader>
                     <CardContent className="pt-0 flex-1 flex flex-col justify-between">
+                      {result.summary && (
+                        <div className="mb-4">
+                          <p className={`text-sm text-muted-foreground ${
+                            expandedSummaries.has(result.id) ? '' : 'line-clamp-2'
+                          }`}>
+                            {result.summary}
+                          </p>
+                          {result.summary.length > 150 && (
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => toggleSummary(result.id)}
+                              className="mt-2 h-auto py-1 px-2 text-xs hover:bg-accent"
+                            >
+                              {expandedSummaries.has(result.id) ? (
+                                <>
+                                  Voir moins <ChevronUp className="ml-1 h-3 w-3" />
+                                </>
+                              ) : (
+                                <>
+                                  Voir plus <ChevronDown className="ml-1 h-3 w-3" />
+                                </>
+                              )}
+                            </Button>
+                          )}
+                        </div>
+                      )}
+                      <div>
                       <div className="flex gap-2 flex-wrap mb-4">
                         {result.categories.slice(0, 3).map((category) => (
                           <Badge 
@@ -582,6 +619,7 @@ const SearchResults = () => {
                             Consulter
                           </Button>
                         )}
+                      </div>
                       </div>
                     </CardContent>
                   </Card>
