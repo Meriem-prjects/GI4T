@@ -12,6 +12,7 @@ import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Breadcrumb, BreadcrumbList, BreadcrumbItem, BreadcrumbLink, BreadcrumbPage, BreadcrumbSeparator } from "@/components/ui/breadcrumb";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { useDocumentSearch } from "@/hooks/useDocumentSearch";
 import { useSearchFilters } from "@/hooks/useSearchFilters";
 import { createDocumentPath } from "@/lib/urlUtils";
@@ -306,7 +307,7 @@ const SearchResults = () => {
       <div className="flex flex-col lg:flex-row gap-6">
         {/* Left Sidebar - Filters */}
         <div className="w-full lg:w-80 space-y-6">
-          <Card className="lg:sticky lg:top-4 lg:max-h-[calc(100vh-2rem)] lg:overflow-y-auto">
+          <Card className="lg:sticky lg:top-4 lg:max-h-[calc(100vh-2rem)]">
             <CardHeader className="pb-4">
               <CardTitle className="text-lg flex items-center gap-2">
                 <Filter className="w-5 h-5" />
@@ -321,7 +322,8 @@ const SearchResults = () => {
                 Réinitialiser
               </Button>
             </CardHeader>
-            <CardContent className="space-y-6">
+            <ScrollArea className="h-[calc(100vh-12rem)] scrollbar-thin">
+            <CardContent className="space-y-6 pr-4">
               {/* Sticky Search Bar */}
               {showStickySearch && (
                 <div className="pb-4 border-b">
@@ -489,6 +491,7 @@ const SearchResults = () => {
                 </RadioGroup>
               </div>
             </CardContent>
+            </ScrollArea>
           </Card>
         </div>
 
