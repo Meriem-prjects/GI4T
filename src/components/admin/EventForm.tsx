@@ -30,6 +30,8 @@ export const EventForm = ({ initialData, onSubmit, onCancel, isLoading }: EventF
     available_places: initialData?.available_places,
     registration_enabled: initialData?.registration_enabled || false,
     images: initialData?.images || [],
+    latitude: initialData?.latitude,
+    longitude: initialData?.longitude,
   });
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -157,9 +159,7 @@ export const EventForm = ({ initialData, onSubmit, onCancel, isLoading }: EventF
                 type="number"
                 step="0.000001"
                 value={formData.latitude || ''}
-                onChange={(e) =>
-                  setFormData({ ...formData, latitude: parseFloat(e.target.value) || undefined })
-                }
+                onChange={(e) => setFormData({ ...formData, latitude: e.target.value ? parseFloat(e.target.value) : undefined })}
                 placeholder="Ex: 36.8065"
               />
             </div>
@@ -171,9 +171,7 @@ export const EventForm = ({ initialData, onSubmit, onCancel, isLoading }: EventF
                 type="number"
                 step="0.000001"
                 value={formData.longitude || ''}
-                onChange={(e) =>
-                  setFormData({ ...formData, longitude: parseFloat(e.target.value) || undefined })
-                }
+                onChange={(e) => setFormData({ ...formData, longitude: e.target.value ? parseFloat(e.target.value) : undefined })}
                 placeholder="Ex: 10.1815"
               />
             </div>
