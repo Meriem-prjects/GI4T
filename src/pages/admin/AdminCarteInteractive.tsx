@@ -121,7 +121,10 @@ const AdminCarteInteractive = () => {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <GovernorateMap governorates={governorates} events={events} />
+              <GovernorateMap
+                governorates={governorates}
+                events={events}
+              />
             </CardContent>
           </Card>
         </TabsContent>

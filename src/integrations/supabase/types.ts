@@ -435,6 +435,8 @@ export type Database = {
           governorate_id: string | null
           id: string
           images: string[] | null
+          latitude: number | null
+          longitude: number | null
           people_impacted: number | null
           registration_enabled: boolean | null
           status: string | null
@@ -453,6 +455,8 @@ export type Database = {
           governorate_id?: string | null
           id?: string
           images?: string[] | null
+          latitude?: number | null
+          longitude?: number | null
           people_impacted?: number | null
           registration_enabled?: boolean | null
           status?: string | null
@@ -471,6 +475,8 @@ export type Database = {
           governorate_id?: string | null
           id?: string
           images?: string[] | null
+          latitude?: number | null
+          longitude?: number | null
           people_impacted?: number | null
           registration_enabled?: boolean | null
           status?: string | null
