@@ -38,8 +38,57 @@ export const GovernorateMap = ({ governorates, events }: GovernorateMapProps) =>
       }
     });
 
-    // Les marqueurs d'événements seront ajoutés ultérieurement
-    // events.forEach((event) => { ... });
+    // Add event markers
+    events.forEach((event) => {
+      if (event.latitude && event.longitude) {
+        const markerColor = event.type === 'action_realisee' ? '#10b981' : '#3b82f6';
+        const markerIcon = L.divIcon({
+          className: 'custom-event-marker',
+          html: `
+            <div style="
+              background-color: ${markerColor};
+              width: 32px;
+              height: 32px;
+              border-radius: 50%;
+              border: 3px solid white;
+              box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              cursor: pointer;
+            ">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="white">
+                <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/>
+              </svg>
+            </div>
+          `,
+          iconSize: [32, 32],
+          iconAnchor: [16, 16],
+          popupAnchor: [0, -16]
+        });
+
+        const marker = L.marker([event.latitude, event.longitude], {
+          icon: markerIcon
+        });
+
+        const popupContent = `
+          <div style="min-width: 200px;">
+            <h3 style="font-weight: bold; margin-bottom: 8px; color: #1f2937;">${event.title}</h3>
+            <p style="margin-bottom: 8px; color: #6b7280; font-size: 14px;">${event.description}</p>
+            <div style="display: flex; flex-direction: column; gap: 4px; font-size: 13px; color: #374151;">
+              <div><strong>Type:</strong> ${event.type === 'action_realisee' ? 'Action réalisée' : 'Événement à venir'}</div>
+              <div><strong>Date:</strong> ${new Date(event.event_date).toLocaleDateString('fr-FR')}</div>
+              ${event.governorate?.name ? `<div><strong>Gouvernorat:</strong> ${event.governorate.name}</div>` : ''}
+              ${event.people_impacted ? `<div><strong>Personnes impactées:</strong> ${event.people_impacted}</div>` : ''}
+              ${event.available_places ? `<div><strong>Places disponibles:</strong> ${event.available_places}</div>` : ''}
+            </div>
+          </div>
+        `;
+
+        marker.bindPopup(popupContent);
+        marker.addTo(map);
+      }
+    });
 
     return () => {
       if (mapRef.current) {
