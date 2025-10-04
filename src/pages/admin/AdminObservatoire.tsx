@@ -58,7 +58,6 @@ const AdminObservatoire = () => {
             <Route path="pdfa-optimizer" element={<PDFAOptimizer />} />
             <Route path="validation" element={<AdminValidation />} />
             <Route path="historique" element={<div className="p-6">Historique - En développement</div>} />
-            <Route path="mediatheque" element={<div className="p-6">Médiathèque - En développement</div>} />
             <Route path="parametres" element={<AdminParametres />} />
           </Routes>
         </div>

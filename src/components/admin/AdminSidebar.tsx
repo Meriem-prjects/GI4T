@@ -45,7 +45,60 @@ const AdminSidebar = ({ type, isCollapsed = false, onToggle }: AdminSidebarProps
     location.pathname.includes('/carte-interactive') || location.pathname.includes('/adresses-utiles')
   );
 
-  const standaloneItems = [
+  // Navigation items pour Observatoire
+  const observatoireItems = [
+    {
+      title: "Dashboard",
+      icon: LayoutDashboard,
+      href: basePath,
+      description: "Vue d'ensemble"
+    },
+    {
+      title: "Utilisateurs",
+      icon: Users,
+      href: `${basePath}/utilisateurs`,
+      description: "Gestion des utilisateurs"
+    },
+    {
+      title: "Contenus",
+      icon: Folder,
+      href: `${basePath}/contenus`,
+      description: "Gestion des documents"
+    },
+    {
+      title: "Éditeur",
+      icon: FileText,
+      href: `${basePath}/editeur`,
+      description: "Édition de documents"
+    },
+    {
+      title: "PDF/A Optimizer",
+      icon: FileText,
+      href: `${basePath}/pdfa-optimizer`,
+      description: "Optimisation PDF/A"
+    },
+    {
+      title: "Validation",
+      icon: FileText,
+      href: `${basePath}/validation`,
+      description: "Validation des contenus"
+    },
+    {
+      title: "Historique",
+      icon: FileText,
+      href: `${basePath}/historique`,
+      description: "Historique des actions"
+    },
+    {
+      title: "Paramètres",
+      icon: Settings,
+      href: `${basePath}/parametres`,
+      description: "Configuration"
+    }
+  ];
+
+  // Navigation items standalone pour Accès aux Droits
+  const accesAuxDroitsStandaloneItems = [
     {
       title: "Dashboard",
       icon: LayoutDashboard,
@@ -66,7 +119,8 @@ const AdminSidebar = ({ type, isCollapsed = false, onToggle }: AdminSidebarProps
     }
   ];
 
-  const groupedItems = [
+  // Navigation items groupés pour Accès aux Droits
+  const accesAuxDroitsGroupedItems = [
     {
       title: "Médiathèque",
       icon: Folder,
@@ -151,8 +205,8 @@ const AdminSidebar = ({ type, isCollapsed = false, onToggle }: AdminSidebarProps
 
       {/* Navigation */}
       <nav className="flex-1 p-2 space-y-1 overflow-y-auto">
-        {/* Standalone items */}
-        {standaloneItems.map((item) => {
+        {/* Pour Observatoire: liste simple */}
+        {type === "observatoire" && observatoireItems.map((item) => {
           const isActive = location.pathname === item.href;
           
           return (
@@ -181,8 +235,38 @@ const AdminSidebar = ({ type, isCollapsed = false, onToggle }: AdminSidebarProps
           );
         })}
 
-        {/* Grouped items with collapsible */}
-        {groupedItems.map((group) => {
+        {/* Pour Accès aux Droits: standalone items */}
+        {type === "acces-aux-droits" && accesAuxDroitsStandaloneItems.map((item) => {
+          const isActive = location.pathname === item.href;
+          
+          return (
+            <Link key={item.href} to={item.href}>
+              <Button
+                variant="ghost"
+                className={cn(
+                  "w-full justify-start h-auto p-3 transition-all",
+                  themeColors.text,
+                  themeColors.hover,
+                  isActive && themeColors.active,
+                  isCollapsed && "px-2"
+                )}
+              >
+                <item.icon className={cn("w-5 h-5", !isCollapsed && "mr-3")} />
+                {!isCollapsed && (
+                  <div className="text-left">
+                    <div className="font-medium">{item.title}</div>
+                    <div className={cn("text-xs", themeColors.textMuted)}>
+                      {item.description}
+                    </div>
+                  </div>
+                )}
+              </Button>
+            </Link>
+          );
+        })}
+
+        {/* Pour Accès aux Droits: grouped items with collapsible */}
+        {type === "acces-aux-droits" && accesAuxDroitsGroupedItems.map((group) => {
           const hasActiveItem = group.items.some(item => location.pathname === item.href);
           
           return (
