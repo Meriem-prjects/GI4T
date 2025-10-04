@@ -34,39 +34,64 @@ const AdminDashboard = ({ type }: AdminDashboardProps) => {
 
   const sectionTitle = type === "observatoire" ? "Observatoire des Droits" : "Accès aux Droits";
 
-  // Récupérer les statistiques réelles
+  // Récupérer les statistiques réelles selon le type d'administration
   const { data: stats, isLoading } = useQuery({
-    queryKey: ["dashboard-stats"],
+    queryKey: ["dashboard-stats", type],
     queryFn: async () => {
-      // Compter les documents publiés (status = 'processed')
-      const { count: publishedCount } = await supabase
-        .from("documents")
-        .select("*", { count: "exact", head: true })
-        .eq("status", "processed");
+      if (type === "observatoire") {
+        // Statistiques pour l'Observatoire des Droits (documents juridiques)
+        const { count: publishedCount } = await supabase
+          .from("documents")
+          .select("*", { count: "exact", head: true })
+          .eq("status", "processed");
 
-      // Compter les documents en attente (status = 'pending_validation')
-      const { count: pendingCount } = await supabase
-        .from("documents")
-        .select("*", { count: "exact", head: true })
-        .eq("status", "pending_validation");
+        const { count: pendingCount } = await supabase
+          .from("documents")
+          .select("*", { count: "exact", head: true })
+          .eq("status", "pending_validation");
 
-      // Compter les documents rejetés (status = 'draft')
-      const { count: rejectedCount } = await supabase
-        .from("documents")
-        .select("*", { count: "exact", head: true })
-        .eq("status", "draft");
+        const { count: rejectedCount } = await supabase
+          .from("documents")
+          .select("*", { count: "exact", head: true })
+          .eq("status", "draft");
 
-      // Compter les utilisateurs actifs
-      const { count: usersCount } = await supabase
-        .from("profiles")
-        .select("*", { count: "exact", head: true });
+        const { count: usersCount } = await supabase
+          .from("profiles")
+          .select("*", { count: "exact", head: true });
 
-      return {
-        published: publishedCount || 0,
-        pending: pendingCount || 0,
-        rejected: rejectedCount || 0,
-        activeUsers: usersCount || 0,
-      };
+        return {
+          published: publishedCount || 0,
+          pending: pendingCount || 0,
+          rejected: rejectedCount || 0,
+          activeUsers: usersCount || 0,
+        };
+      } else {
+        // Statistiques pour Accès aux Droits (événements)
+        const { count: publishedCount } = await supabase
+          .from("events")
+          .select("*", { count: "exact", head: true })
+          .eq("status", "published");
+
+        const { count: draftCount } = await supabase
+          .from("events")
+          .select("*", { count: "exact", head: true })
+          .eq("status", "draft");
+
+        const { count: totalEvents } = await supabase
+          .from("events")
+          .select("*", { count: "exact", head: true });
+
+        const { count: registrationsCount } = await supabase
+          .from("event_registrations")
+          .select("*", { count: "exact", head: true });
+
+        return {
+          published: publishedCount || 0,
+          pending: draftCount || 0,
+          rejected: 0, // Pas de statut "rejeté" pour les événements
+          activeUsers: registrationsCount || 0,
+        };
+      }
     },
   });
 
@@ -119,7 +144,9 @@ const AdminDashboard = ({ type }: AdminDashboardProps) => {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Contenus publiés</CardTitle>
+            <CardTitle className="text-sm font-medium">
+              {type === "observatoire" ? "Contenus publiés" : "Événements publiés"}
+            </CardTitle>
             <FileText className={`w-4 h-4 ${themeColors.primary}`} />
           </CardHeader>
           <CardContent>
@@ -129,7 +156,7 @@ const AdminDashboard = ({ type }: AdminDashboardProps) => {
               <>
                 <div className="text-2xl font-bold">{stats?.published}</div>
                 <p className="text-xs text-muted-foreground">
-                  Documents validés et publiés
+                  {type === "observatoire" ? "Documents validés et publiés" : "Événements actifs"}
                 </p>
               </>
             )}
@@ -138,7 +165,9 @@ const AdminDashboard = ({ type }: AdminDashboardProps) => {
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">En attente</CardTitle>
+            <CardTitle className="text-sm font-medium">
+              {type === "observatoire" ? "En attente" : "Brouillons"}
+            </CardTitle>
             <Clock className="w-4 h-4 text-orange-500" />
           </CardHeader>
           <CardContent>
@@ -148,35 +177,39 @@ const AdminDashboard = ({ type }: AdminDashboardProps) => {
               <>
                 <div className="text-2xl font-bold">{stats?.pending}</div>
                 <p className="text-xs text-muted-foreground">
-                  Nécessitent une validation
+                  {type === "observatoire" ? "Nécessitent une validation" : "Événements non publiés"}
                 </p>
               </>
             )}
           </CardContent>
         </Card>
 
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Rejetés</CardTitle>
-            <XCircle className="w-4 h-4 text-red-500" />
-          </CardHeader>
-          <CardContent>
-            {isLoading ? (
-              <div className="text-2xl font-bold animate-pulse">...</div>
-            ) : (
-              <>
-                <div className="text-2xl font-bold">{stats?.rejected}</div>
-                <p className="text-xs text-muted-foreground">
-                  À corriger et resoumettre
-                </p>
-              </>
-            )}
-          </CardContent>
-        </Card>
+        {type === "observatoire" && (
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Rejetés</CardTitle>
+              <XCircle className="w-4 h-4 text-red-500" />
+            </CardHeader>
+            <CardContent>
+              {isLoading ? (
+                <div className="text-2xl font-bold animate-pulse">...</div>
+              ) : (
+                <>
+                  <div className="text-2xl font-bold">{stats?.rejected}</div>
+                  <p className="text-xs text-muted-foreground">
+                    À corriger et resoumettre
+                  </p>
+                </>
+              )}
+            </CardContent>
+          </Card>
+        )}
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Utilisateurs actifs</CardTitle>
+            <CardTitle className="text-sm font-medium">
+              {type === "observatoire" ? "Utilisateurs actifs" : "Inscriptions"}
+            </CardTitle>
             <Users className={`w-4 h-4 ${themeColors.primary}`} />
           </CardHeader>
           <CardContent>
@@ -186,7 +219,7 @@ const AdminDashboard = ({ type }: AdminDashboardProps) => {
               <>
                 <div className="text-2xl font-bold">{stats?.activeUsers}</div>
                 <p className="text-xs text-muted-foreground">
-                  Comptes utilisateurs créés
+                  {type === "observatoire" ? "Comptes utilisateurs créés" : "Inscriptions aux événements"}
                 </p>
               </>
             )}
