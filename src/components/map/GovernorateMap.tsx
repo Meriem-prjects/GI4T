@@ -52,29 +52,52 @@ export const GovernorateMap = ({ governorates, events }: GovernorateMapProps) =>
     events.forEach((event) => {
       if (event.latitude && event.longitude) {
         const markerColor = event.type === 'action_realisee' ? '#10b981' : '#3b82f6';
+        const imageUrl = event.images?.[0] 
+          ? `https://qpkybrcjcoxhkifnbxei.supabase.co/storage/v1/object/public/documents/events/${event.images[0]}`
+          : null;
+        
         const markerIcon = L.divIcon({
           className: 'custom-event-marker',
           html: `
             <div style="
-              background-color: ${markerColor};
-              width: 32px;
-              height: 32px;
-              border-radius: 50%;
-              border: 3px solid white;
+              width: 80px;
+              height: 60px;
+              border: 3px solid ${markerColor};
+              border-radius: 8px;
               box-shadow: 0 2px 8px rgba(0,0,0,0.3);
-              display: flex;
-              align-items: center;
-              justify-content: center;
+              overflow: hidden;
               cursor: pointer;
+              background-color: white;
             ">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="white">
-                <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/>
-              </svg>
+              ${imageUrl ? `
+                <img 
+                  src="${imageUrl}" 
+                  alt="${event.title}"
+                  style="
+                    width: 100%;
+                    height: 100%;
+                    object-fit: cover;
+                  "
+                  onerror="this.style.display='none'; this.parentElement.innerHTML='<div style=\\'display:flex;align-items:center;justify-content:center;height:100%;color:${markerColor};\\\'><svg width=\\'24\\' height=\\'24\\' viewBox=\\'0 0 24 24\\' fill=\\'currentColor\\'><path d=\\'M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z\\'/></svg></div>';"
+                />
+              ` : `
+                <div style="
+                  display: flex;
+                  align-items: center;
+                  justify-content: center;
+                  height: 100%;
+                  color: ${markerColor};
+                ">
+                  <svg width="32" height="32" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/>
+                  </svg>
+                </div>
+              `}
             </div>
           `,
-          iconSize: [32, 32],
-          iconAnchor: [16, 16],
-          popupAnchor: [0, -16]
+          iconSize: [80, 60],
+          iconAnchor: [40, 30],
+          popupAnchor: [0, 35]
         });
 
         const marker = L.marker([event.latitude, event.longitude], {
@@ -82,7 +105,7 @@ export const GovernorateMap = ({ governorates, events }: GovernorateMapProps) =>
         });
 
         const popupContent = `
-          <div style="min-width: 200px;">
+          <div style="min-width: 200px; max-width: 300px;">
             <h3 style="font-weight: bold; margin-bottom: 8px; color: #1f2937;">${event.title}</h3>
             <p style="margin-bottom: 8px; color: #6b7280; font-size: 14px;">${event.description}</p>
             <div style="display: flex; flex-direction: column; gap: 4px; font-size: 13px; color: #374151;">
@@ -95,7 +118,11 @@ export const GovernorateMap = ({ governorates, events }: GovernorateMapProps) =>
           </div>
         `;
 
-        marker.bindPopup(popupContent);
+        marker.bindPopup(popupContent, {
+          autoPan: true,
+          autoPanPadding: [50, 50],
+          maxHeight: 300
+        });
         marker.addTo(map);
       }
     });
