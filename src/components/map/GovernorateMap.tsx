@@ -3,6 +3,7 @@ import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import { Event } from '@/types/events';
 import { Governorate } from '@/types/events';
+import tunisiaBordersData from '@/data/tunisia-borders.json';
 
 interface GovernorateMapProps {
   governorates: Governorate[];
@@ -34,8 +35,20 @@ export const GovernorateMap = ({ governorates, events }: GovernorateMapProps) =>
         zoomControl: true,
       });
 
+      // Fond de carte simplifié
       L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
         attribution: '© OpenStreetMap contributors',
+      }).addTo(mapRef.current);
+
+      // Ajouter la couche GeoJSON pour les frontières de la Tunisie
+      L.geoJSON(tunisiaBordersData as any, {
+        style: {
+          color: '#2563eb',
+          weight: 2,
+          opacity: 0.8,
+          fillColor: '#f0f9ff',
+          fillOpacity: 0.1
+        }
       }).addTo(mapRef.current);
     }
 
