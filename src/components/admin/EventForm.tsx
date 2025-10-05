@@ -8,6 +8,7 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Switch } from "@/components/ui/switch";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { GovernorateSelector } from "./GovernorateSelector";
+import { EventImageUploader } from "./EventImageUploader";
 import { Calendar, Users, MapPin, Image as ImageIcon } from "lucide-react";
 
 interface EventFormProps {
@@ -249,9 +250,11 @@ export const EventForm = ({ initialData, onSubmit, onCancel, isLoading }: EventF
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <p className="text-sm text-muted-foreground mb-2">
-            La gestion des images sera implémentée ultérieurement avec upload Supabase Storage
-          </p>
+          <EventImageUploader
+            images={formData.images || []}
+            onChange={(images) => setFormData({ ...formData, images })}
+            maxImages={8}
+          />
         </CardContent>
       </Card>
 
