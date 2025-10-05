@@ -30,6 +30,7 @@ import InformationLayout from "./layouts/InformationLayout";
 import QuiSommesNous from "./pages/QuiSommesNous";
 import InformationActualites from "./pages/InformationActualites";
 import FAQChatbot from "./pages/FAQChatbot";
+import AdminSelector from "./pages/admin/AdminSelector";
 import AdminObservatoire from "./pages/admin/AdminObservatoire";
 import AdminAccesAuxDroits from "./pages/admin/AdminAccesAuxDroits";
 import AdminObservatoireLogin from "./pages/admin/AdminObservatoireLogin";
@@ -48,6 +49,9 @@ const App = () => (
         <AuthProvider>
           <Routes>
             <Route path="/" element={<Index />} />
+            
+            {/* Admin Selector - Public */}
+            <Route path="/admin" element={<AdminSelector />} />
             
             {/* Admin Login Pages - Public */}
             <Route path="/admin/observatoire/login" element={<AdminObservatoireLogin />} />
