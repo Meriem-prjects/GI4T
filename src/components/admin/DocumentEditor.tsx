@@ -1053,33 +1053,6 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
             {isAnalyzing ? 'Analyse...' : '🤖 Analyse IA'}
           </Button>
 
-          <Button 
-            onClick={cleanArabicDocument} 
-            disabled={isCleaningArabic || !editedData.id}
-            variant="outline"
-            title="Normalise tous les champs arabes (NFKC + nettoyage)"
-          >
-            {isCleaningArabic ? (
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-            ) : (
-              <span className="mr-2">🧹</span>
-            )}
-            {isCleaningArabic ? 'Nettoyage...' : 'Nettoyer AR'}
-          </Button>
-
-          <Button 
-            onClick={correctArabicSpacing} 
-            disabled={isCorrectingSpacing || editedData.language !== 'ar' || !editedData.content || editedData.content.length > 12000}
-            variant="outline"
-            title="Corrige l'espacement arabe avec IA (max 12k chars)"
-          >
-            {isCorrectingSpacing ? (
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-            ) : (
-              <Search className="mr-2 h-4 w-4" />
-            )}
-            {isCorrectingSpacing ? 'Correction...' : 'Corriger espacement (AR)'}
-          </Button>
 
           
           {isFromValidation ? (
