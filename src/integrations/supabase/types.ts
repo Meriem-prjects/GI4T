@@ -435,6 +435,8 @@ export type Database = {
           governorate_id: string | null
           id: string
           images: string[] | null
+          latitude: number | null
+          longitude: number | null
           people_impacted: number | null
           registration_enabled: boolean | null
           status: string | null
@@ -453,6 +455,8 @@ export type Database = {
           governorate_id?: string | null
           id?: string
           images?: string[] | null
+          latitude?: number | null
+          longitude?: number | null
           people_impacted?: number | null
           registration_enabled?: boolean | null
           status?: string | null
@@ -471,6 +475,8 @@ export type Database = {
           governorate_id?: string | null
           id?: string
           images?: string[] | null
+          latitude?: number | null
+          longitude?: number | null
           people_impacted?: number | null
           registration_enabled?: boolean | null
           status?: string | null
@@ -807,7 +813,12 @@ export type Database = {
     }
     Enums: {
       event_type: "action_realisee" | "evenement_a_venir"
-      user_role: "admin" | "editor" | "validator"
+      user_role:
+        | "admin"
+        | "editor"
+        | "validator"
+        | "admin_observatoire"
+        | "admin_acces_droits"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -936,7 +947,13 @@ export const Constants = {
   public: {
     Enums: {
       event_type: ["action_realisee", "evenement_a_venir"],
-      user_role: ["admin", "editor", "validator"],
+      user_role: [
+        "admin",
+        "editor",
+        "validator",
+        "admin_observatoire",
+        "admin_acces_droits",
+      ],
     },
   },
 } as const
