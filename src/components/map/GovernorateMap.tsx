@@ -1,123 +1,41 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef } from 'react';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import { Event } from '@/types/events';
 import { Governorate } from '@/types/events';
-import tunisiaBordersData from '@/data/tunisia-borders.json';
-import { getGovernorateColor, countEventsByGovernorate } from '@/lib/governorateUtils';
 
 interface GovernorateMapProps {
   governorates: Governorate[];
   events: Event[];
-  onGovernorateClick?: (governorateId: string) => void;
 }
 
-export const GovernorateMap = ({ governorates, events, onGovernorateClick }: GovernorateMapProps) => {
+export const GovernorateMap = ({ governorates, events }: GovernorateMapProps) => {
   const mapRef = useRef<L.Map | null>(null);
   const mapContainerRef = useRef<HTMLDivElement>(null);
-  const [selectedGovernorate, setSelectedGovernorate] = useState<string | null>(null);
-  const geoJsonLayerRef = useRef<L.GeoJSON | null>(null);
 
   useEffect(() => {
     if (!mapContainerRef.current) return;
 
     // Initialize map
     if (!mapRef.current) {
-      // Limites géographiques strictes de la Tunisie
+      // Limites géographiques de la Tunisie
       const tunisiaBounds: L.LatLngBoundsExpression = [
-        [30.2, 7.5],  // Sud-Ouest (plus serré)
-        [37.5, 11.6]  // Nord-Est (plus serré)
+        [30.0, 7.3],  // Sud-Ouest
+        [37.7, 11.8]  // Nord-Est
       ];
 
       mapRef.current = L.map(mapContainerRef.current, {
-        center: [34.0, 9.5],  // Centre ajusté
-        zoom: 7,              // Zoom initial plus proche
-        minZoom: 7,           // Zoom minimum augmenté pour éviter de voir les pays voisins
-        maxZoom: 12,          // Zoom maximum réduit
+        center: [34.0, 9.0],
+        zoom: 6,
+        minZoom: 6,
+        maxZoom: 19,
         maxBounds: tunisiaBounds,
         maxBoundsViscosity: 1.0,
         zoomControl: true,
       });
 
-      // Fond de carte simplifié
       L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
         attribution: '© OpenStreetMap contributors',
-      }).addTo(mapRef.current);
-
-      // Compter les événements par gouvernorat
-      const eventCounts = countEventsByGovernorate(events);
-      
-      // Créer un mapping des noms de gouvernorats vers leurs IDs
-      const governorateNameToId: Record<string, string> = {};
-      governorates.forEach(gov => {
-        governorateNameToId[gov.name] = gov.id;
-      });
-
-      // Ajouter la couche GeoJSON pour les frontières des gouvernorats
-      geoJsonLayerRef.current = L.geoJSON(tunisiaBordersData as any, {
-        style: (feature) => {
-          const adminLevel = feature?.properties?.admin_level;
-          const governorateName = feature?.properties?.shape1;
-          
-          // Trouver l'ID du gouvernorat
-          const governorateId = governorateName ? governorateNameToId[governorateName] : null;
-          const eventCount = governorateId ? (eventCounts[governorateId] || 0) : 0;
-          
-          // Obtenir la couleur basée sur le nombre d'événements
-          const fillColor = getGovernorateColor(eventCount);
-          const isSelected = governorateId === selectedGovernorate;
-          
-          return {
-            color: isSelected ? '#DC2626' : '#1e40af',
-            weight: adminLevel === '4' ? (isSelected ? 3 : 2.5) : 1.5,
-            opacity: 0.9,
-            fillColor: fillColor,
-            fillOpacity: eventCount > 0 ? 0.5 : 0.1
-          };
-        },
-        onEachFeature: (feature, layer) => {
-          const governorateName = feature.properties?.shape1;
-          const governorateId = governorateName ? governorateNameToId[governorateName] : null;
-          const eventCount = governorateId ? (eventCounts[governorateId] || 0) : 0;
-          
-          if (governorateName) {
-            // Ajouter un tooltip avec le nom et le nombre d'événements
-            layer.bindTooltip(
-              `<strong>${governorateName}</strong><br/>${eventCount} événement${eventCount !== 1 ? 's' : ''}`,
-              {
-                permanent: false,
-                direction: 'center',
-                className: 'governorate-label'
-              }
-            );
-            
-            // Ajouter l'interaction au clic
-            layer.on('click', () => {
-              if (governorateId) {
-                setSelectedGovernorate(governorateId);
-                if (onGovernorateClick) {
-                  onGovernorateClick(governorateId);
-                }
-              }
-            });
-            
-            // Ajouter un effet de survol
-            layer.on('mouseover', function(this: L.Path) {
-              this.setStyle({
-                weight: 3,
-                opacity: 1
-              });
-            });
-            
-            layer.on('mouseout', function(this: L.Path) {
-              const isSelected = governorateId === selectedGovernorate;
-              this.setStyle({
-                weight: isSelected ? 3 : 2.5,
-                opacity: 0.9
-              });
-            });
-          }
-        }
       }).addTo(mapRef.current);
     }
 
@@ -190,52 +108,5 @@ export const GovernorateMap = ({ governorates, events, onGovernorateClick }: Gov
     };
   }, [governorates, events]);
 
-  // Mettre à jour les styles quand la sélection change
-  useEffect(() => {
-    if (geoJsonLayerRef.current) {
-      const eventCounts = countEventsByGovernorate(events);
-      const governorateNameToId: Record<string, string> = {};
-      governorates.forEach(gov => {
-        governorateNameToId[gov.name] = gov.id;
-      });
-
-      geoJsonLayerRef.current.eachLayer((layer: any) => {
-        const feature = layer.feature;
-        const governorateName = feature?.properties?.shape1;
-        const governorateId = governorateName ? governorateNameToId[governorateName] : null;
-        const eventCount = governorateId ? (eventCounts[governorateId] || 0) : 0;
-        const fillColor = getGovernorateColor(eventCount);
-        const isSelected = governorateId === selectedGovernorate;
-
-        layer.setStyle({
-          color: isSelected ? '#DC2626' : '#1e40af',
-          weight: isSelected ? 3 : 2.5,
-          fillColor: fillColor,
-          fillOpacity: eventCount > 0 ? 0.5 : 0.1
-        });
-      });
-    }
-  }, [selectedGovernorate, events, governorates]);
-
-  return (
-    <>
-      <style>{`
-        .governorate-label {
-          background: rgba(255, 255, 255, 0.95);
-          border: 1px solid #1e40af;
-          border-radius: 4px;
-          padding: 6px 10px;
-          font-weight: 600;
-          font-size: 13px;
-          color: #1e40af;
-          box-shadow: 0 2px 8px rgba(0,0,0,0.15);
-        }
-        .governorate-label strong {
-          display: block;
-          margin-bottom: 2px;
-        }
-      `}</style>
-      <div ref={mapContainerRef} style={{ width: '100%', height: '600px' }} />
-    </>
-  );
+  return <div ref={mapContainerRef} style={{ width: '100%', height: '600px' }} />;
 };
