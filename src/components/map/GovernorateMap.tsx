@@ -4,6 +4,7 @@ import 'leaflet/dist/leaflet.css';
 import { Event } from '@/types/events';
 import { Governorate } from '@/types/events';
 import tunisiaBordersData from '@/data/tunisia-borders.json';
+import tunisiaOutline from '@/data/tunisia-outline.json';
 import { getGovernorateColor, countEventsByGovernorate } from '@/lib/governorateUtils';
 
 interface GovernorateMapProps {
@@ -42,6 +43,29 @@ export const GovernorateMap = ({ governorates, events, onGovernorateClick }: Gov
       // Fond de carte simplifié
       L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
         attribution: '© OpenStreetMap contributors',
+      }).addTo(mapRef.current);
+
+      // Créer un masque inversé pour cacher tout ce qui est en dehors de la Tunisie
+      const worldBounds: [number, number][][] = [
+        [
+          [-90, -180],
+          [90, -180],
+          [90, 180],
+          [-90, 180],
+          [-90, -180]
+        ]
+      ];
+      
+      // Obtenir les coordonnées de la Tunisie et les inverser pour créer un trou
+      const tunisiaCoords = (tunisiaOutline as any).features[0].geometry.coordinates[0];
+      const invertedCoords = [worldBounds[0], tunisiaCoords];
+      
+      L.polygon(invertedCoords, {
+        color: 'transparent',
+        fillColor: 'white',
+        fillOpacity: 1,
+        interactive: false,
+        pane: 'overlayPane'
       }).addTo(mapRef.current);
 
       // Compter les événements par gouvernorat
