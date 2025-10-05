@@ -40,14 +40,31 @@ export const GovernorateMap = ({ governorates, events }: GovernorateMapProps) =>
         attribution: '© OpenStreetMap contributors',
       }).addTo(mapRef.current);
 
-      // Ajouter la couche GeoJSON pour les frontières de la Tunisie
+      // Ajouter la couche GeoJSON pour les frontières des gouvernorats
       L.geoJSON(tunisiaBordersData as any, {
-        style: {
-          color: '#2563eb',
-          weight: 2,
-          opacity: 0.8,
-          fillColor: '#f0f9ff',
-          fillOpacity: 0.1
+        style: (feature) => {
+          // Style différent selon le niveau administratif
+          const adminLevel = feature?.properties?.admin_level;
+          const governorate = feature?.properties?.shape1;
+          
+          return {
+            color: '#1e40af',
+            weight: adminLevel === '4' ? 2.5 : 1.5,
+            opacity: 0.9,
+            fillColor: 'transparent',
+            fillOpacity: 0
+          };
+        },
+        onEachFeature: (feature, layer) => {
+          // Ajouter un tooltip avec le nom du gouvernorat
+          const governorate = feature.properties?.shape1;
+          if (governorate) {
+            layer.bindTooltip(governorate, {
+              permanent: false,
+              direction: 'center',
+              className: 'governorate-label'
+            });
+          }
         }
       }).addTo(mapRef.current);
     }
@@ -121,5 +138,21 @@ export const GovernorateMap = ({ governorates, events }: GovernorateMapProps) =>
     };
   }, [governorates, events]);
 
-  return <div ref={mapContainerRef} style={{ width: '100%', height: '600px' }} />;
+  return (
+    <>
+      <style>{`
+        .governorate-label {
+          background: rgba(255, 255, 255, 0.9);
+          border: 1px solid #1e40af;
+          border-radius: 4px;
+          padding: 4px 8px;
+          font-weight: 600;
+          font-size: 12px;
+          color: #1e40af;
+          box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+      `}</style>
+      <div ref={mapContainerRef} style={{ width: '100%', height: '600px' }} />
+    </>
+  );
 };
