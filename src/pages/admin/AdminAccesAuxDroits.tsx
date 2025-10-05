@@ -3,6 +3,7 @@ import { Routes, Route } from "react-router-dom";
 import AdminSidebar from "@/components/admin/AdminSidebar";
 import AdminDashboard from "@/components/admin/AdminDashboard";
 import AdminCarteInteractive from "./AdminCarteInteractive";
+import AdminAccesDroitsUsersManagement from "./AdminAccesDroitsUsersManagement";
 import { cn } from "@/lib/utils";
 
 const AdminAccesAuxDroits = () => {
@@ -33,7 +34,7 @@ const AdminAccesAuxDroits = () => {
         <div className="bg-slate-50">
           <Routes>
             <Route index element={<AdminDashboard type="acces-aux-droits" />} />
-            <Route path="utilisateurs" element={<div className="p-6">Utilisateurs - En développement</div>} />
+            <Route path="utilisateurs" element={<AdminAccesDroitsUsersManagement />} />
             <Route path="parametres" element={<div className="p-6">Paramètres - En développement</div>} />
             
             {/* Médiathèque */}

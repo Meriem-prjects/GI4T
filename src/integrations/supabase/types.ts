@@ -14,6 +14,30 @@ export type Database = {
   }
   public: {
     Tables: {
+      acces_droits_permissions: {
+        Row: {
+          created_at: string | null
+          id: string
+          section: string
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          section: string
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          section?: string
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       activity_logs: {
         Row: {
           action: string
@@ -727,6 +751,10 @@ export type Database = {
         Args: { "": unknown[] }
         Returns: number
       }
+      has_acces_droits_permission: {
+        Args: { _section: string; _user_id: string }
+        Returns: boolean
+      }
       has_acces_droits_role: {
         Args: { _user_id: string }
         Returns: boolean
@@ -827,6 +855,7 @@ export type Database = {
         | "validator"
         | "admin_observatoire"
         | "admin_acces_droits"
+        | "editor_acces_droits"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -961,6 +990,7 @@ export const Constants = {
         "validator",
         "admin_observatoire",
         "admin_acces_droits",
+        "editor_acces_droits",
       ],
     },
   },
