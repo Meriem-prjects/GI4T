@@ -19,17 +19,17 @@ export const GovernorateMap = ({ governorates, events }: GovernorateMapProps) =>
 
     // Initialize map
     if (!mapRef.current) {
-      // Limites géographiques de la Tunisie
+      // Limites géographiques strictes de la Tunisie
       const tunisiaBounds: L.LatLngBoundsExpression = [
-        [30.0, 7.3],  // Sud-Ouest
-        [37.7, 11.8]  // Nord-Est
+        [30.2, 7.5],  // Sud-Ouest (plus serré)
+        [37.5, 11.6]  // Nord-Est (plus serré)
       ];
 
       mapRef.current = L.map(mapContainerRef.current, {
-        center: [34.0, 9.0],
-        zoom: 6,
-        minZoom: 6,
-        maxZoom: 19,
+        center: [34.0, 9.5],  // Centre ajusté
+        zoom: 7,              // Zoom initial plus proche
+        minZoom: 7,           // Zoom minimum augmenté pour éviter de voir les pays voisins
+        maxZoom: 12,          // Zoom maximum réduit
         maxBounds: tunisiaBounds,
         maxBoundsViscosity: 1.0,
         zoomControl: true,
