@@ -31,9 +31,19 @@ export const useLeafletMap = ({
   useEffect(() => {
     if (!mapRef.current || mapState.map) return;
 
+    // Limites géographiques de la Tunisie
+    const tunisiaBounds: L.LatLngBoundsExpression = [
+      [30.0, 7.3],  // Sud-Ouest
+      [37.7, 11.8]  // Nord-Est
+    ];
+
     const map = L.map(mapRef.current, {
       center: [34.5, 9.5],
       zoom: 7,
+      minZoom: 6,
+      maxZoom: 19,
+      maxBounds: tunisiaBounds,
+      maxBoundsViscosity: 1.0,
       zoomControl: true,
       scrollWheelZoom: true,
       doubleClickZoom: true,
