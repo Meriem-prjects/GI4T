@@ -52,9 +52,7 @@ export const GovernorateMap = ({ governorates, events }: GovernorateMapProps) =>
     events.forEach((event) => {
       if (event.latitude && event.longitude) {
         const markerColor = event.type === 'action_realisee' ? '#10b981' : '#3b82f6';
-        const imageUrl = event.images?.[0] 
-          ? `https://qpkybrcjcoxhkifnbxei.supabase.co/storage/v1/object/public/documents/events/${event.images[0]}`
-          : null;
+        const imageUrl = event.images?.[0] || null;
         
         const markerIcon = L.divIcon({
           className: 'custom-event-marker',
