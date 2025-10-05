@@ -28,24 +28,37 @@ const AdminAccesDroitsUsersManagement = () => {
   const { data: users, isLoading, refetch } = useQuery({
     queryKey: ["acces-droits-users"],
     queryFn: async () => {
-      // Fetch profiles with roles
+      // First, get all user_roles for the roles we're interested in
+      const { data: userRoles, error: rolesError } = await supabase
+        .from("user_roles")
+        .select("user_id, role")
+        .in("role", ["admin", "admin_acces_droits", "editor_acces_droits"]);
+
+      if (rolesError) throw rolesError;
+      if (!userRoles || userRoles.length === 0) return [];
+
+      // Get unique user IDs
+      const userIds = [...new Set(userRoles.map(ur => ur.user_id))];
+
+      // Fetch profiles for these users
       const { data: profiles, error: profilesError } = await supabase
         .from("profiles")
-        .select(`
-          *,
-          user_roles!inner(role)
-        `)
-        .or('user_roles.role.eq.admin,user_roles.role.eq.admin_acces_droits,user_roles.role.eq.editor_acces_droits');
+        .select("*")
+        .in("user_id", userIds);
 
       if (profilesError) throw profilesError;
+      if (!profiles) return [];
 
       // Fetch permissions for each user
       const usersWithPermissions = await Promise.all(
-        (profiles || []).map(async (profile: any) => {
+        profiles.map(async (profile: any) => {
           const { data: permissions } = await supabase
             .from("acces_droits_permissions")
             .select("section")
             .eq("user_id", profile.user_id);
+
+          // Find the role for this user
+          const userRole = userRoles.find(ur => ur.user_id === profile.user_id);
 
           return {
             id: profile.id,
@@ -53,7 +66,7 @@ const AdminAccesDroitsUsersManagement = () => {
             first_name: profile.first_name,
             last_name: profile.last_name,
             user_id: profile.user_id,
-            role: profile.user_roles?.[0]?.role || null,
+            role: userRole?.role || null,
             permissions: permissions?.map(p => p.section) || []
           };
         })
