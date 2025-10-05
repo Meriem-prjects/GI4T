@@ -124,3 +124,9 @@ verify_jwt = false
 
 [functions.batch-generate-embeddings]
 verify_jwt = false
+
+[functions.create-observatoire-admin]
+verify_jwt = false
+
+[functions.create-acces-droits-admin]
+verify_jwt = false

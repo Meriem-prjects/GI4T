@@ -10,6 +10,8 @@ interface AuthContextType {
   signIn: (email: string, password: string) => Promise<{ error: any }>;
   signOut: () => Promise<void>;
   isAdmin: boolean;
+  isObservatoireAdmin: boolean;
+  isAccesDroitsAdmin: boolean;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -19,6 +21,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
   const [isAdmin, setIsAdmin] = useState(false);
+  const [isObservatoireAdmin, setIsObservatoireAdmin] = useState(false);
+  const [isAccesDroitsAdmin, setIsAccesDroitsAdmin] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -58,18 +62,33 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       const { data, error } = await supabase
         .from("user_roles")
         .select("role")
-        .eq("user_id", userId)
-        .eq("role", "admin")
-        .maybeSingle();
+        .eq("user_id", userId);
 
-      if (!error && data) {
-        setIsAdmin(true);
+      if (!error && data && data.length > 0) {
+        const roles = data.map(r => r.role);
+        
+        // Super admin
+        setIsAdmin(roles.includes("admin"));
+        
+        // Observatoire admin (admin ou admin_observatoire)
+        setIsObservatoireAdmin(
+          roles.includes("admin") || roles.includes("admin_observatoire")
+        );
+        
+        // Accès aux droits admin (admin ou admin_acces_droits)
+        setIsAccesDroitsAdmin(
+          roles.includes("admin") || roles.includes("admin_acces_droits")
+        );
       } else {
         setIsAdmin(false);
+        setIsObservatoireAdmin(false);
+        setIsAccesDroitsAdmin(false);
       }
     } catch (error) {
       console.error("Error checking admin role:", error);
       setIsAdmin(false);
+      setIsObservatoireAdmin(false);
+      setIsAccesDroitsAdmin(false);
     }
   };
 
@@ -84,11 +103,12 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const signOut = async () => {
     await supabase.auth.signOut();
     setIsAdmin(false);
-    navigate("/admin/login");
+    setIsObservatoireAdmin(false);
+    setIsAccesDroitsAdmin(false);
   };
 
   return (
-    <AuthContext.Provider value={{ user, session, loading, signIn, signOut, isAdmin }}>
+    <AuthContext.Provider value={{ user, session, loading, signIn, signOut, isAdmin, isObservatoireAdmin, isAccesDroitsAdmin }}>
       {children}
     </AuthContext.Provider>
   );

@@ -15,11 +15,13 @@ import {
   BookOpen,
   Map,
   MapPin,
-  Building
+  Building,
+  LogOut
 } from "lucide-react";
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { useState } from "react";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface AdminSidebarProps {
   type: "observatoire" | "acces-aux-droits";
@@ -29,6 +31,8 @@ interface AdminSidebarProps {
 
 const AdminSidebar = ({ type, isCollapsed = false, onToggle }: AdminSidebarProps) => {
   const location = useLocation();
+  const navigate = useNavigate();
+  const { signOut } = useAuth();
   const basePath = `/admin/${type}`;
   
   // State for collapsible groups
@@ -336,22 +340,27 @@ const AdminSidebar = ({ type, isCollapsed = false, onToggle }: AdminSidebarProps
         })}
       </nav>
 
-      {/* Footer */}
+      {/* Footer with logout */}
       <div className="p-4 border-t border-white/20">
-        <Link to="/admin">
-          <Button
-            variant="ghost"
-            className={cn(
-              "w-full justify-start",
-              themeColors.text,
-              themeColors.hover,
-              isCollapsed && "px-2"
-            )}
-          >
-            <ChevronLeft className={cn("w-4 h-4", !isCollapsed && "mr-2")} />
-            {!isCollapsed && "Retour admin"}
-          </Button>
-        </Link>
+        <Button
+          variant="ghost"
+          onClick={async () => {
+            await signOut();
+            const loginPath = type === "observatoire" 
+              ? "/admin/observatoire/login" 
+              : "/admin/acces-aux-droits/login";
+            navigate(loginPath);
+          }}
+          className={cn(
+            "w-full justify-start",
+            themeColors.text,
+            themeColors.hover,
+            isCollapsed && "px-2"
+          )}
+        >
+          <LogOut className={cn("w-4 h-4", !isCollapsed && "mr-2")} />
+          {!isCollapsed && "Déconnexion"}
+        </Button>
       </div>
     </aside>
   );

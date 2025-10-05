@@ -4,7 +4,8 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
-import ProtectedRoute from "@/components/admin/ProtectedRoute";
+import ObservatoireProtectedRoute from "@/components/admin/ObservatoireProtectedRoute";
+import AccesDroitsProtectedRoute from "@/components/admin/AccesDroitsProtectedRoute";
 import Index from "./pages/Index";
 import Observatoire from "./pages/Observatoire";
 import SearchResults from "./pages/SearchResults";
@@ -29,10 +30,10 @@ import InformationLayout from "./layouts/InformationLayout";
 import QuiSommesNous from "./pages/QuiSommesNous";
 import InformationActualites from "./pages/InformationActualites";
 import FAQChatbot from "./pages/FAQChatbot";
-import AdminMain from "./pages/admin/AdminMain";
 import AdminObservatoire from "./pages/admin/AdminObservatoire";
 import AdminAccesAuxDroits from "./pages/admin/AdminAccesAuxDroits";
-import AdminLogin from "./pages/admin/AdminLogin";
+import AdminObservatoireLogin from "./pages/admin/AdminObservatoireLogin";
+import AdminAccesDroitsLogin from "./pages/admin/AdminAccesDroitsLogin";
 import CategorieDetail from "./pages/CategorieDetail";
 import DocumentDetail from "./pages/DocumentDetail";
 
@@ -48,8 +49,9 @@ const App = () => (
           <Routes>
             <Route path="/" element={<Index />} />
             
-            {/* Admin Login - Public */}
-            <Route path="/admin/login" element={<AdminLogin />} />
+            {/* Admin Login Pages - Public */}
+            <Route path="/admin/observatoire/login" element={<AdminObservatoireLogin />} />
+            <Route path="/admin/acces-aux-droits/login" element={<AdminAccesDroitsLogin />} />
             
             {/* Observatoire interface - Routes spécifiques d'abord */}
           <Route element={<ObservatoireLayout />}>
@@ -85,10 +87,9 @@ const App = () => (
             <Route path="/information/faq-chatbot" element={<FAQChatbot />} />
           </Route>
           
-          {/* Admin interface - Protected */}
-          <Route path="/admin" element={<ProtectedRoute><AdminMain /></ProtectedRoute>} />
-          <Route path="/admin/observatoire/*" element={<ProtectedRoute><AdminObservatoire /></ProtectedRoute>} />
-          <Route path="/admin/acces-aux-droits/*" element={<ProtectedRoute><AdminAccesAuxDroits /></ProtectedRoute>} />
+          {/* Admin interface - Protected with specific roles */}
+          <Route path="/admin/observatoire/*" element={<ObservatoireProtectedRoute><AdminObservatoire /></ObservatoireProtectedRoute>} />
+          <Route path="/admin/acces-aux-droits/*" element={<AccesDroitsProtectedRoute><AdminAccesAuxDroits /></AccesDroitsProtectedRoute>} />
           
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />

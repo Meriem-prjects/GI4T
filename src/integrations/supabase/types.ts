@@ -727,6 +727,14 @@ export type Database = {
         Args: { "": unknown[] }
         Returns: number
       }
+      has_acces_droits_role: {
+        Args: { _user_id: string }
+        Returns: boolean
+      }
+      has_observatoire_role: {
+        Args: { _user_id: string }
+        Returns: boolean
+      }
       hnsw_bit_support: {
         Args: { "": unknown }
         Returns: unknown
