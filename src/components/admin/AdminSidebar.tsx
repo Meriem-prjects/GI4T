@@ -16,6 +16,8 @@ import {
   Map,
   MapPin,
   Building,
+  MessageCircle,
+  HelpCircle,
   LogOut
 } from "lucide-react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
@@ -44,6 +46,9 @@ const AdminSidebar = ({ type, isCollapsed = false, onToggle }: AdminSidebarProps
     location.pathname.includes('/ressources-pratiques') || 
     location.pathname.includes('/liens-utiles') || 
     location.pathname.includes('/guides-pratiques')
+  );
+  const [faqChatOpen, setFaqChatOpen] = useState(
+    location.pathname.includes('/faq-chatbot')
   );
   const [carteOpen, setCarteOpen] = useState(
     location.pathname.includes('/carte-interactive') || location.pathname.includes('/adresses-utiles')
@@ -145,6 +150,15 @@ const AdminSidebar = ({ type, isCollapsed = false, onToggle }: AdminSidebarProps
         { title: "Ressources pratiques", href: `${basePath}/ressources-pratiques`, icon: FileText, description: "Modèles et formulaires" },
         { title: "Liens utiles", href: `${basePath}/liens-utiles`, icon: ExternalLink, description: "Sites externes" },
         { title: "Guides pratiques", href: `${basePath}/guides-pratiques`, icon: BookOpen, description: "Guides step-by-step" }
+      ]
+    },
+    {
+      title: "FAQ & Chatbot",
+      icon: MessageCircle,
+      isOpen: faqChatOpen,
+      setIsOpen: setFaqChatOpen,
+      items: [
+        { title: "Configuration", href: `${basePath}/faq-chatbot`, icon: HelpCircle, description: "Personnaliser l'assistant" }
       ]
     },
     {

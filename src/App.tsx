@@ -35,6 +35,7 @@ import AssistantVirtuel from "./pages/AssistantVirtuel";
 import AdminSelector from "./pages/admin/AdminSelector";
 import AdminObservatoire from "./pages/admin/AdminObservatoire";
 import AdminAccesAuxDroits from "./pages/admin/AdminAccesAuxDroits";
+import AdminChatbotConfig from "./pages/admin/AdminChatbotConfig";
 import AdminObservatoireLogin from "./pages/admin/AdminObservatoireLogin";
 import AdminAccesDroitsLogin from "./pages/admin/AdminAccesDroitsLogin";
 import CategorieDetail from "./pages/CategorieDetail";

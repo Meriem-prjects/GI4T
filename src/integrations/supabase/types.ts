@@ -109,6 +109,81 @@ export type Database = {
           },
         ]
       }
+      chatbot_config: {
+        Row: {
+          created_at: string
+          font_family: string
+          id: string
+          primary_color: string
+          secondary_color: string
+          system_prompt: string
+          tone: string
+          updated_at: string
+          welcome_message: string
+        }
+        Insert: {
+          created_at?: string
+          font_family?: string
+          id?: string
+          primary_color?: string
+          secondary_color?: string
+          system_prompt?: string
+          tone?: string
+          updated_at?: string
+          welcome_message?: string
+        }
+        Update: {
+          created_at?: string
+          font_family?: string
+          id?: string
+          primary_color?: string
+          secondary_color?: string
+          system_prompt?: string
+          tone?: string
+          updated_at?: string
+          welcome_message?: string
+        }
+        Relationships: []
+      }
+      chatbot_training_documents: {
+        Row: {
+          category: string | null
+          content: string
+          created_at: string
+          file_name: string | null
+          file_url: string | null
+          id: string
+          is_active: boolean
+          title: string
+          title_ar: string | null
+          updated_at: string
+        }
+        Insert: {
+          category?: string | null
+          content: string
+          created_at?: string
+          file_name?: string | null
+          file_url?: string | null
+          id?: string
+          is_active?: boolean
+          title: string
+          title_ar?: string | null
+          updated_at?: string
+        }
+        Update: {
+          category?: string | null
+          content?: string
+          created_at?: string
+          file_name?: string | null
+          file_url?: string | null
+          id?: string
+          is_active?: boolean
+          title?: string
+          title_ar?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       court_types: {
         Row: {
           created_at: string

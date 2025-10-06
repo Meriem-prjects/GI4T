@@ -5,6 +5,7 @@ import AdminDashboard from "@/components/admin/AdminDashboard";
 import AdminCarteInteractive from "./AdminCarteInteractive";
 import AdminAccesDroitsUsersManagement from "./AdminAccesDroitsUsersManagement";
 import AdminAdressesUtiles from "./AdminAdressesUtiles";
+import AdminChatbotConfig from "./AdminChatbotConfig";
 import { cn } from "@/lib/utils";
 
 const AdminAccesAuxDroits = () => {
@@ -47,6 +48,9 @@ const AdminAccesAuxDroits = () => {
             <Route path="ressources-pratiques" element={<div className="p-6">Ressources pratiques - Modèles et formulaires - En développement</div>} />
             <Route path="liens-utiles" element={<div className="p-6">Liens utiles - Sites externes - En développement</div>} />
             <Route path="guides-pratiques" element={<div className="p-6">Guides pratiques - Guides step-by-step - En développement</div>} />
+            
+            {/* FAQ & Chatbot */}
+            <Route path="faq-chatbot" element={<AdminChatbotConfig />} />
             
             {/* Carte interactive */}
             <Route path="carte-interactive" element={<AdminCarteInteractive />} />
