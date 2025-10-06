@@ -123,15 +123,18 @@ export const SearchAutocomplete = ({
       case 'Enter':
         e.preventDefault();
         if (selectedIndex >= 0) {
+          // Fill the input with selected suggestion
           onChange(limitedSuggestions[selectedIndex].text);
           setShowSuggestions(false);
-          setTimeout(onSearch, 100);
+          setSelectedIndex(-1);
         } else {
+          // Launch search if no suggestion is selected
           onSearch();
         }
         break;
       case 'Escape':
         setShowSuggestions(false);
+        setSelectedIndex(-1);
         break;
     }
   };
@@ -205,7 +208,9 @@ export const SearchAutocomplete = ({
               onClick={() => {
                 onChange(suggestion.text);
                 setShowSuggestions(false);
-                setTimeout(onSearch, 100);
+                setSelectedIndex(-1);
+                // Focus back on input so user can press Enter to search
+                setTimeout(() => inputRef.current?.focus(), 0);
               }}
               className={cn(
                 "w-full px-4 py-3 flex items-center gap-3 text-left transition-colors",
