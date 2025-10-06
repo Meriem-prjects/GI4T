@@ -1,6 +1,5 @@
 import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
-import { useLocation } from "react-router-dom";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -40,13 +39,13 @@ interface TrainingDocument {
 }
 
 const AdminChatbotConfig = () => {
-  const location = useLocation();
   const [config, setConfig] = useState<ChatbotConfig | null>(null);
   const [trainingDocs, setTrainingDocs] = useState<TrainingDocument[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [uploadingDoc, setUploadingDoc] = useState(false);
   const [editingFAQ, setEditingFAQ] = useState<FAQItem | null>(null);
   const [showFAQForm, setShowFAQForm] = useState(false);
+  const [activeTab, setActiveTab] = useState("config");
   const { toast } = useToast();
   const { register, handleSubmit, reset, setValue } = useForm();
   
@@ -54,11 +53,6 @@ const AdminChatbotConfig = () => {
   const createFAQ = useCreateFAQItem();
   const updateFAQ = useUpdateFAQItem();
   const deleteFAQ = useDeleteFAQItem();
-
-  // Get active tab from URL params
-  const searchParams = new URLSearchParams(location.search);
-  const tabParam = searchParams.get('tab');
-  const [activeTab, setActiveTab] = useState(tabParam || "config");
 
   useEffect(() => {
     loadConfig();
