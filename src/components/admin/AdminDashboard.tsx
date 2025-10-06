@@ -1,16 +1,9 @@
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { 
   FileText, 
   Clock, 
   XCircle, 
-  Users, 
-  AlertTriangle,
-  Plus,
-  UserPlus,
-  Edit,
-  Eye
+  Users
 } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -94,41 +87,6 @@ const AdminDashboard = ({ type }: AdminDashboardProps) => {
       }
     },
   });
-
-  // Récupérer les dernières activités
-  const { data: recentActivities } = useQuery({
-    queryKey: ["recent-activities"],
-    queryFn: async () => {
-      const { data } = await supabase
-        .from("activity_logs")
-        .select("*")
-        .order("created_at", { ascending: false })
-        .limit(5);
-
-      return data || [];
-    },
-  });
-
-  const recentActions = [
-    {
-      user: "Marie Dubois",
-      action: "Contenu publié",
-      content: "Guide juridique 2025",
-      time: "Il y a 2 heures"
-    },
-    {
-      user: "Jean Martin",
-      action: "Contenu rejeté",
-      content: "Article fiscalité",
-      time: "Il y a 4 heures"
-    },
-    {
-      user: "Sophie Laurent",
-      action: "Utilisateur créé",
-      content: "",
-      time: "Il y a 6 heures"
-    }
-  ];
 
   return (
     <div className="p-6 space-y-6">
@@ -226,117 +184,6 @@ const AdminDashboard = ({ type }: AdminDashboardProps) => {
           </CardContent>
         </Card>
       </div>
-
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Alerts */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center">
-              <AlertTriangle className="w-5 h-5 text-orange-500 mr-2" />
-              Alertes
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              {stats?.pending ? (
-                <div className={`${themeColors.bg} p-4 rounded-lg border-l-4 border-orange-500`}>
-                  <div className="flex items-start justify-between">
-                    <div>
-                      <h4 className="font-medium">Contenus en attente de validation</h4>
-                      <p className="text-sm text-muted-foreground mt-1">
-                        {stats.pending} document{stats.pending > 1 ? 's' : ''} nécessite{stats.pending > 1 ? 'nt' : ''} une validation
-                      </p>
-                    </div>
-                    <Button size="sm" variant="outline">
-                      Voir détails
-                    </Button>
-                  </div>
-                </div>
-              ) : (
-                <div className={`${themeColors.bg} p-4 rounded-lg`}>
-                  <p className="text-sm text-muted-foreground">Aucune alerte pour le moment</p>
-                </div>
-              )}
-
-              {stats?.rejected && stats.rejected > 0 && (
-                <div className={`${themeColors.bg} p-4 rounded-lg border-l-4 border-red-500`}>
-                  <div className="flex items-start justify-between">
-                    <div>
-                      <h4 className="font-medium">Contenus rejetés</h4>
-                      <p className="text-sm text-muted-foreground mt-1">
-                        {stats.rejected} document{stats.rejected > 1 ? 's' : ''} à corriger
-                      </p>
-                    </div>
-                    <Button size="sm" variant="outline">
-                      Gérer
-                    </Button>
-                  </div>
-                </div>
-              )}
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Quick Actions */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Raccourcis</CardTitle>
-            <CardDescription>Actions rapides les plus utilisées</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            <Button className={`w-full justify-start ${themeColors.badge} text-white hover:opacity-90`}>
-              <Plus className="w-4 h-4 mr-2" />
-              Créer contenu
-            </Button>
-            <Button variant="outline" className="w-full justify-start">
-              <UserPlus className="w-4 h-4 mr-2" />
-              Ajouter utilisateur
-            </Button>
-            <Button variant="outline" className="w-full justify-start">
-              <Eye className="w-4 h-4 mr-2" />
-              Contenus en attente
-            </Button>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Recent Actions */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Dernières actions</CardTitle>
-          <CardDescription>Activité récente des utilisateurs</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-4">
-            {recentActivities && recentActivities.length > 0 ? (
-              recentActivities.map((activity, index) => (
-                <div key={index} className="flex items-center justify-between p-3 rounded-lg border">
-                  <div className="flex items-center space-x-3">
-                    <div className="w-8 h-8 bg-muted rounded-full flex items-center justify-center">
-                      <span className="text-sm font-medium">
-                        {activity.action?.charAt(0).toUpperCase() || 'A'}
-                      </span>
-                    </div>
-                    <div>
-                      <p className="font-medium">{activity.entity_type}</p>
-                      <p className="text-sm text-muted-foreground">
-                        {activity.action}
-                      </p>
-                    </div>
-                  </div>
-                  <div className="text-right text-sm text-muted-foreground">
-                    {new Date(activity.created_at).toLocaleDateString('fr-FR')}
-                  </div>
-                </div>
-              ))
-            ) : (
-              <div className="text-center text-muted-foreground py-4">
-                Aucune activité récente
-              </div>
-            )}
-          </div>
-        </CardContent>
-      </Card>
     </div>
   );
 };
