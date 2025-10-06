@@ -1,13 +1,24 @@
+import { useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { ChevronRight, Calendar, MapPin, Users } from "lucide-react";
 import { useEvents } from "@/hooks/useEvents";
 import { useGovernorates } from "@/hooks/useGovernorates";
 import { GovernorateMap } from "@/components/map/GovernorateMap";
+import type { Event } from "@/types/events";
+
+type FilterType = 'all' | 'action_realisee' | 'evenement_a_venir';
 
 const CarteInteractiveContent = () => {
   const { events = [] } = useEvents();
   const { governorates = [] } = useGovernorates();
+  const [filter, setFilter] = useState<FilterType>('all');
+
+  const filteredEvents = events.filter((event: Event) => {
+    if (filter === 'all') return true;
+    return event.type === filter;
+  });
 
   return (
     <main className="flex-1">
@@ -38,18 +49,56 @@ const CarteInteractiveContent = () => {
         <div className="grid grid-cols-1 lg:grid-cols-[30%_70%] gap-6">
           {/* Left Side - Events List */}
           <div className="space-y-4 overflow-y-auto max-h-[700px] pr-2">
-            <div className="flex items-center justify-between mb-4 sticky top-0 bg-background z-10 py-2">
-              <h2 className="text-xl font-semibold">Événements</h2>
-              <Badge variant="outline">{events.length} événement{events.length !== 1 ? 's' : ''}</Badge>
+            <div className="sticky top-0 bg-background z-10 pb-4 space-y-4">
+              <div className="flex items-center justify-between">
+                <h2 className="text-xl font-semibold">Événements</h2>
+                <Badge variant="outline">{filteredEvents.length} événement{filteredEvents.length !== 1 ? 's' : ''}</Badge>
+              </div>
+              
+              {/* Filter Bar */}
+              <div className="flex gap-2 flex-wrap">
+                <Button
+                  variant={filter === 'all' ? 'default' : 'outline'}
+                  size="sm"
+                  onClick={() => setFilter('all')}
+                  className="flex-1 min-w-[100px]"
+                >
+                  Tous
+                </Button>
+                <Button
+                  variant={filter === 'action_realisee' ? 'default' : 'outline'}
+                  size="sm"
+                  onClick={() => setFilter('action_realisee')}
+                  className={`flex-1 min-w-[140px] ${
+                    filter === 'action_realisee' 
+                      ? 'bg-green-600 hover:bg-green-700 text-white' 
+                      : 'border-green-600 text-green-600 hover:bg-green-50'
+                  }`}
+                >
+                  Actions réalisées
+                </Button>
+                <Button
+                  variant={filter === 'evenement_a_venir' ? 'default' : 'outline'}
+                  size="sm"
+                  onClick={() => setFilter('evenement_a_venir')}
+                  className={`flex-1 min-w-[140px] ${
+                    filter === 'evenement_a_venir' 
+                      ? 'bg-blue-600 hover:bg-blue-700 text-white' 
+                      : 'border-blue-600 text-blue-600 hover:bg-blue-50'
+                  }`}
+                >
+                  Événements à venir
+                </Button>
+              </div>
             </div>
             
-            {events.length === 0 ? (
+            {filteredEvents.length === 0 ? (
               <div className="text-center py-12 text-muted-foreground">
                 <Calendar className="h-12 w-12 mx-auto mb-4 opacity-50" />
                 <p>Aucun événement disponible pour le moment</p>
               </div>
             ) : (
-              events.map((event) => (
+              filteredEvents.map((event) => (
                 <Card key={event.id} className="hover:shadow-lg transition-shadow duration-300">
                   <CardContent className="p-4">
                     {/* Event Image */}
@@ -123,7 +172,7 @@ const CarteInteractiveContent = () => {
               <CardContent className="p-0 h-full overflow-visible">
                 <GovernorateMap 
                   governorates={governorates} 
-                  events={events} 
+                  events={filteredEvents}
                 />
               </CardContent>
             </Card>
