@@ -1,25 +1,62 @@
 import { useState } from "react";
-import { Search, Database, Mic, Briefcase, Heart, Scale } from "lucide-react";
+import { Database, Mic, Briefcase, Heart, Scale } from "lucide-react";
 import { useNavigate, Routes, Route } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import ObservatoireNav from "@/components/ObservatoireNav";
 import ObservatoireHeader from "@/components/ObservatoireHeader";
 import Footer from "@/components/Footer";
 import SearchResults from "@/pages/SearchResults";
+import { SearchAutocomplete } from "@/components/SearchAutocomplete";
+import { useCategories } from "@/hooks/useCategories";
+import { useCourtTypes } from "@/hooks/useCourtTypes";
+import { useDocumentTypes } from "@/hooks/useDocumentTypes";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 
 const Observatoire = () => {
   const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState("");
-  const [selectedJurisdiction, setSelectedJurisdiction] = useState("all");
-  const [selectedContentType, setSelectedContentType] = useState("all");
-  const [selectedPeriod, setSelectedPeriod] = useState("all");
+  const [selectedCategory, setSelectedCategory] = useState("all");
+  const [selectedCourtType, setSelectedCourtType] = useState("all");
+  const [selectedDocumentType, setSelectedDocumentType] = useState("all");
+  const [selectedYear, setSelectedYear] = useState("all");
+
+  // Fetch real data
+  const { data: categories } = useCategories();
+  const { data: courtTypes } = useCourtTypes();
+  const { data: documentTypes } = useDocumentTypes();
+  
+  // Fetch available years from documents
+  const { data: years } = useQuery({
+    queryKey: ["document-years"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("documents")
+        .select("year")
+        .not("year", "is", null)
+        .order("year", { ascending: false });
+      
+      if (error) throw error;
+      
+      // Get unique years
+      const uniqueYears = [...new Set(data.map(d => d.year))].filter(Boolean);
+      return uniqueYears as number[];
+    }
+  });
 
   const handleSearch = () => {
     if (searchQuery.trim()) {
-      navigate(`/observatoire/search-results?q=${encodeURIComponent(searchQuery)}`);
+      const params = new URLSearchParams();
+      params.append('q', searchQuery);
+      
+      if (selectedCategory !== 'all') params.append('category', selectedCategory);
+      if (selectedCourtType !== 'all') params.append('court', selectedCourtType);
+      if (selectedDocumentType !== 'all') params.append('type', selectedDocumentType);
+      if (selectedYear !== 'all') params.append('year', selectedYear);
+      
+      navigate(`/observatoire/search-results?${params.toString()}`);
     }
   };
 
@@ -81,25 +118,15 @@ const Observatoire = () => {
             pour comprendre et défendre vos droits fondamentaux.
           </p>
           
-          {/* Search Bar */}
+          {/* Search Bar with Autocomplete */}
           <div className="max-w-4xl mx-auto mb-6 md:mb-8">
-            <div className="relative">
-              <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-muted-foreground" size={20} />
-              <Input
-                placeholder="Recherchez des décisions, analyses..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
-                className="pl-12 pr-16 sm:pr-32 py-4 text-base bg-background text-foreground rounded-lg border transition-all duration-300 hover:shadow-lg focus:shadow-lg placeholder:text-muted-foreground"
-              />
-              <Button 
-                className="absolute right-2 top-1/2 transform -translate-y-1/2 px-2 sm:px-6 py-2 transition-all duration-300 hover:scale-105 text-xs sm:text-sm"
-                onClick={handleSearch}
-              >
-                <Search className="h-4 w-4 sm:hidden" />
-                <span className="hidden sm:inline">Rechercher</span>
-              </Button>
-            </div>
+            <SearchAutocomplete
+              value={searchQuery}
+              onChange={setSearchQuery}
+              onSearch={handleSearch}
+              placeholder="Recherchez des décisions, analyses..."
+              language="fr"
+            />
           </div>
 
           {/* Popular Tags */}
@@ -120,40 +147,64 @@ const Observatoire = () => {
           </div>
 
           {/* Advanced Filters */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 md:gap-4 max-w-4xl mx-auto">
-            <Select value={selectedJurisdiction} onValueChange={setSelectedJurisdiction}>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4 max-w-5xl mx-auto">
+            {/* Categories Filter */}
+            <Select value={selectedCategory} onValueChange={setSelectedCategory}>
               <SelectTrigger className="bg-background text-foreground h-10 sm:h-12 text-sm md:text-base">
-                <SelectValue placeholder="Toutes juridictions" />
+                <SelectValue placeholder="Toutes catégories" />
               </SelectTrigger>
-              <SelectContent className="bg-background border shadow-lg z-50">
-                <SelectItem value="all">Toutes juridictions</SelectItem>
-                <SelectItem value="cedh">CEDH</SelectItem>
-                <SelectItem value="conseil-etat">Conseil d'État</SelectItem>
-                <SelectItem value="cour-cassation">Cour de cassation</SelectItem>
+              <SelectContent className="bg-background border shadow-lg z-50 max-h-[300px]">
+                <SelectItem value="all">Toutes catégories</SelectItem>
+                {categories?.map((category) => (
+                  <SelectItem key={category.id} value={category.id}>
+                    {category.name}
+                  </SelectItem>
+                ))}
               </SelectContent>
             </Select>
 
-            <Select value={selectedContentType} onValueChange={setSelectedContentType}>
+            {/* Court Types Filter */}
+            <Select value={selectedCourtType} onValueChange={setSelectedCourtType}>
               <SelectTrigger className="bg-background text-foreground h-10 sm:h-12 text-sm md:text-base">
-                <SelectValue placeholder="Type de contenu" />
+                <SelectValue placeholder="Tous tribunaux" />
               </SelectTrigger>
-              <SelectContent className="bg-background border shadow-lg z-50">
-                <SelectItem value="all">Tous contenus</SelectItem>
-                <SelectItem value="decisions">Décisions</SelectItem>
-                <SelectItem value="fiches">Fiches pratiques</SelectItem>
-                <SelectItem value="analyses">Analyses</SelectItem>
+              <SelectContent className="bg-background border shadow-lg z-50 max-h-[300px]">
+                <SelectItem value="all">Tous tribunaux</SelectItem>
+                {courtTypes?.map((court) => (
+                  <SelectItem key={court.id} value={court.id}>
+                    {court.name}
+                  </SelectItem>
+                ))}
               </SelectContent>
             </Select>
 
-            <Select value={selectedPeriod} onValueChange={setSelectedPeriod}>
-              <SelectTrigger className="bg-background text-foreground h-10 sm:h-12 text-sm md:text-base sm:col-span-2 md:col-span-1">
+            {/* Document Types Filter */}
+            <Select value={selectedDocumentType} onValueChange={setSelectedDocumentType}>
+              <SelectTrigger className="bg-background text-foreground h-10 sm:h-12 text-sm md:text-base">
+                <SelectValue placeholder="Tous types" />
+              </SelectTrigger>
+              <SelectContent className="bg-background border shadow-lg z-50 max-h-[300px]">
+                <SelectItem value="all">Tous types</SelectItem>
+                {documentTypes?.map((type) => (
+                  <SelectItem key={type.id} value={type.id}>
+                    {type.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+
+            {/* Year Filter */}
+            <Select value={selectedYear} onValueChange={setSelectedYear}>
+              <SelectTrigger className="bg-background text-foreground h-10 sm:h-12 text-sm md:text-base">
                 <SelectValue placeholder="Toute période" />
               </SelectTrigger>
-              <SelectContent className="bg-background border shadow-lg z-50">
+              <SelectContent className="bg-background border shadow-lg z-50 max-h-[300px]">
                 <SelectItem value="all">Toute période</SelectItem>
-                <SelectItem value="week">Cette semaine</SelectItem>
-                <SelectItem value="month">Ce mois</SelectItem>
-                <SelectItem value="year">Cette année</SelectItem>
+                {years?.map((year) => (
+                  <SelectItem key={year} value={year.toString()}>
+                    {year}
+                  </SelectItem>
+                ))}
               </SelectContent>
             </Select>
           </div>
