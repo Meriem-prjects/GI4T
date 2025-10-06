@@ -45,7 +45,6 @@ const AdminChatbotConfig = () => {
   const [uploadingDoc, setUploadingDoc] = useState(false);
   const [editingFAQ, setEditingFAQ] = useState<FAQItem | null>(null);
   const [showFAQForm, setShowFAQForm] = useState(false);
-  const [activeTab, setActiveTab] = useState("config");
   const { toast } = useToast();
   const { register, handleSubmit, reset, setValue } = useForm();
   
@@ -272,7 +271,7 @@ const AdminChatbotConfig = () => {
         <p className="text-muted-foreground">Personnalisez l'assistant virtuel et gérez les documents d'apprentissage</p>
       </div>
 
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+      <Tabs defaultValue="config" className="w-full">
         <TabsList>
           <TabsTrigger value="config">
             <Settings className="h-4 w-4 mr-2" />
