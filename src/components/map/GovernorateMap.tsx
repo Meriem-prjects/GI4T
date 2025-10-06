@@ -57,14 +57,14 @@ export const GovernorateMap = ({ governorates, events }: GovernorateMapProps) =>
         const markerIcon = L.divIcon({
           className: 'custom-event-marker',
           html: `
-            <div style="position: relative; width: 50px; height: 65px; display: flex; flex-direction: column; align-items: center;">
-              <!-- Square container with image -->
+            <div style="position: relative; width: 55px; height: 68px; display: flex; flex-direction: column; align-items: center;">
+              <!-- Square container with rounded corners and image -->
               <div style="
-                width: 50px;
-                height: 50px;
+                width: 55px;
+                height: 55px;
                 border: 3px solid ${markerColor};
-                border-radius: 8px;
-                box-shadow: 0 3px 10px rgba(0,0,0,0.4);
+                border-radius: 12px;
+                box-shadow: 0 4px 12px rgba(0,0,0,0.3);
                 overflow: hidden;
                 cursor: pointer;
                 background-color: white;
@@ -78,7 +78,7 @@ export const GovernorateMap = ({ governorates, events }: GovernorateMapProps) =>
                       height: 100%;
                       object-fit: cover;
                     "
-                    onerror="this.style.display='none'; this.parentElement.innerHTML='<div style=\\'display:flex;align-items:center;justify-content:center;height:100%;color:${markerColor};\\\'><svg width=\\'24\\' height=\\'24\\' viewBox=\\'0 0 24 24\\' fill=\\'currentColor\\'><path d=\\'M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z\\'/></svg></div>';"
+                    onerror="this.style.display='none'; this.parentElement.innerHTML='<div style=\\'display:flex;align-items:center;justify-content:center;height:100%;color:${markerColor};\\\'><svg width=\\'28\\' height=\\'28\\' viewBox=\\'0 0 24 24\\' fill=\\'currentColor\\'><path d=\\'M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z\\'/></svg></div>';"
                   />
                 ` : `
                   <div style="
@@ -88,26 +88,26 @@ export const GovernorateMap = ({ governorates, events }: GovernorateMapProps) =>
                     height: 100%;
                     color: ${markerColor};
                   ">
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+                    <svg width="28" height="28" viewBox="0 0 24 24" fill="currentColor">
                       <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/>
                     </svg>
                   </div>
                 `}
               </div>
-              <!-- Triangle pointer -->
+              <!-- Small triangle pointer at bottom -->
               <div style="
                 width: 0;
                 height: 0;
-                border-left: 8px solid transparent;
-                border-right: 8px solid transparent;
-                border-top: 12px solid ${markerColor};
+                border-left: 7px solid transparent;
+                border-right: 7px solid transparent;
+                border-top: 10px solid ${markerColor};
                 margin-top: -1px;
               "></div>
             </div>
           `,
-          iconSize: [50, 65],
-          iconAnchor: [25, 65],
-          popupAnchor: [0, -68]
+          iconSize: [55, 68],
+          iconAnchor: [27, 68],
+          popupAnchor: [0, -70]
         });
 
         const marker = L.marker([event.latitude, event.longitude], {
