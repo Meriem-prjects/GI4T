@@ -223,7 +223,7 @@ const AdminSidebar = ({ type, isCollapsed = false, onToggle }: AdminSidebarProps
       </div>
 
       {/* Navigation */}
-      <nav className="flex-1 p-2 space-y-1 overflow-y-auto">
+      <nav className="flex-1 p-2 space-y-1 overflow-y-auto scrollbar-thin scrollbar-track-[hsl(var(--justclic-yellow))] scrollbar-thumb-gray-400 hover:scrollbar-thumb-gray-500">
         {/* Pour Observatoire: liste simple */}
         {type === "observatoire" && observatoireItems.map((item) => {
           const isActive = location.pathname === item.href;
