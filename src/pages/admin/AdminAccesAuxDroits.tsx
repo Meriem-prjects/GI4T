@@ -6,6 +6,7 @@ import AdminCarteInteractive from "./AdminCarteInteractive";
 import AdminAccesDroitsUsersManagement from "./AdminAccesDroitsUsersManagement";
 import AdminAdressesUtiles from "./AdminAdressesUtiles";
 import AdminChatbotConfig from "./AdminChatbotConfig";
+import AdminFAQQuestions from "./AdminFAQQuestions";
 import { cn } from "@/lib/utils";
 
 const AdminAccesAuxDroits = () => {
@@ -51,6 +52,7 @@ const AdminAccesAuxDroits = () => {
             
             {/* FAQ & Chatbot */}
             <Route path="faq-chatbot" element={<AdminChatbotConfig />} />
+            <Route path="faq-questions" element={<AdminFAQQuestions />} />
             
             {/* Carte interactive */}
             <Route path="carte-interactive" element={<AdminCarteInteractive />} />
