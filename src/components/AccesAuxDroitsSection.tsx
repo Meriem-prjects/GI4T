@@ -1,7 +1,7 @@
+import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { MapPin, BookOpen } from "lucide-react";
+import { MapPin, Map, BookOpen } from "lucide-react";
 import { Link } from "react-router-dom";
-import TunisiaMapButton from "@/components/TunisiaMapButton";
 
 const AccesAuxDroitsSection = () => {
   return (
@@ -22,9 +22,12 @@ const AccesAuxDroitsSection = () => {
           </h2>
         </div>
 
-        {/* Center Section - Tunisia Map Button */}
+        {/* Center Section - Primary CTA (matches Observatoire) */}
         <div className="w-full max-w-sm sm:max-w-md my-8 sm:my-12">
-          <TunisiaMapButton />
+          <Button className="w-full h-14 sm:h-16 bg-accent text-accent-foreground rounded-xl shadow-lg border-0 flex items-center justify-center gap-3">
+            <Map className="w-5 h-5 sm:w-6 sm:h-6" />
+            <span className="font-semibold text-base sm:text-lg">Carte interactive</span>
+          </Button>
         </div>
 
         {/* Bottom Section - Quick Access Cards (aligned like Observatoire) */}
