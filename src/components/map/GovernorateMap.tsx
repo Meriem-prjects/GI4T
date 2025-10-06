@@ -95,7 +95,7 @@ export const GovernorateMap = ({ governorates, events }: GovernorateMapProps) =>
           `,
           iconSize: [40, 30],
           iconAnchor: [20, 15],
-          popupAnchor: [0, 20]
+          popupAnchor: [0, 25]
         });
 
         const marker = L.marker([event.latitude, event.longitude], {
@@ -103,19 +103,10 @@ export const GovernorateMap = ({ governorates, events }: GovernorateMapProps) =>
         });
 
         const popupContent = `
-          <div style="min-width: 250px; max-width: 350px;">
-            ${imageUrl ? `
-              <div style="margin-bottom: 12px; border-radius: 8px; overflow: hidden;">
-                <img 
-                  src="${imageUrl}" 
-                  alt="${event.title}"
-                  style="width: 100%; height: 180px; object-fit: cover;"
-                />
-              </div>
-            ` : ''}
-            <h3 style="font-weight: bold; margin-bottom: 8px; color: #1f2937; font-size: 16px;">${event.title}</h3>
-            <p style="margin-bottom: 12px; color: #6b7280; font-size: 14px; line-height: 1.5;">${event.description}</p>
-            <div style="display: flex; flex-direction: column; gap: 6px; font-size: 13px; color: #374151;">
+          <div style="min-width: 200px; max-width: 280px;">
+            <h3 style="font-weight: bold; margin-bottom: 8px; color: #1f2937; font-size: 15px;">${event.title}</h3>
+            <p style="margin-bottom: 10px; color: #6b7280; font-size: 13px; line-height: 1.4;">${event.description}</p>
+            <div style="display: flex; flex-direction: column; gap: 4px; font-size: 12px; color: #374151;">
               <div><strong>Type:</strong> ${event.type === 'action_realisee' ? 'Action réalisée' : 'Événement à venir'}</div>
               <div><strong>Date:</strong> ${new Date(event.event_date).toLocaleDateString('fr-FR')}</div>
               ${event.governorate?.name ? `<div><strong>Gouvernorat:</strong> ${event.governorate.name}</div>` : ''}
@@ -127,8 +118,9 @@ export const GovernorateMap = ({ governorates, events }: GovernorateMapProps) =>
 
         marker.bindPopup(popupContent, {
           autoPan: true,
-          autoPanPadding: [100, 100],
-          maxHeight: 400,
+          autoPanPadding: [80, 80],
+          maxHeight: 250,
+          maxWidth: 280,
           closeButton: true,
           keepInView: false,
           className: 'custom-popup-overflow'
