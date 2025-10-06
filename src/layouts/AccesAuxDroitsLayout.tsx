@@ -19,8 +19,7 @@ const AccesAuxDroitsLayout = () => {
     } else if (location.pathname.includes('/mediatheque') || location.pathname.includes('/albums-photos')) {
       return <MediathequeNav />;
     } else if (location.pathname.includes('/actualites') || location.pathname.includes('/ressources-pratiques') || 
-               location.pathname.includes('/liens-utiles') || location.pathname.includes('/guides-pratiques') ||
-               location.pathname.includes('/faq-chatbot')) {
+               location.pathname.includes('/liens-utiles') || location.pathname.includes('/guides-pratiques')) {
       return <ActualitesNav />;
     }
     return null;
@@ -51,9 +50,6 @@ const AccesAuxDroitsLayout = () => {
               </Link>
               <Link to="/acces-aux-droits/actualites" className="text-sm font-medium text-foreground hover:text-primary transition-colors duration-200">
                 Actualités
-              </Link>
-              <Link to="/acces-aux-droits/faq-chatbot" className="text-sm font-medium text-foreground hover:text-primary transition-colors duration-200">
-                FAQ/Chatbot
               </Link>
             </nav>
 
@@ -92,7 +88,6 @@ const AccesAuxDroitsLayout = () => {
                   <Link to="/acces-aux-droits/mediatheque" className="text-base hover:text-primary p-2 rounded-lg hover:bg-muted">Médiathèque</Link>
                   <Link to="/acces-aux-droits/albums-photos" className="text-base hover:text-primary p-2 rounded-lg hover:bg-muted">Albums photos</Link>
                   <Link to="/acces-aux-droits/actualites" className="text-base hover:text-primary p-2 rounded-lg hover:bg-muted">Actualités</Link>
-                  <Link to="/acces-aux-droits/faq-chatbot" className="text-base hover:text-primary p-2 rounded-lg hover:bg-muted">FAQ/Chatbot</Link>
                   <Link to="/acces-aux-droits/ressources-pratiques" className="text-base hover:text-primary p-2 rounded-lg hover:bg-muted">Ressources pratiques</Link>
                   <Link to="/acces-aux-droits/liens-utiles" className="text-base hover:text-primary p-2 rounded-lg hover:bg-muted">Liens utiles</Link>
                   <Link to="/acces-aux-droits/guides-pratiques" className="text-base hover:text-primary p-2 rounded-lg hover:bg-muted">Guides pratiques</Link>
