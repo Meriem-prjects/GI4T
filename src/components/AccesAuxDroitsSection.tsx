@@ -1,6 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { MapPin, Map, BookOpen } from "lucide-react";
+import { MessageCircle, Map, Image } from "lucide-react";
 import { Link } from "react-router-dom";
 
 const AccesAuxDroitsSection = () => {
@@ -24,40 +24,46 @@ const AccesAuxDroitsSection = () => {
 
         {/* Center Section - Primary CTA (matches Observatoire) */}
         <div className="w-full max-w-sm sm:max-w-md my-8 sm:my-12">
-          <Button className="w-full h-14 sm:h-16 bg-accent text-accent-foreground rounded-xl shadow-lg border-0 flex items-center justify-center gap-3">
-            <Map className="w-5 h-5 sm:w-6 sm:h-6" />
-            <span className="font-semibold text-base sm:text-lg">Carte interactive</span>
-          </Button>
+          <Link to="/carte-interactive">
+            <Button className="w-full h-14 sm:h-16 bg-accent text-accent-foreground rounded-xl shadow-lg border-0 flex items-center justify-center gap-3">
+              <Map className="w-5 h-5 sm:w-6 sm:h-6" />
+              <span className="font-semibold text-base sm:text-lg">Carte interactive</span>
+            </Button>
+          </Link>
         </div>
 
         {/* Bottom Section - Quick Access Cards (aligned like Observatoire) */}
         <div className="w-full max-w-sm sm:max-w-md">
           <div className="grid grid-cols-2 gap-6 sm:gap-8">
-            <Card className="bg-white/90 backdrop-blur-sm rounded-lg shadow-lg border-0 h-28 sm:h-32">
-              <CardContent className="p-4 sm:p-6 h-full">
-                <div className="flex flex-col items-center justify-center text-center h-full space-y-3">
-                  <div className="w-7 h-7 sm:w-9 sm:h-9 bg-orange-500 rounded-lg flex items-center justify-center">
-                    <BookOpen className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
+            <Link to="/faq-chatbot" className="block">
+              <Card className="bg-white/90 backdrop-blur-sm rounded-lg shadow-lg border-0 h-28 sm:h-32 hover:shadow-xl transition-shadow cursor-pointer">
+                <CardContent className="p-4 sm:p-6 h-full">
+                  <div className="flex flex-col items-center justify-center text-center h-full space-y-3">
+                    <div className="w-7 h-7 sm:w-9 sm:h-9 bg-orange-500 rounded-lg flex items-center justify-center">
+                      <MessageCircle className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
+                    </div>
+                    <div>
+                      <h3 className="font-semibold text-sm sm:text-base text-card-foreground">FAQ & Chat</h3>
+                    </div>
                   </div>
-                  <div>
-                    <h3 className="font-semibold text-sm sm:text-base text-card-foreground">Guides</h3>
-                    <p className="text-xs sm:text-sm text-muted-foreground">Pratiques</p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
+                </CardContent>
+              </Card>
+            </Link>
 
-            <Card className="bg-white/90 backdrop-blur-sm rounded-lg shadow-lg border-0 h-28 sm:h-32">
-              <CardContent className="p-4 sm:p-6 h-full">
-                <div className="flex flex-col items-center justify-center text-center h-full space-y-3">
-                  <MapPin className="w-7 h-7 sm:w-9 sm:h-9 text-primary" />
-                  <div>
-                    <h3 className="font-semibold text-sm sm:text-base text-card-foreground">Services</h3>
-                    <p className="text-xs sm:text-sm text-muted-foreground">Proximité</p>
+            <Link to="/mediatheque" className="block">
+              <Card className="bg-white/90 backdrop-blur-sm rounded-lg shadow-lg border-0 h-28 sm:h-32 hover:shadow-xl transition-shadow cursor-pointer">
+                <CardContent className="p-4 sm:p-6 h-full">
+                  <div className="flex flex-col items-center justify-center text-center h-full space-y-3">
+                    <div className="w-7 h-7 sm:w-9 sm:h-9 bg-primary rounded-lg flex items-center justify-center">
+                      <Image className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
+                    </div>
+                    <div>
+                      <h3 className="font-semibold text-sm sm:text-base text-card-foreground">Médiathèques</h3>
+                    </div>
                   </div>
-                </div>
-              </CardContent>
-            </Card>
+                </CardContent>
+              </Card>
+            </Link>
           </div>
         </div>
       </div>
