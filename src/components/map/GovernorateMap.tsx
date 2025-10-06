@@ -127,8 +127,11 @@ export const GovernorateMap = ({ governorates, events }: GovernorateMapProps) =>
 
         marker.bindPopup(popupContent, {
           autoPan: true,
-          autoPanPadding: [50, 50],
-          maxHeight: 300
+          autoPanPadding: [100, 100],
+          maxHeight: 400,
+          closeButton: true,
+          keepInView: false,
+          className: 'custom-popup-overflow'
         });
         marker.addTo(map);
       }
@@ -142,5 +145,5 @@ export const GovernorateMap = ({ governorates, events }: GovernorateMapProps) =>
     };
   }, [governorates, events]);
 
-  return <div ref={mapContainerRef} style={{ width: '100%', height: '600px' }} />;
+  return <div ref={mapContainerRef} style={{ width: '100%', height: '600px', position: 'relative', zIndex: 1 }} />;
 };
