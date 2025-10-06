@@ -95,7 +95,7 @@ export const GovernorateMap = ({ governorates, events }: GovernorateMapProps) =>
           `,
           iconSize: [40, 30],
           iconAnchor: [20, 15],
-          popupAnchor: [0, 25]
+          popupAnchor: [0, 30]
         });
 
         const marker = L.marker([event.latitude, event.longitude], {
@@ -103,7 +103,16 @@ export const GovernorateMap = ({ governorates, events }: GovernorateMapProps) =>
         });
 
         const popupContent = `
-          <div style="min-width: 200px; max-width: 280px;">
+          <div style="min-width: 220px; max-width: 300px;">
+            ${imageUrl ? `
+              <div style="margin-bottom: 10px; border-radius: 6px; overflow: hidden;">
+                <img 
+                  src="${imageUrl}" 
+                  alt="${event.title}"
+                  style="width: 100%; height: 140px; object-fit: cover;"
+                />
+              </div>
+            ` : ''}
             <h3 style="font-weight: bold; margin-bottom: 8px; color: #1f2937; font-size: 15px;">${event.title}</h3>
             <p style="margin-bottom: 10px; color: #6b7280; font-size: 13px; line-height: 1.4;">${event.description}</p>
             <div style="display: flex; flex-direction: column; gap: 4px; font-size: 12px; color: #374151;">
@@ -119,11 +128,12 @@ export const GovernorateMap = ({ governorates, events }: GovernorateMapProps) =>
         marker.bindPopup(popupContent, {
           autoPan: true,
           autoPanPadding: [80, 80],
-          maxHeight: 250,
-          maxWidth: 280,
+          maxHeight: 400,
+          maxWidth: 300,
           closeButton: true,
           keepInView: false,
-          className: 'custom-popup-overflow'
+          className: 'custom-popup-overflow',
+          offset: [0, 15]
         });
         marker.addTo(map);
       }
