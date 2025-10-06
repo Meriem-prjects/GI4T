@@ -43,8 +43,7 @@ const AccesAuxDroitsSection = () => {
                       <MessageCircle className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
                     </div>
                     <div>
-                      <h3 className="font-semibold text-sm sm:text-base text-card-foreground">FAQ</h3>
-                      <p className="text-xs sm:text-sm text-muted-foreground">& Chat</p>
+                      <h3 className="font-bold text-sm sm:text-base text-card-foreground">FAQ & Chat</h3>
                     </div>
                   </div>
                 </CardContent>
