@@ -27,28 +27,28 @@ const AccesAuxDroitsSection = () => {
 
         {/* Bottom Section - Quick Access Cards */}
         <div className="w-full max-w-sm sm:max-w-md">
-          <div className="grid grid-cols-2 gap-6 sm:gap-8">
-            <Card className="bg-white/90 backdrop-blur-sm rounded-lg shadow-lg border-0 h-24 sm:h-28">
-              <CardContent className="p-3 sm:p-4 h-full">
-                <div className="flex flex-col items-center justify-center text-center h-full space-y-2">
-                  <div className="w-7 h-7 sm:w-8 sm:h-8 bg-orange-500 rounded-lg flex items-center justify-center">
-                    <MessageCircle className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
+          <div className="grid grid-cols-2 gap-4 sm:gap-6">
+            <Card className="bg-white/90 backdrop-blur-sm rounded-lg shadow-lg border-0 h-20 sm:h-24">
+              <CardContent className="p-2 sm:p-3 h-full">
+                <div className="flex flex-col items-center justify-center text-center h-full space-y-1.5">
+                  <div className="w-6 h-6 sm:w-7 sm:h-7 bg-orange-500 rounded-lg flex items-center justify-center">
+                    <MessageCircle className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-white" />
                   </div>
                   <div>
-                    <h3 className="font-semibold text-sm sm:text-base text-card-foreground">FAQ & Chat</h3>
-                    <p className="text-xs sm:text-sm text-muted-foreground">Support</p>
+                    <h3 className="font-semibold text-xs sm:text-sm text-card-foreground">FAQ & Chat</h3>
+                    <p className="text-[10px] sm:text-xs text-muted-foreground">Support</p>
                   </div>
                 </div>
               </CardContent>
             </Card>
 
-            <Card className="bg-white/90 backdrop-blur-sm rounded-lg shadow-lg border-0 h-24 sm:h-28">
-              <CardContent className="p-3 sm:p-4 h-full">
-                <div className="flex flex-col items-center justify-center text-center h-full space-y-2">
-                  <Image className="w-7 h-7 sm:w-8 sm:h-8 text-primary" />
+            <Card className="bg-white/90 backdrop-blur-sm rounded-lg shadow-lg border-0 h-20 sm:h-24">
+              <CardContent className="p-2 sm:p-3 h-full">
+                <div className="flex flex-col items-center justify-center text-center h-full space-y-1.5">
+                  <Image className="w-6 h-6 sm:w-7 sm:h-7 text-primary" />
                   <div>
-                    <h3 className="font-semibold text-sm sm:text-base text-card-foreground">Médiathèques</h3>
-                    <p className="text-xs sm:text-sm text-muted-foreground">Photos & Vidéos</p>
+                    <h3 className="font-semibold text-xs sm:text-sm text-card-foreground">Médiathèques</h3>
+                    <p className="text-[10px] sm:text-xs text-muted-foreground">Photos & Vidéos</p>
                   </div>
                 </div>
               </CardContent>
