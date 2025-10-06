@@ -12,9 +12,9 @@ const ObservatoireHeader = () => {
       <div className="container mx-auto px-4 py-2 sm:py-4 relative">
         <div className="flex items-center justify-between flex-wrap gap-4">
           <div className="flex items-center space-x-2 sm:space-x-4">
-            <img src="/Feelinx_upload/odf-logo.png" alt="ODF Logo" className="h-8 sm:h-12" />
+            <img src="/Feelinx_upload/odf-logo.png" alt="ODF Logo" className="h-6 sm:h-8 md:h-12" />
             <div>
-              <h1 className="text-base sm:text-2xl font-bold text-foreground">Observatoire des Droits Fondamentaux</h1>
+              <h1 className="text-sm sm:text-base md:text-2xl font-bold text-foreground">Observatoire des Droits Fondamentaux</h1>
               <p className="text-xs sm:text-sm text-muted-foreground hidden sm:block">Surveillance et protection des droits citoyens</p>
             </div>
           </div>
@@ -41,7 +41,7 @@ const ObservatoireHeader = () => {
               <SheetContent side="right" className="w-80">
                 <div className="flex flex-col h-full">
                   <div className="flex items-center space-x-2 p-4 border-b">
-                    <img src="/Feelinx_upload/odf-logo.png" alt="ODF Logo" className="h-8 w-auto" />
+                    <img src="/Feelinx_upload/odf-logo.png" alt="ODF Logo" className="h-6 sm:h-8 w-auto" />
                     <h2 className="font-bold text-primary">ODF</h2>
                   </div>
                   <nav className="flex flex-col space-y-2 mt-4 px-4">

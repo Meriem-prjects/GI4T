@@ -19,8 +19,7 @@ const AccesAuxDroitsLayout = () => {
     } else if (location.pathname.includes('/mediatheque') || location.pathname.includes('/albums-photos')) {
       return <MediathequeNav />;
     } else if (location.pathname.includes('/actualites') || location.pathname.includes('/ressources-pratiques') || 
-               location.pathname.includes('/liens-utiles') || location.pathname.includes('/guides-pratiques') ||
-               location.pathname.includes('/faq-chatbot')) {
+               location.pathname.includes('/liens-utiles') || location.pathname.includes('/guides-pratiques')) {
       return <ActualitesNav />;
     }
     return null;
@@ -34,9 +33,9 @@ const AccesAuxDroitsLayout = () => {
           <div className="flex items-center justify-between flex-wrap gap-4">
             <div className="flex items-center space-x-2 sm:space-x-4">
               <Link to="/acces-aux-droits" className="flex items-center space-x-2 sm:space-x-4 hover:opacity-80 transition-opacity duration-200">
-                <img src="/Feelinx_upload/logo-acces-aux-droits.png" alt="Accès aux Droits Logo" className="h-8 sm:h-12" />
+                <img src="/Feelinx_upload/logo-acces-aux-droits.png" alt="Accès aux Droits Logo" className="h-6 sm:h-8 md:h-12" />
                 <div>
-                  <h1 className="text-base sm:text-2xl font-bold text-foreground">Accès aux Droits</h1>
+                  <h1 className="text-sm sm:text-base md:text-2xl font-bold text-foreground">Accès aux Droits</h1>
                   <p className="text-xs sm:text-sm text-muted-foreground hidden sm:block">Espace citoyen</p>
                 </div>
               </Link>
@@ -82,7 +81,7 @@ const AccesAuxDroitsLayout = () => {
             <SheetContent side="right" className="w-80">
               <div className="flex flex-col h-full">
                 <div className="flex items-center space-x-2 p-4 border-b">
-                  <img src="/Feelinx_upload/logo-acces-aux-droits.png" alt="Accès aux Droits Logo" className="h-8 w-auto" />
+                  <img src="/Feelinx_upload/logo-acces-aux-droits.png" alt="Accès aux Droits Logo" className="h-6 sm:h-8 w-auto" />
                   <h2 className="font-bold text-primary">Accès aux Droits</h2>
                 </div>
                 <nav className="flex flex-col space-y-2 mt-4 px-4">
