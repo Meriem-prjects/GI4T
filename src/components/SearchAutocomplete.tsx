@@ -5,6 +5,7 @@ import { useCourtTypes } from "@/hooks/useCourtTypes";
 import { useDocumentKeywords } from "@/hooks/useDocumentKeywords";
 import { useJurisdictionLevels } from "@/hooks/useJurisdictionLevels";
 import { cn } from "@/lib/utils";
+import { fuzzySort } from "@/lib/fuzzySearch";
 
 interface SearchAutocompleteProps {
   value: string;
@@ -38,67 +39,97 @@ export const SearchAutocomplete = ({
   const { data: keywords } = useDocumentKeywords(language);
   const { data: jurisdictions } = useJurisdictionLevels();
 
-  // Build suggestions based on input
+  // Build suggestions based on input using fuzzy search
   const suggestions: Suggestion[] = [];
 
   if (value.trim().length >= 2) {
-    const searchTerm = value.toLowerCase();
-    const nameField = language === 'ar' ? 'name_ar' : 'name';
+    const searchTerm = value.trim();
 
-    // Add categories
-    categories?.slice(0, 3).forEach(cat => {
-      const text = language === 'ar' ? (cat.name_ar || cat.name) : cat.name;
-      if (text.toLowerCase().includes(searchTerm)) {
+    // Fuzzy search categories
+    if (categories) {
+      const matchedCategories = fuzzySort(
+        categories,
+        searchTerm,
+        (cat) => language === 'ar' ? (cat.name_ar || cat.name) : cat.name,
+        0.5 // Lower threshold for more tolerance
+      ).slice(0, 3);
+
+      matchedCategories.forEach(cat => {
+        const text = language === 'ar' ? (cat.name_ar || cat.name) : cat.name;
         suggestions.push({
           id: `cat-${cat.id}`,
           text,
           type: 'category',
           icon: <FileText className="w-4 h-4" />
         });
-      }
-    });
+      });
+    }
 
-    // Add court types
-    courtTypes?.slice(0, 3).forEach(court => {
-      const text = language === 'ar' ? (court.name_ar || court.name) : court.name;
-      if (text.toLowerCase().includes(searchTerm)) {
+    // Fuzzy search court types
+    if (courtTypes) {
+      const matchedCourtTypes = fuzzySort(
+        courtTypes,
+        searchTerm,
+        (court) => language === 'ar' ? (court.name_ar || court.name) : court.name,
+        0.5
+      ).slice(0, 3);
+
+      matchedCourtTypes.forEach(court => {
+        const text = language === 'ar' ? (court.name_ar || court.name) : court.name;
         suggestions.push({
           id: `court-${court.id}`,
           text,
           type: 'court',
           icon: <Building className="w-4 h-4" />
         });
-      }
-    });
+      });
+    }
 
-    // Add jurisdiction levels
-    jurisdictions?.slice(0, 2).forEach(jur => {
-      const text = language === 'ar' ? (jur.name_ar || jur.name) : jur.name;
-      if (text.toLowerCase().includes(searchTerm)) {
+    // Fuzzy search jurisdiction levels
+    if (jurisdictions) {
+      const matchedJurisdictions = fuzzySort(
+        jurisdictions,
+        searchTerm,
+        (jur) => language === 'ar' ? (jur.name_ar || jur.name) : jur.name,
+        0.5
+      ).slice(0, 2);
+
+      matchedJurisdictions.forEach(jur => {
+        const text = language === 'ar' ? (jur.name_ar || jur.name) : jur.name;
         suggestions.push({
           id: `jur-${jur.id}`,
           text,
           type: 'jurisdiction',
           icon: <Scale className="w-4 h-4" />
         });
-      }
-    });
+      });
+    }
 
-    // Add keywords
-    keywords?.slice(0, 5).forEach(kw => {
-      if (kw.keyword.toLowerCase().includes(searchTerm)) {
+    // Fuzzy search keywords
+    if (keywords) {
+      const matchedKeywords = fuzzySort(
+        keywords,
+        searchTerm,
+        (kw) => kw.keyword,
+        0.5
+      ).slice(0, 5);
+
+      matchedKeywords.forEach(kw => {
         suggestions.push({
           id: `kw-${kw.keyword}`,
           text: kw.keyword,
           type: 'keyword',
           icon: <Tag className="w-4 h-4" />
         });
-      }
-    });
+      });
+    }
   }
 
-  // Limit total suggestions
-  const limitedSuggestions = suggestions.slice(0, 8);
+  // Limit total suggestions and remove duplicates
+  const uniqueSuggestions = suggestions.filter((item, index, self) =>
+    index === self.findIndex((t) => t.text.toLowerCase() === item.text.toLowerCase())
+  );
+  const limitedSuggestions = uniqueSuggestions.slice(0, 8);
 
   // Handle keyboard navigation
   const handleKeyDown = (e: React.KeyboardEvent) => {
