@@ -41,7 +41,7 @@ const ObservatoireSection = () => {
             value={searchQuery}
             onChange={setSearchQuery}
             onSearch={handleSearch}
-            placeholder={animatedPlaceholder || "Rechercher une décision..."}
+            placeholder={animatedPlaceholder}
             language={language}
           />
         </div>
