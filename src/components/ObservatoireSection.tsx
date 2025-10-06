@@ -1,16 +1,17 @@
-import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Search, FileText, Building } from "lucide-react";
+import { FileText, Building } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { useState, FormEvent } from "react";
+import { SearchAutocomplete } from "@/components/SearchAutocomplete";
+import { useTypingPlaceholder } from "@/hooks/useTypingPlaceholder";
 
 const ObservatoireSection = () => {
   const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState("");
+  const [language] = useState<'fr' | 'ar'>('fr'); // Can be extended with language context
+  const animatedPlaceholder = useTypingPlaceholder(language);
 
-  const handleSearch = (e: FormEvent) => {
-    e.preventDefault();
+  const handleSearch = () => {
     if (searchQuery.trim()) {
       navigate(`/observatoire/search-results?query=${encodeURIComponent(searchQuery.trim())}`);
     }
@@ -36,16 +37,13 @@ const ObservatoireSection = () => {
         
         {/* Center Section - Search */}
         <div className="w-full max-w-sm sm:max-w-md my-8 sm:my-12">
-          <form onSubmit={handleSearch} className="relative">
-            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 sm:w-6 sm:h-6 text-muted-foreground pointer-events-none z-10" />
-            <Input
-              type="text"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Rechercher une décision"
-              className="w-full h-14 sm:h-16 bg-accent text-accent-foreground placeholder:text-accent-foreground/70 rounded-xl shadow-lg border-0 pl-12 sm:pl-14 pr-4 text-base sm:text-lg font-semibold focus-visible:ring-2 focus-visible:ring-primary"
-            />
-          </form>
+          <SearchAutocomplete
+            value={searchQuery}
+            onChange={setSearchQuery}
+            onSearch={handleSearch}
+            placeholder={animatedPlaceholder || "Rechercher une décision..."}
+            language={language}
+          />
         </div>
 
         {/* Bottom Section - Quick Access */}
