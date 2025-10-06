@@ -118,9 +118,9 @@ const CarteInteractiveContent = () => {
           </div>
 
           {/* Right Side - Map */}
-          <div className="lg:sticky lg:top-4 h-[700px] overflow-visible">
-            <Card className="h-full overflow-visible">
-              <CardContent className="p-0 h-full overflow-visible">
+          <div className="lg:sticky lg:top-4 h-[700px]">
+            <Card className="h-full">
+              <CardContent className="p-0 h-full">
                 <GovernorateMap 
                   governorates={governorates} 
                   events={events} 

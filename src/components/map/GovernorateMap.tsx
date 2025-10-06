@@ -57,57 +57,45 @@ export const GovernorateMap = ({ governorates, events }: GovernorateMapProps) =>
         const markerIcon = L.divIcon({
           className: 'custom-event-marker',
           html: `
-            <div style="position: relative; width: 55px; height: 68px; display: flex; flex-direction: column; align-items: center;">
-              <!-- Square container with rounded corners and image -->
-              <div style="
-                width: 55px;
-                height: 55px;
-                border: 3px solid ${markerColor};
-                border-radius: 12px;
-                box-shadow: 0 4px 12px rgba(0,0,0,0.3);
-                overflow: hidden;
-                cursor: pointer;
-                background-color: white;
-              ">
-                ${imageUrl ? `
-                  <img 
-                    src="${imageUrl}" 
-                    alt="${event.title}"
-                    style="
-                      width: 100%;
-                      height: 100%;
-                      object-fit: cover;
-                    "
-                    onerror="this.style.display='none'; this.parentElement.innerHTML='<div style=\\'display:flex;align-items:center;justify-content:center;height:100%;color:${markerColor};\\\'><svg width=\\'28\\' height=\\'28\\' viewBox=\\'0 0 24 24\\' fill=\\'currentColor\\'><path d=\\'M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z\\'/></svg></div>';"
-                  />
-                ` : `
-                  <div style="
-                    display: flex;
-                    align-items: center;
-                    justify-content: center;
+            <div style="
+              width: 40px;
+              height: 30px;
+              border: 2px solid ${markerColor};
+              border-radius: 4px;
+              box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+              overflow: hidden;
+              cursor: pointer;
+              background-color: white;
+            ">
+              ${imageUrl ? `
+                <img 
+                  src="${imageUrl}" 
+                  alt="${event.title}"
+                  style="
+                    width: 100%;
                     height: 100%;
-                    color: ${markerColor};
-                  ">
-                    <svg width="28" height="28" viewBox="0 0 24 24" fill="currentColor">
-                      <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/>
-                    </svg>
-                  </div>
-                `}
-              </div>
-              <!-- Small triangle pointer at bottom -->
-              <div style="
-                width: 0;
-                height: 0;
-                border-left: 7px solid transparent;
-                border-right: 7px solid transparent;
-                border-top: 10px solid ${markerColor};
-                margin-top: -1px;
-              "></div>
+                    object-fit: cover;
+                  "
+                  onerror="this.style.display='none'; this.parentElement.innerHTML='<div style=\\'display:flex;align-items:center;justify-content:center;height:100%;color:${markerColor};\\\'><svg width=\\'16\\' height=\\'16\\' viewBox=\\'0 0 24 24\\' fill=\\'currentColor\\'><path d=\\'M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z\\'/></svg></div>';"
+                />
+              ` : `
+                <div style="
+                  display: flex;
+                  align-items: center;
+                  justify-content: center;
+                  height: 100%;
+                  color: ${markerColor};
+                ">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/>
+                  </svg>
+                </div>
+              `}
             </div>
           `,
-          iconSize: [55, 68],
-          iconAnchor: [27, 68],
-          popupAnchor: [0, -70]
+          iconSize: [40, 30],
+          iconAnchor: [20, 15],
+          popupAnchor: [0, 20]
         });
 
         const marker = L.marker([event.latitude, event.longitude], {
@@ -115,19 +103,19 @@ export const GovernorateMap = ({ governorates, events }: GovernorateMapProps) =>
         });
 
         const popupContent = `
-          <div style="min-width: 220px; max-width: 300px;">
+          <div style="min-width: 250px; max-width: 350px;">
             ${imageUrl ? `
-              <div style="margin-bottom: 10px; border-radius: 6px; overflow: hidden;">
+              <div style="margin-bottom: 12px; border-radius: 8px; overflow: hidden;">
                 <img 
                   src="${imageUrl}" 
                   alt="${event.title}"
-                  style="width: 100%; height: 140px; object-fit: cover;"
+                  style="width: 100%; height: 180px; object-fit: cover;"
                 />
               </div>
             ` : ''}
-            <h3 style="font-weight: bold; margin-bottom: 8px; color: #1f2937; font-size: 15px;">${event.title}</h3>
-            <p style="margin-bottom: 10px; color: #6b7280; font-size: 13px; line-height: 1.4;">${event.description}</p>
-            <div style="display: flex; flex-direction: column; gap: 4px; font-size: 12px; color: #374151;">
+            <h3 style="font-weight: bold; margin-bottom: 8px; color: #1f2937; font-size: 16px;">${event.title}</h3>
+            <p style="margin-bottom: 12px; color: #6b7280; font-size: 14px; line-height: 1.5;">${event.description}</p>
+            <div style="display: flex; flex-direction: column; gap: 6px; font-size: 13px; color: #374151;">
               <div><strong>Type:</strong> ${event.type === 'action_realisee' ? 'Action réalisée' : 'Événement à venir'}</div>
               <div><strong>Date:</strong> ${new Date(event.event_date).toLocaleDateString('fr-FR')}</div>
               ${event.governorate?.name ? `<div><strong>Gouvernorat:</strong> ${event.governorate.name}</div>` : ''}
@@ -139,13 +127,8 @@ export const GovernorateMap = ({ governorates, events }: GovernorateMapProps) =>
 
         marker.bindPopup(popupContent, {
           autoPan: true,
-          autoPanPadding: [80, 80],
-          maxHeight: 400,
-          maxWidth: 300,
-          closeButton: true,
-          keepInView: false,
-          className: 'custom-popup-overflow',
-          offset: [0, 15]
+          autoPanPadding: [50, 50],
+          maxHeight: 300
         });
         marker.addTo(map);
       }
@@ -159,5 +142,5 @@ export const GovernorateMap = ({ governorates, events }: GovernorateMapProps) =>
     };
   }, [governorates, events]);
 
-  return <div ref={mapContainerRef} style={{ width: '100%', height: '600px', position: 'relative', zIndex: 1 }} />;
+  return <div ref={mapContainerRef} style={{ width: '100%', height: '600px' }} />;
 };
