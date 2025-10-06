@@ -35,7 +35,7 @@ const AccesAuxDroitsSection = () => {
         {/* Bottom Section - Quick Access Cards (aligned like Observatoire) */}
         <div className="w-full max-w-sm sm:max-w-md">
           <div className="grid grid-cols-2 gap-6 sm:gap-8">
-            <Link to="/acces-aux-droits/faq-chatbot" className="block">
+            <Link to="/acces-aux-droits/foire-aux-questions" className="block">
               <Card className="bg-white/90 backdrop-blur-sm rounded-lg shadow-lg border-0 h-28 sm:h-32 hover:shadow-xl transition-shadow cursor-pointer">
                 <CardContent className="p-4 sm:p-6 h-full">
                   <div className="flex flex-col items-center justify-center text-center h-full space-y-3">

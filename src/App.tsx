@@ -30,7 +30,8 @@ import InformationLayout from "./layouts/InformationLayout";
 import QuiSommesNous from "./pages/QuiSommesNous";
 import InformationActualites from "./pages/InformationActualites";
 import FAQChatbot from "./pages/FAQChatbot";
-import FAQChatbotAccesDroits from "./pages/FAQChatbotAccesDroits";
+import FoireAuxQuestions from "./pages/FoireAuxQuestions";
+import AssistantVirtuel from "./pages/AssistantVirtuel";
 import AdminSelector from "./pages/admin/AdminSelector";
 import AdminObservatoire from "./pages/admin/AdminObservatoire";
 import AdminAccesAuxDroits from "./pages/admin/AdminAccesAuxDroits";
@@ -79,7 +80,8 @@ const App = () => (
             <Route path="/acces-aux-droits/mediatheque" element={<Mediatheque />} />
             <Route path="/acces-aux-droits/albums-photos" element={<AlbumsPhotos />} />
             <Route path="/acces-aux-droits/actualites" element={<ActualitesAccesDroits />} />
-            <Route path="/acces-aux-droits/faq-chatbot" element={<FAQChatbotAccesDroits />} />
+            <Route path="/acces-aux-droits/foire-aux-questions" element={<FoireAuxQuestions />} />
+            <Route path="/acces-aux-droits/assistant-virtuel" element={<AssistantVirtuel />} />
             <Route path="/acces-aux-droits/ressources-pratiques" element={<RessourcesPratiques />} />
             <Route path="/acces-aux-droits/liens-utiles" element={<LiensUtiles />} />
             <Route path="/acces-aux-droits/guides-pratiques" element={<GuidesPratiques />} />
