@@ -250,6 +250,34 @@ All colors MUST be HSL.
   scrollbar-color: hsl(var(--primary) / 0.2) transparent;
 }
 
+/* Custom thin light blue scrollbar for events */
+.scrollbar-events::-webkit-scrollbar {
+  width: 4px;
+}
+
+.scrollbar-events::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.scrollbar-events::-webkit-scrollbar-thumb {
+  background: hsl(var(--justclic-blue) / 0.12);
+  border-radius: 3px;
+}
+
+.scrollbar-events::-webkit-scrollbar-thumb:hover {
+  background: hsl(var(--justclic-blue) / 0.25);
+}
+
+.scrollbar-events::-webkit-scrollbar-button {
+  display: none;
+}
+
+/* Firefox */
+.scrollbar-events {
+  scrollbar-width: thin;
+  scrollbar-color: hsl(var(--justclic-blue) / 0.12) transparent;
+}
+
 /* Leaflet Custom Styles */
 .custom-marker {
   background: transparent !important;
