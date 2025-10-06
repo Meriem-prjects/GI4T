@@ -24,7 +24,7 @@ const AccesAuxDroitsSection = () => {
 
         {/* Center Section - Primary CTA (matches Observatoire) */}
         <div className="w-full max-w-sm sm:max-w-md my-8 sm:my-12">
-          <Link to="/carte-interactive">
+          <Link to="/acces-aux-droits/carte-interactive">
             <Button className="w-full h-14 sm:h-16 bg-accent text-accent-foreground rounded-xl shadow-lg border-0 flex items-center justify-center gap-3">
               <Map className="w-5 h-5 sm:w-6 sm:h-6" />
               <span className="font-semibold text-base sm:text-lg">Carte interactive</span>
@@ -35,7 +35,7 @@ const AccesAuxDroitsSection = () => {
         {/* Bottom Section - Quick Access Cards (aligned like Observatoire) */}
         <div className="w-full max-w-sm sm:max-w-md">
           <div className="grid grid-cols-2 gap-6 sm:gap-8">
-            <Link to="/faq-chatbot" className="block">
+            <Link to="/acces-aux-droits/faq-chatbot" className="block">
               <Card className="bg-white/90 backdrop-blur-sm rounded-lg shadow-lg border-0 h-28 sm:h-32 hover:shadow-xl transition-shadow cursor-pointer">
                 <CardContent className="p-4 sm:p-6 h-full">
                   <div className="flex flex-col items-center justify-center text-center h-full space-y-3">
@@ -43,14 +43,15 @@ const AccesAuxDroitsSection = () => {
                       <MessageCircle className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
                     </div>
                     <div>
-                      <h3 className="font-semibold text-sm sm:text-base text-card-foreground">FAQ & Chat</h3>
+                      <h3 className="font-semibold text-sm sm:text-base text-card-foreground">FAQ</h3>
+                      <p className="text-xs sm:text-sm text-muted-foreground">& Chat</p>
                     </div>
                   </div>
                 </CardContent>
               </Card>
             </Link>
 
-            <Link to="/mediatheque" className="block">
+            <Link to="/acces-aux-droits/mediatheque" className="block">
               <Card className="bg-white/90 backdrop-blur-sm rounded-lg shadow-lg border-0 h-28 sm:h-32 hover:shadow-xl transition-shadow cursor-pointer">
                 <CardContent className="p-4 sm:p-6 h-full">
                   <div className="flex flex-col items-center justify-center text-center h-full space-y-3">
