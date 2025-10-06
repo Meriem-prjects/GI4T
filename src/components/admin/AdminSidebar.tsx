@@ -158,7 +158,8 @@ const AdminSidebar = ({ type, isCollapsed = false, onToggle }: AdminSidebarProps
       isOpen: faqChatOpen,
       setIsOpen: setFaqChatOpen,
       items: [
-        { title: "Configuration", href: `${basePath}/faq-chatbot`, icon: HelpCircle, description: "Personnaliser l'assistant" }
+        { title: "Configuration", href: `${basePath}/faq-chatbot`, icon: Settings, description: "Personnaliser l'assistant" },
+        { title: "Questions FAQ", href: `${basePath}/faq-chatbot?tab=faq`, icon: HelpCircle, description: "Gérer les questions" }
       ]
     },
     {

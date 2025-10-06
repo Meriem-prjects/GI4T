@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
+import { useLocation } from "react-router-dom";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -39,6 +40,7 @@ interface TrainingDocument {
 }
 
 const AdminChatbotConfig = () => {
+  const location = useLocation();
   const [config, setConfig] = useState<ChatbotConfig | null>(null);
   const [trainingDocs, setTrainingDocs] = useState<TrainingDocument[]>([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -52,6 +54,11 @@ const AdminChatbotConfig = () => {
   const createFAQ = useCreateFAQItem();
   const updateFAQ = useUpdateFAQItem();
   const deleteFAQ = useDeleteFAQItem();
+
+  // Get active tab from URL params
+  const searchParams = new URLSearchParams(location.search);
+  const tabParam = searchParams.get('tab');
+  const [activeTab, setActiveTab] = useState(tabParam || "config");
 
   useEffect(() => {
     loadConfig();
@@ -271,7 +278,7 @@ const AdminChatbotConfig = () => {
         <p className="text-muted-foreground">Personnalisez l'assistant virtuel et gérez les documents d'apprentissage</p>
       </div>
 
-      <Tabs defaultValue="config" className="w-full">
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
         <TabsList>
           <TabsTrigger value="config">
             <Settings className="h-4 w-4 mr-2" />
