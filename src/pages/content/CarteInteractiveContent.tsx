@@ -117,8 +117,11 @@ const CarteInteractiveContent = () => {
                       <div className="flex items-start justify-between gap-2">
                         <h3 className="font-semibold text-lg flex-1">{event.title}</h3>
                         <Badge 
-                          variant={event.type === 'action_realisee' ? 'default' : 'secondary'}
-                          className="flex-shrink-0"
+                          className={`flex-shrink-0 ${
+                            event.type === 'action_realisee' 
+                              ? 'bg-green-600 text-white hover:bg-green-700' 
+                              : 'bg-blue-600 text-white hover:bg-blue-700'
+                          }`}
                         >
                           {event.type === 'action_realisee' ? 'Réalisée' : 'À venir'}
                         </Badge>
