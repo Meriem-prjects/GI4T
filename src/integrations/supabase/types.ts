@@ -594,6 +594,48 @@ export type Database = {
           },
         ]
       }
+      faq_items: {
+        Row: {
+          answer: string
+          answer_ar: string | null
+          category: string
+          category_ar: string | null
+          created_at: string
+          display_order: number
+          id: string
+          is_active: boolean
+          question: string
+          question_ar: string | null
+          updated_at: string
+        }
+        Insert: {
+          answer: string
+          answer_ar?: string | null
+          category: string
+          category_ar?: string | null
+          created_at?: string
+          display_order?: number
+          id?: string
+          is_active?: boolean
+          question: string
+          question_ar?: string | null
+          updated_at?: string
+        }
+        Update: {
+          answer?: string
+          answer_ar?: string | null
+          category?: string
+          category_ar?: string | null
+          created_at?: string
+          display_order?: number
+          id?: string
+          is_active?: boolean
+          question?: string
+          question_ar?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       governorates: {
         Row: {
           area_km2: number | null

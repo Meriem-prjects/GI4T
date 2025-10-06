@@ -1,77 +1,52 @@
+import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
-import { Search, HelpCircle, FileText, Scale, Users } from "lucide-react";
+import { Search, HelpCircle } from "lucide-react";
+import { useFAQItems } from "@/hooks/useFAQItems";
 
 const FoireAuxQuestions = () => {
-  const faqCategories = [
-    {
-      title: "Droit du travail",
-      icon: Users,
-      count: 15,
-      questions: [
-        {
-          question: "Comment démissionner légalement ?",
-          answer: "Pour démissionner légalement en Tunisie, vous devez respecter le préavis prévu dans votre contrat de travail ou la convention collective. Remettez une lettre de démission écrite à votre employeur mentionnant la date de fin de votre contrat."
-        },
-        {
-          question: "Quels sont mes droits en cas de licenciement ?",
-          answer: "En cas de licenciement, vous avez droit à un préavis, une indemnité de licenciement selon votre ancienneté, le solde de tout compte, et éventuellement une indemnité compensatrice de congés payés non pris."
-        },
-        {
-          question: "Comment obtenir un certificat de travail ?",
-          answer: "L'employeur est légalement obligé de vous remettre un certificat de travail à la fin de votre contrat. Ce document doit mentionner la date d'embauche, la date de fin, et le poste occupé."
-        }
-      ]
-    },
-    {
-      title: "État civil",
-      icon: FileText,
-      count: 12,
-      questions: [
-        {
-          question: "Comment obtenir un acte de naissance ?",
-          answer: "Vous pouvez obtenir un acte de naissance en vous rendant à l'état civil de votre commune de naissance, en ligne via le portail e-gouvernement, ou en mandatant une personne avec procuration."
-        },
-        {
-          question: "Quelles pièces pour changer de nom ?",
-          answer: "Pour changer de nom, vous devez déposer une demande au tribunal de première instance avec votre acte de naissance, un certificat de résidence, et justifier des motifs légitimes du changement."
-        },
-        {
-          question: "Comment rectifier une erreur sur un acte d'état civil ?",
-          answer: "La rectification d'une erreur matérielle se fait par requête auprès du procureur de la République. Pour les erreurs de fond, une procédure judiciaire devant le tribunal est nécessaire."
-        }
-      ]
-    },
-    {
-      title: "Droit au logement",
-      icon: Scale,
-      count: 18,
-      questions: [
-        {
-          question: "Comment contester une expulsion ?",
-          answer: "Pour contester une expulsion, vous devez saisir le tribunal compétent dans les délais légaux avec l'assistance d'un avocat. Vous pouvez également demander des délais de grâce si votre situation le justifie."
-        },
-        {
-          question: "Quels sont mes droits de locataire ?",
-          answer: "Vos droits incluent : jouissance paisible du logement, protection contre les augmentations abusives, droit au renouvellement du bail, et obligation du propriétaire d'effectuer les grosses réparations."
-        },
-        {
-          question: "Comment déposer un dossier de logement social ?",
-          answer: "Le dépôt se fait auprès de la municipalité ou de l'organisme gestionnaire (SPROLS). Vous devez fournir : pièce d'identité, justificatif de revenus, certificat de résidence, et composition familiale."
-        }
-      ]
-    }
-  ];
+  const [searchQuery, setSearchQuery] = useState("");
+  const { data: faqItems, isLoading } = useFAQItems(true);
 
-  const popularQuestions = [
-    "Comment porter plainte ?",
-    "Obtenir un casier judiciaire",
-    "Droits lors d'un contrôle police",
-    "Procédure de divorce",
-    "Pension alimentaire"
-  ];
+  // Group FAQ items by category
+  const groupedFAQs = faqItems?.reduce((acc, item) => {
+    const category = item.category;
+    if (!acc[category]) {
+      acc[category] = {
+        title: item.category,
+        title_ar: item.category_ar,
+        count: 0,
+        questions: []
+      };
+    }
+    acc[category].count++;
+    acc[category].questions.push(item);
+    return acc;
+  }, {} as Record<string, {
+    title: string;
+    title_ar: string | null;
+    count: number;
+    questions: typeof faqItems;
+  }>);
+
+  // Filter FAQs based on search query
+  const filteredFAQs = searchQuery
+    ? Object.entries(groupedFAQs || {}).reduce((acc, [key, category]) => {
+        const filteredQuestions = category.questions.filter(
+          (q) =>
+            q.question.toLowerCase().includes(searchQuery.toLowerCase()) ||
+            q.answer.toLowerCase().includes(searchQuery.toLowerCase()) ||
+            (q.question_ar && q.question_ar.includes(searchQuery)) ||
+            (q.answer_ar && q.answer_ar.includes(searchQuery))
+        );
+        if (filteredQuestions.length > 0) {
+          acc[key] = { ...category, questions: filteredQuestions, count: filteredQuestions.length };
+        }
+        return acc;
+      }, {} as typeof groupedFAQs)
+    : groupedFAQs;
 
   return (
     <div className="min-h-screen bg-background">
@@ -98,35 +73,34 @@ const FoireAuxQuestions = () => {
             <Input 
               placeholder="Rechercher dans la FAQ..." 
               className="pl-12 h-14 text-base"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
             />
-          </div>
-        </div>
-
-        {/* Popular Questions */}
-        <div className="mb-12 max-w-3xl mx-auto">
-          <h3 className="font-semibold text-lg mb-4">Questions populaires</h3>
-          <div className="flex flex-wrap gap-2">
-            {popularQuestions.map((question, index) => (
-              <Badge 
-                key={index} 
-                variant="outline" 
-                className="cursor-pointer hover:bg-primary hover:text-primary-foreground transition-colors py-2 px-4"
-              >
-                {question}
-              </Badge>
-            ))}
           </div>
         </div>
 
         {/* FAQ Categories */}
         <div className="max-w-4xl mx-auto space-y-6">
-          {faqCategories.map((category, index) => {
-            const Icon = category.icon;
-            return (
-              <Card key={index} className="hover:shadow-lg transition-shadow">
+          {isLoading ? (
+            <Card>
+              <CardContent className="py-12">
+                <p className="text-center text-muted-foreground">Chargement des questions...</p>
+              </CardContent>
+            </Card>
+          ) : !filteredFAQs || Object.keys(filteredFAQs).length === 0 ? (
+            <Card>
+              <CardContent className="py-12">
+                <p className="text-center text-muted-foreground">
+                  {searchQuery ? "Aucune question ne correspond à votre recherche" : "Aucune question disponible"}
+                </p>
+              </CardContent>
+            </Card>
+          ) : (
+            Object.entries(filteredFAQs).map(([categoryKey, category]) => (
+              <Card key={categoryKey} className="hover:shadow-lg transition-shadow">
                 <CardHeader>
                   <div className="flex items-center gap-3">
-                    <Icon className="h-6 w-6 text-primary" />
+                    <HelpCircle className="h-6 w-6 text-primary" />
                     <div className="flex-1">
                       <CardTitle className="flex items-center justify-between">
                         {category.title}
@@ -138,7 +112,7 @@ const FoireAuxQuestions = () => {
                 <CardContent>
                   <Accordion type="single" collapsible>
                     {category.questions.map((faq, faqIndex) => (
-                      <AccordionItem key={faqIndex} value={`item-${index}-${faqIndex}`}>
+                      <AccordionItem key={faq.id} value={`item-${categoryKey}-${faqIndex}`}>
                         <AccordionTrigger className="text-left hover:text-primary">
                           {faq.question}
                         </AccordionTrigger>
@@ -150,8 +124,8 @@ const FoireAuxQuestions = () => {
                   </Accordion>
                 </CardContent>
               </Card>
-            );
-          })}
+            ))
+          )}
         </div>
       </div>
     </div>

@@ -9,9 +9,12 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { Upload, Trash2, FileText, Settings, BookOpen } from "lucide-react";
+import { Upload, Trash2, FileText, Settings, BookOpen, HelpCircle, Plus, Edit2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import { useToast } from "@/components/ui/use-toast";
+import { useToast } from "@/hooks/use-toast";
+import { useFAQItems, useCreateFAQItem, useUpdateFAQItem, useDeleteFAQItem, FAQItem } from "@/hooks/useFAQItems";
+import { FAQItemForm } from "@/components/admin/FAQItemForm";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 
 interface ChatbotConfig {
   id: string;
@@ -40,8 +43,15 @@ const AdminChatbotConfig = () => {
   const [trainingDocs, setTrainingDocs] = useState<TrainingDocument[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [uploadingDoc, setUploadingDoc] = useState(false);
+  const [editingFAQ, setEditingFAQ] = useState<FAQItem | null>(null);
+  const [showFAQForm, setShowFAQForm] = useState(false);
   const { toast } = useToast();
   const { register, handleSubmit, reset, setValue } = useForm();
+  
+  const { data: faqItems, isLoading: loadingFAQ } = useFAQItems(false);
+  const createFAQ = useCreateFAQItem();
+  const updateFAQ = useUpdateFAQItem();
+  const deleteFAQ = useDeleteFAQItem();
 
   useEffect(() => {
     loadConfig();
@@ -224,6 +234,36 @@ const AdminChatbotConfig = () => {
     }
   };
 
+  const handleFAQSubmit = (data: Omit<FAQItem, 'id' | 'created_at' | 'updated_at'>) => {
+    if (editingFAQ) {
+      updateFAQ.mutate({ id: editingFAQ.id, ...data });
+    } else {
+      createFAQ.mutate(data);
+    }
+    setShowFAQForm(false);
+    setEditingFAQ(null);
+  };
+
+  const handleEditFAQ = (item: FAQItem) => {
+    setEditingFAQ(item);
+    setShowFAQForm(true);
+  };
+
+  const handleCancelFAQ = () => {
+    setShowFAQForm(false);
+    setEditingFAQ(null);
+  };
+
+  // Group FAQ items by category
+  const groupedFAQs = faqItems?.reduce((acc, item) => {
+    const category = item.category;
+    if (!acc[category]) {
+      acc[category] = [];
+    }
+    acc[category].push(item);
+    return acc;
+  }, {} as Record<string, FAQItem[]>);
+
   return (
     <div className="space-y-6">
       <div>
@@ -240,6 +280,10 @@ const AdminChatbotConfig = () => {
           <TabsTrigger value="training">
             <BookOpen className="h-4 w-4 mr-2" />
             Documents d'apprentissage
+          </TabsTrigger>
+          <TabsTrigger value="faq">
+            <HelpCircle className="h-4 w-4 mr-2" />
+            Questions FAQ
           </TabsTrigger>
         </TabsList>
 
@@ -446,6 +490,102 @@ const AdminChatbotConfig = () => {
               </Table>
             </CardContent>
           </Card>
+        </TabsContent>
+
+        <TabsContent value="faq" className="space-y-6">
+          <div className="flex justify-between items-center">
+            <div>
+              <h3 className="text-lg font-semibold">Gestion des questions FAQ</h3>
+              <p className="text-sm text-muted-foreground">
+                Ajoutez et gérez les questions fréquentes affichées dans la section publique
+              </p>
+            </div>
+            <Button onClick={() => setShowFAQForm(true)} className="flex items-center gap-2">
+              <Plus className="h-4 w-4" />
+              Nouvelle question
+            </Button>
+          </div>
+
+          {showFAQForm && (
+            <FAQItemForm
+              item={editingFAQ || undefined}
+              onSubmit={handleFAQSubmit}
+              onCancel={handleCancelFAQ}
+            />
+          )}
+
+          {loadingFAQ ? (
+            <Card>
+              <CardContent className="py-8">
+                <p className="text-center text-muted-foreground">Chargement...</p>
+              </CardContent>
+            </Card>
+          ) : (
+            <div className="space-y-6">
+              {groupedFAQs && Object.entries(groupedFAQs).map(([category, items]) => (
+                <Card key={category}>
+                  <CardHeader>
+                    <div className="flex items-center justify-between">
+                      <CardTitle className="text-lg">{category}</CardTitle>
+                      <Badge variant="secondary">{items.length} question(s)</Badge>
+                    </div>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    {items.map((item) => (
+                      <div key={item.id} className="border rounded-lg p-4 space-y-2">
+                        <div className="flex items-start justify-between gap-4">
+                          <div className="flex-1 space-y-2">
+                            <div className="flex items-center gap-2">
+                              <h4 className="font-semibold">{item.question}</h4>
+                              {!item.is_active && <Badge variant="outline">Inactive</Badge>}
+                            </div>
+                            {item.question_ar && (
+                              <p className="text-sm text-muted-foreground" dir="rtl">{item.question_ar}</p>
+                            )}
+                            <p className="text-sm text-muted-foreground">{item.answer}</p>
+                            {item.answer_ar && (
+                              <p className="text-sm text-muted-foreground" dir="rtl">{item.answer_ar}</p>
+                            )}
+                            <p className="text-xs text-muted-foreground">Ordre: {item.display_order}</p>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <Button
+                              variant="outline"
+                              size="icon"
+                              onClick={() => handleEditFAQ(item)}
+                            >
+                              <Edit2 className="h-4 w-4" />
+                            </Button>
+                            <AlertDialog>
+                              <AlertDialogTrigger asChild>
+                                <Button variant="outline" size="icon">
+                                  <Trash2 className="h-4 w-4" />
+                                </Button>
+                              </AlertDialogTrigger>
+                              <AlertDialogContent>
+                                <AlertDialogHeader>
+                                  <AlertDialogTitle>Confirmer la suppression</AlertDialogTitle>
+                                  <AlertDialogDescription>
+                                    Êtes-vous sûr de vouloir supprimer cette question ? Cette action est irréversible.
+                                  </AlertDialogDescription>
+                                </AlertDialogHeader>
+                                <AlertDialogFooter>
+                                  <AlertDialogCancel>Annuler</AlertDialogCancel>
+                                  <AlertDialogAction onClick={() => deleteFAQ.mutate(item.id)}>
+                                    Supprimer
+                                  </AlertDialogAction>
+                                </AlertDialogFooter>
+                              </AlertDialogContent>
+                            </AlertDialog>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          )}
         </TabsContent>
       </Tabs>
     </div>
