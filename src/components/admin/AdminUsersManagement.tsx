@@ -34,22 +34,30 @@ const AdminUsersManagement = () => {
   const { data: users, isLoading } = useQuery({
     queryKey: ["admin-users"],
     queryFn: async () => {
+      // First, get user_roles for observatoire roles only
+      const { data: userRoles, error: rolesError } = await supabase
+        .from("user_roles")
+        .select("user_id, role")
+        .in("role", ["admin", "admin_observatoire"]);
+
+      if (rolesError) throw rolesError;
+      if (!userRoles || userRoles.length === 0) return [];
+
+      // Get unique user IDs
+      const userIds = [...new Set(userRoles.map(ur => ur.user_id))];
+
+      // Fetch profiles for these users only
       const { data: profiles, error: profilesError } = await supabase
         .from("profiles")
         .select("*")
+        .in("user_id", userIds)
         .order("created_at", { ascending: false });
 
       if (profilesError) throw profilesError;
 
-      const { data: roles, error: rolesError } = await supabase
-        .from("user_roles")
-        .select("user_id, role");
-
-      if (rolesError) throw rolesError;
-
       const usersWithRoles = profiles?.map(profile => ({
         ...profile,
-        roles: roles?.filter(r => r.user_id === profile.user_id).map(r => r.role) || []
+        roles: userRoles?.filter(r => r.user_id === profile.user_id).map(r => r.role) || []
       })) || [];
 
       return usersWithRoles as UserProfile[];
