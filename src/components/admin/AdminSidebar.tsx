@@ -81,12 +81,6 @@ const AdminSidebar = ({ type, isCollapsed = false, onToggle }: AdminSidebarProps
       description: "Édition de documents"
     },
     {
-      title: "PDF/A Optimizer",
-      icon: FileText,
-      href: `${basePath}/pdfa-optimizer`,
-      description: "Optimisation PDF/A"
-    },
-    {
       title: "Validation",
       icon: FileText,
       href: `${basePath}/validation`,
