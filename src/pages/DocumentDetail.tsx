@@ -381,7 +381,7 @@ const DocumentDetail = () => {
                     <div className={`flex items-center gap-3 ${isArabicContent ? 'justify-start flex-row-reverse' : 'justify-center md:justify-start'}`}>
                       <Scale className="w-5 h-5 text-muted-foreground" />
                       <span className="font-medium">{isArabicContent ? 'فئة الحق الأساسي:' : 'Catégorie de droit fondamental:'}</span>
-                      <Badge variant="secondary" style={{ backgroundColor: category.color + '20', color: category.color }}>
+                      <Badge className="font-normal" style={{ backgroundColor: category.color, color: '#ffffff' }}>
                         {isArabicContent && category.name_ar ? category.name_ar : category.name}
                       </Badge>
                     </div>
