@@ -35,7 +35,7 @@ const CarteInteractiveContent = () => {
         </div>
 
         {/* Layout: Events List + Map */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-[30%_70%] gap-6">
           {/* Left Side - Events List */}
           <div className="space-y-4 overflow-y-auto max-h-[700px] pr-2">
             <div className="flex items-center justify-between mb-4 sticky top-0 bg-background z-10 py-2">
