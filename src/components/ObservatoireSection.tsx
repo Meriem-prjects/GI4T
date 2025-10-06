@@ -18,7 +18,7 @@ const ObservatoireSection = () => {
   };
 
   return (
-    <div className="w-full h-1/2 md:w-1/2 md:h-full bg-gradient-to-b md:bg-gradient-to-r from-blue-50 to-blue-100 flex flex-col relative">
+    <div className="w-full h-1/2 md:w-1/2 md:h-full bg-gradient-to-b md:bg-gradient-to-r from-[hsl(224,76%,58%)] to-[hsl(224,76%,68%)] flex flex-col relative">
       <div className="flex flex-col items-center justify-between px-4 sm:px-8 py-12 sm:py-16 h-full">
         {/* Header Section - Logo & Title */}
         <div className="flex flex-col items-center space-y-6 sm:space-y-8">
@@ -30,7 +30,7 @@ const ObservatoireSection = () => {
             />
           </div>
           
-          <h2 className="text-primary text-xl sm:text-2xl md:text-3xl font-spartan font-bold text-center max-w-md leading-tight">
+          <h2 className="text-white text-xl sm:text-2xl md:text-3xl font-spartan font-bold text-center max-w-md leading-tight">
             Observatoire des Droits
           </h2>
         </div>
