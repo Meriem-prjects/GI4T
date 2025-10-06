@@ -693,6 +693,74 @@ export type Database = {
         }
         Relationships: []
       }
+      useful_addresses: {
+        Row: {
+          address: string
+          address_ar: string
+          category: string
+          category_ar: string
+          created_at: string
+          email: string | null
+          governorate_id: string | null
+          hours: string | null
+          hours_ar: string | null
+          id: string
+          is_published: boolean | null
+          latitude: number | null
+          longitude: number | null
+          name: string
+          name_ar: string
+          phone: string
+          updated_at: string
+        }
+        Insert: {
+          address: string
+          address_ar: string
+          category?: string
+          category_ar?: string
+          created_at?: string
+          email?: string | null
+          governorate_id?: string | null
+          hours?: string | null
+          hours_ar?: string | null
+          id?: string
+          is_published?: boolean | null
+          latitude?: number | null
+          longitude?: number | null
+          name: string
+          name_ar: string
+          phone: string
+          updated_at?: string
+        }
+        Update: {
+          address?: string
+          address_ar?: string
+          category?: string
+          category_ar?: string
+          created_at?: string
+          email?: string | null
+          governorate_id?: string | null
+          hours?: string | null
+          hours_ar?: string | null
+          id?: string
+          is_published?: boolean | null
+          latitude?: number | null
+          longitude?: number | null
+          name?: string
+          name_ar?: string
+          phone?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "useful_addresses_governorate_id_fkey"
+            columns: ["governorate_id"]
+            isOneToOne: false
+            referencedRelation: "governorates"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_roles: {
         Row: {
           created_at: string

@@ -4,6 +4,7 @@ import AdminSidebar from "@/components/admin/AdminSidebar";
 import AdminDashboard from "@/components/admin/AdminDashboard";
 import AdminCarteInteractive from "./AdminCarteInteractive";
 import AdminAccesDroitsUsersManagement from "./AdminAccesDroitsUsersManagement";
+import AdminAdressesUtiles from "./AdminAdressesUtiles";
 import { cn } from "@/lib/utils";
 
 const AdminAccesAuxDroits = () => {
@@ -49,7 +50,7 @@ const AdminAccesAuxDroits = () => {
             
             {/* Carte interactive */}
             <Route path="carte-interactive" element={<AdminCarteInteractive />} />
-            <Route path="adresses-utiles" element={<div className="p-6">Adresses utiles - Organismes et contacts - En développement</div>} />
+            <Route path="adresses-utiles" element={<AdminAdressesUtiles />} />
           </Routes>
         </div>
       </main>
