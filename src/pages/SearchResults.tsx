@@ -45,7 +45,7 @@ const SearchResults = () => {
 
   // Get search query from URL params on component mount
   useEffect(() => {
-    const queryFromUrl = searchParams.get('q');
+    const queryFromUrl = searchParams.get('query') || searchParams.get('q');
     if (queryFromUrl) {
       setSearchQuery(decodeURIComponent(queryFromUrl));
     }
