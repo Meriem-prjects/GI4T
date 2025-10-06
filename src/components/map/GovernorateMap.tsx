@@ -57,60 +57,57 @@ export const GovernorateMap = ({ governorates, events }: GovernorateMapProps) =>
         const markerIcon = L.divIcon({
           className: 'custom-event-marker',
           html: `
-            <div style="position: relative; width: 50px; height: 60px;">
-              <!-- Main pin body with image -->
+            <div style="position: relative; width: 50px; height: 65px; display: flex; flex-direction: column; align-items: center;">
+              <!-- Square container with image -->
               <div style="
-                position: absolute;
-                top: 0;
-                left: 50%;
-                transform: translateX(-50%);
-                width: 45px;
-                height: 45px;
+                width: 50px;
+                height: 50px;
                 border: 3px solid ${markerColor};
-                border-radius: 50% 50% 50% 0;
+                border-radius: 8px;
                 box-shadow: 0 3px 10px rgba(0,0,0,0.4);
                 overflow: hidden;
                 cursor: pointer;
                 background-color: white;
-                transform: translateX(-50%) rotate(-45deg);
               ">
-                <div style="
-                  width: 100%;
-                  height: 100%;
-                  transform: rotate(45deg);
-                  overflow: hidden;
-                ">
-                  ${imageUrl ? `
-                    <img 
-                      src="${imageUrl}" 
-                      alt="${event.title}"
-                      style="
-                        width: 100%;
-                        height: 100%;
-                        object-fit: cover;
-                      "
-                      onerror="this.style.display='none'; this.parentElement.innerHTML='<div style=\\'display:flex;align-items:center;justify-content:center;height:100%;color:${markerColor};\\\'><svg width=\\'20\\' height=\\'20\\' viewBox=\\'0 0 24 24\\' fill=\\'currentColor\\'><path d=\\'M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z\\'/></svg></div>';"
-                    />
-                  ` : `
-                    <div style="
-                      display: flex;
-                      align-items: center;
-                      justify-content: center;
+                ${imageUrl ? `
+                  <img 
+                    src="${imageUrl}" 
+                    alt="${event.title}"
+                    style="
+                      width: 100%;
                       height: 100%;
-                      color: ${markerColor};
-                    ">
-                      <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
-                        <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/>
-                      </svg>
-                    </div>
-                  `}
-                </div>
+                      object-fit: cover;
+                    "
+                    onerror="this.style.display='none'; this.parentElement.innerHTML='<div style=\\'display:flex;align-items:center;justify-content:center;height:100%;color:${markerColor};\\\'><svg width=\\'24\\' height=\\'24\\' viewBox=\\'0 0 24 24\\' fill=\\'currentColor\\'><path d=\\'M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z\\'/></svg></div>';"
+                  />
+                ` : `
+                  <div style="
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    height: 100%;
+                    color: ${markerColor};
+                  ">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+                      <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/>
+                    </svg>
+                  </div>
+                `}
               </div>
+              <!-- Triangle pointer -->
+              <div style="
+                width: 0;
+                height: 0;
+                border-left: 8px solid transparent;
+                border-right: 8px solid transparent;
+                border-top: 12px solid ${markerColor};
+                margin-top: -1px;
+              "></div>
             </div>
           `,
-          iconSize: [50, 60],
-          iconAnchor: [25, 55],
-          popupAnchor: [0, -55]
+          iconSize: [50, 65],
+          iconAnchor: [25, 65],
+          popupAnchor: [0, -68]
         });
 
         const marker = L.marker([event.latitude, event.longitude], {
