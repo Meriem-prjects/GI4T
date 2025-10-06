@@ -103,7 +103,7 @@ export const GovernorateMap = ({ governorates, events }: GovernorateMapProps) =>
         });
 
         const popupContent = `
-          <div style="min-width: 220px; max-width: 300px;">
+          <div style="width: 300px;">
             ${imageUrl ? `
               <div style="margin-bottom: 10px; border-radius: 6px; overflow: hidden;">
                 <img 
