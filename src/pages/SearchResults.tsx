@@ -1,8 +1,6 @@
 import { useState, useEffect, useRef } from "react";
-import { Link, useSearchParams, useNavigate } from "react-router-dom";
-import { Filter, Grid3X3, List, Loader2, Sparkles, ChevronDown, ChevronUp } from "lucide-react";
-import { SearchAutocomplete } from "@/components/SearchAutocomplete";
-import { useTypingPlaceholder } from "@/hooks/useTypingPlaceholder";
+import { Link, useSearchParams } from "react-router-dom";
+import { Search, Filter, Grid3X3, List, Loader2, Sparkles, ChevronDown, ChevronUp } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -22,9 +20,6 @@ import { format } from "date-fns";
 
 const SearchResults = () => {
   const [searchParams, setSearchParams] = useSearchParams();
-  const navigate = useNavigate();
-  const [language] = useState<'fr' | 'ar'>('fr');
-  const animatedPlaceholder = useTypingPlaceholder(language);
   
   // Fetch filter options first to get year range
   const { categories, courtTypes, jurisdictionLevels, documentTypes, yearRange, isLoading: filtersLoading } = useSearchFilters();
@@ -50,7 +45,7 @@ const SearchResults = () => {
 
   // Get search query from URL params on component mount
   useEffect(() => {
-    const queryFromUrl = searchParams.get('query') || searchParams.get('q');
+    const queryFromUrl = searchParams.get('q');
     if (queryFromUrl) {
       setSearchQuery(decodeURIComponent(queryFromUrl));
     }
@@ -110,11 +105,6 @@ const SearchResults = () => {
         ? prev.filter(id => id !== categoryId)
         : [...prev, categoryId]
     );
-    setCurrentPage(1);
-  };
-
-  // Handle search execution
-  const handleSearch = () => {
     setCurrentPage(1);
   };
 
@@ -255,13 +245,26 @@ const SearchResults = () => {
 
       {/* Search Bar */}
       <div ref={searchBarRef} className="max-w-4xl mx-auto mb-6">
-        <SearchAutocomplete
-          value={searchQuery}
-          onChange={setSearchQuery}
-          onSearch={handleSearch}
-          placeholder={useAI ? "Recherche intelligente avec IA... Posez votre question en langage naturel" : (animatedPlaceholder || "Rechercher des documents...")}
-          language={language}
-        />
+        <div className="relative">
+          <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-muted-foreground" size={20} />
+          <Input
+            placeholder={useAI ? "Recherche intelligente avec IA... Posez votre question en langage naturel" : "Rechercher des documents..."}
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') {
+                setCurrentPage(1);
+              }
+            }}
+            className="pl-12 pr-32 py-4 text-base bg-background rounded-lg border"
+          />
+          <Button 
+            className="absolute right-2 top-1/2 transform -translate-y-1/2 px-6"
+            onClick={() => setCurrentPage(1)}
+          >
+            Rechercher
+          </Button>
+        </div>
         
         {/* AI Toggle */}
         <div className="flex items-center justify-center gap-3 mt-4">
@@ -327,13 +330,20 @@ const SearchResults = () => {
               {showStickySearch && (
                 <div className="pb-4 border-b">
                   <Label className="text-sm font-medium mb-2 block">Recherche</Label>
-                  <SearchAutocomplete
-                    value={searchQuery}
-                    onChange={setSearchQuery}
-                    onSearch={handleSearch}
-                    placeholder={animatedPlaceholder || "Rechercher..."}
-                    language={language}
-                  />
+                  <div className="relative">
+                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground" size={16} />
+                    <Input
+                      placeholder="Rechercher..."
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') {
+                          setCurrentPage(1);
+                        }
+                      }}
+                      className="pl-9 text-sm"
+                    />
+                  </div>
                   <div className="flex items-center gap-2 mt-2">
                     <Switch
                       id="ai-search-sticky"
