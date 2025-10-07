@@ -172,23 +172,11 @@ const CarteInteractiveContent = () => {
           {/* Right Side - Map */}
           <div className="lg:sticky lg:top-4 h-[700px] overflow-visible">
             <Card className="h-full overflow-visible">
-              <CardContent className="p-0 h-full overflow-visible relative">
+              <CardContent className="p-0 h-full overflow-visible">
                 <GovernorateMap 
                   governorates={governorates} 
                   events={filteredEvents}
                 />
-                
-                {/* Legend */}
-                <div className="absolute top-4 right-4 bg-white/95 backdrop-blur-sm rounded-lg shadow-lg p-3 space-y-2 border border-gray-200 z-[1000]">
-                  <div className="flex items-center gap-2">
-                    <div className="w-4 h-4 bg-green-600 rounded"></div>
-                    <span className="text-xs font-medium text-gray-700">Action réalisée</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <div className="w-4 h-4 bg-blue-600 rounded"></div>
-                    <span className="text-xs font-medium text-gray-700">Événement à venir</span>
-                  </div>
-                </div>
               </CardContent>
             </Card>
           </div>
