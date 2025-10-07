@@ -36,9 +36,9 @@ const ObservatoireSection = () => {
         <div className="flex flex-col items-center space-y-6 sm:space-y-8">
           <div className="mb-4 sm:mb-6">
             <img 
-              src="/Feelinx_upload/odf-logo.png" 
+              src="/Feelinx_upload/LogoODF-fra-fondble.png" 
               alt="Observatoire des Droits" 
-              className="h-10 sm:h-14 w-auto object-contain max-w-full"
+              className="h-20 sm:h-24 w-auto object-contain max-w-full"
             />
           </div>
           
