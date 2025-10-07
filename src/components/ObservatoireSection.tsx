@@ -38,7 +38,7 @@ const ObservatoireSection = () => {
             <img 
               src="/Feelinx_upload/LogoODF-fra-fondble.png" 
               alt="Observatoire des Droits" 
-              className="h-10 sm:h-14 w-auto object-contain max-w-full"
+              className="h-16 sm:h-20 w-auto object-contain max-w-full"
             />
           </div>
           
