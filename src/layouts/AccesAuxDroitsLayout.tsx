@@ -35,13 +35,11 @@ const AccesAuxDroitsLayout = () => {
         <div className="container mx-auto px-4 py-2 sm:py-4 relative">
           <div className="flex items-center justify-between flex-wrap gap-4">
             <div className="flex items-center space-x-2 sm:space-x-4">
-              <Link to="/acces-aux-droits" className="flex items-center space-x-2 sm:space-x-4 hover:opacity-80 transition-opacity duration-200">
-                <img src="/Feelinx_upload/logo-acces-aux-droits.png" alt="Accès aux Droits Logo" className="h-6 sm:h-8 md:h-12" />
-                <div>
-                  <h1 className="text-sm sm:text-base md:text-2xl font-bold text-foreground">Accès aux Droits</h1>
-                  <p className="text-xs sm:text-sm text-muted-foreground hidden sm:block">Espace citoyen</p>
-                </div>
-              </Link>
+              <img src="/Feelinx_upload/logo-acces-aux-droits.png" alt="Accès aux Droits Logo" className="h-6 sm:h-8 md:h-12" />
+              <div>
+                <h1 className="text-sm sm:text-base md:text-2xl font-bold text-foreground">Accès aux Droits</h1>
+                <p className="text-xs sm:text-sm text-muted-foreground hidden sm:block">Espace citoyen</p>
+              </div>
             </div>
             
             <nav className="hidden md:flex items-center space-x-6 absolute left-1/2 transform -translate-x-1/2">
@@ -66,9 +64,9 @@ const AccesAuxDroitsLayout = () => {
                 </Button>
               </Link>
               <Button variant="outline" size="sm" className="text-xs sm:text-sm">العربية</Button>
-              <Link to="/observatoire">
-                <Button variant="outline" size="sm" className="text-xs sm:text-sm">
-                  Observatoire
+              <Link to="/">
+                <Button variant="outline" size="sm" className="px-2 sm:px-3">
+                  <img src="/Feelinx_upload/justclic-logo.png" alt="JustClic" className="h-5 sm:h-6" />
                 </Button>
               </Link>
             </div>
@@ -100,8 +98,8 @@ const AccesAuxDroitsLayout = () => {
                   <Link to="/acces-aux-droits/liens-utiles" className="text-base hover:text-primary p-2 rounded-lg hover:bg-muted">Liens utiles</Link>
                   <Link to="/acces-aux-droits/guides-pratiques" className="text-base hover:text-primary p-2 rounded-lg hover:bg-muted">Guides pratiques</Link>
                   <div className="border-t pt-4 mt-4">
-                    <Link to="/observatoire" className="text-base hover:text-primary p-2 rounded-lg hover:bg-muted flex items-center">
-                      <span>→ Observatoire</span>
+                    <Link to="/" className="text-base hover:text-primary p-2 rounded-lg hover:bg-muted flex items-center">
+                      <span>→ Page d'accueil</span>
                     </Link>
                   </div>
                 </nav>

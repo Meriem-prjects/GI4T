@@ -26,8 +26,10 @@ const ObservatoireHeader = () => {
                 </Button>
               </Link>
               <Button variant="outline" size="sm" className="text-xs sm:text-sm">العربية</Button>
-              <Link to="/acces-aux-droits">
-                <Button variant="ghost" size="sm" className="text-xs sm:text-sm">Accès aux Droits</Button>
+              <Link to="/">
+                <Button variant="outline" size="sm" className="px-2 sm:px-3">
+                  <img src="/Feelinx_upload/justclic-logo.png" alt="JustClic" className="h-5 sm:h-6" />
+                </Button>
               </Link>
             </div>
             
@@ -50,8 +52,8 @@ const ObservatoireHeader = () => {
                     <Link to="/observatoire/analyses-opinions" className="text-base hover:text-primary p-2 rounded-lg hover:bg-muted">Analyses & Opinions</Link>
                     <Link to="/observatoire/actualites" className="text-base hover:text-primary p-2 rounded-lg hover:bg-muted">Actualités</Link>
                     <div className="border-t pt-4 mt-4">
-                      <Link to="/acces-aux-droits" className="text-base hover:text-primary p-2 rounded-lg hover:bg-muted flex items-center">
-                        <span>→ Accès aux Droits</span>
+                      <Link to="/" className="text-base hover:text-primary p-2 rounded-lg hover:bg-muted flex items-center">
+                        <span>→ Page d'accueil</span>
                       </Link>
                     </div>
                   </nav>
