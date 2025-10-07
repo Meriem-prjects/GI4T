@@ -18,7 +18,19 @@ const ObservatoireSection = () => {
   };
 
   return (
-    <Link to="/observatoire" className="w-full h-1/2 md:w-1/2 md:h-full bg-gradient-to-b md:bg-gradient-to-r from-[hsl(224,76%,58%)] to-[hsl(224,76%,68%)] flex flex-col relative cursor-pointer hover:brightness-105 transition-all">
+    <div
+      role="link"
+      tabIndex={0}
+      aria-label="Ouvrir l’Observatoire des Droits"
+      onClick={() => navigate('/observatoire')}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          navigate('/observatoire');
+        }
+      }}
+      className="w-full h-1/2 md:w-1/2 md:h-full bg-gradient-to-b md:bg-gradient-to-r from-[hsl(224,76%,58%)] to-[hsl(224,76%,68%)] flex flex-col relative cursor-pointer hover:brightness-105 transition-all"
+    >
       <div className="flex flex-col items-center justify-between px-4 sm:px-8 py-12 sm:py-16 h-full">
         {/* Header Section - Logo & Title */}
         <div className="flex flex-col items-center space-y-6 sm:space-y-8">
@@ -36,16 +48,20 @@ const ObservatoireSection = () => {
         </div>
         
         {/* Center Section - Search */}
-        <div className="w-full max-w-sm sm:max-w-md my-8 sm:my-12 relative z-10" onClick={(e) => e.preventDefault()}>
-          <div onClick={(e) => e.stopPropagation()}>
-            <SearchAutocomplete
-              value={searchQuery}
-              onChange={setSearchQuery}
-              onSearch={handleSearch}
-              placeholder={animatedPlaceholder}
-              language={language}
-            />
-          </div>
+        <div
+          className="w-full max-w-sm sm:max-w-md my-8 sm:my-12 relative z-10"
+          onClick={(e) => e.stopPropagation()}
+          onMouseDown={(e) => e.stopPropagation()}
+          onKeyDown={(e) => e.stopPropagation()}
+          onTouchStart={(e) => e.stopPropagation()}
+        >
+          <SearchAutocomplete
+            value={searchQuery}
+            onChange={setSearchQuery}
+            onSearch={handleSearch}
+            placeholder={animatedPlaceholder}
+            language={language}
+          />
         </div>
 
         {/* Bottom Section - Quick Access */}
@@ -87,7 +103,7 @@ const ObservatoireSection = () => {
           </div>
         </div>
       </div>
-    </Link>
+    </div>
   );
 };
 
