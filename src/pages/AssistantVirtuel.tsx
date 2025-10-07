@@ -224,7 +224,12 @@ const AssistantVirtuel = () => {
                   value={inputMessage}
                   onChange={(e) => setInputMessage(e.target.value)}
                   placeholder="Tapez votre question..."
-                  onKeyPress={(e) => e.key === 'Enter' && !isStreaming && handleSendMessage()}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' && !isStreaming) {
+                      e.preventDefault();
+                      handleSendMessage();
+                    }
+                  }}
                   disabled={isStreaming}
                   className="flex-1 h-12"
                 />
