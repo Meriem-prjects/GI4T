@@ -1,12 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
-import { useLanguage } from "@/hooks/useLanguage";
-import { useTranslation } from "@/hooks/useTranslation";
 
 const HomeHeader = () => {
-  const { language, setLanguage } = useLanguage();
-  const { t } = useTranslation();
-
   return (
     <header className="bg-white border-b border-border shadow-sm">
       <div className="container mx-auto px-4">
@@ -20,28 +15,16 @@ const HomeHeader = () => {
                 className="h-8 sm:h-12 w-auto object-contain"
               />
             </div>
-            <p className="text-primary text-xs font-medium hidden sm:block">{t('header.simplifiedCitizenInfo')}</p>
+            <p className="text-primary text-xs font-medium hidden sm:block">Information citoyenne simplifiée</p>
           </div>
           
           {/* Language Switcher */}
           <div className="absolute right-0 top-1/2 -translate-y-1/2 flex items-center">
             <div className="flex items-center bg-muted rounded-full p-1">
-              <Button 
-                size="sm" 
-                onClick={() => setLanguage('fr')}
-                className={`rounded-full px-2 sm:px-4 py-1 text-xs sm:text-sm font-medium ${
-                  language === 'fr' ? 'bg-primary text-primary-foreground' : 'bg-transparent text-muted-foreground'
-                }`}
-              >
+              <Button size="sm" className="bg-primary text-primary-foreground rounded-full px-2 sm:px-4 py-1 text-xs sm:text-sm font-medium">
                 FR
               </Button>
-              <Button 
-                size="sm" 
-                onClick={() => setLanguage('ar')}
-                className={`rounded-full px-2 sm:px-4 py-1 text-xs sm:text-sm font-medium ${
-                  language === 'ar' ? 'bg-primary text-primary-foreground' : 'bg-transparent text-muted-foreground'
-                }`}
-              >
+              <Button variant="ghost" size="sm" className="text-muted-foreground rounded-full px-2 sm:px-4 py-1 text-xs sm:text-sm">
                 AR
               </Button>
             </div>
@@ -54,19 +37,19 @@ const HomeHeader = () => {
             <div className="flex items-center space-x-6">
               <Link to="/information/qui-sommes-nous">
                 <Button variant="ghost" className="text-sm">
-                  {t('navigation.whoWeAre')}
+                  Qui sommes-nous
                 </Button>
               </Link>
 
               <Link to="/information/actualites">
                 <Button variant="ghost" className="text-sm">
-                  {t('navigation.news')}
+                  Actualités
                 </Button>
               </Link>
 
               <Link to="/information/faq-chatbot">
                 <Button variant="ghost" className="text-sm">
-                  {t('navigation.faqChatbot')}
+                  FAQ/Chatbot
                 </Button>
               </Link>
             </div>
