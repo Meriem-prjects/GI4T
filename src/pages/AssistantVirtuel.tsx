@@ -173,9 +173,9 @@ const AssistantVirtuel = () => {
         </div>
       </section>
 
-      <div className="container mx-auto px-4 py-6 h-[calc(100vh-280px)]">
-        <div className="h-full">
-          <Card className="h-full flex flex-col shadow-lg">
+      <div className="container mx-auto px-4 py-12">
+        <div className="max-w-4xl mx-auto">
+          <Card className="h-[600px] flex flex-col shadow-lg">
             <CardHeader className="border-b">
               <CardTitle className="text-xl flex items-center gap-2">
                 <MessageCircle className="h-5 w-5" style={{ color: primaryColor }} />
@@ -250,6 +250,17 @@ const AssistantVirtuel = () => {
               </p>
             </div>
           </Card>
+
+          {/* Info Section */}
+          <div className="mt-8 p-6 bg-muted/30 rounded-lg">
+            <h3 className="font-semibold mb-3">Comment fonctionne l'assistant ?</h3>
+            <ul className="space-y-2 text-sm text-muted-foreground">
+              <li>• Posez vos questions en langage naturel</li>
+              <li>• Recevez des réponses juridiques adaptées à votre situation</li>
+              <li>• L'assistant utilise les documents d'apprentissage pour des réponses précises</li>
+              <li>• Votre conversation est confidentielle et sécurisée</li>
+            </ul>
+          </div>
         </div>
       </div>
     </div>
