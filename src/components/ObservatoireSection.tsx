@@ -31,14 +31,14 @@ const ObservatoireSection = () => {
       }}
       className="w-full h-1/2 md:w-1/2 md:h-full bg-gradient-to-b md:bg-gradient-to-r from-[hsl(224,76%,58%)] to-[hsl(224,76%,68%)] flex flex-col relative cursor-pointer hover:brightness-105 transition-all"
     >
-      <div className="flex flex-col items-center justify-between px-4 sm:px-8 py-8 sm:py-12 h-full">
+      <div className="flex flex-col items-center justify-between px-4 sm:px-8 py-12 sm:py-16 h-full">
         {/* Header Section - Logo & Title */}
-        <div className="flex flex-col items-center space-y-3 sm:space-y-4">
-          <div className="mb-2 sm:mb-3">
+        <div className="flex flex-col items-center space-y-6 sm:space-y-8">
+          <div className="mb-4 sm:mb-6">
             <img 
               src="/Feelinx_upload/LogoODF-fra-fondble.png" 
               alt="Observatoire des Droits" 
-              className="h-16 sm:h-20 w-auto object-contain max-w-full"
+              className="h-10 sm:h-14 w-auto object-contain max-w-full"
             />
           </div>
           
@@ -49,7 +49,7 @@ const ObservatoireSection = () => {
         
         {/* Center Section - Search */}
         <div
-          className="w-full max-w-sm sm:max-w-md my-4 sm:my-6 relative z-10"
+          className="w-full max-w-sm sm:max-w-md my-8 sm:my-12 relative z-10"
           onClick={(e) => e.stopPropagation()}
           onMouseDown={(e) => e.stopPropagation()}
           onKeyDown={(e) => e.stopPropagation()}
