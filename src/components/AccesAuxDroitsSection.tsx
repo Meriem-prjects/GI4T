@@ -38,7 +38,7 @@ const AccesAuxDroitsSection = () => {
             <Link to="/acces-aux-droits/foire-aux-questions" className="block">
               <Card className="bg-white/90 backdrop-blur-sm rounded-lg shadow-lg border-0 h-28 sm:h-32 hover:shadow-xl transition-shadow cursor-pointer">
                 <CardContent className="p-4 sm:p-6 h-full">
-                  <div className="flex flex-col items-center justify-center text-center h-full space-y-2">
+                  <div className="flex flex-col items-center justify-center text-center h-full space-y-3">
                     <div className="w-7 h-7 sm:w-9 sm:h-9 bg-orange-500 rounded-lg flex items-center justify-center">
                       <MessageCircle className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
                     </div>
@@ -53,7 +53,7 @@ const AccesAuxDroitsSection = () => {
             <Link to="/acces-aux-droits/mediatheque" className="block">
               <Card className="bg-white/90 backdrop-blur-sm rounded-lg shadow-lg border-0 h-28 sm:h-32 hover:shadow-xl transition-shadow cursor-pointer">
                 <CardContent className="p-4 sm:p-6 h-full">
-                  <div className="flex flex-col items-center justify-center text-center h-full space-y-2">
+                  <div className="flex flex-col items-center justify-center text-center h-full space-y-3">
                     <div className="w-7 h-7 sm:w-9 sm:h-9 bg-primary rounded-lg flex items-center justify-center">
                       <Image className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
                     </div>
