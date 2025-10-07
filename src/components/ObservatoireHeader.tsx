@@ -11,13 +11,13 @@ const ObservatoireHeader = () => {
     <header className="border-b bg-card">
       <div className="container mx-auto px-4 py-2 sm:py-4 relative">
         <div className="flex items-center justify-between flex-wrap gap-4">
-          <div className="flex items-center space-x-2 sm:space-x-4">
+          <Link to="/observatoire" className="flex items-center space-x-2 sm:space-x-4 hover:opacity-80 transition-opacity">
             <img src="/Feelinx_upload/odf-logo.png" alt="ODF Logo" className="h-6 sm:h-8 md:h-12" />
             <div>
               <h1 className="text-sm sm:text-base md:text-2xl font-bold text-foreground">Observatoire des Droits Fondamentaux</h1>
               <p className="text-xs sm:text-sm text-muted-foreground hidden sm:block">Surveillance et protection des droits citoyens</p>
             </div>
-          </div>
+          </Link>
           <div className="flex items-center ml-auto">
             <div className="hidden sm:flex items-center space-x-2 sm:space-x-4">
               <Link to="/observatoire">
