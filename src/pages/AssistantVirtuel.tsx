@@ -19,7 +19,7 @@ const AssistantVirtuel = () => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [inputMessage, setInputMessage] = useState("");
   const [isStreaming, setIsStreaming] = useState(false);
-  const messagesEndRef = useRef<HTMLDivElement>(null);
+  const messagesContainerRef = useRef<HTMLDivElement>(null);
   const abortControllerRef = useRef<AbortController | null>(null);
 
   useEffect(() => {
@@ -34,8 +34,11 @@ const AssistantVirtuel = () => {
   }, [config?.welcome_message]);
 
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages]);
+    const container = messagesContainerRef.current;
+    if (container) {
+      container.scrollTo({ top: container.scrollHeight, behavior: "smooth" });
+    }
+  }, [messages, isStreaming]);
 
   const handleSendMessage = async () => {
     if (!inputMessage.trim() || isStreaming) return;
@@ -187,7 +190,7 @@ const AssistantVirtuel = () => {
             </CardHeader>
             
             {/* Chat Messages */}
-            <CardContent className="flex-1 overflow-y-auto p-6">
+            <CardContent ref={messagesContainerRef} className="flex-1 overflow-y-auto p-6">
               <div className="space-y-4">
                 {messages.map((msg) => (
                   <div key={msg.id} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
@@ -213,7 +216,6 @@ const AssistantVirtuel = () => {
                     </div>
                   </div>
                 )}
-                <div ref={messagesEndRef} />
               </div>
             </CardContent>
 
