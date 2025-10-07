@@ -18,10 +18,10 @@ const ObservatoireSection = () => {
   };
 
   return (
-    <div className="w-full h-1/2 md:w-1/2 md:h-full bg-gradient-to-b md:bg-gradient-to-r from-[hsl(224,76%,58%)] to-[hsl(224,76%,68%)] flex flex-col relative">
+    <Link to="/observatoire" className="w-full h-1/2 md:w-1/2 md:h-full bg-gradient-to-b md:bg-gradient-to-r from-[hsl(224,76%,58%)] to-[hsl(224,76%,68%)] flex flex-col relative cursor-pointer hover:brightness-105 transition-all">
       <div className="flex flex-col items-center justify-between px-4 sm:px-8 py-12 sm:py-16 h-full">
         {/* Header Section - Logo & Title */}
-        <Link to="/observatoire" className="flex flex-col items-center space-y-6 sm:space-y-8 cursor-pointer hover:opacity-90 transition-opacity">
+        <div className="flex flex-col items-center space-y-6 sm:space-y-8">
           <div className="mb-4 sm:mb-6">
             <img 
               src="/Feelinx_upload/odf-logo.png" 
@@ -33,25 +33,26 @@ const ObservatoireSection = () => {
           <h2 className="text-white text-xl sm:text-2xl md:text-3xl font-spartan font-bold text-center max-w-md leading-tight">
             Observatoire des Droits
           </h2>
-        </Link>
+        </div>
         
         {/* Center Section - Search */}
-        <div className="w-full max-w-sm sm:max-w-md my-8 sm:my-12 relative z-10">
-          <SearchAutocomplete
-            value={searchQuery}
-            onChange={setSearchQuery}
-            onSearch={handleSearch}
-            placeholder={animatedPlaceholder}
-            language={language}
-          />
+        <div className="w-full max-w-sm sm:max-w-md my-8 sm:my-12 relative z-10" onClick={(e) => e.preventDefault()}>
+          <div onClick={(e) => e.stopPropagation()}>
+            <SearchAutocomplete
+              value={searchQuery}
+              onChange={setSearchQuery}
+              onSearch={handleSearch}
+              placeholder={animatedPlaceholder}
+              language={language}
+            />
+          </div>
         </div>
 
         {/* Bottom Section - Quick Access */}
-        <div className="w-full max-w-sm sm:max-w-md">
+        <div className="w-full max-w-sm sm:max-w-md" onClick={(e) => e.stopPropagation()}>
           <div className="grid grid-cols-2 gap-6 sm:gap-8">
             <Link 
-              to="/observatoire/droits-fondamentaux" 
-              onClick={(e) => e.stopPropagation()}
+              to="/observatoire/droits-fondamentaux"
               className="block"
             >
               <Card className="bg-white/90 backdrop-blur-sm rounded-lg shadow-lg border-0 h-28 sm:h-32 hover:bg-white transition-colors">
@@ -68,8 +69,7 @@ const ObservatoireSection = () => {
             </Link>
 
             <Link 
-              to="/observatoire/analyses-opinions" 
-              onClick={(e) => e.stopPropagation()}
+              to="/observatoire/analyses-opinions"
               className="block"
             >
               <Card className="bg-white/90 backdrop-blur-sm rounded-lg shadow-lg border-0 h-28 sm:h-32 hover:bg-white transition-colors">
@@ -87,7 +87,7 @@ const ObservatoireSection = () => {
           </div>
         </div>
       </div>
-    </div>
+    </Link>
   );
 };
 
