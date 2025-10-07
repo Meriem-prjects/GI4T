@@ -9,9 +9,17 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { Upload, Trash2, FileText, Settings, BookOpen } from "lucide-react";
+import { Trash2, FileText, Settings, BookOpen, Plus, Sparkles } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 
 interface ChatbotConfig {
   id: string;
@@ -39,7 +47,10 @@ const AdminChatbotConfig = () => {
   const [config, setConfig] = useState<ChatbotConfig | null>(null);
   const [trainingDocs, setTrainingDocs] = useState<TrainingDocument[]>([]);
   const [isLoading, setIsLoading] = useState(false);
-  const [uploadingDoc, setUploadingDoc] = useState(false);
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [newDocTitle, setNewDocTitle] = useState("");
+  const [newDocContent, setNewDocContent] = useState("");
+  const [isFineTuning, setIsFineTuning] = useState(false);
   const { toast } = useToast();
   const { register, handleSubmit, reset, setValue } = useForm();
 
@@ -119,58 +130,68 @@ const AdminChatbotConfig = () => {
     }
   };
 
-  const uploadTrainingDocument = async (event: React.ChangeEvent<HTMLInputElement>) => {
-    const files = event.target.files;
-    if (!files || files.length === 0) return;
-
-    setUploadingDoc(true);
-    const file = files[0];
+  const addTrainingText = async () => {
+    if (!newDocTitle.trim() || !newDocContent.trim()) {
+      toast({
+        title: "Erreur",
+        description: "Veuillez remplir le titre et le contenu",
+        variant: "destructive"
+      });
+      return;
+    }
 
     try {
-      // Upload file to storage
-      const fileExt = file.name.split('.').pop();
-      const fileName = `${Math.random()}.${fileExt}`;
-      const { data: uploadData, error: uploadError } = await supabase.storage
-        .from('documents')
-        .upload(`training/${fileName}`, file);
-
-      if (uploadError) throw uploadError;
-
-      // Get public URL
-      const { data: { publicUrl } } = supabase.storage
-        .from('documents')
-        .getPublicUrl(`training/${fileName}`);
-
-      // Read file content
-      const text = await file.text();
-
-      // Insert document record
-      const { error: insertError } = await supabase
+      const { error } = await supabase
         .from('chatbot_training_documents')
         .insert({
-          title: file.name,
-          content: text,
-          file_url: publicUrl,
-          file_name: file.name,
+          title: newDocTitle,
+          content: newDocContent,
           is_active: true
         });
 
-      if (insertError) throw insertError;
+      if (error) throw error;
 
       toast({
         title: "Succès",
-        description: "Document ajouté avec succès"
+        description: "Texte d'apprentissage ajouté avec succès"
       });
+      
+      setNewDocTitle("");
+      setNewDocContent("");
+      setIsDialogOpen(false);
       loadTrainingDocuments();
     } catch (error) {
-      console.error('Error uploading document:', error);
+      console.error('Error adding text:', error);
       toast({
         title: "Erreur",
-        description: "Impossible d'uploader le document",
+        description: "Impossible d'ajouter le texte",
+        variant: "destructive"
+      });
+    }
+  };
+
+  const startFineTuning = async () => {
+    setIsFineTuning(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('chatbot-fine-tuning', {
+        body: { action: 'train' }
+      });
+
+      if (error) throw error;
+
+      toast({
+        title: "Succès",
+        description: "Fine-tuning lancé avec succès"
+      });
+    } catch (error) {
+      console.error('Error starting fine-tuning:', error);
+      toast({
+        title: "Erreur",
+        description: "Impossible de lancer le fine-tuning",
         variant: "destructive"
       });
     } finally {
-      setUploadingDoc(false);
+      setIsFineTuning(false);
     }
   };
 
@@ -367,27 +388,65 @@ const AdminChatbotConfig = () => {
             <CardHeader>
               <CardTitle>Documents d'apprentissage</CardTitle>
               <CardDescription>
-                Ajoutez des documents pour enrichir les connaissances de l'assistant
+                Ajoutez des textes pour enrichir les connaissances de l'assistant
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="flex items-center gap-4">
-                <Button asChild disabled={uploadingDoc}>
-                  <label className="cursor-pointer">
-                    <Upload className="h-4 w-4 mr-2" />
-                    {uploadingDoc ? "Upload..." : "Uploader un document"}
-                    <input
-                      type="file"
-                      accept=".txt,.md,.json,.pdf"
-                      className="hidden"
-                      onChange={uploadTrainingDocument}
-                      disabled={uploadingDoc}
-                    />
-                  </label>
+              <div className="flex items-center gap-4 justify-between">
+                <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+                  <DialogTrigger asChild>
+                    <Button>
+                      <Plus className="h-4 w-4 mr-2" />
+                      Ajouter un texte d'apprentissage
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent className="max-w-2xl">
+                    <DialogHeader>
+                      <DialogTitle>Nouveau texte d'apprentissage</DialogTitle>
+                      <DialogDescription>
+                        Ajoutez un texte pour enrichir la base de connaissances de l'assistant
+                      </DialogDescription>
+                    </DialogHeader>
+                    <div className="space-y-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="doc-title">Titre du texte</Label>
+                        <Input
+                          id="doc-title"
+                          placeholder="Ex: Guide des droits du travail"
+                          value={newDocTitle}
+                          onChange={(e) => setNewDocTitle(e.target.value)}
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="doc-content">Contenu</Label>
+                        <Textarea
+                          id="doc-content"
+                          placeholder="Saisissez le contenu du texte d'apprentissage..."
+                          rows={10}
+                          value={newDocContent}
+                          onChange={(e) => setNewDocContent(e.target.value)}
+                        />
+                      </div>
+                      <div className="flex justify-end gap-2">
+                        <Button variant="outline" onClick={() => setIsDialogOpen(false)}>
+                          Annuler
+                        </Button>
+                        <Button onClick={addTrainingText}>
+                          Ajouter
+                        </Button>
+                      </div>
+                    </div>
+                  </DialogContent>
+                </Dialog>
+                
+                <Button 
+                  variant="secondary" 
+                  onClick={startFineTuning}
+                  disabled={isFineTuning || trainingDocs.length === 0}
+                >
+                  <Sparkles className="h-4 w-4 mr-2" />
+                  {isFineTuning ? "Fine-tuning en cours..." : "Lancer le fine-tuning"}
                 </Button>
-                <p className="text-sm text-muted-foreground">
-                  Formats acceptés: TXT, MD, JSON, PDF
-                </p>
               </div>
 
               <Table>

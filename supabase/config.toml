@@ -130,3 +130,9 @@ verify_jwt = false
 
 [functions.create-acces-droits-admin]
 verify_jwt = false
+
+[functions.chatbot-fine-tuning]
+verify_jwt = false
+
+[functions.acces-droits-chat]
+verify_jwt = false
