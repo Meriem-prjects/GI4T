@@ -1,5 +1,5 @@
 import { Card, CardContent } from "@/components/ui/card";
-import { FileText, Building } from "lucide-react";
+import { FileText } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { useState, FormEvent } from "react";
 import { SearchAutocomplete } from "@/components/SearchAutocomplete";
@@ -49,29 +49,41 @@ const ObservatoireSection = () => {
         {/* Bottom Section - Quick Access */}
         <div className="w-full max-w-sm sm:max-w-md">
           <div className="grid grid-cols-2 gap-6 sm:gap-8">
-            <Card className="bg-white/90 backdrop-blur-sm rounded-lg shadow-lg border-0 h-28 sm:h-32 hover:bg-white transition-colors">
-              <CardContent className="p-4 sm:p-6 h-full">
-                <div className="flex flex-col items-center justify-center text-center h-full space-y-3">
-                  <FileText className="w-7 h-7 sm:w-9 sm:h-9 text-primary" />
-                  <div>
-                    <h3 className="font-semibold text-sm sm:text-base text-card-foreground">Droits fondamentaux</h3>
-                    <p className="text-xs sm:text-sm text-muted-foreground">Constitution</p>
+            <Link 
+              to="/observatoire/textes-fondamentaux" 
+              onClick={(e) => e.stopPropagation()}
+              className="block"
+            >
+              <Card className="bg-white/90 backdrop-blur-sm rounded-lg shadow-lg border-0 h-28 sm:h-32 hover:bg-white transition-colors">
+                <CardContent className="p-4 sm:p-6 h-full">
+                  <div className="flex flex-col items-center justify-center text-center h-full space-y-2">
+                    <FileText className="w-6 h-6 sm:w-7 sm:h-7 text-primary" />
+                    <div>
+                      <h3 className="font-semibold text-sm sm:text-base text-card-foreground">Droits fondamentaux</h3>
+                      <p className="text-xs sm:text-sm text-muted-foreground">Textes de référence</p>
+                    </div>
                   </div>
-                </div>
-              </CardContent>
-            </Card>
+                </CardContent>
+              </Card>
+            </Link>
 
-            <Card className="bg-white/90 backdrop-blur-sm rounded-lg shadow-lg border-0 h-28 sm:h-32 hover:bg-white transition-colors">
-              <CardContent className="p-4 sm:p-6 h-full">
-                <div className="flex flex-col items-center justify-center text-center h-full space-y-3">
-                  <Building className="w-7 h-7 sm:w-9 sm:h-9 text-primary" />
-                  <div>
-                    <h3 className="font-semibold text-sm sm:text-base text-card-foreground">Analyses</h3>
-                    <p className="text-xs sm:text-sm text-muted-foreground">Tribunaux</p>
+            <Link 
+              to="/observatoire/analyses-opinions" 
+              onClick={(e) => e.stopPropagation()}
+              className="block"
+            >
+              <Card className="bg-white/90 backdrop-blur-sm rounded-lg shadow-lg border-0 h-28 sm:h-32 hover:bg-white transition-colors">
+                <CardContent className="p-4 sm:p-6 h-full">
+                  <div className="flex flex-col items-center justify-center text-center h-full space-y-2">
+                    <FileText className="w-6 h-6 sm:w-7 sm:h-7 text-primary" />
+                    <div>
+                      <h3 className="font-semibold text-sm sm:text-base text-card-foreground">Analyses & Opinions</h3>
+                      <p className="text-xs sm:text-sm text-muted-foreground">Analyses juridiques</p>
+                    </div>
                   </div>
-                </div>
-              </CardContent>
-            </Card>
+                </CardContent>
+              </Card>
+            </Link>
           </div>
         </div>
       </div>
