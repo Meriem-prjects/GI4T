@@ -1,48 +1,168 @@
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { MessageCircle, Send } from "lucide-react";
+import { MessageCircle, Send, Loader2 } from "lucide-react";
+import { useChatbotConfig } from "@/hooks/useChatbotConfig";
+import { useToast } from "@/hooks/use-toast";
+
+interface Message {
+  id: number;
+  role: "user" | "assistant";
+  content: string;
+  timestamp: Date;
+}
 
 const AssistantVirtuel = () => {
-  const [chatMessages, setChatMessages] = useState([
-    {
-      id: 1,
-      type: "bot",
-      message: "Bonjour ! Je suis votre assistant juridique virtuel. Comment puis-je vous aider aujourd'hui ?",
-      timestamp: new Date()
-    }
-  ]);
+  const { data: config, isLoading: configLoading } = useChatbotConfig();
+  const { toast } = useToast();
+  const [messages, setMessages] = useState<Message[]>([]);
   const [inputMessage, setInputMessage] = useState("");
+  const [isStreaming, setIsStreaming] = useState(false);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+  const abortControllerRef = useRef<AbortController | null>(null);
 
-  const handleSendMessage = () => {
-    if (inputMessage.trim()) {
-      const newMessage = {
-        id: chatMessages.length + 1,
-        type: "user",
-        message: inputMessage,
+  useEffect(() => {
+    if (config?.welcome_message) {
+      setMessages([{
+        id: 1,
+        role: "assistant",
+        content: config.welcome_message,
         timestamp: new Date()
-      };
+      }]);
+    }
+  }, [config?.welcome_message]);
+
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [messages]);
+
+  const handleSendMessage = async () => {
+    if (!inputMessage.trim() || isStreaming) return;
+
+    const userMessage: Message = {
+      id: messages.length + 1,
+      role: "user",
+      content: inputMessage,
+      timestamp: new Date()
+    };
+
+    setMessages(prev => [...prev, userMessage]);
+    setInputMessage("");
+    setIsStreaming(true);
+
+    const assistantMessageId = messages.length + 2;
+    let assistantContent = "";
+
+    setMessages(prev => [...prev, {
+      id: assistantMessageId,
+      role: "assistant",
+      content: "",
+      timestamp: new Date()
+    }]);
+
+    try {
+      abortControllerRef.current = new AbortController();
       
-      const botResponse = {
-        id: chatMessages.length + 2,
-        type: "bot",
-        message: "Merci pour votre question. Notre équipe juridique vous répondra dans les plus brefs délais. En attendant, consultez notre FAQ ou nos guides pratiques.",
-        timestamp: new Date()
-      };
+      const conversationHistory = [...messages, userMessage].map(msg => ({
+        role: msg.role,
+        content: msg.content
+      }));
 
-      setChatMessages([...chatMessages, newMessage, botResponse]);
-      setInputMessage("");
+      const response = await fetch(
+        `https://qpkybrcjcoxhkifnbxei.supabase.co/functions/v1/acces-droits-chat`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            messages: conversationHistory,
+            stream: true
+          }),
+          signal: abortControllerRef.current.signal
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error(`Erreur HTTP: ${response.status}`);
+      }
+
+      const reader = response.body?.getReader();
+      const decoder = new TextDecoder();
+
+      if (!reader) {
+        throw new Error("Impossible de lire la réponse");
+      }
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+
+        const chunk = decoder.decode(value);
+        const lines = chunk.split("\n");
+
+        for (const line of lines) {
+          if (line.startsWith("data: ")) {
+            const data = line.slice(6);
+            if (data === "[DONE]") continue;
+
+            try {
+              const parsed = JSON.parse(data);
+              const content = parsed.choices?.[0]?.delta?.content;
+              
+              if (content) {
+                assistantContent += content;
+                setMessages(prev => prev.map(msg => 
+                  msg.id === assistantMessageId 
+                    ? { ...msg, content: assistantContent }
+                    : msg
+                ));
+              }
+            } catch (e) {
+              // Ignorer les erreurs de parsing JSON pour les chunks partiels
+            }
+          }
+        }
+      }
+    } catch (error: any) {
+      if (error.name === 'AbortError') {
+        console.log('Requête annulée');
+      } else {
+        console.error("Erreur lors de l'envoi du message:", error);
+        toast({
+          title: "Erreur",
+          description: "Impossible de contacter l'assistant. Veuillez réessayer.",
+          variant: "destructive"
+        });
+        
+        setMessages(prev => prev.filter(msg => msg.id !== assistantMessageId));
+      }
+    } finally {
+      setIsStreaming(false);
+      abortControllerRef.current = null;
     }
   };
 
+  if (configLoading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+
+  const primaryColor = config?.primary_color || "#3B82F6";
+  const secondaryColor = config?.secondary_color || "#10B981";
+  const fontFamily = config?.font_family || "Inter, sans-serif";
+
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background" style={{ fontFamily }}>
       {/* Hero Section */}
       <section className="py-12 bg-gradient-to-br from-primary/5 to-primary/10">
         <div className="container mx-auto px-4 text-center">
           <div className="flex items-center justify-center gap-3 mb-4">
-            <MessageCircle className="h-10 w-10 text-primary" />
+            <MessageCircle className="h-10 w-10" style={{ color: primaryColor }} />
             <h1 className="text-3xl sm:text-4xl font-bold text-foreground">
               Assistant Virtuel
             </h1>
@@ -58,7 +178,7 @@ const AssistantVirtuel = () => {
           <Card className="h-[600px] flex flex-col shadow-lg">
             <CardHeader className="border-b">
               <CardTitle className="text-xl flex items-center gap-2">
-                <MessageCircle className="h-5 w-5 text-primary" />
+                <MessageCircle className="h-5 w-5" style={{ color: primaryColor }} />
                 Discutez avec notre assistant
               </CardTitle>
               <CardDescription>
@@ -69,20 +189,31 @@ const AssistantVirtuel = () => {
             {/* Chat Messages */}
             <CardContent className="flex-1 overflow-y-auto p-6">
               <div className="space-y-4">
-                {chatMessages.map((msg) => (
-                  <div key={msg.id} className={`flex ${msg.type === 'user' ? 'justify-end' : 'justify-start'}`}>
-                    <div className={`max-w-[80%] p-4 rounded-lg ${
-                      msg.type === 'user' 
-                        ? 'bg-primary text-primary-foreground' 
-                        : 'bg-muted text-foreground'
-                    }`}>
-                      <p className="text-sm leading-relaxed">{msg.message}</p>
+                {messages.map((msg) => (
+                  <div key={msg.id} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
+                    <div 
+                      className={`max-w-[80%] p-4 rounded-lg ${
+                        msg.role === 'user' 
+                          ? 'text-white' 
+                          : 'bg-muted text-foreground'
+                      }`}
+                      style={msg.role === 'user' ? { backgroundColor: primaryColor } : {}}
+                    >
+                      <p className="text-sm leading-relaxed whitespace-pre-wrap">{msg.content}</p>
                       <span className="text-xs opacity-70 mt-2 block">
                         {msg.timestamp.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}
                       </span>
                     </div>
                   </div>
                 ))}
+                {isStreaming && messages[messages.length - 1]?.content === "" && (
+                  <div className="flex justify-start">
+                    <div className="bg-muted p-4 rounded-lg">
+                      <Loader2 className="h-5 w-5 animate-spin" style={{ color: secondaryColor }} />
+                    </div>
+                  </div>
+                )}
+                <div ref={messagesEndRef} />
               </div>
             </CardContent>
 
@@ -93,12 +224,25 @@ const AssistantVirtuel = () => {
                   value={inputMessage}
                   onChange={(e) => setInputMessage(e.target.value)}
                   placeholder="Tapez votre question..."
-                  onKeyPress={(e) => e.key === 'Enter' && handleSendMessage()}
+                  onKeyPress={(e) => e.key === 'Enter' && !isStreaming && handleSendMessage()}
+                  disabled={isStreaming}
                   className="flex-1 h-12"
                 />
-                <Button onClick={handleSendMessage} size="lg" className="px-6">
-                  <Send className="h-4 w-4 mr-2" />
-                  Envoyer
+                <Button 
+                  onClick={handleSendMessage} 
+                  size="lg" 
+                  className="px-6 text-white"
+                  disabled={isStreaming || !inputMessage.trim()}
+                  style={{ backgroundColor: primaryColor }}
+                >
+                  {isStreaming ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <>
+                      <Send className="h-4 w-4 mr-2" />
+                      Envoyer
+                    </>
+                  )}
                 </Button>
               </div>
               <p className="text-xs text-muted-foreground mt-3 text-center">
@@ -113,7 +257,7 @@ const AssistantVirtuel = () => {
             <ul className="space-y-2 text-sm text-muted-foreground">
               <li>• Posez vos questions en langage naturel</li>
               <li>• Recevez des réponses juridiques adaptées à votre situation</li>
-              <li>• Consultez les ressources complémentaires suggérées</li>
+              <li>• L'assistant utilise les documents d'apprentissage pour des réponses précises</li>
               <li>• Votre conversation est confidentielle et sécurisée</li>
             </ul>
           </div>
