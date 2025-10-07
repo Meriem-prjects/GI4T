@@ -32,6 +32,7 @@ export const GovernorateMap = ({ governorates, events }: GovernorateMapProps) =>
         maxBounds: tunisiaBounds,
         maxBoundsViscosity: 1.0,
         zoomControl: true,
+        attributionControl: false,
       });
 
       L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
