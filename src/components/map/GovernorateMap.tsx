@@ -148,5 +148,5 @@ export const GovernorateMap = ({ governorates, events }: GovernorateMapProps) =>
     };
   }, [governorates, events]);
 
-  return <div ref={mapContainerRef} style={{ width: '100%', height: '600px', position: 'relative', zIndex: 1 }} />;
+  return <div ref={mapContainerRef} style={{ width: '100%', height: '100%', position: 'relative', zIndex: 1 }} />;
 };
