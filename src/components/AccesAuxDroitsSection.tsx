@@ -2,6 +2,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { MessageCircle, Map, Image } from "lucide-react";
 import { Link } from "react-router-dom";
+import { BrandedImage } from "@/components/ui/branded-image";
 
 const AccesAuxDroitsSection = () => {
   return (
@@ -10,10 +11,11 @@ const AccesAuxDroitsSection = () => {
         {/* Header Section - Logo & Title */}
         <div className="flex flex-col items-center space-y-6 sm:space-y-8">
           <div className="mb-4 sm:mb-6">
-            <img 
+            <BrandedImage
               src="/Feelinx_upload/logo-acces-aux-droits.png" 
               alt="Accès aux Droits" 
               className="h-20 sm:h-24 w-auto object-contain max-w-full"
+              faviconSize="md"
             />
           </div>
           
