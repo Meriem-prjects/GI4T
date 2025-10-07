@@ -1,6 +1,5 @@
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
-import { BrandedImage } from "@/components/ui/branded-image";
 
 const HomeHeader = () => {
   return (
@@ -10,11 +9,10 @@ const HomeHeader = () => {
         <div className="flex items-center justify-center py-4 relative">
           <div className="text-center">
             <div className="flex items-center justify-center mb-1">
-              <BrandedImage
+              <img
                 src="/Feelinx_upload/justclic-logo.png" 
                 alt="JustClic.tn" 
                 className="h-8 sm:h-12 w-auto object-contain"
-                faviconSize="sm"
               />
             </div>
             <p className="text-primary text-xs font-medium hidden sm:block">Information citoyenne simplifiée</p>

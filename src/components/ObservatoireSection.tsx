@@ -4,7 +4,6 @@ import { Link, useNavigate } from "react-router-dom";
 import { useState, FormEvent } from "react";
 import { SearchAutocomplete } from "@/components/SearchAutocomplete";
 import { useTypingPlaceholder } from "@/hooks/useTypingPlaceholder";
-import { BrandedImage } from "@/components/ui/branded-image";
 
 const ObservatoireSection = () => {
   const navigate = useNavigate();
@@ -36,11 +35,10 @@ const ObservatoireSection = () => {
         {/* Header Section - Logo & Title */}
         <div className="flex flex-col items-center space-y-6 sm:space-y-8">
           <div className="mb-4 sm:mb-6">
-            <BrandedImage
+            <img
               src="/Feelinx_upload/LogoODF-fra-fondble.png" 
               alt="Observatoire des Droits" 
               className="h-20 sm:h-24 w-auto object-contain max-w-full"
-              faviconSize="md"
             />
           </div>
           
