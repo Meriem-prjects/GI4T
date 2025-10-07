@@ -52,7 +52,7 @@ const AccesAuxDroitsLayout = () => {
               <Link to="/acces-aux-droits/actualites" className="text-sm font-medium text-foreground hover:text-primary transition-colors duration-200">
                 Actualités
               </Link>
-              <Link to="/acces-aux-droits/foire-aux-questions" className="text-sm font-medium text-foreground hover:text-primary transition-colors duration-200">
+              <Link to="/acces-aux-droits/assistant-virtuel" className="text-sm font-medium text-foreground hover:text-primary transition-colors duration-200">
                 FAQ/Chat
               </Link>
             </nav>
