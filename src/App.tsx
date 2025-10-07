@@ -62,8 +62,9 @@ const App = () => (
             <Route path="/admin/observatoire/login" element={<AdminObservatoireLogin />} />
             <Route path="/admin/acces-aux-droits/login" element={<AdminAccesDroitsLogin />} />
             
-            {/* Observatoire interface - Routes spécifiques d'abord */}
+            {/* Observatoire interface */}
           <Route element={<ObservatoireLayout />}>
+            <Route path="/observatoire" element={<Observatoire />} />
             <Route path="/observatoire/search-results" element={<SearchResults />} />
             <Route path="/observatoire/droits-fondamentaux" element={<TextesFondamentaux />} />
             <Route path="/observatoire/droits-fondamentaux/:categorySlug" element={<CategorieDetail />} />
@@ -71,9 +72,6 @@ const App = () => (
             <Route path="/observatoire/analyses-opinions" element={<AnalysesOpinions />} />
             <Route path="/observatoire/actualites" element={<Actualites />} />
           </Route>
-          
-          {/* Route générale observatoire en dernier */}
-          <Route path="/observatoire" element={<Observatoire />} />
           
           {/* Accès aux droits interface - Unified Layout */}
           <Route element={<AccesAuxDroitsLayout />}>

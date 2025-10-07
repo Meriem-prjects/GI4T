@@ -1,13 +1,9 @@
 import { useState } from "react";
 import { Database, Mic, Briefcase, Heart, Scale } from "lucide-react";
-import { useNavigate, Routes, Route } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import ObservatoireNav from "@/components/ObservatoireNav";
-import ObservatoireHeader from "@/components/ObservatoireHeader";
-import Footer from "@/components/Footer";
-import SearchResults from "@/pages/SearchResults";
 import { SearchAutocomplete } from "@/components/SearchAutocomplete";
 import { useCategories } from "@/hooks/useCategories";
 import { useCourtTypes } from "@/hooks/useCourtTypes";
@@ -98,19 +94,8 @@ const Observatoire = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-background">
-      {/* Header */}
-      <ObservatoireHeader />
-
-      {/* Secondary Navigation */}
-      <ObservatoireNav />
-
-      {/* Route Content */}
-      <Routes>
-        <Route path="search-results" element={<SearchResults />} />
-        <Route path="/" element={
-          <>
-            {/* Hero Section with Search */}
+    <>
+      {/* Hero Section with Search */}
       <section className="bg-gradient-to-br from-primary to-primary-foreground text-primary-foreground py-4 sm:py-8 md:py-16">
         <div className="container mx-auto px-4 text-center">
           <p className="text-sm sm:text-base md:text-lg lg:text-xl mb-6 sm:mb-8 md:mb-12 max-w-3xl mx-auto opacity-90 px-2 sm:px-4 leading-relaxed">
@@ -321,13 +306,7 @@ const Observatoire = () => {
           </div>
         </div>
       </section>
-
-            {/* Footer */}
-            <Footer />
-          </>
-        } />
-      </Routes>
-    </div>
+    </>
   );
 };
 

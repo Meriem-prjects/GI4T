@@ -122,6 +122,96 @@ const BatchDocumentUploader: React.FC<BatchDocumentUploaderProps> = ({ onDocumen
     }
   };
 
+  const formatFileSize = (bytes: number) => {
+    if (bytes === 0) return '0 Bytes';
+    const k = 1024;
+    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+  };
+
+  const processFile = async (uploadFile: UploadFile, categoryIds: string[], documentTypeId: string, processedDocuments: any[]) => {
+    // Update status to processing - start at 0%
+    setUploadFiles(prev => prev.map(f => 
+      f.id === uploadFile.id ? { ...f, status: 'processing', progress: 0 } : f
+    ));
+
+    // Use upload-document function with progress tracking
+    const formData = new FormData();
+    formData.append('file', uploadFile.file);
+    // Send first category for backwards compatibility, we'll handle multiple categories after upload
+    formData.append('categoryId', categoryIds[0]);
+    formData.append('documentTypeId', documentTypeId);
+    formData.append('language', selectedLanguage);
+
+    // Update progress to show uploading
+    setUploadFiles(prev => prev.map(f => 
+      f.id === uploadFile.id ? { ...f, progress: 10 } : f
+    ));
+
+    const { data: uploadResult, error: uploadError } = await supabase.functions.invoke('upload-document', {
+      body: formData
+    });
+
+    if (uploadError) {
+      throw new Error(`Upload failed: ${uploadError.message}`);
+    }
+
+    if (!uploadResult.success) {
+      throw new Error(uploadResult.error || 'Upload failed');
+    }
+
+    // Extract job ID from response
+    const jobId = uploadResult.jobId;
+    const documentId = uploadResult.document?.id;
+    
+    // Handle multiple categories if document was created
+    if (documentId && categoryIds.length > 1) {
+      try {
+        // Clear existing categories and add new ones
+        await supabase
+          .from('document_categories')
+          .delete()
+          .eq('document_id', documentId);
+
+        const categoryInserts = categoryIds.map(catId => ({
+          document_id: documentId,
+          category_id: catId
+        }));
+
+        await supabase
+          .from('document_categories')
+          .insert(categoryInserts);
+      } catch (error) {
+        console.error('Error updating document categories:', error);
+      }
+    }
+    
+    if (jobId) {
+      // Update file with job ID for progress tracking
+      setUploadFiles(prev => prev.map(f => 
+        f.id === uploadFile.id ? { 
+          ...f, 
+          jobId: jobId,
+          progress: 20,
+          status: 'processing'
+        } : f
+      ));
+    } else {
+      // No job ID - mark as completed immediately
+      setUploadFiles(prev => prev.map(f => 
+        f.id === uploadFile.id ? { 
+          ...f, 
+          status: 'completed', 
+          progress: 100, 
+          result: uploadResult.document
+        } : f
+      ));
+      
+      processedDocuments.push(uploadResult.document);
+    }
+  };
+
   const handleFiles = (files: FileList) => {
     const acceptedTypes = [
       'application/pdf', 
@@ -277,95 +367,6 @@ const BatchDocumentUploader: React.FC<BatchDocumentUploaderProps> = ({ onDocumen
     }, 100);
   };
 
-  const formatFileSize = (bytes: number) => {
-    if (bytes === 0) return '0 Bytes';
-    const k = 1024;
-    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
-    const i = Math.floor(Math.log(bytes) / Math.log(k));
-    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
-  };
-
-  const processFile = async (uploadFile: UploadFile, categoryIds: string[], documentTypeId: string, processedDocuments: any[]) => {
-    // Update status to processing - start at 0%
-    setUploadFiles(prev => prev.map(f => 
-      f.id === uploadFile.id ? { ...f, status: 'processing', progress: 0 } : f
-    ));
-
-    // Use upload-document function with progress tracking
-    const formData = new FormData();
-    formData.append('file', uploadFile.file);
-    // Send first category for backwards compatibility, we'll handle multiple categories after upload
-    formData.append('categoryId', categoryIds[0]);
-    formData.append('documentTypeId', documentTypeId);
-    formData.append('language', selectedLanguage);
-
-    // Update progress to show uploading
-    setUploadFiles(prev => prev.map(f => 
-      f.id === uploadFile.id ? { ...f, progress: 10 } : f
-    ));
-
-    const { data: uploadResult, error: uploadError } = await supabase.functions.invoke('upload-document', {
-      body: formData
-    });
-
-    if (uploadError) {
-      throw new Error(`Upload failed: ${uploadError.message}`);
-    }
-
-    if (!uploadResult.success) {
-      throw new Error(uploadResult.error || 'Upload failed');
-    }
-
-    // Extract job ID from response
-    const jobId = uploadResult.jobId;
-    const documentId = uploadResult.document?.id;
-    
-    // Handle multiple categories if document was created
-    if (documentId && categoryIds.length > 1) {
-      try {
-        // Clear existing categories and add new ones
-        await supabase
-          .from('document_categories')
-          .delete()
-          .eq('document_id', documentId);
-
-        const categoryInserts = categoryIds.map(catId => ({
-          document_id: documentId,
-          category_id: catId
-        }));
-
-        await supabase
-          .from('document_categories')
-          .insert(categoryInserts);
-      } catch (error) {
-        console.error('Error updating document categories:', error);
-      }
-    }
-    
-    if (jobId) {
-      // Update file with job ID for progress tracking
-      setUploadFiles(prev => prev.map(f => 
-        f.id === uploadFile.id ? { 
-          ...f, 
-          jobId: jobId,
-          progress: 20,
-          status: 'processing'
-        } : f
-      ));
-    } else {
-      // No job ID - mark as completed immediately
-      setUploadFiles(prev => prev.map(f => 
-        f.id === uploadFile.id ? { 
-          ...f, 
-          status: 'completed', 
-          progress: 100, 
-          result: uploadResult.document
-        } : f
-      ));
-      
-      processedDocuments.push(uploadResult.document);
-    }
-  };
 
   const getStatusIcon = (status: string) => {
     switch (status) {
