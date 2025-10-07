@@ -18,10 +18,10 @@ const ObservatoireSection = () => {
   };
 
   return (
-    <Link to="/observatoire" className="w-full h-1/2 md:w-1/2 md:h-full bg-gradient-to-b md:bg-gradient-to-r from-[hsl(224,76%,58%)] to-[hsl(224,76%,68%)] flex flex-col relative cursor-pointer">
+    <div className="w-full h-1/2 md:w-1/2 md:h-full bg-gradient-to-b md:bg-gradient-to-r from-[hsl(224,76%,58%)] to-[hsl(224,76%,68%)] flex flex-col relative">
       <div className="flex flex-col items-center justify-between px-4 sm:px-8 py-12 sm:py-16 h-full">
         {/* Header Section - Logo & Title */}
-        <div className="flex flex-col items-center space-y-6 sm:space-y-8">
+        <Link to="/observatoire" className="flex flex-col items-center space-y-6 sm:space-y-8 cursor-pointer hover:opacity-90 transition-opacity">
           <div className="mb-4 sm:mb-6">
             <img 
               src="/Feelinx_upload/odf-logo.png" 
@@ -33,10 +33,10 @@ const ObservatoireSection = () => {
           <h2 className="text-white text-xl sm:text-2xl md:text-3xl font-spartan font-bold text-center max-w-md leading-tight">
             Observatoire des Droits
           </h2>
-        </div>
+        </Link>
         
         {/* Center Section - Search */}
-        <div className="w-full max-w-sm sm:max-w-md my-8 sm:my-12" onClick={(e) => e.stopPropagation()}>
+        <div className="w-full max-w-sm sm:max-w-md my-8 sm:my-12 relative z-10">
           <SearchAutocomplete
             value={searchQuery}
             onChange={setSearchQuery}
@@ -87,7 +87,7 @@ const ObservatoireSection = () => {
           </div>
         </div>
       </div>
-    </Link>
+    </div>
   );
 };
 
