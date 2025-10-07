@@ -50,7 +50,7 @@ const ObservatoireSection = () => {
         <div className="w-full max-w-sm sm:max-w-md">
           <div className="grid grid-cols-2 gap-6 sm:gap-8">
             <Link 
-              to="/observatoire/textes-fondamentaux" 
+              to="/observatoire/droits-fondamentaux" 
               onClick={(e) => e.stopPropagation()}
               className="block"
             >
