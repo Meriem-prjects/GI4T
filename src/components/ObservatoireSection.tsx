@@ -54,7 +54,7 @@ const ObservatoireSection = () => {
                 <div className="flex flex-col items-center justify-center text-center h-full space-y-3">
                   <FileText className="w-7 h-7 sm:w-9 sm:h-9 text-primary" />
                   <div>
-                    <h3 className="font-semibold text-sm sm:text-base text-card-foreground">Textes</h3>
+                    <h3 className="font-semibold text-sm sm:text-base text-card-foreground">Droits fondamentaux</h3>
                     <p className="text-xs sm:text-sm text-muted-foreground">Constitution</p>
                   </div>
                 </div>
@@ -66,7 +66,7 @@ const ObservatoireSection = () => {
                 <div className="flex flex-col items-center justify-center text-center h-full space-y-3">
                   <Building className="w-7 h-7 sm:w-9 sm:h-9 text-primary" />
                   <div>
-                    <h3 className="font-semibold text-sm sm:text-base text-card-foreground">Juridictions</h3>
+                    <h3 className="font-semibold text-sm sm:text-base text-card-foreground">Analyses</h3>
                     <p className="text-xs sm:text-sm text-muted-foreground">Tribunaux</p>
                   </div>
                 </div>
