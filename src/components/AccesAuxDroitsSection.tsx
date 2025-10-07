@@ -13,7 +13,7 @@ const AccesAuxDroitsSection = () => {
             <img 
               src="/Feelinx_upload/logo-acces-aux-droits.png" 
               alt="Accès aux Droits" 
-              className="h-10 sm:h-14 w-auto object-contain max-w-full"
+              className="h-20 sm:h-24 w-auto object-contain max-w-full"
             />
           </div>
           
