@@ -8,16 +8,16 @@ const FAQNav = () => {
 
   const navItems = [
     {
-      path: "/acces-aux-droits/foire-aux-questions",
-      label: "Foire aux Questions",
-      icon: HelpCircle,
-      description: "Questions fréquentes"
-    },
-    {
       path: "/acces-aux-droits/assistant-virtuel",
       label: "Assistant Virtuel",
       icon: MessageCircle,
       description: "Chat en temps réel"
+    },
+    {
+      path: "/acces-aux-droits/foire-aux-questions",
+      label: "Foire aux Questions",
+      icon: HelpCircle,
+      description: "Questions fréquentes"
     }
   ];
 
