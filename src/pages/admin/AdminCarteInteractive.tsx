@@ -120,7 +120,7 @@ const AdminCarteInteractive = () => {
                 Visualisez les événements par gouvernorat sur la carte de Tunisie
               </CardDescription>
             </CardHeader>
-            <CardContent>
+            <CardContent className="h-[600px]">
               <GovernorateMap governorates={governorates} events={events} />
             </CardContent>
           </Card>
