@@ -9,7 +9,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { Trash2, FileText, Settings, BookOpen, Plus, Sparkles } from "lucide-react";
+import { Trash2, FileText, Settings, BookOpen, Plus, Sparkles, Pencil } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import {
@@ -51,6 +51,10 @@ const AdminChatbotConfig = () => {
   const [newDocTitle, setNewDocTitle] = useState("");
   const [newDocContent, setNewDocContent] = useState("");
   const [isFineTuning, setIsFineTuning] = useState(false);
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [editingDoc, setEditingDoc] = useState<TrainingDocument | null>(null);
+  const [editDocTitle, setEditDocTitle] = useState("");
+  const [editDocContent, setEditDocContent] = useState("");
   const { toast } = useToast();
   const { register, handleSubmit, reset, setValue } = useForm();
 
@@ -240,6 +244,54 @@ const AdminChatbotConfig = () => {
       toast({
         title: "Erreur",
         description: "Impossible de supprimer le document",
+        variant: "destructive"
+      });
+    }
+  };
+
+  const openEditDialog = (doc: TrainingDocument) => {
+    setEditingDoc(doc);
+    setEditDocTitle(doc.title);
+    setEditDocContent(doc.content);
+    setIsEditDialogOpen(true);
+  };
+
+  const updateTrainingText = async () => {
+    if (!editingDoc || !editDocTitle.trim() || !editDocContent.trim()) {
+      toast({
+        title: "Erreur",
+        description: "Veuillez remplir le titre et le contenu",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    try {
+      const { error } = await supabase
+        .from('chatbot_training_documents')
+        .update({
+          title: editDocTitle,
+          content: editDocContent
+        })
+        .eq('id', editingDoc.id);
+
+      if (error) throw error;
+
+      toast({
+        title: "Succès",
+        description: "Texte d'apprentissage modifié avec succès"
+      });
+      
+      setEditingDoc(null);
+      setEditDocTitle("");
+      setEditDocContent("");
+      setIsEditDialogOpen(false);
+      loadTrainingDocuments();
+    } catch (error) {
+      console.error('Error updating text:', error);
+      toast({
+        title: "Erreur",
+        description: "Impossible de modifier le texte",
         variant: "destructive"
       });
     }
@@ -485,6 +537,13 @@ const AdminChatbotConfig = () => {
                             {doc.is_active ? "Désactiver" : "Activer"}
                           </Button>
                           <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => openEditDialog(doc)}
+                          >
+                            <Pencil className="h-4 w-4" />
+                          </Button>
+                          <Button
                             variant="destructive"
                             size="sm"
                             onClick={() => deleteDocument(doc.id)}
@@ -508,6 +567,47 @@ const AdminChatbotConfig = () => {
           </Card>
         </TabsContent>
       </Tabs>
+
+      {/* Dialog d'édition */}
+      <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Modifier le texte d'apprentissage</DialogTitle>
+            <DialogDescription>
+              Modifiez le contenu de ce texte d'apprentissage
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="edit-doc-title">Titre du texte</Label>
+              <Input
+                id="edit-doc-title"
+                placeholder="Ex: Guide des droits du travail"
+                value={editDocTitle}
+                onChange={(e) => setEditDocTitle(e.target.value)}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="edit-doc-content">Contenu</Label>
+              <Textarea
+                id="edit-doc-content"
+                placeholder="Saisissez le contenu du texte d'apprentissage..."
+                rows={10}
+                value={editDocContent}
+                onChange={(e) => setEditDocContent(e.target.value)}
+              />
+            </div>
+            <div className="flex justify-end gap-2">
+              <Button variant="outline" onClick={() => setIsEditDialogOpen(false)}>
+                Annuler
+              </Button>
+              <Button onClick={updateTrainingText}>
+                Enregistrer les modifications
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
