@@ -349,6 +349,28 @@ const AdminSidebar = ({ type, isCollapsed = false, onToggle }: AdminSidebarProps
         })}
       </nav>
 
+      {/* Footer with logout */}
+      <div className="p-4 border-t border-white/20">
+        <Button
+          variant="ghost"
+          onClick={async () => {
+            await signOut();
+            const loginPath = type === "observatoire" 
+              ? "/admin/observatoire/login" 
+              : "/admin/acces-aux-droits/login";
+            navigate(loginPath);
+          }}
+          className={cn(
+            "w-full justify-start",
+            themeColors.text,
+            themeColors.hover,
+            isCollapsed && "px-2"
+          )}
+        >
+          <LogOut className={cn("w-4 h-4", !isCollapsed && "mr-2")} />
+          {!isCollapsed && "Déconnexion"}
+        </Button>
+      </div>
     </aside>
   );
 };
