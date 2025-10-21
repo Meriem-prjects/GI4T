@@ -132,6 +132,17 @@ export const isArabicText = (text: string): boolean => {
 };
 
 /**
+ * Lightweight real-time Arabic input handler
+ * Fixes "ا ل" → "ال" during typing for better UX
+ */
+export const handleArabicInput = (value: string): string => {
+  if (!value) return value;
+  
+  // Real-time correction: join broken "ا ل" back to "ال"
+  return value.replace(/ا\s+ل/g, 'ال');
+};
+
+/**
  * Automatically applies Arabic CSS classes and direction based on content
  */
 export const getArabicClasses = (text: string): string => {

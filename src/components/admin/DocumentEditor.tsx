@@ -18,7 +18,7 @@ import { MultiCategorySelector } from './MultiCategorySelector';
 import { useDocumentCategories, useUpdateDocumentCategories } from '@/hooks/useDocumentCategories';
 import PDFViewer from './PDFViewer';
 import { renderFormattedContent, formatContent } from '@/utils/contentFormatter';
-import { normalizeArabicText } from '@/lib/arabicUtils';
+import { normalizeArabicText, handleArabicInput } from '@/lib/arabicUtils';
 
 interface PageContent {
   pageNumber: number;
@@ -1388,7 +1388,10 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
                       </Label>
                       <Input
                         value={editedData.title_ar || ''}
-                        onChange={(e) => setEditedData(prev => ({ ...prev, title_ar: e.target.value }))}
+                        onChange={(e) => {
+                          const cleaned = handleArabicInput(e.target.value);
+                          setEditedData(prev => ({ ...prev, title_ar: cleaned }));
+                        }}
                         placeholder="عنوان الوثيقة"
                         dir="rtl"
                         className="mt-1"
@@ -1404,8 +1407,8 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
                       <Input
                         value={editedData.subtitle_ar || ''}
                         onChange={(e) => {
-                          console.log('Subtitle AR onChange:', e.target.value);
-                          setEditedData(prev => ({ ...prev, subtitle_ar: e.target.value }));
+                          const cleaned = handleArabicInput(e.target.value);
+                          setEditedData(prev => ({ ...prev, subtitle_ar: cleaned }));
                         }}
                         placeholder="العنوان الفرعي للوثيقة (اختياري)"
                         dir="rtl"
@@ -1453,7 +1456,10 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
                           <Label className="text-xs font-medium">المؤلف</Label>
                           <Input
                             value={editedData.author_ar || ''}
-                            onChange={(e) => setEditedData(prev => ({ ...prev, author_ar: e.target.value }))}
+                            onChange={(e) => {
+                              const cleaned = handleArabicInput(e.target.value);
+                              setEditedData(prev => ({ ...prev, author_ar: cleaned }));
+                            }}
                             placeholder="اسم المؤلف"
                             dir="rtl"
                             className="mt-1 h-8"
@@ -1518,7 +1524,10 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
                           <Label className="text-xs font-medium">اسم المحكمة</Label>
                           <Input
                             value={editedData.court_ar || ''}
-                            onChange={(e) => setEditedData(prev => ({ ...prev, court_ar: e.target.value }))}
+                            onChange={(e) => {
+                              const cleaned = handleArabicInput(e.target.value);
+                              setEditedData(prev => ({ ...prev, court_ar: cleaned }));
+                            }}
                             placeholder="اسم المحكمة"
                             dir="rtl"
                             className="mt-1 h-8"
@@ -1552,7 +1561,10 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
                           <Label className="text-xs font-medium">المدعي</Label>
                           <Input
                             value={editedData.plaintiff_ar || ''}
-                            onChange={(e) => setEditedData(prev => ({ ...prev, plaintiff_ar: e.target.value }))}
+                            onChange={(e) => {
+                              const cleaned = handleArabicInput(e.target.value);
+                              setEditedData(prev => ({ ...prev, plaintiff_ar: cleaned }));
+                            }}
                             placeholder="اسم المدعي"
                             dir="rtl"
                             className="mt-1 h-8"
@@ -1563,7 +1575,10 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
                           <Label className="text-xs font-medium">المدعى عليه</Label>
                           <Input
                             value={editedData.defendant_ar || ''}
-                            onChange={(e) => setEditedData(prev => ({ ...prev, defendant_ar: e.target.value }))}
+                            onChange={(e) => {
+                              const cleaned = handleArabicInput(e.target.value);
+                              setEditedData(prev => ({ ...prev, defendant_ar: cleaned }));
+                            }}
                             placeholder="اسم المدعى عليه"
                             dir="rtl"
                             className="mt-1 h-8"
@@ -1616,13 +1631,15 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
                       <span className="text-xs text-muted-foreground ml-2">(ذكاء اصطناعي)</span>
                     )}
                   </Label>
-                  <Textarea
+                   <Textarea
                     value={currentLanguage === 'ar' ? (editedData.summary_ar || '') : (editedData.summary || '')}
-                    onChange={(e) => setEditedData(prev => ({
-                      ...prev,
-                      [currentLanguage === 'ar' ? 'summary_ar' : 'summary']: 
-                        currentLanguage === 'ar' ? normalizeArabicText(e.target.value) : e.target.value
-                    }))}
+                    onChange={(e) => {
+                      const value = currentLanguage === 'ar' ? handleArabicInput(e.target.value) : e.target.value;
+                      setEditedData(prev => ({
+                        ...prev,
+                        [currentLanguage === 'ar' ? 'summary_ar' : 'summary']: value
+                      }));
+                    }}
                     placeholder={currentLanguage === 'ar' ? 'ملخص الوثيقة' : 'Résumé du document'}
                     rows={4}
                     dir={currentLanguage === 'ar' ? 'rtl' : 'ltr'}
@@ -1640,10 +1657,10 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
                   <div className="flex gap-2">
                     <Input
                       value={currentLanguage === 'ar' ? newKeywordAr : newKeyword}
-                      onChange={(e) => currentLanguage === 'ar' 
-                        ? setNewKeywordAr(e.target.value) 
-                        : setNewKeyword(e.target.value)
-                      }
+                      onChange={(e) => {
+                        const value = currentLanguage === 'ar' ? handleArabicInput(e.target.value) : e.target.value;
+                        currentLanguage === 'ar' ? setNewKeywordAr(value) : setNewKeyword(value);
+                      }}
                       placeholder={currentLanguage === 'ar' ? 'إضافة كلمة مفتاحية' : 'Ajouter un mot-clé'}
                       onKeyPress={(e) => {
                         if (e.key === 'Enter') {
@@ -1695,11 +1712,10 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
                       value={currentLanguage === editedData.language ? (editedData.textual_metadata || '') : (translatedTextualMetadata || '')}
                       onChange={(e) => {
                         if (currentLanguage === editedData.language) {
+                          const value = currentLanguage === 'ar' ? handleArabicInput(e.target.value) : e.target.value;
                           setEditedData(prev => ({
                             ...prev,
-                            textual_metadata: currentLanguage === 'ar' 
-                              ? normalizeArabicText(e.target.value)
-                              : e.target.value
+                            textual_metadata: value
                           }));
                         }
                       }}
@@ -1792,15 +1808,17 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
                   content={getCurrentContent()}
                   onChange={(newContent) => {
                     if (currentLanguage === editedData.language) {
-                      // Editing primary language content
+                      // Editing primary language content - apply Arabic correction if needed
+                      const processedContent = currentLanguage === 'ar' ? handleArabicInput(newContent) : newContent;
                       setEditedData(prev => ({
                         ...prev,
-                        content: newContent,
-                        fullContent: newContent
+                        content: processedContent,
+                        fullContent: processedContent
                       }));
                     } else {
                       // Editing translated content
-                      setTranslatedContent(newContent);
+                      const processedContent = currentLanguage === 'ar' ? handleArabicInput(newContent) : newContent;
+                      setTranslatedContent(processedContent);
                       setHasChanges(true);
                     }
                   }}
