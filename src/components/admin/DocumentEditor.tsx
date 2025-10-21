@@ -138,28 +138,8 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
       setSelectedCourtType(documentData.court_category_type);
     }
     
-    // Normalize Arabic fields on initial load (only once)
-    if (!hasNormalizedOnLoad.current && documentData.id) {
-      hasNormalizedOnLoad.current = true;
-      
-      setEditedData(prev => ({
-        ...prev,
-        title_ar: prev.title_ar ? normalizeArabicForDisplay(prev.title_ar) : prev.title_ar,
-        subtitle_ar: prev.subtitle_ar ? normalizeArabicForDisplay(prev.subtitle_ar) : prev.subtitle_ar,
-        summary_ar: prev.summary_ar ? normalizeArabicForDisplay(prev.summary_ar) : prev.summary_ar,
-        author_ar: prev.author_ar ? normalizeArabicForDisplay(prev.author_ar) : prev.author_ar,
-        court_ar: prev.court_ar ? normalizeArabicForDisplay(prev.court_ar) : prev.court_ar,
-        plaintiff_ar: prev.plaintiff_ar ? normalizeArabicForDisplay(prev.plaintiff_ar) : prev.plaintiff_ar,
-        defendant_ar: prev.defendant_ar ? normalizeArabicForDisplay(prev.defendant_ar) : prev.defendant_ar,
-        keywords_ar: prev.keywords_ar?.map(k => normalizeArabicForDisplay(k)),
-        textual_metadata: (prev.language === 'ar' && prev.textual_metadata) 
-          ? normalizeArabicForDisplay(prev.textual_metadata) 
-          : prev.textual_metadata,
-        content: (prev.language === 'ar' && prev.content) 
-          ? normalizeArabicText(prev.content) 
-          : prev.content
-      }));
-    }
+    // Note: We no longer normalize Arabic fields on load to preserve original spacing and syntax
+    // Normalization will only happen during save to ensure data consistency in database
     
     loadCategories();
     loadDocumentTypes();
@@ -576,18 +556,18 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
   const handleSave = async () => {
     try {
       if (editedData.id) {
-        // Prepare and validate data
+        // Prepare and validate data - Apply normalization to Arabic fields during save
         const updateData = {
           title: editedData.title?.trim() || '',
-          title_ar: editedData.title_ar?.trim() || null,
+          title_ar: editedData.title_ar?.trim() ? normalizeArabicForDisplay(editedData.title_ar.trim()) : null,
           subtitle: editedData.subtitle?.trim() || null,
-          subtitle_ar: editedData.subtitle_ar?.trim() || null,
+          subtitle_ar: editedData.subtitle_ar?.trim() ? normalizeArabicForDisplay(editedData.subtitle_ar.trim()) : null,
           summary: editedData.summary?.trim() || null,
-          summary_ar: editedData.summary_ar?.trim() || null,
-          content: editedData.content || '',
+          summary_ar: editedData.summary_ar?.trim() ? normalizeArabicForDisplay(editedData.summary_ar.trim()) : null,
+          content: editedData.language === 'ar' && editedData.content ? normalizeArabicText(editedData.content) : editedData.content || '',
           translated_content: translatedContent?.trim() || null,
           keywords: Array.isArray(editedData.keywords) ? editedData.keywords.filter(k => k && k.trim()) : [],
-          keywords_ar: Array.isArray(editedData.keywords_ar) ? editedData.keywords_ar.filter(k => k && k.trim()) : [],
+          keywords_ar: Array.isArray(editedData.keywords_ar) ? editedData.keywords_ar.filter(k => k && k.trim()).map(k => normalizeArabicForDisplay(k)) : [],
           document_type_id: editedData.document_type_id || null,
           language: editedData.language || 'fr',
           status: 'draft' // Save as draft
@@ -596,23 +576,24 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
 
         console.log('Attempting to save document with data:', updateData);
 
-        // Update existing document  
+        // Update existing document - Apply normalization to all Arabic metadata fields
         const fullUpdateData = {
           ...updateData,
           author: editedData.author?.trim() || null,
-          author_ar: editedData.author_ar?.trim() || null,
+          author_ar: editedData.author_ar?.trim() ? normalizeArabicForDisplay(editedData.author_ar.trim()) : null,
           court: editedData.court?.trim() || null,
-          court_ar: editedData.court_ar?.trim() || null,
+          court_ar: editedData.court_ar?.trim() ? normalizeArabicForDisplay(editedData.court_ar.trim()) : null,
           court_category_type: editedData.court_category_type?.trim() || null,
-          court_category_type_ar: editedData.court_category_type_ar?.trim() || null,
+          court_category_type_ar: editedData.court_category_type_ar?.trim() ? normalizeArabicForDisplay(editedData.court_category_type_ar.trim()) : null,
           court_level: editedData.court_level?.trim() || null,
-          court_level_ar: editedData.court_level_ar?.trim() || null,
+          court_level_ar: editedData.court_level_ar?.trim() ? normalizeArabicForDisplay(editedData.court_level_ar.trim()) : null,
           case_number: editedData.case_number?.trim() || null,
           year: editedData.year || null,
           plaintiff: editedData.plaintiff?.trim() || null,
-          plaintiff_ar: editedData.plaintiff_ar?.trim() || null,
+          plaintiff_ar: editedData.plaintiff_ar?.trim() ? normalizeArabicForDisplay(editedData.plaintiff_ar.trim()) : null,
           defendant: editedData.defendant?.trim() || null,
-          defendant_ar: editedData.defendant_ar?.trim() || null,
+          defendant_ar: editedData.defendant_ar?.trim() ? normalizeArabicForDisplay(editedData.defendant_ar.trim()) : null,
+          textual_metadata: editedData.language === 'ar' && editedData.textual_metadata ? normalizeArabicForDisplay(editedData.textual_metadata) : editedData.textual_metadata || null,
         };
 
         const { error } = await supabase
@@ -1899,9 +1880,14 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
                   className="prose prose-sm max-w-none p-4 border rounded bg-muted/30 max-h-[600px] overflow-y-auto"
                   dir={currentLanguage === 'ar' ? 'rtl' : 'ltr'}
                 >
-                  <h4 className="font-semibold text-base" dir={currentLanguage === 'ar' ? 'rtl' : 'ltr'}>
+                  <h4 className="font-semibold text-base mb-2" dir={currentLanguage === 'ar' ? 'rtl' : 'ltr'}>
                     {currentLanguage === 'ar' && editedData.title_ar ? editedData.title_ar : editedData.title}
                   </h4>
+                  {(currentLanguage === 'ar' && editedData.subtitle_ar) || (currentLanguage !== 'ar' && editedData.subtitle) ? (
+                    <h5 className="font-medium text-sm text-muted-foreground mb-3" dir={currentLanguage === 'ar' ? 'rtl' : 'ltr'}>
+                      {currentLanguage === 'ar' ? editedData.subtitle_ar : editedData.subtitle}
+                    </h5>
+                  ) : null}
                   <div 
                     className="prose prose-sm max-w-none text-sm leading-relaxed [&>h1]:text-xl [&>h1]:font-bold [&>h1]:mb-3 [&>h2]:text-lg [&>h2]:font-semibold [&>h2]:mb-2 [&>h3]:text-base [&>h3]:font-medium [&>h3]:mb-2 [&>p]:mb-2 [&>br]:block [&>br]:content-[''] [&>br]:mt-2" 
                     dir={currentLanguage === 'ar' ? 'rtl' : 'ltr'}
