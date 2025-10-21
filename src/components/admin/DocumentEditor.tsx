@@ -18,7 +18,7 @@ import { MultiCategorySelector } from './MultiCategorySelector';
 import { useDocumentCategories, useUpdateDocumentCategories } from '@/hooks/useDocumentCategories';
 import PDFViewer from './PDFViewer';
 import { renderFormattedContent, formatContent } from '@/utils/contentFormatter';
-import { normalizeArabicText, handleArabicInput } from '@/lib/arabicUtils';
+import { normalizeArabicText, normalizeArabicForDisplay, handleArabicInput } from '@/lib/arabicUtils';
 
 interface PageContent {
   pageNumber: number;
@@ -144,15 +144,16 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
       
       setEditedData(prev => ({
         ...prev,
-        title_ar: prev.title_ar ? normalizeArabicText(prev.title_ar) : prev.title_ar,
-        subtitle_ar: prev.subtitle_ar ? normalizeArabicText(prev.subtitle_ar) : prev.subtitle_ar,
-        summary_ar: prev.summary_ar ? normalizeArabicText(prev.summary_ar) : prev.summary_ar,
-        author_ar: prev.author_ar ? normalizeArabicText(prev.author_ar) : prev.author_ar,
-        court_ar: prev.court_ar ? normalizeArabicText(prev.court_ar) : prev.court_ar,
-        plaintiff_ar: prev.plaintiff_ar ? normalizeArabicText(prev.plaintiff_ar) : prev.plaintiff_ar,
-        defendant_ar: prev.defendant_ar ? normalizeArabicText(prev.defendant_ar) : prev.defendant_ar,
+        title_ar: prev.title_ar ? normalizeArabicForDisplay(prev.title_ar) : prev.title_ar,
+        subtitle_ar: prev.subtitle_ar ? normalizeArabicForDisplay(prev.subtitle_ar) : prev.subtitle_ar,
+        summary_ar: prev.summary_ar ? normalizeArabicForDisplay(prev.summary_ar) : prev.summary_ar,
+        author_ar: prev.author_ar ? normalizeArabicForDisplay(prev.author_ar) : prev.author_ar,
+        court_ar: prev.court_ar ? normalizeArabicForDisplay(prev.court_ar) : prev.court_ar,
+        plaintiff_ar: prev.plaintiff_ar ? normalizeArabicForDisplay(prev.plaintiff_ar) : prev.plaintiff_ar,
+        defendant_ar: prev.defendant_ar ? normalizeArabicForDisplay(prev.defendant_ar) : prev.defendant_ar,
+        keywords_ar: prev.keywords_ar?.map(k => normalizeArabicForDisplay(k)),
         textual_metadata: (prev.language === 'ar' && prev.textual_metadata) 
-          ? normalizeArabicText(prev.textual_metadata) 
+          ? normalizeArabicForDisplay(prev.textual_metadata) 
           : prev.textual_metadata,
         content: (prev.language === 'ar' && prev.content) 
           ? normalizeArabicText(prev.content) 
@@ -406,23 +407,23 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
           // Arabic is primary - analysis result goes to Arabic fields, translation to French
           setEditedData(prev => ({
             ...prev,
-            title_ar: analysis.title ? normalizeArabicText(analysis.title) : prev.title_ar,
-            subtitle_ar: analysis.subtitle ? normalizeArabicText(analysis.subtitle) : prev.subtitle_ar,
+            title_ar: analysis.title ? normalizeArabicForDisplay(analysis.title) : prev.title_ar,
+            subtitle_ar: analysis.subtitle ? normalizeArabicForDisplay(analysis.subtitle) : prev.subtitle_ar,
             title: analysis.translatedTitle || prev.title,
             subtitle: analysis.translatedSubtitle || prev.subtitle,
-            summary_ar: analysis.summary ? normalizeArabicText(analysis.summary) : prev.summary_ar,
+            summary_ar: analysis.summary ? normalizeArabicForDisplay(analysis.summary) : prev.summary_ar,
             summary: analysis.translatedSummary || prev.summary,
             // Keep original content unchanged
             // Apply AI suggestions for dropdown fields
             document_type_id: suggestionIds.documentTypeId || prev.document_type_id,
             // Metadata in Arabic (primary language)
-            author_ar: analysis.metadata?.author ? normalizeArabicText(analysis.metadata.author) : prev.author_ar,
-            court_ar: analysis.metadata?.court ? normalizeArabicText(analysis.metadata.court) : prev.court_ar,
+            author_ar: analysis.metadata?.author ? normalizeArabicForDisplay(analysis.metadata.author) : prev.author_ar,
+            court_ar: analysis.metadata?.court ? normalizeArabicForDisplay(analysis.metadata.court) : prev.court_ar,
             case_number: analysis.metadata?.case_number || prev.case_number,
-            plaintiff_ar: analysis.metadata?.plaintiff ? normalizeArabicText(analysis.metadata.plaintiff) : prev.plaintiff_ar,
-            defendant_ar: analysis.metadata?.defendant ? normalizeArabicText(analysis.metadata.defendant) : prev.defendant_ar,
+            plaintiff_ar: analysis.metadata?.plaintiff ? normalizeArabicForDisplay(analysis.metadata.plaintiff) : prev.plaintiff_ar,
+            defendant_ar: analysis.metadata?.defendant ? normalizeArabicForDisplay(analysis.metadata.defendant) : prev.defendant_ar,
             year: analysis.metadata?.year || prev.year,
-            court_level_ar: analysis.metadata?.court_level ? normalizeArabicText(analysis.metadata.court_level) : prev.court_level_ar,
+            court_level_ar: analysis.metadata?.court_level ? normalizeArabicForDisplay(analysis.metadata.court_level) : prev.court_level_ar,
             // Translated metadata in French
             author: analysis.metadataTranslated?.author || prev.author,
             court: analysis.metadataTranslated?.court || prev.court,
@@ -431,9 +432,9 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
             court_level: analysis.metadataTranslated?.court_level || prev.court_level,
             // Keep original Arabic content, don't replace it
             keywords_ar: (() => {
-              const existing = (prev.keywords_ar || []).map(k => normalizeArabicText(k.trim())).filter(k => k && /[\u0600-\u06FF]/.test(k));
+              const existing = (prev.keywords_ar || []).map(k => normalizeArabicForDisplay(k.trim())).filter(k => k && /[\u0600-\u06FF]/.test(k));
               const rawNewKeys = parseKeywordsArray(analysis.existingKeywords || []);
-              const newKeys = rawNewKeys.map(k => normalizeArabicText(k.trim())).filter(k => k && /[\u0600-\u06FF]/.test(k));
+              const newKeys = rawNewKeys.map(k => normalizeArabicForDisplay(k.trim())).filter(k => k && /[\u0600-\u06FF]/.test(k));
               const combined = [...existing, ...newKeys];
               const seen = new Set();
               return combined.filter(k => {
@@ -467,10 +468,10 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
             ...prev,
             title: analysis.title || prev.title,
             subtitle: analysis.subtitle || prev.subtitle,
-            title_ar: analysis.translatedTitle ? normalizeArabicText(analysis.translatedTitle) : prev.title_ar,
-            subtitle_ar: analysis.translatedSubtitle ? normalizeArabicText(analysis.translatedSubtitle) : prev.subtitle_ar,
+            title_ar: analysis.translatedTitle ? normalizeArabicForDisplay(analysis.translatedTitle) : prev.title_ar,
+            subtitle_ar: analysis.translatedSubtitle ? normalizeArabicForDisplay(analysis.translatedSubtitle) : prev.subtitle_ar,
             summary: analysis.summary || prev.summary,
-            summary_ar: analysis.translatedSummary ? normalizeArabicText(analysis.translatedSummary) : prev.summary_ar,
+            summary_ar: analysis.translatedSummary ? normalizeArabicForDisplay(analysis.translatedSummary) : prev.summary_ar,
             // Keep original content unchanged
             // Apply AI suggestions for dropdown fields
             document_type_id: suggestionIds.documentTypeId || prev.document_type_id,
@@ -483,11 +484,11 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
             year: analysis.metadata?.year || prev.year,
             court_level: analysis.metadata?.court_level || prev.court_level,
             // Translated metadata in Arabic
-            author_ar: analysis.metadataTranslated?.author ? normalizeArabicText(analysis.metadataTranslated.author) : prev.author_ar,
-            court_ar: analysis.metadataTranslated?.court ? normalizeArabicText(analysis.metadataTranslated.court) : prev.court_ar,
-            plaintiff_ar: analysis.metadataTranslated?.plaintiff ? normalizeArabicText(analysis.metadataTranslated.plaintiff) : prev.plaintiff_ar,
-            defendant_ar: analysis.metadataTranslated?.defendant ? normalizeArabicText(analysis.metadataTranslated.defendant) : prev.defendant_ar,
-            court_level_ar: analysis.metadataTranslated?.court_level ? normalizeArabicText(analysis.metadataTranslated.court_level) : prev.court_level_ar,
+            author_ar: analysis.metadataTranslated?.author ? normalizeArabicForDisplay(analysis.metadataTranslated.author) : prev.author_ar,
+            court_ar: analysis.metadataTranslated?.court ? normalizeArabicForDisplay(analysis.metadataTranslated.court) : prev.court_ar,
+            plaintiff_ar: analysis.metadataTranslated?.plaintiff ? normalizeArabicForDisplay(analysis.metadataTranslated.plaintiff) : prev.plaintiff_ar,
+            defendant_ar: analysis.metadataTranslated?.defendant ? normalizeArabicForDisplay(analysis.metadataTranslated.defendant) : prev.defendant_ar,
+            court_level_ar: analysis.metadataTranslated?.court_level ? normalizeArabicForDisplay(analysis.metadataTranslated.court_level) : prev.court_level_ar,
             // Keep original French content, don't replace it
             keywords: (() => {
               const existing = (prev.keywords || []).map(k => k.trim()).filter(k => k && !/[\u0600-\u06FF]/.test(k));
@@ -503,9 +504,9 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
               });
             })(),
             keywords_ar: (() => {
-              const existing = (prev.keywords_ar || []).map(k => normalizeArabicText(k.trim())).filter(k => k && /[\u0600-\u06FF]/.test(k));
+              const existing = (prev.keywords_ar || []).map(k => normalizeArabicForDisplay(k.trim())).filter(k => k && /[\u0600-\u06FF]/.test(k));
               const rawNewKeys = parseKeywordsArray(analysis.translatedKeywords || []);
-              const newKeys = rawNewKeys.map(k => normalizeArabicText(k.trim())).filter(k => k && /[\u0600-\u06FF]/.test(k));
+              const newKeys = rawNewKeys.map(k => normalizeArabicForDisplay(k.trim())).filter(k => k && /[\u0600-\u06FF]/.test(k));
               const combined = [...existing, ...newKeys];
               const seen = new Set();
               return combined.filter(k => {
@@ -530,7 +531,7 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
             setEditedData(prev => ({
               ...prev,
               court_category_type: suggestedCourtType.name,
-              court_category_type_ar: suggestedCourtType.name_ar ? normalizeArabicText(suggestedCourtType.name_ar) : null
+              court_category_type_ar: suggestedCourtType.name_ar ? normalizeArabicForDisplay(suggestedCourtType.name_ar) : null
             }));
           }
         }
@@ -821,10 +822,21 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
   };
 
   const addKeyword = (language: 'fr' | 'ar' = 'fr') => {
-    const keyword = language === 'fr' ? newKeyword.trim() : newKeywordAr.trim();
+    let keyword = language === 'fr' ? newKeyword.trim() : newKeywordAr.trim();
     const field = language === 'fr' ? 'keywords' : 'keywords_ar';
     
-    if (keyword && !editedData[field]?.includes(keyword)) {
+    // Apply normalization for Arabic keywords
+    if (language === 'ar' && keyword) {
+      keyword = normalizeArabicForDisplay(handleArabicInput(keyword));
+    }
+    
+    // Check for duplicates (case-insensitive, space-normalized)
+    const existing = editedData[field] || [];
+    const isDuplicate = existing.some(k => 
+      k.toLowerCase().trim().replace(/\s+/g, ' ') === keyword.toLowerCase().trim().replace(/\s+/g, ' ')
+    );
+    
+    if (keyword && !isDuplicate) {
       setEditedData(prev => ({
         ...prev,
         [field]: [...(prev[field] || []), keyword]
@@ -837,6 +849,25 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
       }
       setHasChanges(true);
     }
+  };
+  
+  const fixArabicKeywords = () => {
+    setEditedData(prev => ({
+      ...prev,
+      keywords_ar: (prev.keywords_ar || [])
+        .map(k => normalizeArabicForDisplay(k))
+        .map(k => k.replace(/\s+/g, ' ').trim())
+        .filter(Boolean)
+        .filter((k, i, arr) => {
+          const normalized = k.toLowerCase().trim().replace(/\s+/g, ' ');
+          return arr.findIndex(x => x.toLowerCase().trim().replace(/\s+/g, ' ') === normalized) === i;
+        })
+    }));
+    setHasChanges(true);
+    toast({
+      title: "Mots-clés corrigés",
+      description: "Les mots-clés arabes ont été normalisés et les doublons supprimés",
+    });
   };
 
   const removeKeyword = (keyword: string, language: 'fr' | 'ar' = 'fr') => {
@@ -914,21 +945,21 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
 
     setIsCleaningArabic(true);
     try {
-      // Normalize all Arabic fields
+      // Normalize all Arabic fields - use display normalization for short fields, full for content
       const cleaned = {
         ...editedData,
-        title_ar: editedData.title_ar ? normalizeArabicText(editedData.title_ar) : editedData.title_ar,
-        subtitle_ar: editedData.subtitle_ar ? normalizeArabicText(editedData.subtitle_ar) : editedData.subtitle_ar,
+        title_ar: editedData.title_ar ? normalizeArabicForDisplay(editedData.title_ar) : editedData.title_ar,
+        subtitle_ar: editedData.subtitle_ar ? normalizeArabicForDisplay(editedData.subtitle_ar) : editedData.subtitle_ar,
         content: editedData.language === 'ar' && editedData.content ? normalizeArabicText(editedData.content) : editedData.content,
-        textual_metadata: editedData.language === 'ar' && editedData.textual_metadata ? normalizeArabicText(editedData.textual_metadata) : editedData.textual_metadata,
-        summary_ar: editedData.summary_ar ? normalizeArabicText(editedData.summary_ar) : editedData.summary_ar,
-        keywords_ar: editedData.keywords_ar?.map(k => normalizeArabicText(k)),
-        author_ar: editedData.author_ar ? normalizeArabicText(editedData.author_ar) : editedData.author_ar,
-        court_ar: editedData.court_ar ? normalizeArabicText(editedData.court_ar) : editedData.court_ar,
-        plaintiff_ar: editedData.plaintiff_ar ? normalizeArabicText(editedData.plaintiff_ar) : editedData.plaintiff_ar,
-        defendant_ar: editedData.defendant_ar ? normalizeArabicText(editedData.defendant_ar) : editedData.defendant_ar,
-        court_level_ar: editedData.court_level_ar ? normalizeArabicText(editedData.court_level_ar) : editedData.court_level_ar,
-        court_category_type_ar: editedData.court_category_type_ar ? normalizeArabicText(editedData.court_category_type_ar) : editedData.court_category_type_ar,
+        textual_metadata: editedData.language === 'ar' && editedData.textual_metadata ? normalizeArabicForDisplay(editedData.textual_metadata) : editedData.textual_metadata,
+        summary_ar: editedData.summary_ar ? normalizeArabicForDisplay(editedData.summary_ar) : editedData.summary_ar,
+        keywords_ar: editedData.keywords_ar?.map(k => normalizeArabicForDisplay(k)),
+        author_ar: editedData.author_ar ? normalizeArabicForDisplay(editedData.author_ar) : editedData.author_ar,
+        court_ar: editedData.court_ar ? normalizeArabicForDisplay(editedData.court_ar) : editedData.court_ar,
+        plaintiff_ar: editedData.plaintiff_ar ? normalizeArabicForDisplay(editedData.plaintiff_ar) : editedData.plaintiff_ar,
+        defendant_ar: editedData.defendant_ar ? normalizeArabicForDisplay(editedData.defendant_ar) : editedData.defendant_ar,
+        court_level_ar: editedData.court_level_ar ? normalizeArabicForDisplay(editedData.court_level_ar) : editedData.court_level_ar,
+        court_category_type_ar: editedData.court_category_type_ar ? normalizeArabicForDisplay(editedData.court_category_type_ar) : editedData.court_category_type_ar,
       };
 
       // Save to database
@@ -1340,7 +1371,7 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
                               // Update Arabic equivalent
                               const courtType = courtTypes.find(ct => ct.name === value);
                               if (courtType?.name_ar) {
-                                setEditedData(prev => ({ ...prev, court_category_type_ar: normalizeArabicText(courtType.name_ar) }));
+                                setEditedData(prev => ({ ...prev, court_category_type_ar: normalizeArabicForDisplay(courtType.name_ar) }));
                               }
                               setSelectedCourtType(value);
                             }}
@@ -1532,7 +1563,7 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
                           <Select
                             value={editedData.court_category_type_ar || ''}
                             onValueChange={(value) => {
-                              setEditedData(prev => ({ ...prev, court_category_type_ar: normalizeArabicText(value) }));
+                              setEditedData(prev => ({ ...prev, court_category_type_ar: normalizeArabicForDisplay(value) }));
                               // Update French equivalent and selectedCourtType
                               const courtType = courtTypes.find(ct => ct.name_ar === value);
                               if (courtType) {
@@ -1712,9 +1743,22 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
 
               <Card className="p-4 lg:col-span-5">
                 <div className="space-y-3">
-                  <Label className="text-sm font-medium">
-                    {currentLanguage === 'ar' ? 'الكلمات المفاتيح' : 'Mots-clés'}
-                  </Label>
+                  <div className="flex items-center justify-between">
+                    <Label className="text-sm font-medium">
+                      {currentLanguage === 'ar' ? 'الكلمات المفاتيح' : 'Mots-clés'}
+                    </Label>
+                    {currentLanguage === 'ar' && (
+                      <Button
+                        type="button"
+                        onClick={fixArabicKeywords}
+                        size="sm"
+                        variant="outline"
+                        className="text-xs h-7"
+                      >
+                        Corriger
+                      </Button>
+                    )}
+                  </div>
                   <div className="flex gap-2">
                     <Input
                       value={currentLanguage === 'ar' ? newKeywordAr : newKeyword}
@@ -1743,7 +1787,7 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
                   <div className="flex flex-wrap gap-2 max-h-24 overflow-y-auto">
                     {(currentLanguage === 'ar' ? editedData.keywords_ar : editedData.keywords)?.map((keyword, index) => (
                       <Badge key={index} variant="secondary" className="flex items-center gap-1">
-                        {keyword}
+                        {normalizeArabicForDisplay(keyword)}
                         <X
                           className="h-3 w-3 cursor-pointer hover:text-destructive transition-colors"
                           onClick={() => removeKeyword(keyword, currentLanguage as 'fr' | 'ar')}

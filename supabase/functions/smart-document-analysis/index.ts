@@ -251,10 +251,12 @@ ${content}` }
 
     // Validate and parse keywords if they come as a single string
     if (analysisResult.existingKeywords) {
-      analysisResult.existingKeywords = parseKeywordsArray(analysisResult.existingKeywords);
+      analysisResult.existingKeywords = parseKeywordsArray(analysisResult.existingKeywords)
+        .map(k => targetLanguage === 'arabe' ? sanitizeArabicText(k) : k);
     }
     if (analysisResult.translatedKeywords) {
-      analysisResult.translatedKeywords = parseKeywordsArray(analysisResult.translatedKeywords);
+      analysisResult.translatedKeywords = parseKeywordsArray(analysisResult.translatedKeywords)
+        .map(k => targetLanguage === 'arabe' ? k : sanitizeArabicText(k));
     }
     if (analysisResult.suggestedKeywords) {
       analysisResult.suggestedKeywords = parseKeywordsArray(analysisResult.suggestedKeywords);

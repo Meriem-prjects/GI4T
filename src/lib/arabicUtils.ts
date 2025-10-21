@@ -1,13 +1,68 @@
 // Arabic text utilities for normalization and detection
 
 /**
- * Normalizes Arabic text using NFKC normalization plus cleanup
- * - Uses NFKC to convert presentation forms to base characters
- * - Strips control characters (ZWJ, ZWNJ, LRM, RLM, tatweel)
- * - Remaps non-standard Arabic characters (Persian kaf/yeh, alternate heh)
- * - Reorders diacritics (Shadda before vowel marks)
- * - Fixes broken intra-word spaces (deglue pass)
- * - Separates glued words using linguistic patterns
+ * Lightweight normalization for display purposes (titles, keywords, short fields)
+ * - Preserves Alif variants (إ/أ/آ/ٱ) for proper display
+ * - Removes invisible characters and converts special spaces
+ * - Reorders diacritics
+ * - Minimal "ا ل" → "ال" correction
+ * - Does NOT apply aggressive word separation heuristics
+ */
+export const normalizeArabicForDisplay = (text: string): string => {
+  if (!text) return text;
+  
+  // Step 1: NFKC normalization (converts presentation forms to base forms)
+  let normalized = text.normalize('NFKC');
+  
+  // Step 2: Strip problematic control characters
+  normalized = normalized
+    .replace(/[\u200B-\u200F]/g, '') // ZWSP, ZWNJ, ZWJ, LRM, RLM, etc.
+    .replace(/\u0640/g, '')          // Arabic Tatweel
+    .replace(/[\u00A0\u202F\u2000-\u200A\u2060\uFEFF]/g, ' '); // Convert special spaces to regular space
+  
+  // Step 3: Remap non-standard Arabic characters EXCEPT Alif variants (preserve إ/أ/آ/ٱ)
+  const charMap: Record<string, string> = {
+    // Persian/Urdu Kaf → Arabic Kaf
+    '\u06A9': '\u0643',  // ک → ك
+    '\u06AF': '\u0643',  // گ → ك
+    // Persian/Urdu Yeh → Arabic Yeh
+    '\u06CC': '\u064A',  // ی → ي
+    '\u06D2': '\u064A',  // ے → ي
+    // Alternate Heh forms → Arabic Heh
+    '\u06C1': '\u0647',  // ہ → ه
+    '\u06BE': '\u0647',  // ھ → ه
+    '\uFEEB': '\u0647',  // ﻫ → ه (presentation form)
+    '\uFEEC': '\u0647',  // ﻬ → ه (presentation form)
+    // NOTE: Alif variants are NOT mapped here to preserve them
+  };
+  
+  for (const [from, to] of Object.entries(charMap)) {
+    normalized = normalized.replace(new RegExp(from, 'g'), to);
+  }
+  
+  // Step 4: Reorder diacritics (Shadda \u0651 should come before vowel marks)
+  normalized = normalized.replace(/([\u064B-\u0650\u0652])(\u0651)/g, '$2$1');
+  
+  // Step 5: Minimal DEGLUE - Only fix obvious broken "ا ل" → "ال"
+  normalized = normalized.replace(/ا\s*[\u200B-\u200F\u2060]?\s*ل/g, 'ال');
+  
+  // Remove spaces between letter and diacritics
+  normalized = normalized.replace(/([\u0621-\u064A])\s+([\u064B-\u0652\u0670])/g, '$1$2');
+  
+  // Step 6: Clean orphan diacritics at word boundaries
+  normalized = normalized.replace(/\s+[\u064B-\u0652\u0670]+\s+/g, ' ');
+  
+  // Step 7: Final cleanup - compact multiple spaces
+  normalized = normalized.replace(/\s+/g, ' ').trim();
+  
+  return normalized;
+};
+
+/**
+ * Full normalization for long paragraphs/content
+ * - Uses NFKC normalization and character remapping
+ * - Applies aggressive word separation ONLY for long text
+ * - Unifies Alif variants to ا for search/indexing
  */
 export const normalizeArabicText = (text: string): string => {
   if (!text) return text;
@@ -34,7 +89,7 @@ export const normalizeArabicText = (text: string): string => {
     '\u06BE': '\u0647',  // ھ → ه
     '\uFEEB': '\u0647',  // ﻫ → ه (presentation form)
     '\uFEEC': '\u0647',  // ﻬ → ه (presentation form)
-    // Alif variants → Standard Alif
+    // Alif variants → Standard Alif (for search/indexing)
     '\u0622': '\u0627',  // آ → ا
     '\u0623': '\u0627',  // أ → ا
     '\u0625': '\u0627',  // إ → ا
@@ -46,26 +101,26 @@ export const normalizeArabicText = (text: string): string => {
   }
   
   // Step 4: Reorder diacritics (Shadda \u0651 should come before vowel marks)
-  // Match: vowel mark followed by shadda, then swap them
   normalized = normalized.replace(/([\u064B-\u0650\u0652])(\u0651)/g, '$2$1');
   
   // Step 5: DEGLUE PASS - Fix broken intra-word spaces
-  // Join broken "ا ل" back to "ال" (handle all Alif variants and special spaces)
   normalized = normalized.replace(/[اإأآٱ]\s*[\u200B-\u200F\u2060]?[\s\u00A0\u202F\u2000-\u200A]*ل/g, 'ال');
   
   // Remove spaces between letter and diacritics
   normalized = normalized.replace(/([\u0621-\u064A])\s+([\u064B-\u0652\u0670])/g, '$1$2');
   
-  // Fix common broken patterns like "ا لع ا رض" -> "العارض"
-  // Pattern: broken definite article at start (handle all Alif variants and special spaces)
+  // Fix common broken patterns
   normalized = normalized.replace(/[اإأآٱ]\s*[\u200B-\u200F\u2060]?[\s\u00A0\u202F\u2000-\u200A]*ل\s*([\u0621-\u064A])/g, 'ال$1');
   
   // Pattern: single spaces within 3-6 letter Arabic words (likely broken words)
   normalized = normalized.replace(/([\u0621-\u064A])\s+([\u0621-\u064A])\s+([\u0621-\u064A])\s+([\u0621-\u064A])/g, '$1$2$3$4');
   normalized = normalized.replace(/([\u0621-\u064A])\s+([\u0621-\u064A])\s+([\u0621-\u064A])/g, '$1$2$3');
   
-  // Step 6: Separate glued Arabic words
-  normalized = separateGluedArabicWords(normalized);
+  // Step 6: Separate glued Arabic words ONLY for long text or text with structure
+  const hasStructure = normalized.length > 80 || /[\n،:؛.!?]/.test(normalized);
+  if (hasStructure) {
+    normalized = separateGluedArabicWords(normalized);
+  }
   
   // Step 7: Clean orphan diacritics at word boundaries
   normalized = normalized.replace(/\s+[\u064B-\u0652\u0670]+\s+/g, ' ');
