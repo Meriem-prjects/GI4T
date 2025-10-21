@@ -43,14 +43,33 @@ export const normalizeArabicForDisplay = (text: string): string => {
   // Step 4: Reorder diacritics (Shadda \u0651 should come before vowel marks)
   normalized = normalized.replace(/([\u064B-\u0650\u0652])(\u0651)/g, '$2$1');
   
-  // Step 5: Minimal DEGLUE - Only fix obvious broken "ا ل" → "ال"
+  // Step 5: Comprehensive spacing fixes for common Arabic patterns
+  
+  // Fix "ا ل" → "ال" (definite article)
   normalized = normalized.replace(/ا\s*[\u200B-\u200F\u2060]?\s*ل/g, 'ال');
-
-  // Step 5.1: Fix broken "ع ل" → "عل" (Ayn + space + Lam)
+  
+  // Fix "ل ل" → "لل" (double lam)
+  normalized = normalized.replace(/ل\s+ل/g, 'لل');
+  
+  // Fix "ع ل" → "عل"
   normalized = normalized.replace(/ع\s*[\u200B-\u200F\u2060]?\s*ل/g, 'عل');
-
-  // Step 5.2: Fix broken "ج ا" → "جا" (Jim + space + Alif)
+  
+  // Fix "ج ا" → "جا"
   normalized = normalized.replace(/ج\s*[\u200B-\u200F\u2060]?\s*ا/g, 'جا');
+  
+  // Fix spaces after definite article "ال " before a word
+  normalized = normalized.replace(/\bال\s+([ب-ي])/g, 'ال$1');
+  
+  // Fix broken words - common patterns where space appears in middle of word
+  // Fix "ش ف" → "شف" (common in المستشفى)
+  normalized = normalized.replace(/ش\s+ف/g, 'شف');
+  
+  // Fix "المستش فيات" → "المستشفيات"
+  normalized = normalized.replace(/المستش\s+فيات/g, 'المستشفيات');
+  
+  // Fix missing spaces between words that are glued (look for definite article without space)
+  // "العلاجالمجاني" → "العلاج المجاني"
+  normalized = normalized.replace(/([\u0621-\u064Aء-ي])ال([ب-ي])/g, '$1 ال$2');
   
   // Remove spaces between letter and diacritics
   normalized = normalized.replace(/([\u0621-\u064A])\s+([\u064B-\u0652\u0670])/g, '$1$2');
@@ -220,11 +239,23 @@ export const handleArabicInput = (value: string): string => {
   // Real-time correction: join broken "ا ل" back to "ال"
   let corrected = value.replace(/ا\s+ل/g, 'ال');
   
+  // Real-time correction: join broken "ل ل" back to "لل"
+  corrected = corrected.replace(/ل\s+ل/g, 'لل');
+  
   // Real-time correction: join broken "ع ل" back to "عل"
   corrected = corrected.replace(/ع\s+ل/g, 'عل');
   
   // Real-time correction: join broken "ج ا" back to "جا"
   corrected = corrected.replace(/ج\s+ا/g, 'جا');
+  
+  // Real-time correction: join broken "ش ف" back to "شف"
+  corrected = corrected.replace(/ش\s+ف/g, 'شف');
+  
+  // Fix spaces after definite article
+  corrected = corrected.replace(/\bال\s+([ب-ي])/g, 'ال$1');
+  
+  // Fix glued words with definite article
+  corrected = corrected.replace(/([\u0621-\u064Aء-ي])ال([ب-ي])/g, '$1 ال$2');
   
   return corrected;
 };
