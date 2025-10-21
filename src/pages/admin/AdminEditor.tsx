@@ -13,6 +13,8 @@ interface DocumentData {
   content: string;
   title: string;
   title_ar?: string;
+  subtitle?: string;
+  subtitle_ar?: string;
   summary: string;
   summary_ar?: string;
   keywords: string[];
@@ -103,6 +105,8 @@ const AdminEditor = () => {
         content: document.content,
         title: document.title,
         title_ar: document.title_ar || '',
+        subtitle: document.subtitle || '',
+        subtitle_ar: document.subtitle_ar || '',
         summary: document.summary || '',
         summary_ar: document.summary_ar || '',
         keywords: document.keywords || [],
