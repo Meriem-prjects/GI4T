@@ -14,6 +14,32 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
+// Helper function to parse keywords that might come as a single string or array
+function parseKeywordsArray(keywords: any): string[] {
+  if (!keywords) return [];
+  
+  // If it's already an array, process each element
+  if (Array.isArray(keywords)) {
+    return keywords.flatMap(k => {
+      if (typeof k === 'string') {
+        // Check if it contains separators (comma, semicolon, pipe)
+        if (k.includes(',') || k.includes(';') || k.includes('|')) {
+          return k.split(/[,;|]/).map(item => item.trim()).filter(item => item);
+        }
+        return [k.trim()].filter(item => item);
+      }
+      return [];
+    });
+  }
+  
+  // If it's a string, split it
+  if (typeof keywords === 'string') {
+    return keywords.split(/[,;|]/).map(item => item.trim()).filter(item => item);
+  }
+  
+  return [];
+}
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
@@ -55,6 +81,23 @@ serve(async (req) => {
     const sourceLanguage = isPrimaryArabic ? 'arabe' : 'français';
 
     const systemPrompt = `Tu es un expert en analyse de documents juridiques tunisiens. Analyse le contenu suivant et extrait les informations demandées en JSON.
+
+LANGUE DU DOCUMENT SOURCE: ${sourceLanguage}
+LANGUE CIBLE POUR LES TRADUCTIONS: ${targetLanguage}
+
+⚠️ RÈGLE ABSOLUE SUR LES TRADUCTIONS:
+- Si le document source est en ${sourceLanguage}, les champs "title", "subtitle", "summary", "metadata" doivent être en ${sourceLanguage}
+- Les champs "translatedTitle", "translatedSubtitle", "translatedSummary", "metadataTranslated" doivent être EXCLUSIVEMENT en ${targetLanguage}
+- Si targetLanguage est "arabe", tu DOIS écrire en caractères arabes (Unicode U+0600 à U+06FF)
+- Si targetLanguage est "français", tu DOIS écrire en caractères latins
+
+⚠️ RÈGLE ABSOLUE SUR LES MOTS-CLÉS:
+- "existingKeywords" doit être un tableau de chaînes en ${sourceLanguage}
+- "translatedKeywords" doit être un tableau de chaînes en ${targetLanguage}
+- Chaque mot-clé doit être une chaîne séparée dans le tableau
+- NE PAS mettre tous les mots-clés dans une seule chaîne séparée par des virgules
+- Exemple correct: ["mot1", "mot2", "mot3"]
+- Exemple INCORRECT: ["mot1, mot2, mot3"]
 
 IMPORTANTES INSTRUCTIONS POUR L'EXTRACTION DEPUIS LES MÉTADONNÉES TEXTUELLES:
 1. NE MODIFIE PAS le contenu original du document - garde-le intact
@@ -187,6 +230,34 @@ ${content}` }
       console.error('JSON parsing error:', parseError);
       console.error('Raw AI response:', aiResponse);
       throw new Error('Failed to parse AI response as JSON');
+    }
+
+    // Validate that translated fields are actually in target language
+    if (targetLanguage === 'arabe') {
+      // Check if translatedTitle contains Arabic characters
+      if (analysisResult.translatedTitle && !/[\u0600-\u06FF]/.test(analysisResult.translatedTitle)) {
+        console.warn('translatedTitle does not contain Arabic characters, using fallback');
+        analysisResult.translatedTitle = analysisResult.title || '';
+      }
+      if (analysisResult.translatedSubtitle && !/[\u0600-\u06FF]/.test(analysisResult.translatedSubtitle)) {
+        console.warn('translatedSubtitle does not contain Arabic characters, using fallback');
+        analysisResult.translatedSubtitle = analysisResult.subtitle || '';
+      }
+      if (analysisResult.translatedSummary && !/[\u0600-\u06FF]/.test(analysisResult.translatedSummary)) {
+        console.warn('translatedSummary does not contain Arabic characters, using fallback');
+        analysisResult.translatedSummary = analysisResult.summary || '';
+      }
+    }
+
+    // Validate and parse keywords if they come as a single string
+    if (analysisResult.existingKeywords) {
+      analysisResult.existingKeywords = parseKeywordsArray(analysisResult.existingKeywords);
+    }
+    if (analysisResult.translatedKeywords) {
+      analysisResult.translatedKeywords = parseKeywordsArray(analysisResult.translatedKeywords);
+    }
+    if (analysisResult.suggestedKeywords) {
+      analysisResult.suggestedKeywords = parseKeywordsArray(analysisResult.suggestedKeywords);
     }
 
     // Validate required fields

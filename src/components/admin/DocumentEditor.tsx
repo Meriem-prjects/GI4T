@@ -252,6 +252,23 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
     }
   };
 
+  // Helper to parse and clean keywords array
+  const parseKeywordsArray = (keywords: any[]): string[] => {
+    if (!keywords || !Array.isArray(keywords)) return [];
+    
+    return keywords.flatMap(k => {
+      if (typeof k === 'string') {
+        const trimmed = k.trim();
+        // If keyword contains separators, split it
+        if (trimmed.includes(',') || trimmed.includes(';') || trimmed.includes('|')) {
+          return trimmed.split(/[,;|]/).map(item => item.trim()).filter(item => item);
+        }
+        return [trimmed].filter(item => item);
+      }
+      return [];
+    });
+  };
+
   useEffect(() => {
     if (documentCategories.length > 0) {
       setSelectedCategoryIds(documentCategories.map(dc => dc.category_id));
@@ -335,6 +352,46 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
         const analysis = data.analysis;
         const isPrimaryArabic = editedData.language === 'ar';
         
+        // Debug: Log analysis result to verify content
+        console.log('🔍 AI Analysis Result:', {
+          isPrimaryArabic,
+          titleLanguage: analysis.title ? ((/[\u0600-\u06FF]/.test(analysis.title)) ? 'AR' : 'FR') : 'N/A',
+          translatedTitleLanguage: analysis.translatedTitle ? ((/[\u0600-\u06FF]/.test(analysis.translatedTitle)) ? 'AR' : 'FR') : 'N/A',
+          existingKeywordsType: Array.isArray(analysis.existingKeywords) ? 'array' : typeof analysis.existingKeywords,
+          existingKeywordsCount: Array.isArray(analysis.existingKeywords) ? analysis.existingKeywords.length : 0,
+          existingKeywordsFirstItem: Array.isArray(analysis.existingKeywords) && analysis.existingKeywords[0],
+          translatedKeywordsType: Array.isArray(analysis.translatedKeywords) ? 'array' : typeof analysis.translatedKeywords,
+        });
+
+        // Verify that translations are in the correct language
+        const verifyTranslationLanguage = (text: string, expectedLanguage: 'ar' | 'fr'): boolean => {
+          if (!text) return true;
+          
+          if (expectedLanguage === 'ar') {
+            return /[\u0600-\u06FF]/.test(text);
+          } else {
+            return /[a-zA-ZÀ-ÿ]/.test(text);
+          }
+        };
+
+        // Log warnings if translations are in wrong language
+        if (!isPrimaryArabic) {
+          if (!verifyTranslationLanguage(analysis.translatedTitle, 'ar')) {
+            console.warn('translatedTitle is not in Arabic:', analysis.translatedTitle);
+            toast({
+              title: "Avertissement",
+              description: "Le titre traduit en arabe semble incorrect",
+              variant: "default"
+            });
+          }
+          if (!verifyTranslationLanguage(analysis.translatedSubtitle, 'ar')) {
+            console.warn('translatedSubtitle is not in Arabic:', analysis.translatedSubtitle);
+          }
+          if (!verifyTranslationLanguage(analysis.translatedSummary, 'ar')) {
+            console.warn('translatedSummary is not in Arabic:', analysis.translatedSummary);
+          }
+        }
+        
         // DON'T change the original content - keep it intact
         // Only update metadata fields
         
@@ -375,7 +432,8 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
             // Keep original Arabic content, don't replace it
             keywords_ar: (() => {
               const existing = (prev.keywords_ar || []).map(k => normalizeArabicText(k.trim())).filter(k => k && /[\u0600-\u06FF]/.test(k));
-              const newKeys = (analysis.existingKeywords || []).map(k => normalizeArabicText(k.trim())).filter(k => k && /[\u0600-\u06FF]/.test(k));
+              const rawNewKeys = parseKeywordsArray(analysis.existingKeywords || []);
+              const newKeys = rawNewKeys.map(k => normalizeArabicText(k.trim())).filter(k => k && /[\u0600-\u06FF]/.test(k));
               const combined = [...existing, ...newKeys];
               const seen = new Set();
               return combined.filter(k => {
@@ -387,7 +445,8 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
             })(),
             keywords: (() => {
               const existing = (prev.keywords || []).map(k => k.trim()).filter(k => k && !/[\u0600-\u06FF]/.test(k));
-              const newKeys = (analysis.translatedKeywords || []).map(k => k.trim()).filter(k => k && !/[\u0600-\u06FF]/.test(k));
+              const rawNewKeys = parseKeywordsArray(analysis.translatedKeywords || []);
+              const newKeys = rawNewKeys.filter(k => k && !/[\u0600-\u06FF]/.test(k));
               const combined = [...existing, ...newKeys];
               const seen = new Set();
               return combined.filter(k => {
@@ -432,7 +491,8 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
             // Keep original French content, don't replace it
             keywords: (() => {
               const existing = (prev.keywords || []).map(k => k.trim()).filter(k => k && !/[\u0600-\u06FF]/.test(k));
-              const newKeys = (analysis.existingKeywords || []).map(k => k.trim()).filter(k => k && !/[\u0600-\u06FF]/.test(k));
+              const rawNewKeys = parseKeywordsArray(analysis.existingKeywords || []);
+              const newKeys = rawNewKeys.filter(k => k && !/[\u0600-\u06FF]/.test(k));
               const combined = [...existing, ...newKeys];
               const seen = new Set();
               return combined.filter(k => {
@@ -444,7 +504,8 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
             })(),
             keywords_ar: (() => {
               const existing = (prev.keywords_ar || []).map(k => normalizeArabicText(k.trim())).filter(k => k && /[\u0600-\u06FF]/.test(k));
-              const newKeys = (analysis.translatedKeywords || []).map(k => normalizeArabicText(k.trim())).filter(k => k && /[\u0600-\u06FF]/.test(k));
+              const rawNewKeys = parseKeywordsArray(analysis.translatedKeywords || []);
+              const newKeys = rawNewKeys.map(k => normalizeArabicText(k.trim())).filter(k => k && /[\u0600-\u06FF]/.test(k));
               const combined = [...existing, ...newKeys];
               const seen = new Set();
               return combined.filter(k => {
