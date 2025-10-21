@@ -57,6 +57,12 @@ export const normalizeArabicForDisplay = (text: string): string => {
   // Fix "ج ا" → "جا"
   normalized = normalized.replace(/ج\s*[\u200B-\u200F\u2060]?\s*ا/g, 'جا');
   
+  // Fix "ب ا" → "با" (ba + alif)
+  normalized = normalized.replace(/ب\s*[\u200B-\u200F\u2060]?\s*ا/g, 'با');
+  
+  // Fix "ب ال" → "بال" (preposition + definite article)
+  normalized = normalized.replace(/ب\s+ال/g, 'بال');
+  
   // Fix spaces after definite article "ال " before a word
   normalized = normalized.replace(/\bال\s+([ب-ي])/g, 'ال$1');
   
@@ -136,6 +142,15 @@ export const normalizeArabicText = (text: string): string => {
 
   // Step 5.2: Fix broken "ج ا" → "جا" (Jim + space + Alif)
   normalized = normalized.replace(/ج\s*[\u200B-\u200F\u2060]?[\s\u00A0\u202F\u2000-\u200A]*ا/g, 'جا');
+  
+  // Step 5.3: Fix broken "ب ا" → "با" (Ba + space + Alif)
+  normalized = normalized.replace(/ب\s*[\u200B-\u200F\u2060]?[\s\u00A0\u202F\u2000-\u200A]*ا/g, 'با');
+  
+  // Step 5.4: Fix "ب ال" → "بال" (Ba + space + definite article)
+  normalized = normalized.replace(/ب\s*[\u200B-\u200F\u2060]?[\s\u00A0\u202F\u2000-\u200A]*ال/g, 'بال');
+  
+  // Step 5.5: Fix "ب ال" followed by another Arabic letter
+  normalized = normalized.replace(/ب\s*[\u200B-\u200F\u2060]?[\s\u00A0\u202F\u2000-\u200A]*ال\s*([\u0621-\u064A])/g, 'بال$1');
   
   // Remove spaces between letter and diacritics
   normalized = normalized.replace(/([\u0621-\u064A])\s+([\u064B-\u0652\u0670])/g, '$1$2');
@@ -247,6 +262,12 @@ export const handleArabicInput = (value: string): string => {
   
   // Real-time correction: join broken "ج ا" back to "جا"
   corrected = corrected.replace(/ج\s+ا/g, 'جا');
+  
+  // Real-time correction: join broken "ب ا" back to "با"
+  corrected = corrected.replace(/ب\s+ا/g, 'با');
+  
+  // Real-time correction: join "ب ال" to "بال"
+  corrected = corrected.replace(/ب\s+ال/g, 'بال');
   
   // Real-time correction: join broken "ش ف" back to "شف"
   corrected = corrected.replace(/ش\s+ف/g, 'شف');

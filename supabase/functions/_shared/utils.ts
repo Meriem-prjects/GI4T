@@ -52,6 +52,12 @@ export const sanitizeArabicText = (text: string | null | undefined): string => {
   // Join broken "ج ا" back to "جا" (Jim + space + Alif)
   sanitized = sanitized.replace(/ج\s*[\u200B-\u200F\u2060]?\s*ا/g, 'جا');
   
+  // Join broken "ب ا" back to "با" (Ba + space + Alif)
+  sanitized = sanitized.replace(/ب\s*[\u200B-\u200F\u2060]?\s*ا/g, 'با');
+  
+  // Join broken "ب ال" to "بال" (Ba + space + definite article)
+  sanitized = sanitized.replace(/ب\s+ال/g, 'بال');
+  
   // Remove spaces between letter and diacritics
   sanitized = sanitized.replace(/([\u0621-\u064A])\s+([\u064B-\u0652\u0670])/g, '$1$2');
   
