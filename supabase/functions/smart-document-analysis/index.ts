@@ -251,6 +251,35 @@ ${content}` }
       }
     }
 
+    // Sanitize translated Arabic fields when target language is Arabic
+    if (targetLanguage === 'arabe') {
+      if (analysisResult.translatedTitle) {
+        analysisResult.translatedTitle = sanitizeArabicText(analysisResult.translatedTitle);
+      }
+      if (analysisResult.translatedSubtitle) {
+        analysisResult.translatedSubtitle = sanitizeArabicText(analysisResult.translatedSubtitle);
+      }
+      if (analysisResult.translatedSummary) {
+        analysisResult.translatedSummary = sanitizeArabicText(analysisResult.translatedSummary);
+      }
+      if (analysisResult.translatedKeywords) {
+        analysisResult.translatedKeywords = analysisResult.translatedKeywords.map((k: string) => sanitizeArabicText(k));
+      }
+      if (analysisResult.metadataTranslated) {
+        for (const key of Object.keys(analysisResult.metadataTranslated)) {
+          if (typeof analysisResult.metadataTranslated[key] === 'string') {
+            analysisResult.metadataTranslated[key] = sanitizeArabicText(analysisResult.metadataTranslated[key]);
+          }
+        }
+      }
+      if (analysisResult.textualMetadataTranslated) {
+        analysisResult.textualMetadataTranslated = sanitizeArabicText(analysisResult.textualMetadataTranslated);
+      }
+      if (analysisResult.translatedContent) {
+        analysisResult.translatedContent = sanitizeArabicText(analysisResult.translatedContent);
+      }
+    }
+
     return new Response(JSON.stringify({
       success: true,
       analysis: analysisResult,

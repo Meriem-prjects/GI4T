@@ -18,7 +18,8 @@ export const normalizeArabicText = (text: string): string => {
   // Step 2: Strip problematic control characters
   normalized = normalized
     .replace(/[\u200B-\u200F]/g, '') // ZWSP, ZWNJ, ZWJ, LRM, RLM, etc.
-    .replace(/\u0640/g, '');          // Arabic Tatweel
+    .replace(/\u0640/g, '')          // Arabic Tatweel
+    .replace(/[\u00A0\u202F\u2000-\u200A\u2060\uFEFF]/g, ' '); // Convert special spaces to regular space
   
   // Step 3: Remap non-standard Arabic characters to standard forms
   const charMap: Record<string, string> = {
@@ -33,6 +34,11 @@ export const normalizeArabicText = (text: string): string => {
     '\u06BE': '\u0647',  // ھ → ه
     '\uFEEB': '\u0647',  // ﻫ → ه (presentation form)
     '\uFEEC': '\u0647',  // ﻬ → ه (presentation form)
+    // Alif variants → Standard Alif
+    '\u0622': '\u0627',  // آ → ا
+    '\u0623': '\u0627',  // أ → ا
+    '\u0625': '\u0627',  // إ → ا
+    '\u0671': '\u0627',  // ٱ → ا
   };
   
   for (const [from, to] of Object.entries(charMap)) {
@@ -44,15 +50,15 @@ export const normalizeArabicText = (text: string): string => {
   normalized = normalized.replace(/([\u064B-\u0650\u0652])(\u0651)/g, '$2$1');
   
   // Step 5: DEGLUE PASS - Fix broken intra-word spaces
-  // Join broken "ا ل" back to "ال"
-  normalized = normalized.replace(/ا\s+ل/g, 'ال');
+  // Join broken "ا ل" back to "ال" (handle all Alif variants and special spaces)
+  normalized = normalized.replace(/[اإأآٱ]\s*[\u200B-\u200F\u2060]?[\s\u00A0\u202F\u2000-\u200A]*ل/g, 'ال');
   
   // Remove spaces between letter and diacritics
   normalized = normalized.replace(/([\u0621-\u064A])\s+([\u064B-\u0652\u0670])/g, '$1$2');
   
   // Fix common broken patterns like "ا لع ا رض" -> "العارض"
-  // Pattern: broken definite article at start
-  normalized = normalized.replace(/ا\s*ل\s*([\u0621-\u064A])/g, 'ال$1');
+  // Pattern: broken definite article at start (handle all Alif variants and special spaces)
+  normalized = normalized.replace(/[اإأآٱ]\s*[\u200B-\u200F\u2060]?[\s\u00A0\u202F\u2000-\u200A]*ل\s*([\u0621-\u064A])/g, 'ال$1');
   
   // Pattern: single spaces within 3-6 letter Arabic words (likely broken words)
   normalized = normalized.replace(/([\u0621-\u064A])\s+([\u0621-\u064A])\s+([\u0621-\u064A])\s+([\u0621-\u064A])/g, '$1$2$3$4');

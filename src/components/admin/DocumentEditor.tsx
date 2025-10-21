@@ -469,7 +469,7 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
             setEditedData(prev => ({
               ...prev,
               court_category_type: suggestedCourtType.name,
-              court_category_type_ar: suggestedCourtType.name_ar || null
+              court_category_type_ar: suggestedCourtType.name_ar ? normalizeArabicText(suggestedCourtType.name_ar) : null
             }));
           }
         }
@@ -1279,7 +1279,7 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
                               // Update Arabic equivalent
                               const courtType = courtTypes.find(ct => ct.name === value);
                               if (courtType?.name_ar) {
-                                setEditedData(prev => ({ ...prev, court_category_type_ar: courtType.name_ar }));
+                                setEditedData(prev => ({ ...prev, court_category_type_ar: normalizeArabicText(courtType.name_ar) }));
                               }
                               setSelectedCourtType(value);
                             }}
@@ -1471,7 +1471,7 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
                           <Select
                             value={editedData.court_category_type_ar || ''}
                             onValueChange={(value) => {
-                              setEditedData(prev => ({ ...prev, court_category_type_ar: value }));
+                              setEditedData(prev => ({ ...prev, court_category_type_ar: normalizeArabicText(value) }));
                               // Update French equivalent and selectedCourtType
                               const courtType = courtTypes.find(ct => ct.name_ar === value);
                               if (courtType) {
