@@ -16,6 +16,8 @@ interface Document {
   id: string;
   title: string;
   title_ar: string;
+  subtitle: string;
+  subtitle_ar: string;
   summary: string;
   summary_ar: string;
   content: string;
@@ -280,10 +282,11 @@ const DocumentDetail = () => {
   const isArabicContent = showOriginal && document.language === 'ar';
   
   // Use Arabic fields when displaying Arabic content
-  const currentTitle = isArabicContent && document.title_ar ? normalizeArabicText(document.title_ar) : document.title;
-  const currentSummary = isArabicContent && document.summary_ar ? normalizeArabicText(document.summary_ar) : document.summary;
-  const currentAuthor = isArabicContent && document.author_ar ? normalizeArabicText(document.author_ar) : document.author;
-  const currentCourt = isArabicContent && document.court_ar ? normalizeArabicText(document.court_ar) : document.court;
+  const currentTitle = isArabicContent && document.title_ar ? document.title_ar : document.title;
+  const currentSubtitle = isArabicContent && document.subtitle_ar ? document.subtitle_ar : document.subtitle;
+  const currentSummary = isArabicContent && document.summary_ar ? document.summary_ar : document.summary;
+  const currentAuthor = isArabicContent && document.author_ar ? document.author_ar : document.author;
+  const currentCourt = isArabicContent && document.court_ar ? document.court_ar : document.court;
   
   // Format court level: replace underscores with spaces and translate for Arabic
   const formatCourtLevel = (level: string | null) => {
@@ -359,6 +362,12 @@ const DocumentDetail = () => {
               {currentTitle}
             </h1>
             
+            {currentSubtitle && (
+              <h2 className={`text-xl md:text-2xl font-semibold mb-6 text-muted-foreground max-w-4xl mx-auto ${isArabicContent ? 'dir-rtl' : ''}`}>
+                {currentSubtitle}
+              </h2>
+            )}
+
             {currentSummary && (
               <p className={`text-lg text-muted-foreground mb-8 max-w-4xl mx-auto ${isArabicContent ? 'dir-rtl' : ''}`}>
                 {currentSummary}
