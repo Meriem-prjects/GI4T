@@ -349,8 +349,8 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
           // Arabic is primary - analysis result goes to Arabic fields, translation to French
           setEditedData(prev => ({
             ...prev,
-            title_ar: analysis.title || prev.title_ar,
-            subtitle_ar: analysis.subtitle || prev.subtitle_ar,
+            title_ar: analysis.title ? normalizeArabicText(analysis.title) : prev.title_ar,
+            subtitle_ar: analysis.subtitle ? normalizeArabicText(analysis.subtitle) : prev.subtitle_ar,
             title: analysis.translatedTitle || prev.title,
             subtitle: analysis.translatedSubtitle || prev.subtitle,
             summary_ar: analysis.summary ? normalizeArabicText(analysis.summary) : prev.summary_ar,
@@ -359,13 +359,13 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
             // Apply AI suggestions for dropdown fields
             document_type_id: suggestionIds.documentTypeId || prev.document_type_id,
             // Metadata in Arabic (primary language)
-            author_ar: analysis.metadata?.author || prev.author_ar,
-            court_ar: analysis.metadata?.court || prev.court_ar,
+            author_ar: analysis.metadata?.author ? normalizeArabicText(analysis.metadata.author) : prev.author_ar,
+            court_ar: analysis.metadata?.court ? normalizeArabicText(analysis.metadata.court) : prev.court_ar,
             case_number: analysis.metadata?.case_number || prev.case_number,
-            plaintiff_ar: analysis.metadata?.plaintiff || prev.plaintiff_ar,
-            defendant_ar: analysis.metadata?.defendant || prev.defendant_ar,
+            plaintiff_ar: analysis.metadata?.plaintiff ? normalizeArabicText(analysis.metadata.plaintiff) : prev.plaintiff_ar,
+            defendant_ar: analysis.metadata?.defendant ? normalizeArabicText(analysis.metadata.defendant) : prev.defendant_ar,
             year: analysis.metadata?.year || prev.year,
-            court_level_ar: analysis.metadata?.court_level || prev.court_level_ar,
+            court_level_ar: analysis.metadata?.court_level ? normalizeArabicText(analysis.metadata.court_level) : prev.court_level_ar,
             // Translated metadata in French
             author: analysis.metadataTranslated?.author || prev.author,
             court: analysis.metadataTranslated?.court || prev.court,
@@ -374,8 +374,8 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
             court_level: analysis.metadataTranslated?.court_level || prev.court_level,
             // Keep original Arabic content, don't replace it
             keywords_ar: (() => {
-              const existing = (prev.keywords_ar || []).map(k => k.trim()).filter(k => k && /[\u0600-\u06FF]/.test(k));
-              const newKeys = (analysis.existingKeywords || []).map(k => k.trim()).filter(k => k && /[\u0600-\u06FF]/.test(k));
+              const existing = (prev.keywords_ar || []).map(k => normalizeArabicText(k.trim())).filter(k => k && /[\u0600-\u06FF]/.test(k));
+              const newKeys = (analysis.existingKeywords || []).map(k => normalizeArabicText(k.trim())).filter(k => k && /[\u0600-\u06FF]/.test(k));
               const combined = [...existing, ...newKeys];
               const seen = new Set();
               return combined.filter(k => {
@@ -408,8 +408,8 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
             ...prev,
             title: analysis.title || prev.title,
             subtitle: analysis.subtitle || prev.subtitle,
-            title_ar: analysis.translatedTitle || prev.title_ar,
-            subtitle_ar: analysis.translatedSubtitle || prev.subtitle_ar,
+            title_ar: analysis.translatedTitle ? normalizeArabicText(analysis.translatedTitle) : prev.title_ar,
+            subtitle_ar: analysis.translatedSubtitle ? normalizeArabicText(analysis.translatedSubtitle) : prev.subtitle_ar,
             summary: analysis.summary || prev.summary,
             summary_ar: analysis.translatedSummary ? normalizeArabicText(analysis.translatedSummary) : prev.summary_ar,
             // Keep original content unchanged
@@ -424,11 +424,11 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
             year: analysis.metadata?.year || prev.year,
             court_level: analysis.metadata?.court_level || prev.court_level,
             // Translated metadata in Arabic
-            author_ar: analysis.metadataTranslated?.author || prev.author_ar,
-            court_ar: analysis.metadataTranslated?.court || prev.court_ar,
-            plaintiff_ar: analysis.metadataTranslated?.plaintiff || prev.plaintiff_ar,
-            defendant_ar: analysis.metadataTranslated?.defendant || prev.defendant_ar,
-            court_level_ar: analysis.metadataTranslated?.court_level || prev.court_level_ar,
+            author_ar: analysis.metadataTranslated?.author ? normalizeArabicText(analysis.metadataTranslated.author) : prev.author_ar,
+            court_ar: analysis.metadataTranslated?.court ? normalizeArabicText(analysis.metadataTranslated.court) : prev.court_ar,
+            plaintiff_ar: analysis.metadataTranslated?.plaintiff ? normalizeArabicText(analysis.metadataTranslated.plaintiff) : prev.plaintiff_ar,
+            defendant_ar: analysis.metadataTranslated?.defendant ? normalizeArabicText(analysis.metadataTranslated.defendant) : prev.defendant_ar,
+            court_level_ar: analysis.metadataTranslated?.court_level ? normalizeArabicText(analysis.metadataTranslated.court_level) : prev.court_level_ar,
             // Keep original French content, don't replace it
             keywords: (() => {
               const existing = (prev.keywords || []).map(k => k.trim()).filter(k => k && !/[\u0600-\u06FF]/.test(k));
@@ -443,8 +443,8 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
               });
             })(),
             keywords_ar: (() => {
-              const existing = (prev.keywords_ar || []).map(k => k.trim()).filter(k => k && /[\u0600-\u06FF]/.test(k));
-              const newKeys = (analysis.translatedKeywords || []).map(k => k.trim()).filter(k => k && /[\u0600-\u06FF]/.test(k));
+              const existing = (prev.keywords_ar || []).map(k => normalizeArabicText(k.trim())).filter(k => k && /[\u0600-\u06FF]/.test(k));
+              const newKeys = (analysis.translatedKeywords || []).map(k => normalizeArabicText(k.trim())).filter(k => k && /[\u0600-\u06FF]/.test(k));
               const combined = [...existing, ...newKeys];
               const seen = new Set();
               return combined.filter(k => {
