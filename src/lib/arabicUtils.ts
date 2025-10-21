@@ -48,6 +48,9 @@ export const normalizeArabicForDisplay = (text: string): string => {
 
   // Step 5.1: Fix broken "ع ل" → "عل" (Ayn + space + Lam)
   normalized = normalized.replace(/ع\s*[\u200B-\u200F\u2060]?\s*ل/g, 'عل');
+
+  // Step 5.2: Fix broken "ج ا" → "جا" (Jim + space + Alif)
+  normalized = normalized.replace(/ج\s*[\u200B-\u200F\u2060]?\s*ا/g, 'جا');
   
   // Remove spaces between letter and diacritics
   normalized = normalized.replace(/([\u0621-\u064A])\s+([\u064B-\u0652\u0670])/g, '$1$2');
@@ -111,6 +114,9 @@ export const normalizeArabicText = (text: string): string => {
 
   // Step 5.1: Fix broken "ع ل" → "عل" (Ayn + space + Lam)
   normalized = normalized.replace(/ع\s*[\u200B-\u200F\u2060]?[\s\u00A0\u202F\u2000-\u200A]*ل/g, 'عل');
+
+  // Step 5.2: Fix broken "ج ا" → "جا" (Jim + space + Alif)
+  normalized = normalized.replace(/ج\s*[\u200B-\u200F\u2060]?[\s\u00A0\u202F\u2000-\u200A]*ا/g, 'جا');
   
   // Remove spaces between letter and diacritics
   normalized = normalized.replace(/([\u0621-\u064A])\s+([\u064B-\u0652\u0670])/g, '$1$2');
@@ -120,6 +126,9 @@ export const normalizeArabicText = (text: string): string => {
 
   // Step 5.2: Fix "ع ل" followed by another Arabic letter
   normalized = normalized.replace(/ع\s*[\u200B-\u200F\u2060]?[\s\u00A0\u202F\u2000-\u200A]*ل\s*([\u0621-\u064A])/g, 'عل$1');
+
+  // Step 5.3: Fix "ج ا" followed by another Arabic letter
+  normalized = normalized.replace(/ج\s*[\u200B-\u200F\u2060]?[\s\u00A0\u202F\u2000-\u200A]*ا\s*([\u0621-\u064A])/g, 'جا$1');
   
   // Pattern: single spaces within 3-6 letter Arabic words (likely broken words)
   normalized = normalized.replace(/([\u0621-\u064A])\s+([\u0621-\u064A])\s+([\u0621-\u064A])\s+([\u0621-\u064A])/g, '$1$2$3$4');
@@ -213,6 +222,9 @@ export const handleArabicInput = (value: string): string => {
   
   // Real-time correction: join broken "ع ل" back to "عل"
   corrected = corrected.replace(/ع\s+ل/g, 'عل');
+  
+  // Real-time correction: join broken "ج ا" back to "جا"
+  corrected = corrected.replace(/ج\s+ا/g, 'جا');
   
   return corrected;
 };
