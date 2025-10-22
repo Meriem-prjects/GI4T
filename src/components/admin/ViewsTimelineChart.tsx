@@ -1,5 +1,5 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, Legend, ResponsiveContainer } from 'recharts';
 import { GroupedView } from "@/lib/statisticsUtils";
 
 interface ViewsTimelineChartProps {
@@ -39,7 +39,7 @@ const ViewsTimelineChart = ({ data }: ViewsTimelineChartProps) => {
               }}
             />
             <YAxis className="text-xs" />
-            <Tooltip 
+            <RechartsTooltip 
               labelFormatter={(value) => {
                 const date = new Date(value as string);
                 return date.toLocaleDateString('fr-FR');
