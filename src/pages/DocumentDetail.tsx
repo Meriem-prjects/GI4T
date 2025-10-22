@@ -11,6 +11,9 @@ import { Separator } from "@/components/ui/separator";
 import { createSlug, createCategorySlug, createDocumentPath } from "@/lib/urlUtils";
 import { renderFormattedContent } from "@/utils/contentFormatter";
 import { normalizeArabicText } from "@/lib/arabicUtils";
+import { ArticleStatistics } from "@/components/ArticleStatistics";
+import { CommentSection } from "@/components/CommentSection";
+import { useDocumentView } from "@/hooks/useDocumentView";
 
 interface Document {
   id: string;
@@ -81,6 +84,9 @@ const DocumentDetail = () => {
   const [relatedDocuments, setRelatedDocuments] = useState<SuggestedDocument[]>([]);
   const [loading, setLoading] = useState(true);
   const [showOriginal, setShowOriginal] = useState(false);
+  
+  // Track document view
+  useDocumentView(document?.id);
 
   useEffect(() => {
     const fetchDocument = async () => {

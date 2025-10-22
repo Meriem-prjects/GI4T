@@ -87,6 +87,12 @@ const AdminSidebar = ({ type, isCollapsed = false, onToggle }: AdminSidebarProps
       description: "Validation des contenus"
     },
     {
+      title: "Commentaires",
+      icon: MessageCircle,
+      href: `${basePath}/commentaires`,
+      description: "Gestion des commentaires"
+    },
+    {
       title: "Historique",
       icon: FileText,
       href: `${basePath}/historique`,

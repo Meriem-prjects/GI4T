@@ -245,7 +245,78 @@ export type Database = {
             foreignKeyName: "document_categories_document_id_fkey"
             columns: ["document_id"]
             isOneToOne: false
+            referencedRelation: "document_statistics"
+            referencedColumns: ["document_id"]
+          },
+          {
+            foreignKeyName: "document_categories_document_id_fkey"
+            columns: ["document_id"]
+            isOneToOne: false
             referencedRelation: "documents"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      document_comments: {
+        Row: {
+          admin_user_id: string | null
+          author_email: string
+          author_name: string
+          content: string
+          created_at: string | null
+          document_id: string
+          id: string
+          is_admin_reply: boolean | null
+          parent_comment_id: string | null
+          status: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          admin_user_id?: string | null
+          author_email: string
+          author_name: string
+          content: string
+          created_at?: string | null
+          document_id: string
+          id?: string
+          is_admin_reply?: boolean | null
+          parent_comment_id?: string | null
+          status?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          admin_user_id?: string | null
+          author_email?: string
+          author_name?: string
+          content?: string
+          created_at?: string | null
+          document_id?: string
+          id?: string
+          is_admin_reply?: boolean | null
+          parent_comment_id?: string | null
+          status?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "document_comments_document_id_fkey"
+            columns: ["document_id"]
+            isOneToOne: false
+            referencedRelation: "document_statistics"
+            referencedColumns: ["document_id"]
+          },
+          {
+            foreignKeyName: "document_comments_document_id_fkey"
+            columns: ["document_id"]
+            isOneToOne: false
+            referencedRelation: "documents"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "document_comments_parent_comment_id_fkey"
+            columns: ["parent_comment_id"]
+            isOneToOne: false
+            referencedRelation: "document_comments"
             referencedColumns: ["id"]
           },
         ]
@@ -276,6 +347,54 @@ export type Database = {
           name_ar?: string | null
         }
         Relationships: []
+      }
+      document_views: {
+        Row: {
+          created_at: string | null
+          document_id: string
+          id: string
+          ip_address: string | null
+          read_duration: number | null
+          session_id: string
+          user_agent: string | null
+          viewed_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          document_id: string
+          id?: string
+          ip_address?: string | null
+          read_duration?: number | null
+          session_id: string
+          user_agent?: string | null
+          viewed_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          document_id?: string
+          id?: string
+          ip_address?: string | null
+          read_duration?: number | null
+          session_id?: string
+          user_agent?: string | null
+          viewed_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "document_views_document_id_fkey"
+            columns: ["document_id"]
+            isOneToOne: false
+            referencedRelation: "document_statistics"
+            referencedColumns: ["document_id"]
+          },
+          {
+            foreignKeyName: "document_views_document_id_fkey"
+            columns: ["document_id"]
+            isOneToOne: false
+            referencedRelation: "documents"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       documents: {
         Row: {
@@ -904,7 +1023,20 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      document_statistics: {
+        Row: {
+          avg_read_duration: number | null
+          document_id: string | null
+          last_viewed_at: string | null
+          pending_comments: number | null
+          title: string | null
+          title_ar: string | null
+          total_comments: number | null
+          total_reads: number | null
+          total_views: number | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       binary_quantize: {
@@ -982,7 +1114,7 @@ export type Database = {
       }
       l2_normalize: {
         Args: { "": string } | { "": unknown } | { "": unknown }
-        Returns: string
+        Returns: unknown
       }
       match_documents: {
         Args: {
