@@ -131,8 +131,23 @@ verify_jwt = false
 [functions.create-acces-droits-admin]
 verify_jwt = false
 
+[functions.create-admin-user]
+verify_jwt = false
+
+[functions.delete-user]
+verify_jwt = false
+
+[functions.update-user-roles]
+verify_jwt = false
+
 [functions.chatbot-fine-tuning]
 verify_jwt = false
 
 [functions.acces-droits-chat]
+verify_jwt = false
+
+[functions.track-document-view]
+verify_jwt = false
+
+[functions.submit-comment]
 verify_jwt = false

@@ -498,6 +498,14 @@ const DocumentDetail = () => {
               )}
             </div>
 
+            {/* Article Statistics */}
+            <div className="max-w-4xl mx-auto my-8">
+              <ArticleStatistics 
+                documentId={document.id} 
+                contentLength={document.content?.length || 0}
+              />
+            </div>
+
             {/* Action Buttons */}
             <div className="flex flex-wrap items-center justify-center gap-4 mb-8">
               {/* Toggle between original and translated */}
@@ -587,6 +595,14 @@ const DocumentDetail = () => {
               </div>
             </div>
           )}
+
+          {/* Comment Section */}
+          <div className="mt-12">
+            <CommentSection 
+              documentId={document.id} 
+              documentTitle={currentTitle}
+            />
+          </div>
         </div>
 
         {/* Sidebar - French (right side) */}
