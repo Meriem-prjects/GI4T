@@ -8,7 +8,8 @@ import {
   AlertTriangle,
   Plus,
   UserPlus,
-  Eye
+  Eye,
+  BarChart3
 } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -277,6 +278,10 @@ const AdminDashboard = ({ type }: AdminDashboardProps) => {
               <Button variant="outline" className="w-full justify-start">
                 <Eye className="w-4 h-4 mr-2" />
                 Contenus en attente
+              </Button>
+              <Button variant="outline" className="w-full justify-start">
+                <BarChart3 className="w-4 h-4 mr-2" />
+                Voir les statistiques détaillées
               </Button>
             </CardContent>
           </Card>

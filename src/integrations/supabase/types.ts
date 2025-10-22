@@ -1043,6 +1043,18 @@ export type Database = {
         Args: { "": string } | { "": unknown }
         Returns: unknown
       }
+      get_global_statistics: {
+        Args: { period_days?: number }
+        Returns: {
+          avg_read_duration: number
+          pending_comments: number
+          top_articles_count: number
+          total_comments: number
+          total_reads: number
+          total_views: number
+          unique_sessions: number
+        }[]
+      }
       get_pdfa_statistics: {
         Args: Record<PropertyKey, never>
         Returns: {

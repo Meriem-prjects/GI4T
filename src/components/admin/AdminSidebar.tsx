@@ -17,6 +17,8 @@ import {
   MapPin,
   Building,
   MessageCircle,
+  MessageSquare,
+  BarChart3,
   HelpCircle,
   LogOut
 } from "lucide-react";
@@ -88,9 +90,15 @@ const AdminSidebar = ({ type, isCollapsed = false, onToggle }: AdminSidebarProps
     },
     {
       title: "Commentaires",
-      icon: MessageCircle,
+      icon: MessageSquare,
       href: `${basePath}/commentaires`,
-      description: "Gestion des commentaires"
+      description: "Modérer les commentaires"
+    },
+    {
+      title: "Statistiques",
+      icon: BarChart3,
+      href: `${basePath}/statistiques`,
+      description: "Vues, lectures et analyses"
     },
     {
       title: "Historique",
