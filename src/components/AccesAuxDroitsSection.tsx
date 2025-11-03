@@ -23,12 +23,12 @@ const AccesAuxDroitsSection = () => {
     >
       <CardContent className="p-8 sm:p-12 flex flex-col items-center justify-center space-y-8 min-h-[500px]">
         {/* Title */}
-        <h2 className="text-gray-900 text-3xl sm:text-4xl font-spartan font-bold text-center max-w-md">
+        <h2 className="text-blue-900 text-3xl sm:text-4xl font-spartan font-bold text-center max-w-md">
           Accès au droit administratif
         </h2>
 
         {/* Description */}
-        <p className="text-gray-800 text-base sm:text-lg text-center max-w-md leading-relaxed">
+        <p className="text-blue-800 text-base sm:text-lg text-center max-w-md leading-relaxed">
           Comprendre ses droits, savoir comment agir : des outils concrets pour tous les citoyens
         </p>
 
