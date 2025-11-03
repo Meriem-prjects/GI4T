@@ -1,5 +1,6 @@
 import ObservatoireSection from "@/components/ObservatoireSection";
 import AccesAuxDroitsSection from "@/components/AccesAuxDroitsSection";
+import ActualitesHomeSection from "@/components/ActualitesHomeSection";
 import HomeHeader from "@/components/HomeHeader";
 import HomeFooter from "@/components/HomeFooter";
 
@@ -19,11 +20,16 @@ const Index = () => {
         <HomeHeader />
 
         {/* Main Content - Card Grid Layout */}
-        <main className="flex-grow container mx-auto px-4 sm:px-6 lg:px-8 py-12">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 max-w-7xl mx-auto">
-            <ObservatoireSection />
-            <AccesAuxDroitsSection />
+        <main className="flex-grow">
+          <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-12">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 max-w-7xl mx-auto">
+              <ObservatoireSection />
+              <AccesAuxDroitsSection />
+            </div>
           </div>
+
+          {/* Actualités Section */}
+          <ActualitesHomeSection />
         </main>
 
         <HomeFooter />
