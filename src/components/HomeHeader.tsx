@@ -15,7 +15,7 @@ const HomeHeader = () => {
                 className="h-8 sm:h-12 w-auto object-contain"
               />
             </div>
-            <p className="text-primary text-xs font-medium hidden sm:block">Information citoyenne simplifiée</p>
+            <p className="text-primary text-xs font-medium hidden sm:block">Plateforme citoyenne de la jurisprudence administrative et constitutionnelle</p>
           </div>
           
           {/* Language Switcher */}
