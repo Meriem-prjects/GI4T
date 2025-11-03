@@ -29,7 +29,7 @@ const ObservatoireSection = () => {
           navigate('/observatoire');
         }
       }}
-      className="bg-gradient-to-br from-[hsl(224,76%,58%)] to-[hsl(224,76%,68%)] border-0 shadow-2xl hover:shadow-3xl transition-all cursor-pointer hover:scale-[1.02] duration-300"
+      className="bg-gradient-to-br from-[#4164D7] to-[#5574E0] border-0 shadow-2xl hover:shadow-3xl transition-all cursor-pointer hover:scale-[1.02] duration-300"
     >
       <CardContent className="p-8 sm:p-12 flex flex-col items-center justify-center space-y-8 min-h-[500px]">
         {/* Logo */}
