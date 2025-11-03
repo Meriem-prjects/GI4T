@@ -1,14 +1,14 @@
 import { Card, CardContent } from "@/components/ui/card";
-import { FileText } from "lucide-react";
-import { Link, useNavigate } from "react-router-dom";
-import { useState, FormEvent } from "react";
+import { useNavigate } from "react-router-dom";
+import { useState } from "react";
 import { SearchAutocomplete } from "@/components/SearchAutocomplete";
 import { useTypingPlaceholder } from "@/hooks/useTypingPlaceholder";
+import logoOdfFr from "@/assets/logo-odf-fr.png";
 
 const ObservatoireSection = () => {
   const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState("");
-  const [language] = useState<'fr' | 'ar'>('fr'); // Can be extended with language context
+  const [language] = useState<'fr' | 'ar'>('fr');
   const animatedPlaceholder = useTypingPlaceholder(language);
 
   const handleSearch = () => {
@@ -18,10 +18,10 @@ const ObservatoireSection = () => {
   };
 
   return (
-    <div
-      role="link"
+    <Card 
+      role="button"
       tabIndex={0}
-      aria-label="Ouvrir l’Observatoire des Droits"
+      aria-label="Accéder à l'Observatoire des Droits"
       onClick={() => navigate('/observatoire')}
       onKeyDown={(e) => {
         if (e.key === 'Enter' || e.key === ' ') {
@@ -29,27 +29,26 @@ const ObservatoireSection = () => {
           navigate('/observatoire');
         }
       }}
-      className="w-full h-1/2 md:w-1/2 md:h-full bg-gradient-to-b md:bg-gradient-to-r from-[hsl(224,76%,58%)] to-[hsl(224,76%,68%)] flex flex-col relative cursor-pointer hover:brightness-105 transition-all"
+      className="bg-gradient-to-br from-[hsl(224,76%,58%)] to-[hsl(224,76%,68%)] border-0 shadow-2xl hover:shadow-3xl transition-all cursor-pointer hover:scale-[1.02] duration-300"
     >
-      <div className="flex flex-col items-center justify-between px-4 sm:px-8 py-12 sm:py-16 h-full">
-        {/* Header Section - Logo & Title */}
-        <div className="flex flex-col items-center space-y-6 sm:space-y-8">
-          <div className="mb-4 sm:mb-6">
-            <img
-              src="/Feelinx_upload/LogoODF-fra-fondble.png" 
-              alt="Observatoire des Droits" 
-              className="h-20 sm:h-24 w-auto object-contain max-w-full"
-            />
-          </div>
-          
-          <h2 className="text-white text-xl sm:text-2xl md:text-3xl font-spartan font-bold text-center max-w-md leading-tight">
-            Observatoire des Droits
-          </h2>
+      <CardContent className="p-8 sm:p-12 flex flex-col items-center justify-center space-y-8 min-h-[500px]">
+        {/* Logo */}
+        <div className="flex-shrink-0">
+          <img
+            src={logoOdfFr}
+            alt="Observatoire des Droits Fondamentaux" 
+            className="h-32 sm:h-40 w-auto object-contain"
+          />
         </div>
-        
-        {/* Center Section - Search */}
+
+        {/* Description */}
+        <p className="text-white text-center text-lg sm:text-xl font-medium max-w-md leading-relaxed">
+          Consultez, analysez et comprenez la jurisprudence tunisienne sur les droits fondamentaux
+        </p>
+
+        {/* Search Input */}
         <div
-          className="w-full max-w-sm sm:max-w-md my-8 sm:my-12 relative z-10"
+          className="w-full max-w-md relative z-10"
           onClick={(e) => e.stopPropagation()}
           onMouseDown={(e) => e.stopPropagation()}
           onKeyDown={(e) => e.stopPropagation()}
@@ -63,47 +62,8 @@ const ObservatoireSection = () => {
             language={language}
           />
         </div>
-
-        {/* Bottom Section - Quick Access */}
-        <div className="w-full max-w-sm sm:max-w-md" onClick={(e) => e.stopPropagation()}>
-          <div className="grid grid-cols-2 gap-6 sm:gap-8">
-            <Link 
-              to="/observatoire/droits-fondamentaux"
-              className="block"
-            >
-              <Card className="bg-white/90 backdrop-blur-sm rounded-lg shadow-lg border-0 h-28 sm:h-32 hover:bg-white transition-colors">
-                <CardContent className="p-4 sm:p-6 h-full">
-                  <div className="flex flex-col items-center justify-center text-center h-full space-y-2">
-                    <FileText className="w-6 h-6 sm:w-7 sm:h-7 text-primary" />
-                    <div>
-                      <h3 className="font-semibold text-sm sm:text-base text-card-foreground">Droits fondamentaux</h3>
-                      <p className="text-xs sm:text-sm text-muted-foreground">Textes de référence</p>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            </Link>
-
-            <Link 
-              to="/observatoire/analyses-opinions"
-              className="block"
-            >
-              <Card className="bg-white/90 backdrop-blur-sm rounded-lg shadow-lg border-0 h-28 sm:h-32 hover:bg-white transition-colors">
-                <CardContent className="p-4 sm:p-6 h-full">
-                  <div className="flex flex-col items-center justify-center text-center h-full space-y-2">
-                    <FileText className="w-6 h-6 sm:w-7 sm:h-7 text-primary" />
-                    <div>
-                      <h3 className="font-semibold text-sm sm:text-base text-card-foreground">Analyses & Opinions</h3>
-                      <p className="text-xs sm:text-sm text-muted-foreground">Analyses juridiques</p>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            </Link>
-          </div>
-        </div>
-      </div>
-    </div>
+      </CardContent>
+    </Card>
   );
 };
 

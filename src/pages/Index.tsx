@@ -15,14 +15,16 @@ const Index = () => {
         rel="stylesheet" 
       />
       
-      <div className="min-h-screen flex flex-col">
+      <div className="min-h-screen flex flex-col bg-background">
         <HomeHeader />
 
-        {/* Main Content - Split Screen - Full height */}
-        <div className="flex-grow flex flex-col md:flex-row" style={{ minHeight: 'calc(100vh - 200px)' }}>
-          <ObservatoireSection />
-          <AccesAuxDroitsSection />
-        </div>
+        {/* Main Content - Card Grid Layout */}
+        <main className="flex-grow container mx-auto px-4 sm:px-6 lg:px-8 py-12">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 max-w-7xl mx-auto">
+            <ObservatoireSection />
+            <AccesAuxDroitsSection />
+          </div>
+        </main>
 
         <HomeFooter />
       </div>
