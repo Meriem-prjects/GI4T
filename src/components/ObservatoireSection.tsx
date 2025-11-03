@@ -37,12 +37,12 @@ const ObservatoireSection = () => {
           <img
             src={logoOdfFr}
             alt="Observatoire des Droits Fondamentaux" 
-            className="h-32 sm:h-40 w-auto object-contain"
+            className="h-24 sm:h-28 w-auto object-contain"
           />
         </div>
 
         {/* Description */}
-        <p className="text-white text-center text-lg sm:text-xl font-medium max-w-md leading-relaxed">
+        <p className="text-white text-center text-base sm:text-lg max-w-md leading-relaxed">
           Consultez, analysez et comprenez la jurisprudence tunisienne sur les droits fondamentaux
         </p>
 
