@@ -2,34 +2,38 @@ import { Button } from "@/components/ui/button";
 import { Newspaper, FileText, ExternalLink, BookOpen } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
 import { cn } from "@/lib/utils";
+import { useLanguage } from "@/contexts/LanguageContext";
+import { useTranslation } from "@/hooks/useTranslation";
 
 const ActualitesNav = () => {
   const location = useLocation();
+  const { isRTL } = useLanguage();
+  const { t } = useTranslation();
 
   const navItems = [
     {
       path: "/acces-aux-droits/actualites",
-      label: "Actualités",
+      label: t('actualites'),
       icon: Newspaper,
-      description: "Dernières nouvelles"
+      description: t('latestNews')
     },
     {
       path: "/acces-aux-droits/ressources-pratiques",
-      label: "Ressources pratiques",
+      label: t('practicalResources'),
       icon: FileText,
-      description: "Modèles et formulaires"
+      description: t('formsModels')
     },
     {
       path: "/acces-aux-droits/liens-utiles",
-      label: "Liens utiles",
+      label: t('usefulLinks'),
       icon: ExternalLink,
-      description: "Sites externes"
+      description: t('externalSites')
     },
     {
       path: "/acces-aux-droits/guides-pratiques",
-      label: "Guides",
+      label: t('practicalGuides'),
       icon: BookOpen,
-      description: "Guides step-by-step"
+      description: t('stepByStepGuides')
     }
   ];
 
@@ -48,10 +52,11 @@ const ActualitesNav = () => {
                   className={cn(
                     "flex items-center gap-1 sm:gap-2 px-2 sm:px-4 py-2 h-auto flex-col min-w-0 transition-all duration-300 hover:scale-105",
                     isActive && "bg-primary text-primary-foreground shadow-md",
-                    !isActive && "hover:bg-muted hover:shadow-sm"
+                    !isActive && "hover:bg-muted hover:shadow-sm",
+                    isRTL && "font-almarai"
                   )}
                 >
-                  <div className="flex items-center gap-1 sm:gap-2">
+                  <div className={`flex items-center gap-1 sm:gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
                     <Icon className="h-3 w-3 sm:h-4 sm:w-4 flex-shrink-0 transition-transform duration-200" />
                     <span className="font-medium text-xs sm:text-sm whitespace-nowrap">{item.label}</span>
                   </div>

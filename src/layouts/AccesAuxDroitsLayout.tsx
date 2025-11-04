@@ -8,10 +8,14 @@ import MediathequeNav from "@/components/MediathequeNav";
 import ActualitesNav from "@/components/ActualitesNav";
 import FAQNav from "@/components/FAQNav";
 import Footer from "@/components/Footer";
+import { useLanguage } from "@/contexts/LanguageContext";
+import { useTranslation } from "@/hooks/useTranslation";
 
 const AccesAuxDroitsLayout = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const location = useLocation();
+  const { language, setLanguage, isRTL } = useLanguage();
+  const { t } = useTranslation();
 
   // Determine which sub-navigation to show based on current route
   const getSubNav = () => {
@@ -33,37 +37,52 @@ const AccesAuxDroitsLayout = () => {
       {/* Header */}
       <header className="border-b bg-card animate-fade-in">
         <div className="container mx-auto px-4 py-2 sm:py-4 relative">
-          <div className="flex items-center justify-between flex-wrap gap-4">
-            <Link to="/acces-aux-droits" className="flex items-center space-x-2 sm:space-x-4 hover:opacity-80 transition-opacity">
-              <img src="/Feelinx_upload/logo-acces-aux-droits.png" alt="Accès aux Droits Logo" className="h-6 sm:h-8 md:h-12" />
-              <div>
-                <h1 className="text-sm sm:text-base md:text-2xl font-bold text-foreground">Accès aux Droits</h1>
-                <p className="text-xs sm:text-sm text-muted-foreground hidden sm:block">Espace citoyen</p>
+          <div className={`flex items-center justify-between flex-wrap gap-4 ${isRTL ? 'flex-row-reverse' : ''}`}>
+            <Link to="/acces-aux-droits" className={`flex items-center hover:opacity-80 transition-opacity ${isRTL ? 'space-x-reverse space-x-2 sm:space-x-4' : 'space-x-2 sm:space-x-4'}`}>
+              <img src="/Feelinx_upload/logo-acces-aux-droits.png" alt={t('accessToRights')} className="h-6 sm:h-8 md:h-12" />
+              <div className={isRTL ? 'text-right' : ''}>
+                <h1 className={`text-sm sm:text-base md:text-2xl font-bold text-foreground ${isRTL ? 'font-almarai' : ''}`}>{t('accessToRights')}</h1>
+                <p className={`text-xs sm:text-sm text-muted-foreground hidden sm:block ${isRTL ? 'font-almarai' : ''}`}>{t('citizenSpace')}</p>
               </div>
             </Link>
             
-            <nav className="hidden md:flex items-center space-x-6 absolute left-1/2 transform -translate-x-1/2">
-              <Link to="/acces-aux-droits/carte-interactive" className="text-sm font-medium text-foreground hover:text-primary transition-colors duration-200">
-                Carte interactive
+            <nav className={`hidden md:flex items-center absolute left-1/2 transform -translate-x-1/2 ${isRTL ? 'space-x-reverse space-x-6' : 'space-x-6'}`}>
+              <Link to="/acces-aux-droits/carte-interactive" className={`text-sm font-medium text-foreground hover:text-primary transition-colors duration-200 ${isRTL ? 'font-almarai' : ''}`}>
+                {t('interactiveMap')}
               </Link>
-              <Link to="/acces-aux-droits/mediatheque" className="text-sm font-medium text-foreground hover:text-primary transition-colors duration-200">
-                Médiathèque
+              <Link to="/acces-aux-droits/mediatheque" className={`text-sm font-medium text-foreground hover:text-primary transition-colors duration-200 ${isRTL ? 'font-almarai' : ''}`}>
+                {t('mediaLibrary')}
               </Link>
-              <Link to="/acces-aux-droits/actualites" className="text-sm font-medium text-foreground hover:text-primary transition-colors duration-200">
-                Actualités
+              <Link to="/acces-aux-droits/actualites" className={`text-sm font-medium text-foreground hover:text-primary transition-colors duration-200 ${isRTL ? 'font-almarai' : ''}`}>
+                {t('actualites')}
               </Link>
-              <Link to="/acces-aux-droits/assistant-virtuel" className="text-sm font-medium text-foreground hover:text-primary transition-colors duration-200">
-                FAQ/Chat
+              <Link to="/acces-aux-droits/assistant-virtuel" className={`text-sm font-medium text-foreground hover:text-primary transition-colors duration-200 ${isRTL ? 'font-almarai' : ''}`}>
+                {t('faqChatbot')}
               </Link>
             </nav>
 
-            <div className="flex items-center space-x-2 sm:space-x-4 ml-auto">
+            <div className={`flex items-center ml-auto ${isRTL ? 'space-x-reverse space-x-2 sm:space-x-4' : 'space-x-2 sm:space-x-4'}`}>
               <Link to="/acces-aux-droits">
                 <Button variant="outline" size="sm" className="text-xs sm:text-sm">
                   <Home className="h-4 w-4" />
                 </Button>
               </Link>
-              <Button variant="outline" size="sm" className="text-xs sm:text-sm">العربية</Button>
+              <div className="flex items-center bg-muted rounded-full p-1">
+                <Button 
+                  size="sm" 
+                  onClick={() => setLanguage('fr')}
+                  className={`${language === 'fr' ? 'bg-primary text-primary-foreground' : 'bg-transparent text-muted-foreground'} rounded-full px-2 text-xs font-medium hover:bg-primary/90`}
+                >
+                  FR
+                </Button>
+                <Button 
+                  size="sm"
+                  onClick={() => setLanguage('ar')}
+                  className={`${language === 'ar' ? 'bg-primary text-primary-foreground' : 'bg-transparent text-muted-foreground'} rounded-full px-2 text-xs font-medium hover:bg-primary/90`}
+                >
+                  AR
+                </Button>
+              </div>
               <Link to="/">
                 <Button variant="outline" size="sm" className="px-2 sm:px-3">
                   <img src="/Feelinx_upload/justclic-logo.png" alt="JustClic" className="h-5 sm:h-6" />
@@ -79,27 +98,27 @@ const AccesAuxDroitsLayout = () => {
                 <Menu className="h-5 w-5" />
               </Button>
             </SheetTrigger>
-            <SheetContent side="right" className="w-80">
+            <SheetContent side={isRTL ? "left" : "right"} className="w-80">
               <div className="flex flex-col h-full">
-                <div className="flex items-center space-x-2 p-4 border-b">
-                  <img src="/Feelinx_upload/logo-acces-aux-droits.png" alt="Accès aux Droits Logo" className="h-6 sm:h-8 w-auto" />
-                  <h2 className="font-bold text-primary">Accès aux Droits</h2>
+                <div className={`flex items-center p-4 border-b ${isRTL ? 'space-x-reverse space-x-2' : 'space-x-2'}`}>
+                  <img src="/Feelinx_upload/logo-acces-aux-droits.png" alt={t('accessToRights')} className="h-6 sm:h-8 w-auto" />
+                  <h2 className={`font-bold text-primary ${isRTL ? 'font-almarai' : ''}`}>{t('accessToRights')}</h2>
                 </div>
                 <nav className="flex flex-col space-y-2 mt-4 px-4">
-                  <Link to="/acces-aux-droits" className="text-base hover:text-primary p-2 rounded-lg hover:bg-muted">Accueil</Link>
-                  <Link to="/acces-aux-droits/carte-interactive" className="text-base hover:text-primary p-2 rounded-lg hover:bg-muted">Carte interactive</Link>
-                  <Link to="/acces-aux-droits/adresses-utiles" className="text-base hover:text-primary p-2 rounded-lg hover:bg-muted">Adresses utiles</Link>
-                  <Link to="/acces-aux-droits/mediatheque" className="text-base hover:text-primary p-2 rounded-lg hover:bg-muted">Médiathèque</Link>
-                  <Link to="/acces-aux-droits/albums-photos" className="text-base hover:text-primary p-2 rounded-lg hover:bg-muted">Albums photos</Link>
-                  <Link to="/acces-aux-droits/actualites" className="text-base hover:text-primary p-2 rounded-lg hover:bg-muted">Actualités</Link>
-                  <Link to="/acces-aux-droits/foire-aux-questions" className="text-base hover:text-primary p-2 rounded-lg hover:bg-muted">FAQ</Link>
-                  <Link to="/acces-aux-droits/assistant-virtuel" className="text-base hover:text-primary p-2 rounded-lg hover:bg-muted">Assistant Virtuel</Link>
-                  <Link to="/acces-aux-droits/ressources-pratiques" className="text-base hover:text-primary p-2 rounded-lg hover:bg-muted">Ressources pratiques</Link>
-                  <Link to="/acces-aux-droits/liens-utiles" className="text-base hover:text-primary p-2 rounded-lg hover:bg-muted">Liens utiles</Link>
-                  <Link to="/acces-aux-droits/guides-pratiques" className="text-base hover:text-primary p-2 rounded-lg hover:bg-muted">Guides pratiques</Link>
+                  <Link to="/acces-aux-droits" className={`text-base hover:text-primary p-2 rounded-lg hover:bg-muted ${isRTL ? 'font-almarai text-right' : ''}`}>{t('home')}</Link>
+                  <Link to="/acces-aux-droits/carte-interactive" className={`text-base hover:text-primary p-2 rounded-lg hover:bg-muted ${isRTL ? 'font-almarai text-right' : ''}`}>{t('interactiveMap')}</Link>
+                  <Link to="/acces-aux-droits/adresses-utiles" className={`text-base hover:text-primary p-2 rounded-lg hover:bg-muted ${isRTL ? 'font-almarai text-right' : ''}`}>{t('usefulAddresses')}</Link>
+                  <Link to="/acces-aux-droits/mediatheque" className={`text-base hover:text-primary p-2 rounded-lg hover:bg-muted ${isRTL ? 'font-almarai text-right' : ''}`}>{t('mediaLibrary')}</Link>
+                  <Link to="/acces-aux-droits/albums-photos" className={`text-base hover:text-primary p-2 rounded-lg hover:bg-muted ${isRTL ? 'font-almarai text-right' : ''}`}>{t('photoAlbums')}</Link>
+                  <Link to="/acces-aux-droits/actualites" className={`text-base hover:text-primary p-2 rounded-lg hover:bg-muted ${isRTL ? 'font-almarai text-right' : ''}`}>{t('actualites')}</Link>
+                  <Link to="/acces-aux-droits/foire-aux-questions" className={`text-base hover:text-primary p-2 rounded-lg hover:bg-muted ${isRTL ? 'font-almarai text-right' : ''}`}>{t('faq')}</Link>
+                  <Link to="/acces-aux-droits/assistant-virtuel" className={`text-base hover:text-primary p-2 rounded-lg hover:bg-muted ${isRTL ? 'font-almarai text-right' : ''}`}>{t('virtualAssistant')}</Link>
+                  <Link to="/acces-aux-droits/ressources-pratiques" className={`text-base hover:text-primary p-2 rounded-lg hover:bg-muted ${isRTL ? 'font-almarai text-right' : ''}`}>{t('practicalResources')}</Link>
+                  <Link to="/acces-aux-droits/liens-utiles" className={`text-base hover:text-primary p-2 rounded-lg hover:bg-muted ${isRTL ? 'font-almarai text-right' : ''}`}>{t('usefulLinks')}</Link>
+                  <Link to="/acces-aux-droits/guides-pratiques" className={`text-base hover:text-primary p-2 rounded-lg hover:bg-muted ${isRTL ? 'font-almarai text-right' : ''}`}>{t('practicalGuides')}</Link>
                   <div className="border-t pt-4 mt-4">
-                    <Link to="/" className="text-base hover:text-primary p-2 rounded-lg hover:bg-muted flex items-center">
-                      <span>→ Page d'accueil</span>
+                    <Link to="/" className={`text-base hover:text-primary p-2 rounded-lg hover:bg-muted flex items-center ${isRTL ? 'flex-row-reverse font-almarai' : ''}`}>
+                      <span>{isRTL ? '← ' : '→ '}{t('homepage')}</span>
                     </Link>
                   </div>
                 </nav>

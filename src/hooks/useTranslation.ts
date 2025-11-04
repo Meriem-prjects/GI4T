@@ -1,6 +1,7 @@
 import { useLanguage } from '@/contexts/LanguageContext';
 
 type TranslationKey = 
+  // Homepage
   | 'tagline'
   | 'whoWeAre'
   | 'news'
@@ -25,10 +26,145 @@ type TranslationKey =
   | 'terms'
   | 'observatory'
   | 'awarenessСampaign'
-  | 'practicalGuide';
+  | 'practicalGuide'
+  // Layout & Navigation
+  | 'accessToRights'
+  | 'citizenSpace'
+  | 'mediaLibrary'
+  | 'actualites'
+  | 'home'
+  | 'usefulAddresses'
+  | 'photoAlbums'
+  | 'faq'
+  | 'virtualAssistant'
+  | 'practicalResources'
+  | 'usefulLinks'
+  | 'practicalGuides'
+  | 'homepage'
+  // Sub-navigation
+  | 'locateServices'
+  | 'organizationsContacts'
+  | 'videosTestimonies'
+  | 'eventsGallery'
+  | 'latestNews'
+  | 'formsModels'
+  | 'externalSites'
+  | 'stepByStepGuides'
+  | 'realTimeChat'
+  | 'frequentQuestions'
+  // Footer
+  | 'followUs'
+  | 'subscribe'
+  | 'navigation'
+  | 'observatoryOfRights'
+  | 'accessRights'
+  | 'publications'
+  | 'about'
+  | 'legalNotice'
+  | 'privacy'
+  | 'terms'
+  | 'siteMap'
+  | 'yourPlatform'
+  // AccesAuxDroits page
+  | 'quickAccess'
+  | 'guidesStepByStep'
+  | 'formsModelsDocuments'
+  | 'findServicesNearYou'
+  | 'explanatoryVideos'
+  | 'yourRightsByCategory'
+  | 'housingRight'
+  | 'housingDesc'
+  | 'workRight'
+  | 'workDesc'
+  | 'healthRight'
+  | 'healthDesc'
+  | 'educationRight'
+  | 'educationDesc'
+  | 'socialRights'
+  | 'socialDesc'
+  | 'freedomExpression'
+  | 'freedomDesc'
+  | 'cases'
+  | 'explore'
+  // Content pages - Common
+  | 'search'
+  | 'searchDot'
+  | 'all'
+  | 'category'
+  | 'noResults'
+  | 'loading'
+  | 'featured'
+  // Carte Interactive
+  | 'mapInteractiveTitle'
+  | 'mapDescription'
+  | 'events'
+  | 'actionCompleted'
+  | 'upcomingEvent'
+  | 'completedActions'
+  | 'upcomingEvents'
+  | 'allEvents'
+  | 'location'
+  | 'date'
+  | 'impact'
+  | 'legend'
+  // Adresses Utiles
+  | 'usefulAddressesTitle'
+  | 'usefulAddressesDesc'
+  | 'selectGovernorate'
+  | 'governorate'
+  | 'address'
+  | 'phone'
+  | 'email'
+  | 'openingHours'
+  // Guides Pratiques
+  | 'practicalGuidesTitle'
+  | 'practicalGuidesDesc'
+  | 'read'
+  | 'download'
+  | 'minutes'
+  | 'needHelp'
+  | 'needHelpDesc'
+  | 'contactUs'
+  // Resources Pratiques
+  | 'practicalResourcesTitle'
+  | 'practicalResourcesDesc'
+  | 'format'
+  | 'downloads'
+  | 'featuredResources'
+  | 'allResources'
+  // Liens Utiles
+  | 'usefulLinksTitle'
+  | 'usefulLinksDesc'
+  | 'verified'
+  | 'suggestLink'
+  | 'suggestLinkDesc'
+  // Publications
+  | 'publicationsTitle'
+  | 'publicationsDesc'
+  // Albums Photos
+  | 'photoAlbumsTitle'
+  | 'photoAlbumsDesc'
+  | 'photos'
+  | 'albums'
+  | 'totalPhotos'
+  | 'totalAlbums'
+  // Mediatheque
+  | 'mediaLibraryTitle'
+  | 'mediaLibraryDesc'
+  | 'type'
+  | 'video'
+  | 'podcast'
+  | 'testimony'
+  | 'views'
+  | 'duration'
+  | 'watch'
+  | 'listen'
+  | 'shareStory'
+  | 'shareStoryDesc';
 
 const translations: Record<'fr' | 'ar', Record<TranslationKey, string>> = {
   fr: {
+    // Homepage
     tagline: 'Plateforme citoyenne de la jurisprudence administrative et constitutionnelle',
     whoWeAre: 'Qui sommes-nous',
     news: 'Actualités',
@@ -54,8 +190,142 @@ const translations: Record<'fr' | 'ar', Record<TranslationKey, string>> = {
     observatory: 'Mرصد',
     awarenessСampaign: 'Campagne de sensibilisation',
     practicalGuide: 'Guide pratique',
+    // Layout & Navigation
+    accessToRights: 'Accès aux Droits',
+    citizenSpace: 'Espace citoyen',
+    mediaLibrary: 'Médiathèque',
+    actualites: 'Actualités',
+    home: 'Accueil',
+    usefulAddresses: 'Adresses utiles',
+    photoAlbums: 'Albums photos',
+    faq: 'FAQ',
+    virtualAssistant: 'Assistant Virtuel',
+    practicalResources: 'Ressources pratiques',
+    usefulLinks: 'Liens utiles',
+    practicalGuides: 'Guides pratiques',
+    homepage: 'Page d\'accueil',
+    // Sub-navigation
+    locateServices: 'Localiser les services',
+    organizationsContacts: 'Organismes et contacts',
+    videosTestimonies: 'Vidéos et témoignages',
+    eventsGallery: 'Galerie événements',
+    latestNews: 'Dernières nouvelles',
+    formsModels: 'Modèles et formulaires',
+    externalSites: 'Sites externes',
+    stepByStepGuides: 'Guides step-by-step',
+    realTimeChat: 'Chat en temps réel',
+    frequentQuestions: 'Questions fréquentes',
+    // Footer
+    followUs: 'Suivez-nous',
+    subscribe: 'S\'ABONNER',
+    navigation: 'Navigation',
+    observatoryOfRights: 'Observatoire des droits',
+    accessRights: 'Accès aux droits',
+    publications: 'Publications',
+    about: 'À propos',
+    legalNotice: 'Mentions légales',
+    privacy: 'Politique de confidentialité',
+    siteMap: 'Plan du site',
+    yourPlatform: 'Votre plateforme d\'information citoyenne en Tunisie. Accédez facilement à vos droits et aux services administratifs.',
+    // AccesAuxDroits page
+    quickAccess: 'Accès rapide',
+    guidesStepByStep: 'Guides step-by-step pour exercer vos droits',
+    formsModelsDocuments: 'Modèles, formulaires et documents utiles',
+    findServicesNearYou: 'Trouvez les services près de chez vous',
+    explanatoryVideos: 'Vidéos explicatives et témoignages',
+    yourRightsByCategory: 'Vos droits par catégorie',
+    housingRight: 'Droit au logement',
+    housingDesc: 'Location, expulsion, aides au logement',
+    workRight: 'Droit au travail',
+    workDesc: 'Emploi, discrimination, conditions de travail',
+    healthRight: 'Droit à la santé',
+    healthDesc: 'Accès aux soins, protection sociale',
+    educationRight: 'Droit à l\'éducation',
+    educationDesc: 'Scolarité, formation professionnelle',
+    socialRights: 'Droits sociaux',
+    socialDesc: 'Prestations, handicap, famille',
+    freedomExpression: 'Liberté d\'expression',
+    freedomDesc: 'Presse, manifestation, association',
+    cases: 'cas',
+    explore: 'Explorer',
+    // Content pages - Common
+    search: 'Rechercher',
+    searchDot: 'Rechercher...',
+    all: 'Tous',
+    category: 'Catégorie',
+    noResults: 'Aucun résultat trouvé',
+    loading: 'Chargement...',
+    featured: 'À la une',
+    // Carte Interactive
+    mapInteractiveTitle: 'Carte Interactive',
+    mapDescription: 'Découvrez les actions et événements d\'accès aux droits sur l\'ensemble du territoire tunisien',
+    events: 'Événements',
+    actionCompleted: 'Action réalisée',
+    upcomingEvent: 'Événement à venir',
+    completedActions: 'Actions réalisées',
+    upcomingEvents: 'Événements à venir',
+    allEvents: 'Tous',
+    location: 'Lieu',
+    date: 'Date',
+    impact: 'Impact',
+    legend: 'Légende',
+    // Adresses Utiles
+    usefulAddressesTitle: 'Adresses Utiles',
+    usefulAddressesDesc: 'Trouvez les coordonnées des organismes et services qui peuvent vous aider',
+    selectGovernorate: 'Sélectionner un gouvernorat',
+    governorate: 'Gouvernorat',
+    address: 'Adresse',
+    phone: 'Téléphone',
+    email: 'Email',
+    openingHours: 'Horaires d\'ouverture',
+    // Guides Pratiques
+    practicalGuidesTitle: 'Guides Pratiques',
+    practicalGuidesDesc: 'Des guides step-by-step pour comprendre et exercer vos droits',
+    read: 'Lire',
+    download: 'Télécharger',
+    minutes: 'min',
+    needHelp: 'Besoin d\'aide ?',
+    needHelpDesc: 'Notre équipe est là pour vous accompagner',
+    contactUs: 'Contactez-nous',
+    // Resources Pratiques
+    practicalResourcesTitle: 'Ressources Pratiques',
+    practicalResourcesDesc: 'Modèles, formulaires et documents pour vous accompagner',
+    format: 'Format',
+    downloads: 'téléchargements',
+    featuredResources: 'Ressources à la une',
+    allResources: 'Toutes les ressources',
+    // Liens Utiles
+    usefulLinksTitle: 'Liens Utiles',
+    usefulLinksDesc: 'Retrouvez tous les sites et ressources externes utiles',
+    verified: 'Vérifié',
+    suggestLink: 'Suggérer un lien',
+    suggestLinkDesc: 'Vous connaissez une ressource utile ?',
+    // Publications
+    publicationsTitle: 'Publications',
+    publicationsDesc: 'Rapports, guides et analyses sur l\'accès aux droits',
+    // Albums Photos
+    photoAlbumsTitle: 'Albums Photos',
+    photoAlbumsDesc: 'Découvrez nos actions en images',
+    photos: 'photos',
+    albums: 'albums',
+    totalPhotos: 'Total photos',
+    totalAlbums: 'Total albums',
+    // Mediatheque
+    mediaLibraryTitle: 'Médiathèque',
+    mediaLibraryDesc: 'Vidéos, podcasts et témoignages sur l\'accès aux droits',
+    type: 'Type',
+    video: 'Vidéo',
+    podcast: 'Podcast',
+    testimony: 'Témoignage',
+    views: 'vues',
+    duration: 'Durée',
+    watch: 'Regarder',
+    listen: 'Écouter',
+    shareStory: 'Partagez votre histoire',
+    shareStoryDesc: 'Vous avez un témoignage à partager ?',
   },
   ar: {
+    // Homepage
     tagline: 'منصة المواطن للفقه القضائي الإداري والدستوري',
     whoWeAre: 'من نحن',
     news: 'الأخبار',
@@ -81,6 +351,139 @@ const translations: Record<'fr' | 'ar', Record<TranslationKey, string>> = {
     observatory: 'مرصد',
     awarenessСampaign: 'حملة توعية',
     practicalGuide: 'دليل عملي',
+    // Layout & Navigation
+    accessToRights: 'الوصول إلى الحقوق',
+    citizenSpace: 'فضاء المواطن',
+    mediaLibrary: 'مكتبة الوسائط',
+    actualites: 'الأخبار',
+    home: 'الرئيسية',
+    usefulAddresses: 'عناوين مفيدة',
+    photoAlbums: 'ألبومات الصور',
+    faq: 'الأسئلة الشائعة',
+    virtualAssistant: 'المساعد الافتراضي',
+    practicalResources: 'موارد عملية',
+    usefulLinks: 'روابط مفيدة',
+    practicalGuides: 'أدلة عملية',
+    homepage: 'الصفحة الرئيسية',
+    // Sub-navigation
+    locateServices: 'تحديد موقع الخدمات',
+    organizationsContacts: 'المنظمات وجهات الاتصال',
+    videosTestimonies: 'فيديوهات وشهادات',
+    eventsGallery: 'معرض الأحداث',
+    latestNews: 'آخر الأخبار',
+    formsModels: 'نماذج واستمارات',
+    externalSites: 'مواقع خارجية',
+    stepByStepGuides: 'أدلة خطوة بخطوة',
+    realTimeChat: 'دردشة فورية',
+    frequentQuestions: 'أسئلة متكررة',
+    // Footer
+    followUs: 'تابعنا',
+    subscribe: 'اشترك',
+    navigation: 'التنقل',
+    observatoryOfRights: 'مرصد الحقوق',
+    accessRights: 'الوصول إلى الحقوق',
+    publications: 'المنشورات',
+    about: 'معلومات عنا',
+    legalNotice: 'الإشعارات القانونية',
+    privacy: 'سياسة الخصوصية',
+    siteMap: 'خريطة الموقع',
+    yourPlatform: 'منصتك للمعلومات المدنية في تونس. الوصول بسهولة إلى حقوقك والخدمات الإدارية.',
+    // AccesAuxDroits page
+    quickAccess: 'وصول سريع',
+    guidesStepByStep: 'أدلة خطوة بخطوة لممارسة حقوقك',
+    formsModelsDocuments: 'نماذج واستمارات ووثائق مفيدة',
+    findServicesNearYou: 'اعثر على الخدمات القريبة منك',
+    explanatoryVideos: 'فيديوهات توضيحية وشهادات',
+    yourRightsByCategory: 'حقوقك حسب الفئة',
+    housingRight: 'الحق في السكن',
+    housingDesc: 'الإيجار، الطرد، مساعدات السكن',
+    workRight: 'الحق في العمل',
+    workDesc: 'التوظيف، التمييز، ظروف العمل',
+    healthRight: 'الحق في الصحة',
+    healthDesc: 'الوصول إلى الرعاية، الحماية الاجتماعية',
+    educationRight: 'الحق في التعليم',
+    educationDesc: 'التعليم، التدريب المهني',
+    socialRights: 'الحقوق الاجتماعية',
+    socialDesc: 'الإعانات، الإعاقة، الأسرة',
+    freedomExpression: 'حرية التعبير',
+    freedomDesc: 'الصحافة، التظاهر، الجمعيات',
+    cases: 'حالة',
+    explore: 'استكشف',
+    // Content pages - Common
+    search: 'بحث',
+    searchDot: 'بحث...',
+    all: 'الكل',
+    category: 'الفئة',
+    noResults: 'لم يتم العثور على نتائج',
+    loading: 'جاري التحميل...',
+    featured: 'مميز',
+    // Carte Interactive
+    mapInteractiveTitle: 'خريطة تفاعلية',
+    mapDescription: 'اكتشف إجراءات وفعاليات الوصول إلى الحقوق في جميع أنحاء تونس',
+    events: 'الأحداث',
+    actionCompleted: 'إجراء منجز',
+    upcomingEvent: 'حدث قادم',
+    completedActions: 'الإجراءات المنجزة',
+    upcomingEvents: 'الأحداث القادمة',
+    allEvents: 'الكل',
+    location: 'المكان',
+    date: 'التاريخ',
+    impact: 'التأثير',
+    legend: 'الرمز',
+    // Adresses Utiles
+    usefulAddressesTitle: 'عناوين مفيدة',
+    usefulAddressesDesc: 'اعثر على تفاصيل اتصال المنظمات والخدمات التي يمكن أن تساعدك',
+    selectGovernorate: 'اختر ولاية',
+    governorate: 'الولاية',
+    address: 'العنوان',
+    phone: 'الهاتف',
+    email: 'البريد الإلكتروني',
+    openingHours: 'ساعات العمل',
+    // Guides Pratiques
+    practicalGuidesTitle: 'أدلة عملية',
+    practicalGuidesDesc: 'أدلة خطوة بخطوة لفهم وممارسة حقوقك',
+    read: 'قراءة',
+    download: 'تحميل',
+    minutes: 'دقيقة',
+    needHelp: 'هل تحتاج مساعدة؟',
+    needHelpDesc: 'فريقنا هنا لمساعدتك',
+    contactUs: 'اتصل بنا',
+    // Resources Pratiques
+    practicalResourcesTitle: 'موارد عملية',
+    practicalResourcesDesc: 'نماذج واستمارات ووثائق لمساعدتك',
+    format: 'الصيغة',
+    downloads: 'تنزيلات',
+    featuredResources: 'موارد مميزة',
+    allResources: 'جميع الموارد',
+    // Liens Utiles
+    usefulLinksTitle: 'روابط مفيدة',
+    usefulLinksDesc: 'اعثر على جميع المواقع والموارد الخارجية المفيدة',
+    verified: 'تم التحقق',
+    suggestLink: 'اقترح رابطًا',
+    suggestLinkDesc: 'هل تعرف موردًا مفيدًا؟',
+    // Publications
+    publicationsTitle: 'المنشورات',
+    publicationsDesc: 'تقارير وأدلة وتحليلات حول الوصول إلى الحقوق',
+    // Albums Photos
+    photoAlbumsTitle: 'ألبومات الصور',
+    photoAlbumsDesc: 'اكتشف أعمالنا من خلال الصور',
+    photos: 'صور',
+    albums: 'ألبومات',
+    totalPhotos: 'إجمالي الصور',
+    totalAlbums: 'إجمالي الألبومات',
+    // Mediatheque
+    mediaLibraryTitle: 'مكتبة الوسائط',
+    mediaLibraryDesc: 'فيديوهات وبودكاست وشهادات حول الوصول إلى الحقوق',
+    type: 'النوع',
+    video: 'فيديو',
+    podcast: 'بودكاست',
+    testimony: 'شهادة',
+    views: 'مشاهدة',
+    duration: 'المدة',
+    watch: 'شاهد',
+    listen: 'استمع',
+    shareStory: 'شارك قصتك',
+    shareStoryDesc: 'هل لديك شهادة لمشاركتها؟',
   },
 };
 

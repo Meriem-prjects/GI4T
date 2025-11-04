@@ -2,22 +2,26 @@ import { Button } from "@/components/ui/button";
 import { MapPin, Building } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
 import { cn } from "@/lib/utils";
+import { useLanguage } from "@/contexts/LanguageContext";
+import { useTranslation } from "@/hooks/useTranslation";
 
 const CarteInteractiveNav = () => {
   const location = useLocation();
+  const { isRTL } = useLanguage();
+  const { t } = useTranslation();
 
   const navItems = [
     {
       path: "/acces-aux-droits/carte-interactive",
-      label: "Carte interactive",
+      label: t('interactiveMap'),
       icon: MapPin,
-      description: "Localiser les services"
+      description: t('locateServices')
     },
     {
       path: "/acces-aux-droits/adresses-utiles",
-      label: "Adresses utiles",
+      label: t('usefulAddresses'),
       icon: Building,
-      description: "Organismes et contacts"
+      description: t('organizationsContacts')
     }
   ];
 
@@ -36,10 +40,11 @@ const CarteInteractiveNav = () => {
                   className={cn(
                     "flex items-center gap-1 sm:gap-2 px-2 sm:px-4 py-2 h-auto flex-col min-w-0 transition-all duration-300 hover:scale-105",
                     isActive && "bg-primary text-primary-foreground shadow-md",
-                    !isActive && "hover:bg-muted hover:shadow-sm"
+                    !isActive && "hover:bg-muted hover:shadow-sm",
+                    isRTL && "font-almarai"
                   )}
                 >
-                  <div className="flex items-center gap-1 sm:gap-2">
+                  <div className={`flex items-center gap-1 sm:gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
                     <Icon className="h-3 w-3 sm:h-4 sm:w-4 flex-shrink-0 transition-transform duration-200" />
                     <span className="font-medium text-xs sm:text-sm whitespace-nowrap">{item.label}</span>
                   </div>

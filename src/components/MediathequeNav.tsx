@@ -2,22 +2,26 @@ import { Button } from "@/components/ui/button";
 import { Video, Camera } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
 import { cn } from "@/lib/utils";
+import { useLanguage } from "@/contexts/LanguageContext";
+import { useTranslation } from "@/hooks/useTranslation";
 
 const MediathequeNav = () => {
   const location = useLocation();
+  const { isRTL } = useLanguage();
+  const { t } = useTranslation();
 
   const navItems = [
     {
       path: "/acces-aux-droits/mediatheque",
-      label: "Médiathèque",
+      label: t('mediaLibrary'),
       icon: Video,
-      description: "Vidéos et témoignages"
+      description: t('videosTestimonies')
     },
     {
       path: "/acces-aux-droits/albums-photos",
-      label: "Albums photos",
+      label: t('photoAlbums'),
       icon: Camera,
-      description: "Galerie événements"
+      description: t('eventsGallery')
     }
   ];
 
@@ -36,10 +40,11 @@ const MediathequeNav = () => {
                   className={cn(
                     "flex items-center gap-1 sm:gap-2 px-2 sm:px-4 py-2 h-auto flex-col min-w-0 transition-all duration-300 hover:scale-105",
                     isActive && "bg-primary text-primary-foreground shadow-md",
-                    !isActive && "hover:bg-muted hover:shadow-sm"
+                    !isActive && "hover:bg-muted hover:shadow-sm",
+                    isRTL && "font-almarai"
                   )}
                 >
-                  <div className="flex items-center gap-1 sm:gap-2">
+                  <div className={`flex items-center gap-1 sm:gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
                     <Icon className="h-3 w-3 sm:h-4 sm:w-4 flex-shrink-0 transition-transform duration-200" />
                     <span className="font-medium text-xs sm:text-sm whitespace-nowrap">{item.label}</span>
                   </div>
