@@ -15,7 +15,7 @@ const ActualitesHomeSection = () => {
       categoryColor: "bg-[#4164D7] text-white",
       title: isRTL ? "آخر التحديثات في قاعدة البيانات" : "Dernières mises à jour de la base de données",
       excerpt: isRTL ? "مرصد الحقوق الأساسية (ODF) هو منصة مستقلة تقوم بتجميع وتحليل وإتاحة..." : "L'Observatoire des Droits Fondamentaux (ODF) est une plateforme indépendante qui centralise, analyse et rend accessibles...",
-      date: isRTL ? "٨ أكتوبر ٢٠٢٥" : "8 octobre 2025",
+      date: isRTL ? "8 أكتوبر 2025" : "8 octobre 2025",
       source: "ODF",
       image: "https://images.unsplash.com/photo-1589829545856-d10d557cf95f?w=500&q=80"
     },
@@ -25,7 +25,7 @@ const ActualitesHomeSection = () => {
       categoryColor: "bg-[#F4D03F] text-gray-900",
       title: isRTL ? "باجة تستضيف قافلة الوصول إلى القانون" : "Béja accueille notre caravane d'accès au droit",
       excerpt: isRTL ? "فضاء الوصول إلى القانون الإداري يقدم محتويات تعليمية لمساعدة كل مواطن على الفهم..." : "espace Accès au droit administratif propose des contenus pédagogiques pour aider chaque citoyen à comprendre...",
-      date: isRTL ? "٤ أكتوبر ٢٠٢٥" : "4 octobre 2025",
+      date: isRTL ? "4 أكتوبر 2025" : "4 octobre 2025",
       image: "https://images.unsplash.com/photo-1552664730-d307ca884978?w=500&q=80"
     },
     {
@@ -34,7 +34,7 @@ const ActualitesHomeSection = () => {
       categoryColor: "bg-[#F4D03F] text-gray-900",
       title: isRTL ? "دليل عملي للعدالة الإدارية" : "Guide pratique de la justice administrative",
       excerpt: isRTL ? "فضاء الوصول إلى القانون الإداري يقدم محتويات..." : "espace Accès au droit administratif propose des contenus...",
-      date: isRTL ? "١١ سبتمبر ٢٠٢٥" : "11 septembre 2025",
+      date: isRTL ? "11 سبتمبر 2025" : "11 septembre 2025",
       image: "https://images.unsplash.com/photo-1456513080510-7bf3a84b82f8?w=500&q=80"
     }
   ];
