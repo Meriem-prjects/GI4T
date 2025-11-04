@@ -11,10 +11,10 @@ const Footer = () => {
   return (
     <footer className="bg-slate-800 text-white mt-auto">
       <div className="container mx-auto px-4 py-12">
-        <div className={`grid grid-cols-1 md:grid-cols-4 gap-8 ${isRTL ? 'text-right' : ''}`}>
+      <div className={`grid grid-cols-1 md:grid-cols-4 gap-8 ${isRTL ? 'text-right md:grid-flow-dense' : ''}`}>
           {/* First section - Logo and description */}
-          <div className="space-y-4">
-            <div className={`flex items-center ${isRTL ? 'space-x-reverse space-x-3' : 'space-x-3'}`}>
+          <div className={`space-y-4 ${isRTL ? 'md:order-4' : ''}`}>
+            <div className={`flex items-center ${isRTL ? 'justify-end' : ''}`}>
               <img src="/Feelinx_upload/justclic-logo.png" alt="JustClic.tn" className="h-12 w-auto object-contain" />
             </div>
             <p className={`text-gray-300 text-sm leading-relaxed ${isRTL ? 'font-almarai' : ''}`}>
@@ -23,7 +23,7 @@ const Footer = () => {
           </div>
 
           {/* Second section - Navigation Links */}
-          <div className="space-y-4">
+          <div className={`space-y-4 ${isRTL ? 'md:order-3' : ''}`}>
             <h3 className={`text-lg font-semibold text-white ${isRTL ? 'font-almarai' : ''}`}>{t('navigation')}</h3>
             <div className="space-y-2 text-sm text-gray-300">
               <a href="#" className={`block hover:text-white transition-colors ${isRTL ? 'font-almarai' : ''}`}>{t('observatoryOfRights')}</a>
@@ -35,7 +35,7 @@ const Footer = () => {
           </div>
 
           {/* Third section - Contact Info */}
-          <div className="space-y-4">
+          <div className={`space-y-4 ${isRTL ? 'md:order-2' : ''}`}>
             <h3 className={`text-lg font-semibold text-white ${isRTL ? 'font-almarai' : ''}`}>{t('contact')}</h3>
             <div className="space-y-2 text-sm text-gray-300">
               <div className={`flex items-center ${isRTL ? 'space-x-reverse space-x-2 flex-row-reverse' : 'space-x-2'}`}>
@@ -54,10 +54,10 @@ const Footer = () => {
           </div>
 
           {/* Fourth section - Social Media & Newsletter */}
-          <div className="space-y-6">
+          <div className={`space-y-6 ${isRTL ? 'md:order-1' : ''}`}>
             <div className="space-y-4">
               <h3 className={`text-lg font-semibold text-white ${isRTL ? 'font-almarai' : ''}`}>{t('followUs')}</h3>
-              <div className="flex flex-wrap gap-3">
+              <div className={`flex flex-wrap gap-3 ${isRTL ? 'justify-end' : ''}`}>
                 <Button 
                   size="sm" 
                   variant="outline" 
