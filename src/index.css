@@ -151,9 +151,15 @@ All colors MUST be HSL.
   }
 }
 
+/* RTL Support */
+.rtl {
+  direction: rtl;
+  text-align: right;
+}
+
 /* Arabic Typography and RTL Support */
 .arabic-text {
-  font-family: 'Noto Sans Arabic', 'Amiri', sans-serif;
+  font-family: 'Almarai', 'Noto Sans Arabic', 'Amiri', sans-serif;
   direction: rtl;
   text-align: right;
   font-feature-settings: "liga" 1, "calt" 1, "ccmp" 1, "locl" 1;

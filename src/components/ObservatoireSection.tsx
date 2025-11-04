@@ -3,12 +3,15 @@ import { useNavigate } from "react-router-dom";
 import { useState } from "react";
 import { SearchAutocomplete } from "@/components/SearchAutocomplete";
 import { useTypingPlaceholder } from "@/hooks/useTypingPlaceholder";
+import { useLanguage } from "@/contexts/LanguageContext";
+import { useTranslation } from "@/hooks/useTranslation";
 import logoOdfFr from "@/assets/logo-odf-fr.png";
 
 const ObservatoireSection = () => {
   const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState("");
-  const [language] = useState<'fr' | 'ar'>('fr');
+  const { language, isRTL } = useLanguage();
+  const { t } = useTranslation();
   const animatedPlaceholder = useTypingPlaceholder(language);
 
   const handleSearch = () => {
@@ -42,8 +45,8 @@ const ObservatoireSection = () => {
         </div>
 
         {/* Description */}
-        <p className="text-white text-center text-base sm:text-lg max-w-md leading-relaxed">
-          Consultez, analysez et comprenez la jurisprudence tunisienne sur les droits fondamentaux
+        <p className={`text-white text-center text-base sm:text-lg max-w-md leading-relaxed ${isRTL ? 'font-almarai' : ''}`}>
+          {t('observatoryDescription')}
         </p>
 
         {/* Search Input */}

@@ -2,9 +2,13 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Map } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
+import { useLanguage } from "@/contexts/LanguageContext";
+import { useTranslation } from "@/hooks/useTranslation";
 
 const AccesAuxDroitsSection = () => {
   const navigate = useNavigate();
+  const { isRTL } = useLanguage();
+  const { t } = useTranslation();
 
   return (
     <Card 
@@ -23,13 +27,13 @@ const AccesAuxDroitsSection = () => {
     >
       <CardContent className="p-8 sm:p-12 flex flex-col items-center justify-center space-y-8 min-h-[500px]">
         {/* Title */}
-        <h2 className="text-blue-900 text-3xl sm:text-4xl font-spartan font-bold text-center max-w-md">
-          Accès au droit administratif
+        <h2 className={`text-blue-900 text-3xl sm:text-4xl font-spartan font-bold text-center max-w-md ${isRTL ? 'font-almarai' : ''}`}>
+          {t('accessToAdminLaw')}
         </h2>
 
         {/* Description */}
-        <p className="text-blue-800 text-base sm:text-lg text-center max-w-md leading-relaxed">
-          Comprendre ses droits, savoir comment agir : des outils concrets pour tous les citoyens
+        <p className={`text-blue-800 text-base sm:text-lg text-center max-w-md leading-relaxed ${isRTL ? 'font-almarai' : ''}`}>
+          {t('accessDescription')}
         </p>
 
         {/* Primary CTA */}
@@ -38,9 +42,9 @@ const AccesAuxDroitsSection = () => {
           onClick={(e) => e.stopPropagation()}
         >
           <Link to="/acces-aux-droits/carte-interactive">
-            <Button className="w-full h-14 sm:h-16 bg-white text-gray-900 rounded-xl shadow-lg border-0 flex items-center justify-center gap-3 hover:bg-white/90">
+            <Button className={`w-full h-14 sm:h-16 bg-white text-gray-900 rounded-xl shadow-lg border-0 flex items-center justify-center gap-3 hover:bg-white/90 ${isRTL ? 'flex-row-reverse font-almarai' : ''}`}>
               <Map className="w-5 h-5 sm:w-6 sm:h-6" />
-              <span className="font-semibold text-base sm:text-lg">Carte interactive</span>
+              <span className="font-semibold text-base sm:text-lg">{t('interactiveMap')}</span>
             </Button>
           </Link>
         </div>
