@@ -25,8 +25,10 @@ export const LanguageProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     
     if (isRTL) {
       document.documentElement.classList.add('rtl');
+      document.documentElement.style.fontVariantNumeric = 'lining-nums';
     } else {
       document.documentElement.classList.remove('rtl');
+      document.documentElement.style.fontVariantNumeric = '';
     }
   }, [language, isRTL]);
 
