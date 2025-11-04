@@ -158,6 +158,16 @@ All colors MUST be HSL.
   font-variant-numeric: lining-nums;
 }
 
+/* RTL Flexbox utilities */
+.rtl .flex-row {
+  flex-direction: row-reverse;
+}
+
+/* RTL Text alignment for headings */
+.rtl h1, .rtl h2, .rtl h3, .rtl h4, .rtl h5, .rtl h6 {
+  text-align: right;
+}
+
 /* Arabic Typography and RTL Support */
 .arabic-text {
   font-family: 'Almarai', 'Noto Sans Arabic', 'Amiri', sans-serif;

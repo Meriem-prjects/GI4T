@@ -43,15 +43,22 @@ const ActualitesHomeSection = () => {
     <section className={`py-16 bg-background ${isRTL ? 'rtl' : ''}`}>
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header */}
-        <div className={`flex items-center gap-4 mb-12 ${isRTL ? 'flex-row-reverse' : ''}`}>
-          <h2 className={`text-4xl sm:text-5xl font-bold text-foreground ${isRTL ? 'font-almarai' : ''}`}>
-            {t('newsSection')}
-          </h2>
-          <img 
-            src="/justclic-logo.png" 
-            alt="JustClic" 
-            className="h-12 sm:h-14 w-auto object-contain"
-          />
+        <div className="flex items-center gap-4 mb-12">
+          {!isRTL ? (
+            <>
+              <h2 className="text-4xl sm:text-5xl font-bold text-foreground">
+                {t('newsSection')}
+              </h2>
+              <img src="/justclic-logo.png" alt="JustClic" className="h-12 sm:h-14 w-auto object-contain" />
+            </>
+          ) : (
+            <>
+              <img src="/justclic-logo.png" alt="JustClic" className="h-12 sm:h-14 w-auto object-contain" />
+              <h2 className="text-4xl sm:text-5xl font-bold text-foreground font-almarai">
+                {t('newsSection')}
+              </h2>
+            </>
+          )}
         </div>
 
         {/* Articles Grid */}
