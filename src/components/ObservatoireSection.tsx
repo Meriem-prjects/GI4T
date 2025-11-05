@@ -41,7 +41,7 @@ const ObservatoireSection = () => {
           <img
             src={language === 'ar' ? logoOdfAr : logoOdfFr}
             alt="Observatoire des Droits Fondamentaux" 
-            className="h-24 sm:h-28 w-auto object-contain"
+            className="h-32 sm:h-40 md:h-48 w-auto object-contain"
           />
         </div>
 
