@@ -4,10 +4,14 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Search, Calendar, MapPin, Eye, Camera, Users, ChevronRight } from "lucide-react";
+import { useLanguage } from "@/contexts/LanguageContext";
+import { useTranslation } from "@/hooks/useTranslation";
 
 const AlbumsPhotosContent = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("Tous");
+  const { isRTL } = useLanguage();
+  const { t } = useTranslation();
 
   const albums = [
     {
@@ -98,16 +102,16 @@ const AlbumsPhotosContent = () => {
   const totalPhotos = albums.reduce((sum, album) => sum + album.photos, 0);
 
   return (
-    <main className="flex-1">
+    <main className={`flex-1 ${isRTL ? 'font-almarai' : ''}`}>
       {/* Breadcrumb */}
       <div className="bg-muted/30 py-2">
         <div className="container mx-auto px-4">
-          <div className="flex items-center space-x-2 text-sm text-muted-foreground">
-            <span>Accueil</span>
-            <ChevronRight className="h-4 w-4" />
-            <span>Accès aux droits</span>
-            <ChevronRight className="h-4 w-4" />
-            <span className="text-foreground">Albums photos</span>
+          <div className={`flex items-center gap-2 text-sm text-muted-foreground ${isRTL ? 'flex-row-reverse' : ''}`}>
+            <span>{t('home')}</span>
+            <ChevronRight className={`h-4 w-4 ${isRTL ? 'rotate-180' : ''}`} />
+            <span>{t('accessRights')}</span>
+            <ChevronRight className={`h-4 w-4 ${isRTL ? 'rotate-180' : ''}`} />
+            <span className="text-foreground">{t('photoAlbumsTitle')}</span>
           </div>
         </div>
       </div>
@@ -115,19 +119,19 @@ const AlbumsPhotosContent = () => {
       {/* Main Content */}
       <div className="container mx-auto px-4 py-8">
         {/* Page Header */}
-        <div className="text-center mb-8 animate-fade-in">
-          <h1 className="text-3xl sm:text-4xl font-bold mb-4">Albums Photos</h1>
+        <div className={`text-center mb-8 animate-fade-in ${isRTL ? 'text-right' : ''}`}>
+          <h1 className="text-3xl sm:text-4xl font-bold mb-4">{t('photoAlbumsTitle')}</h1>
           <p className="text-lg text-muted-foreground max-w-2xl mx-auto mb-4">
-            Revivez nos événements, formations et campagnes de sensibilisation à travers nos galeries photo.
+            {t('photoAlbumsDesc')}
           </p>
-          <div className="flex items-center justify-center gap-6 text-sm text-muted-foreground">
-            <div className="flex items-center gap-1">
+          <div className={`flex items-center justify-center gap-6 text-sm text-muted-foreground ${isRTL ? 'flex-row-reverse' : ''}`}>
+            <div className={`flex items-center gap-1 ${isRTL ? 'flex-row-reverse' : ''}`}>
               <Camera className="h-4 w-4" />
-              {totalPhotos} photos
+              {totalPhotos} {t('photos')}
             </div>
-            <div className="flex items-center gap-1">
+            <div className={`flex items-center gap-1 ${isRTL ? 'flex-row-reverse' : ''}`}>
               <Users className="h-4 w-4" />
-              {albums.length} albums
+              {albums.length} {t('albums')}
             </div>
           </div>
         </div>
@@ -135,12 +139,12 @@ const AlbumsPhotosContent = () => {
         {/* Search and Filters */}
         <div className="mb-8 animate-fade-in">
           <div className="relative mb-4 max-w-md mx-auto">
-            <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+            <Search className={`absolute ${isRTL ? 'right-3' : 'left-3'} top-3 h-4 w-4 text-muted-foreground`} />
             <Input
-              placeholder="Rechercher un album..."
+              placeholder={t('searchDot')}
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10"
+              className={`${isRTL ? 'pr-10 text-right' : 'pl-10'}`}
             />
           </div>
 
@@ -162,7 +166,7 @@ const AlbumsPhotosContent = () => {
         {/* Featured Albums */}
         {selectedCategory === "Tous" && (
           <div className="mb-12 animate-fade-in">
-            <h2 className="text-2xl font-semibold mb-6 text-center">Albums à la une</h2>
+            <h2 className={`text-2xl font-semibold mb-6 text-center ${isRTL ? 'text-right' : ''}`}>{t('featured')}</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {featuredAlbums.map((album) => (
                 <Card key={album.id} className="hover:shadow-lg transition-shadow duration-300 border-primary/20 hover-scale">
@@ -170,47 +174,47 @@ const AlbumsPhotosContent = () => {
                     <div className="aspect-video bg-muted rounded-t-lg flex items-center justify-center">
                       <Camera className="h-12 w-12 text-muted-foreground" />
                     </div>
-                    <Badge className="absolute top-3 left-3 bg-primary/90">
-                      À la une
+                    <Badge className={`absolute top-3 ${isRTL ? 'right-3' : 'left-3'} bg-primary/90`}>
+                      {t('featured')}
                     </Badge>
-                    <Badge variant="outline" className="absolute top-3 right-3 bg-background">
+                    <Badge variant="outline" className={`absolute top-3 ${isRTL ? 'left-3' : 'right-3'} bg-background`}>
                       {album.category}
                     </Badge>
                   </div>
                   <CardHeader>
-                    <CardTitle className="text-lg">{album.title}</CardTitle>
-                    <CardDescription className="text-sm">
+                    <CardTitle className={`text-lg ${isRTL ? 'text-right' : ''}`}>{album.title}</CardTitle>
+                    <CardDescription className={`text-sm ${isRTL ? 'text-right' : ''}`}>
                       {album.description}
                     </CardDescription>
                   </CardHeader>
                   <CardContent>
-                    <div className="flex items-center justify-between mb-4 text-xs text-muted-foreground">
-                      <div className="flex items-center space-x-4">
-                        <div className="flex items-center">
-                          <Calendar className="h-3 w-3 mr-1" />
+                    <div className={`flex items-center justify-between mb-4 text-xs text-muted-foreground ${isRTL ? 'flex-row-reverse' : ''}`}>
+                      <div className={`flex items-center gap-4 ${isRTL ? 'flex-row-reverse' : ''}`}>
+                        <div className={`flex items-center ${isRTL ? 'flex-row-reverse' : ''}`}>
+                          <Calendar className={`h-3 w-3 ${isRTL ? 'ml-1' : 'mr-1'}`} />
                           {album.date}
                         </div>
-                        <div className="flex items-center">
-                          <MapPin className="h-3 w-3 mr-1" />
+                        <div className={`flex items-center ${isRTL ? 'flex-row-reverse' : ''}`}>
+                          <MapPin className={`h-3 w-3 ${isRTL ? 'ml-1' : 'mr-1'}`} />
                           {album.location}
                         </div>
                       </div>
                     </div>
-                    <div className="flex items-center justify-between mb-4 text-xs text-muted-foreground">
-                      <div className="flex items-center space-x-4">
-                        <div className="flex items-center">
-                          <Camera className="h-3 w-3 mr-1" />
-                          {album.photos} photos
+                    <div className={`flex items-center justify-between mb-4 text-xs text-muted-foreground ${isRTL ? 'flex-row-reverse' : ''}`}>
+                      <div className={`flex items-center gap-4 ${isRTL ? 'flex-row-reverse' : ''}`}>
+                        <div className={`flex items-center ${isRTL ? 'flex-row-reverse' : ''}`}>
+                          <Camera className={`h-3 w-3 ${isRTL ? 'ml-1' : 'mr-1'}`} />
+                          {album.photos} {t('photos')}
                         </div>
-                        <div className="flex items-center">
-                          <Eye className="h-3 w-3 mr-1" />
-                          {album.views} vues
+                        <div className={`flex items-center ${isRTL ? 'flex-row-reverse' : ''}`}>
+                          <Eye className={`h-3 w-3 ${isRTL ? 'ml-1' : 'mr-1'}`} />
+                          {album.views} {t('views')}
                         </div>
                       </div>
                     </div>
                     
                     <Button className="w-full" size="sm">
-                      Voir l'album
+                      {isRTL ? 'عرض الألبوم' : 'Voir l\'album'}
                     </Button>
                   </CardContent>
                 </Card>
@@ -221,8 +225,8 @@ const AlbumsPhotosContent = () => {
 
         {/* All Albums */}
         <div className="mb-12 animate-fade-in">
-          <h2 className="text-2xl font-semibold mb-6">
-            {selectedCategory === "Tous" ? "Tous les albums" : `Albums - ${selectedCategory}`}
+          <h2 className={`text-2xl font-semibold mb-6 ${isRTL ? 'text-right' : ''}`}>
+            {selectedCategory === "Tous" ? (isRTL ? 'جميع الألبومات' : 'Tous les albums') : `${isRTL ? 'ألبومات' : 'Albums'} - ${selectedCategory}`}
           </h2>
           
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -232,37 +236,37 @@ const AlbumsPhotosContent = () => {
                   <div className="aspect-video bg-muted rounded-t-lg flex items-center justify-center">
                     <Camera className="h-8 w-8 text-muted-foreground" />
                   </div>
-                  <Badge variant="outline" className="absolute top-2 right-2 bg-background text-xs">
+                  <Badge variant="outline" className={`absolute top-2 ${isRTL ? 'left-2' : 'right-2'} bg-background text-xs`}>
                     {album.category}
                   </Badge>
                 </div>
                 <CardContent className="p-4">
-                  <h3 className="font-medium text-sm mb-2 line-clamp-2">{album.title}</h3>
-                  <p className="text-xs text-muted-foreground mb-3 line-clamp-2">
+                  <h3 className={`font-medium text-sm mb-2 line-clamp-2 ${isRTL ? 'text-right' : ''}`}>{album.title}</h3>
+                  <p className={`text-xs text-muted-foreground mb-3 line-clamp-2 ${isRTL ? 'text-right' : ''}`}>
                     {album.description}
                   </p>
                   <div className="space-y-2 mb-3 text-xs text-muted-foreground">
-                    <div className="flex items-center">
-                      <Calendar className="h-3 w-3 mr-2" />
+                    <div className={`flex items-center ${isRTL ? 'flex-row-reverse' : ''}`}>
+                      <Calendar className={`h-3 w-3 ${isRTL ? 'ml-2' : 'mr-2'}`} />
                       {album.date}
                     </div>
-                    <div className="flex items-center">
-                      <MapPin className="h-3 w-3 mr-2" />
+                    <div className={`flex items-center ${isRTL ? 'flex-row-reverse' : ''}`}>
+                      <MapPin className={`h-3 w-3 ${isRTL ? 'ml-2' : 'mr-2'}`} />
                       <span className="line-clamp-1">{album.location}</span>
                     </div>
                   </div>
-                  <div className="flex items-center justify-between mb-3 text-xs text-muted-foreground">
-                    <div className="flex items-center">
-                      <Camera className="h-3 w-3 mr-1" />
-                      {album.photos} photos
+                  <div className={`flex items-center justify-between mb-3 text-xs text-muted-foreground ${isRTL ? 'flex-row-reverse' : ''}`}>
+                    <div className={`flex items-center ${isRTL ? 'flex-row-reverse' : ''}`}>
+                      <Camera className={`h-3 w-3 ${isRTL ? 'ml-1' : 'mr-1'}`} />
+                      {album.photos} {t('photos')}
                     </div>
-                    <div className="flex items-center">
-                      <Eye className="h-3 w-3 mr-1" />
+                    <div className={`flex items-center ${isRTL ? 'flex-row-reverse' : ''}`}>
+                      <Eye className={`h-3 w-3 ${isRTL ? 'ml-1' : 'mr-1'}`} />
                       {album.views}
                     </div>
                   </div>
                   <Button size="sm" className="w-full text-xs">
-                    Voir l'album
+                    {isRTL ? 'عرض الألبوم' : 'Voir l\'album'}
                   </Button>
                 </CardContent>
               </Card>
@@ -271,15 +275,15 @@ const AlbumsPhotosContent = () => {
         </div>
 
         {/* Newsletter Signup */}
-        <div className="bg-muted/50 rounded-lg p-6 text-center animate-fade-in">
-          <h3 className="text-xl font-semibold mb-2">Ne ratez aucun événement</h3>
+        <div className={`bg-muted/50 rounded-lg p-6 text-center animate-fade-in ${isRTL ? 'text-right' : ''}`}>
+          <h3 className="text-xl font-semibold mb-2">{isRTL ? 'لا تفوت أي حدث' : 'Ne ratez aucun événement'}</h3>
           <p className="text-muted-foreground mb-4">
-            Abonnez-vous à notre newsletter pour être informé de nos prochains événements et découvrir les photos en avant-première.
+            {isRTL ? 'اشترك في نشرتنا الإخبارية للحصول على معلومات حول الأحداث القادمة واكتشاف الصور مسبقًا.' : 'Abonnez-vous à notre newsletter pour être informé de nos prochains événements et découvrir les photos en avant-première.'}
           </p>
-          <div className="flex gap-2 max-w-md mx-auto">
-            <Input placeholder="Votre email..." className="flex-1" />
+          <div className={`flex gap-2 max-w-md mx-auto ${isRTL ? 'flex-row-reverse' : ''}`}>
+            <Input placeholder={t('yourEmail')} className={`flex-1 ${isRTL ? 'text-right' : ''}`} />
             <Button>
-              S'abonner
+              {t('subscribe')}
             </Button>
           </div>
         </div>

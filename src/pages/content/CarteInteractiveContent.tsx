@@ -6,6 +6,8 @@ import { ChevronRight, Calendar, MapPin, Users } from "lucide-react";
 import { useEvents } from "@/hooks/useEvents";
 import { useGovernorates } from "@/hooks/useGovernorates";
 import { GovernorateMap } from "@/components/map/GovernorateMap";
+import { useLanguage } from "@/contexts/LanguageContext";
+import { useTranslation } from "@/hooks/useTranslation";
 import type { Event } from "@/types/events";
 
 type FilterType = 'all' | 'action_realisee' | 'evenement_a_venir';
@@ -14,6 +16,8 @@ const CarteInteractiveContent = () => {
   const { events = [] } = useEvents();
   const { governorates = [] } = useGovernorates();
   const [filter, setFilter] = useState<FilterType>('all');
+  const { isRTL } = useLanguage();
+  const { t } = useTranslation();
 
   const filteredEvents = events.filter((event: Event) => {
     if (filter === 'all') return true;
@@ -21,16 +25,16 @@ const CarteInteractiveContent = () => {
   });
 
   return (
-    <main className="flex-1">
+    <main className={`flex-1 ${isRTL ? 'font-almarai' : ''}`}>
       {/* Breadcrumb */}
       <div className="bg-muted/30 py-2">
         <div className="container mx-auto px-4">
-          <div className="flex items-center space-x-2 text-sm text-muted-foreground">
-            <span>Accueil</span>
-            <ChevronRight className="h-4 w-4" />
-            <span>Accès aux droits</span>
-            <ChevronRight className="h-4 w-4" />
-            <span className="text-foreground">Carte interactive</span>
+          <div className={`flex items-center gap-2 text-sm text-muted-foreground ${isRTL ? 'flex-row-reverse' : ''}`}>
+            <span>{t('home')}</span>
+            <ChevronRight className={`h-4 w-4 ${isRTL ? 'rotate-180' : ''}`} />
+            <span>{t('accessRights')}</span>
+            <ChevronRight className={`h-4 w-4 ${isRTL ? 'rotate-180' : ''}`} />
+            <span className="text-foreground">{t('mapInteractiveTitle')}</span>
           </div>
         </div>
       </div>
@@ -38,10 +42,10 @@ const CarteInteractiveContent = () => {
       {/* Main Content */}
       <div className="container mx-auto px-4 py-8">
         {/* Page Header */}
-        <div className="text-center mb-8 animate-fade-in">
-          <h1 className="text-3xl sm:text-4xl font-bold mb-4">Carte Interactive</h1>
+        <div className={`text-center mb-8 animate-fade-in ${isRTL ? 'text-right' : ''}`}>
+          <h1 className="text-3xl sm:text-4xl font-bold mb-4">{t('mapInteractiveTitle')}</h1>
           <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-            Découvrez les actions et événements d'accès aux droits sur l'ensemble du territoire tunisien.
+            {t('mapDescription')}
           </p>
         </div>
 
@@ -50,9 +54,9 @@ const CarteInteractiveContent = () => {
           {/* Left Side - Events List */}
           <div className="space-y-4 overflow-y-auto max-h-[700px] pr-2 scrollbar-events">
             <div className="sticky top-0 bg-background z-10 pb-4 space-y-4">
-              <div className="flex items-center justify-between">
-                <h2 className="text-xl font-semibold">Événements</h2>
-                <Badge variant="outline">{filteredEvents.length} événement{filteredEvents.length !== 1 ? 's' : ''}</Badge>
+              <div className={`flex items-center justify-between ${isRTL ? 'flex-row-reverse' : ''}`}>
+                <h2 className="text-xl font-semibold">{t('events')}</h2>
+                <Badge variant="outline">{filteredEvents.length} {filteredEvents.length !== 1 ? t('events').toLowerCase() : t('events').toLowerCase()}</Badge>
               </div>
               
               {/* Filter Bar */}
@@ -63,7 +67,7 @@ const CarteInteractiveContent = () => {
                   onClick={() => setFilter('all')}
                   className="flex-1 min-w-[100px]"
                 >
-                  Tous
+                  {t('allEvents')}
                 </Button>
                 <Button
                   variant={filter === 'action_realisee' ? 'default' : 'outline'}
@@ -75,7 +79,7 @@ const CarteInteractiveContent = () => {
                       : 'border-green-600 text-green-600 hover:bg-green-50'
                   }`}
                 >
-                  Actions réalisées
+                  {t('completedActions')}
                 </Button>
                 <Button
                   variant={filter === 'evenement_a_venir' ? 'default' : 'outline'}
@@ -87,7 +91,7 @@ const CarteInteractiveContent = () => {
                       : 'border-blue-600 text-blue-600 hover:bg-blue-50'
                   }`}
                 >
-                  Événements à venir
+                  {t('upcomingEvents')}
                 </Button>
               </div>
             </div>
@@ -95,7 +99,7 @@ const CarteInteractiveContent = () => {
             {filteredEvents.length === 0 ? (
               <div className="text-center py-12 text-muted-foreground">
                 <Calendar className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                <p>Aucun événement disponible pour le moment</p>
+                <p>{t('noResults')}</p>
               </div>
             ) : (
               filteredEvents.map((event) => (
@@ -114,8 +118,8 @@ const CarteInteractiveContent = () => {
                     
                     {/* Event Info */}
                     <div className="space-y-3">
-                      <div className="flex items-start justify-between gap-2">
-                        <h3 className="font-semibold text-lg flex-1">{event.title}</h3>
+                      <div className={`flex items-start justify-between gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
+                        <h3 className={`font-semibold text-lg flex-1 ${isRTL ? 'text-right' : ''}`}>{event.title}</h3>
                         <Badge 
                           className={`flex-shrink-0 ${
                             event.type === 'action_realisee' 
@@ -123,18 +127,18 @@ const CarteInteractiveContent = () => {
                               : 'bg-blue-600 text-white hover:bg-blue-700'
                           }`}
                         >
-                          {event.type === 'action_realisee' ? 'Réalisée' : 'À venir'}
+                          {event.type === 'action_realisee' ? t('actionCompleted') : t('upcomingEvent')}
                         </Badge>
                       </div>
                       
-                      <p className="text-sm text-muted-foreground line-clamp-2">
+                      <p className={`text-sm text-muted-foreground line-clamp-2 ${isRTL ? 'text-right' : ''}`}>
                         {event.description}
                       </p>
                       
                       <div className="space-y-2 text-sm">
-                        <div className="flex items-center gap-2 text-muted-foreground">
+                        <div className={`flex items-center gap-2 text-muted-foreground ${isRTL ? 'flex-row-reverse' : ''}`}>
                           <Calendar className="h-4 w-4 flex-shrink-0" />
-                          <span>{new Date(event.event_date).toLocaleDateString('fr-FR', {
+                          <span>{new Date(event.event_date).toLocaleDateString(isRTL ? 'ar-TN' : 'fr-FR', {
                             year: 'numeric',
                             month: 'long',
                             day: 'numeric'
@@ -142,23 +146,23 @@ const CarteInteractiveContent = () => {
                         </div>
                         
                         {event.governorate?.name && (
-                          <div className="flex items-center gap-2 text-muted-foreground">
+                          <div className={`flex items-center gap-2 text-muted-foreground ${isRTL ? 'flex-row-reverse' : ''}`}>
                             <MapPin className="h-4 w-4 flex-shrink-0" />
                             <span>{event.governorate.name}</span>
                           </div>
                         )}
                         
                         {event.people_impacted && (
-                          <div className="flex items-center gap-2 text-muted-foreground">
+                          <div className={`flex items-center gap-2 text-muted-foreground ${isRTL ? 'flex-row-reverse' : ''}`}>
                             <Users className="h-4 w-4 flex-shrink-0" />
-                            <span>{event.people_impacted} personnes impactées</span>
+                            <span>{event.people_impacted} {isRTL ? 'شخص متأثر' : 'personnes impactées'}</span>
                           </div>
                         )}
                         
                         {event.available_places && event.type === 'evenement_a_venir' && (
-                          <div className="flex items-center gap-2 text-muted-foreground">
+                          <div className={`flex items-center gap-2 text-muted-foreground ${isRTL ? 'flex-row-reverse' : ''}`}>
                             <Users className="h-4 w-4 flex-shrink-0" />
-                            <span>{event.available_places} places disponibles</span>
+                            <span>{event.available_places} {isRTL ? 'مقعد متاح' : 'places disponibles'}</span>
                           </div>
                         )}
                       </div>
@@ -179,14 +183,14 @@ const CarteInteractiveContent = () => {
                 />
                 
                 {/* Legend */}
-                <div className="absolute top-4 right-4 bg-white/95 backdrop-blur-sm rounded-lg shadow-lg p-3 space-y-2 border border-gray-200 z-[1000]">
-                  <div className="flex items-center gap-2">
+                <div className={`absolute top-4 ${isRTL ? 'left-4' : 'right-4'} bg-white/95 backdrop-blur-sm rounded-lg shadow-lg p-3 space-y-2 border border-gray-200 z-[1000]`}>
+                  <div className={`flex items-center gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
                     <div className="w-4 h-4 bg-green-600 rounded"></div>
-                    <span className="text-xs font-medium text-gray-700">Action réalisée</span>
+                    <span className="text-xs font-medium text-gray-700">{t('actionCompleted')}</span>
                   </div>
-                  <div className="flex items-center gap-2">
+                  <div className={`flex items-center gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
                     <div className="w-4 h-4 bg-blue-600 rounded"></div>
-                    <span className="text-xs font-medium text-gray-700">Événement à venir</span>
+                    <span className="text-xs font-medium text-gray-700">{t('upcomingEvent')}</span>
                   </div>
                 </div>
               </CardContent>

@@ -12,6 +12,8 @@ import {
 } from "@/components/ui/select";
 import { useUsefulAddresses } from "@/hooks/useUsefulAddresses";
 import { useGovernorates } from "@/hooks/useGovernorates";
+import { useLanguage } from "@/contexts/LanguageContext";
+import { useTranslation } from "@/hooks/useTranslation";
 
 const AdressesUtilesContent = () => {
   const [searchQuery, setSearchQuery] = useState("");
@@ -19,6 +21,8 @@ const AdressesUtilesContent = () => {
   
   const { addresses, isLoading } = useUsefulAddresses(true);
   const { governorates } = useGovernorates();
+  const { isRTL } = useLanguage();
+  const { t } = useTranslation();
 
   const filteredAddresses = addresses.filter((address) => {
     const matchesSearch =
@@ -34,16 +38,16 @@ const AdressesUtilesContent = () => {
   });
 
   return (
-    <main className="flex-1">
+    <main className={`flex-1 ${isRTL ? 'font-almarai' : ''}`}>
       {/* Breadcrumb */}
       <div className="bg-muted/30 py-2">
         <div className="container mx-auto px-4">
-          <div className="flex items-center space-x-2 text-sm text-muted-foreground">
-            <span>Accueil</span>
-            <ChevronRight className="h-4 w-4" />
-            <span>Accès aux droits</span>
-            <ChevronRight className="h-4 w-4" />
-            <span className="text-foreground">Adresses utiles</span>
+          <div className={`flex items-center gap-2 text-sm text-muted-foreground ${isRTL ? 'flex-row-reverse' : ''}`}>
+            <span>{t('home')}</span>
+            <ChevronRight className={`h-4 w-4 ${isRTL ? 'rotate-180' : ''}`} />
+            <span>{t('accessRights')}</span>
+            <ChevronRight className={`h-4 w-4 ${isRTL ? 'rotate-180' : ''}`} />
+            <span className="text-foreground">{t('usefulAddressesTitle')}</span>
           </div>
         </div>
       </div>
@@ -51,32 +55,32 @@ const AdressesUtilesContent = () => {
       {/* Main Content */}
       <div className="container mx-auto px-4 py-8">
         {/* Page Header */}
-        <div className="text-center mb-8 animate-fade-in">
-          <h1 className="text-3xl sm:text-4xl font-bold mb-4">Adresses Utiles</h1>
+        <div className={`text-center mb-8 animate-fade-in ${isRTL ? 'text-right' : ''}`}>
+          <h1 className="text-3xl sm:text-4xl font-bold mb-4">{t('usefulAddressesTitle')}</h1>
           <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-            Retrouvez les coordonnées des principaux organismes et services d'accès aux droits.
+            {t('usefulAddressesDesc')}
           </p>
         </div>
 
         {/* Search and Filters */}
         <div className="mb-8 space-y-4 animate-fade-in">
           <div className="relative max-w-2xl mx-auto">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-5 h-5" />
+            <Search className={`absolute ${isRTL ? 'right-3' : 'left-3'} top-1/2 transform -translate-y-1/2 text-muted-foreground w-5 h-5`} />
             <Input
               type="text"
-              placeholder="Rechercher par nom, adresse ou téléphone..."
+              placeholder={isRTL ? 'ابحث بالاسم، العنوان أو الهاتف...' : 'Rechercher par nom, adresse ou téléphone...'}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-10 h-12"
+              className={`${isRTL ? 'pr-10 text-right' : 'pl-10'} h-12`}
             />
           </div>
           <div className="max-w-md mx-auto">
             <Select value={selectedGovernorate} onValueChange={setSelectedGovernorate}>
-              <SelectTrigger>
-                <SelectValue placeholder="Tous les gouvernorats" />
+              <SelectTrigger className={isRTL ? 'text-right' : ''}>
+                <SelectValue placeholder={t('selectGovernorate')} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">Tous les gouvernorats</SelectItem>
+                <SelectItem value="all">{t('all')} {t('governorate')}</SelectItem>
                 {governorates.map((gov) => (
                   <SelectItem key={gov.id} value={gov.id}>
                     {gov.name}
@@ -106,11 +110,11 @@ const AdressesUtilesContent = () => {
               <Card key={address.id} className="hover:shadow-lg transition-shadow">
                 <CardContent className="p-6 space-y-4">
                   <div>
-                    <h3 className="text-xl font-semibold mb-1">{address.name}</h3>
+                    <h3 className={`text-xl font-semibold mb-1 ${isRTL ? 'text-right' : ''}`}>{address.name}</h3>
                     <h3 className="text-lg font-semibold text-right mb-3" dir="rtl">
                       {address.name_ar}
                     </h3>
-                    <div className="flex flex-wrap gap-2">
+                    <div className={`flex flex-wrap gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
                       <Badge variant="secondary">{address.category}</Badge>
                       {address.governorates && (
                         <Badge variant="outline">
@@ -122,28 +126,29 @@ const AdressesUtilesContent = () => {
                   </div>
 
                   <div className="space-y-2 text-sm">
-                    <div className="flex items-start gap-2">
+                    <div className={`flex items-start gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
                       <MapPin className="w-4 h-4 mt-1 flex-shrink-0 text-muted-foreground" />
-                      <div>
-                        <p>{address.address}</p>
+                      <div className="flex-1">
+                        <p className={isRTL ? 'text-right' : ''}>{address.address}</p>
                         <p className="text-right text-muted-foreground" dir="rtl">
                           {address.address_ar}
                         </p>
                       </div>
                     </div>
 
-                    <div className="flex items-center gap-2">
+                    <div className={`flex items-center gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
                       <Phone className="w-4 h-4 text-muted-foreground" />
                       <a
                         href={`tel:${address.phone.replace(/\s/g, '')}`}
                         className="hover:underline text-primary"
+                        dir="ltr"
                       >
                         {address.phone}
                       </a>
                     </div>
 
                     {address.email && (
-                      <div className="flex items-center gap-2">
+                      <div className={`flex items-center gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
                         <Mail className="w-4 h-4 text-muted-foreground" />
                         <a
                           href={`mailto:${address.email}`}
@@ -156,8 +161,8 @@ const AdressesUtilesContent = () => {
 
                     {(address.hours || address.hours_ar) && (
                       <div className="pt-2 border-t">
-                        <p className="font-medium mb-1">Horaires:</p>
-                        {address.hours && <p>{address.hours}</p>}
+                        <p className={`font-medium mb-1 ${isRTL ? 'text-right' : ''}`}>{t('openingHours')}:</p>
+                        {address.hours && <p className={isRTL ? 'text-right' : ''}>{address.hours}</p>}
                         {address.hours_ar && (
                           <p className="text-right text-muted-foreground" dir="rtl">
                             {address.hours_ar}
@@ -173,7 +178,7 @@ const AdressesUtilesContent = () => {
         ) : (
           <Card className="animate-fade-in">
             <CardContent className="py-12 text-center text-muted-foreground">
-              Aucune adresse trouvée
+              {t('noResults')}
             </CardContent>
           </Card>
         )}

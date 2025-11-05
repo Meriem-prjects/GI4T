@@ -4,10 +4,14 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Search, Clock, Users, Download, BookOpen, ChevronRight } from "lucide-react";
+import { useLanguage } from "@/contexts/LanguageContext";
+import { useTranslation } from "@/hooks/useTranslation";
 
 const GuidesPratiquesContent = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("Tous");
+  const { isRTL } = useLanguage();
+  const { t } = useTranslation();
 
   const guides = [
     {
@@ -83,16 +87,16 @@ const GuidesPratiquesContent = () => {
   });
 
   return (
-    <main className="flex-1">
+    <main className={`flex-1 ${isRTL ? 'font-almarai' : ''}`}>
       {/* Breadcrumb */}
       <div className="bg-muted/30 py-2">
         <div className="container mx-auto px-4">
-          <div className="flex items-center space-x-2 text-sm text-muted-foreground">
-            <span>Accueil</span>
-            <ChevronRight className="h-4 w-4" />
-            <span>Accès aux droits</span>
-            <ChevronRight className="h-4 w-4" />
-            <span className="text-foreground">Guides pratiques</span>
+          <div className={`flex items-center gap-2 text-sm text-muted-foreground ${isRTL ? 'flex-row-reverse' : ''}`}>
+            <span>{t('home')}</span>
+            <ChevronRight className={`h-4 w-4 ${isRTL ? 'rotate-180' : ''}`} />
+            <span>{t('accessRights')}</span>
+            <ChevronRight className={`h-4 w-4 ${isRTL ? 'rotate-180' : ''}`} />
+            <span className="text-foreground">{t('practicalGuidesTitle')}</span>
           </div>
         </div>
       </div>
@@ -100,22 +104,22 @@ const GuidesPratiquesContent = () => {
       {/* Main Content */}
       <div className="container mx-auto px-4 py-8">
         {/* Page Header */}
-        <div className="text-center mb-8 animate-fade-in">
-          <h1 className="text-3xl sm:text-4xl font-bold mb-4">Guides Pratiques</h1>
+        <div className={`text-center mb-8 animate-fade-in ${isRTL ? 'text-right' : ''}`}>
+          <h1 className="text-3xl sm:text-4xl font-bold mb-4">{t('practicalGuidesTitle')}</h1>
           <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-            Découvrez nos guides step-by-step pour vous accompagner dans vos démarches et faire valoir vos droits.
+            {t('practicalGuidesDesc')}
           </p>
         </div>
 
         {/* Search and Filters */}
         <div className="mb-8 animate-fade-in">
           <div className="relative mb-4">
-            <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+            <Search className={`absolute ${isRTL ? 'right-3' : 'left-3'} top-3 h-4 w-4 text-muted-foreground`} />
             <Input
-              placeholder="Rechercher un guide..."
+              placeholder={t('searchDot')}
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10"
+              className={`${isRTL ? 'pr-10 text-right' : 'pl-10'}`}
             />
           </div>
 
@@ -139,29 +143,29 @@ const GuidesPratiquesContent = () => {
           {filteredGuides.map((guide) => (
             <Card key={guide.id} className="hover:shadow-lg transition-shadow duration-300 hover-scale">
               <CardHeader>
-                <div className="flex justify-between items-start mb-2">
+                <div className={`flex justify-between items-start mb-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
                   <Badge variant="secondary" className="text-xs">
                     {guide.category}
                   </Badge>
-                  <div className="flex items-center text-xs text-muted-foreground">
-                    <Download className="h-3 w-3 mr-1" />
+                  <div className={`flex items-center text-xs text-muted-foreground ${isRTL ? 'flex-row-reverse' : ''}`}>
+                    <Download className={`h-3 w-3 ${isRTL ? 'ml-1' : 'mr-1'}`} />
                     {guide.downloads}
                   </div>
                 </div>
-                <CardTitle className="text-lg">{guide.title}</CardTitle>
+                <CardTitle className={`text-lg ${isRTL ? 'text-right' : ''}`}>{guide.title}</CardTitle>
               </CardHeader>
               <CardContent>
-                <p className="text-sm text-muted-foreground mb-4">
+                <p className={`text-sm text-muted-foreground mb-4 ${isRTL ? 'text-right' : ''}`}>
                   {guide.description}
                 </p>
                 
-                <div className="flex items-center justify-between mb-4 text-xs text-muted-foreground">
-                  <div className="flex items-center">
-                    <Clock className="h-3 w-3 mr-1" />
+                <div className={`flex items-center justify-between mb-4 text-xs text-muted-foreground ${isRTL ? 'flex-row-reverse' : ''}`}>
+                  <div className={`flex items-center ${isRTL ? 'flex-row-reverse' : ''}`}>
+                    <Clock className={`h-3 w-3 ${isRTL ? 'ml-1' : 'mr-1'}`} />
                     {guide.duration}
                   </div>
-                  <div className="flex items-center">
-                    <Users className="h-3 w-3 mr-1" />
+                  <div className={`flex items-center ${isRTL ? 'flex-row-reverse' : ''}`}>
+                    <Users className={`h-3 w-3 ${isRTL ? 'ml-1' : 'mr-1'}`} />
                     {guide.difficulty}
                   </div>
                 </div>
@@ -176,8 +180,8 @@ const GuidesPratiquesContent = () => {
 
                 <div className="flex gap-2">
                   <Button className="flex-1" size="sm">
-                    <BookOpen className="h-3 w-3 mr-1" />
-                    Lire
+                    <BookOpen className={`h-3 w-3 ${isRTL ? 'ml-1' : 'mr-1'}`} />
+                    {t('read')}
                   </Button>
                   <Button variant="outline" size="sm">
                     <Download className="h-3 w-3" />
@@ -189,13 +193,13 @@ const GuidesPratiquesContent = () => {
         </div>
 
         {/* Call to Action */}
-        <div className="bg-muted/50 rounded-lg p-6 text-center animate-fade-in">
-          <h3 className="text-xl font-semibold mb-2">Vous ne trouvez pas le guide que vous cherchez ?</h3>
+        <div className={`bg-muted/50 rounded-lg p-6 text-center animate-fade-in ${isRTL ? 'text-right' : ''}`}>
+          <h3 className="text-xl font-semibold mb-2">{t('needHelp')}</h3>
           <p className="text-muted-foreground mb-4">
-            Contactez-nous pour nous suggérer de nouveaux guides pratiques.
+            {t('needHelpDesc')}
           </p>
           <Button>
-            Nous contacter
+            {t('contactUs')}
           </Button>
         </div>
       </div>
