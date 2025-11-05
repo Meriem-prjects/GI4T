@@ -37,7 +37,7 @@ const AccesAuxDroitsLayout = () => {
       {/* Header */}
       <header className="border-b bg-card animate-fade-in">
         <div className="container mx-auto px-4 py-2 sm:py-4 relative">
-          <div className={`flex items-center justify-between flex-wrap gap-4 ${isRTL ? 'flex-row-reverse' : ''}`}>
+          <div className="flex items-center justify-between flex-wrap gap-4">
             <Link to="/acces-aux-droits" className={`flex items-center gap-2 sm:gap-4 hover:opacity-80 transition-opacity ${isRTL ? 'flex-row-reverse' : ''}`}>
               <img src="/Feelinx_upload/logo-acces-aux-droits.png" alt={t('accessToRights')} className="h-6 sm:h-8 md:h-12 flex-shrink-0" />
               <div className={isRTL ? 'text-right' : ''}>
@@ -46,7 +46,7 @@ const AccesAuxDroitsLayout = () => {
               </div>
             </Link>
             
-            <nav className={`hidden md:flex items-center absolute left-1/2 transform -translate-x-1/2 ${isRTL ? 'space-x-reverse space-x-6' : 'space-x-6'}`}>
+            <nav className={`hidden md:flex items-center absolute ${isRTL ? 'right-1/2 translate-x-1/2' : 'left-1/2 -translate-x-1/2'} gap-6`}>
               <Link to="/acces-aux-droits/carte-interactive" className={`text-sm font-medium text-foreground hover:text-primary transition-colors duration-200 ${isRTL ? 'font-almarai' : ''}`}>
                 {t('interactiveMap')}
               </Link>
@@ -61,7 +61,7 @@ const AccesAuxDroitsLayout = () => {
               </Link>
             </nav>
 
-            <div className={`flex items-center ml-auto ${isRTL ? 'space-x-reverse space-x-2 sm:space-x-4' : 'space-x-2 sm:space-x-4'}`}>
+            <div className={`flex items-center gap-2 sm:gap-4 ${isRTL ? 'mr-auto' : 'ml-auto'}`}>
               <Link to="/acces-aux-droits">
                 <Button variant="outline" size="sm" className="text-xs sm:text-sm">
                   <Home className="h-4 w-4" />
