@@ -1,154 +1,156 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Search, ExternalLink, Shield, Users, Gavel, Heart, Home, Briefcase, ChevronRight } from "lucide-react";
-
+import { useLanguage } from "@/contexts/LanguageContext";
+import { useTranslation } from "@/hooks/useTranslation";
 const LiensUtilesContent = () => {
   const [searchTerm, setSearchTerm] = useState("");
-
+  const { isRTL } = useLanguage();
+  const { t } = useTranslation();
   const linkCategories = [
     {
-      title: "Institutions officielles",
+      title: isRTL ? "المؤسسات الرسمية" : "Institutions officielles",
       icon: Shield,
       links: [
         {
           name: "Présidence de la République Tunisienne",
           url: "http://www.carthage.tn",
-          description: "Site officiel de la Présidence de la République",
+          description: isRTL ? "الموقع الرسمي لرئاسة الجمهورية" : "Site officiel de la Présidence de la République",
           verified: true
         },
         {
           name: "Assemblée des Représentants du Peuple",
           url: "http://www.arp.tn",
-          description: "Parlement tunisien - Lois et débats",
+          description: isRTL ? "البرلمان التونسي - القوانين والنقاشات" : "Parlement tunisien - Lois et débats",
           verified: true
         },
         {
           name: "Tribunal Administratif",
           url: "http://www.ta.tn",
-          description: "Recours contre les décisions administratives",
+          description: isRTL ? "الطعن في القرارات الإدارية" : "Recours contre les décisions administratives",
           verified: true
         }
       ]
     },
     {
-      title: "Droits humains et libertés",
+      title: isRTL ? "حقوق الإنسان والحريات" : "Droits humains et libertés",
       icon: Users,
       links: [
         {
           name: "Ligue Tunisienne des Droits de l'Homme",
           url: "http://www.ltdh.tn",
-          description: "Défense des droits humains en Tunisie",
+          description: isRTL ? "الدفاع عن حقوق الإنسان في تونس" : "Défense des droits humains en Tunisie",
           verified: true
         },
         {
           name: "Forum Tunisien des Droits Économiques et Sociaux",
           url: "http://www.ftdes.net",
-          description: "Droits économiques et sociaux",
+          description: isRTL ? "الحقوق الاقتصادية والاجتماعية" : "Droits économiques et sociaux",
           verified: true
         },
         {
           name: "Amnesty International Tunisie",
           url: "https://www.amnesty.org/fr/countries/middle-east-and-north-africa/tunisia/",
-          description: "Organisation internationale des droits humains",
+          description: isRTL ? "منظمة دولية لحقوق الإنسان" : "Organisation internationale des droits humains",
           verified: false
         }
       ]
     },
     {
-      title: "Justice et aide juridique",
+      title: isRTL ? "العدالة والمساعدة القانونية" : "Justice et aide juridique",
       icon: Gavel,
       links: [
         {
           name: "Ordre des Avocats de Tunis",
           url: "http://www.barreau.org.tn",
-          description: "Conseil de l'ordre et annuaire des avocats",
+          description: isRTL ? "مجلس الهيئة ودليل المحامين" : "Conseil de l'ordre et annuaire des avocats",
           verified: true
         },
         {
           name: "Ministère de la Justice",
           url: "http://www.e-justice.tn",
-          description: "Services de justice électronique",
+          description: isRTL ? "خدمات العدالة الإلكترونية" : "Services de justice électronique",
           verified: true
         },
         {
           name: "Centre d'Information Juridique",
           url: "http://www.legislation.tn",
-          description: "Accès aux textes de loi tunisiens",
+          description: isRTL ? "الوصول إلى النصوص القانونية التونسية" : "Accès aux textes de loi tunisiens",
           verified: true
         }
       ]
     },
     {
-      title: "Aide sociale et santé",
+      title: isRTL ? "الشؤون الاجتماعية والصحة" : "Aide sociale et santé",
       icon: Heart,
       links: [
         {
           name: "Ministère des Affaires Sociales",
           url: "http://www.social.gov.tn",
-          description: "Programmes d'aide sociale et de protection",
+          description: isRTL ? "برامج المساعدات الاجتماعية والحماية" : "Programmes d'aide sociale et de protection",
           verified: true
         },
         {
           name: "Caisse Nationale d'Assurance Maladie",
           url: "http://www.cnam.nat.tn",
-          description: "Couverture maladie et remboursements",
+          description: isRTL ? "التغطية الصحية والاسترجاع" : "Couverture maladie et remboursements",
           verified: true
         },
         {
           name: "Croissant-Rouge Tunisien",
           url: "http://www.croissantrouge.tn",
-          description: "Aide humanitaire et assistance sociale",
+          description: isRTL ? "مساعدة إنسانية واجتماعية" : "Aide humanitaire et assistance sociale",
           verified: false
         }
       ]
     },
     {
-      title: "Logement et urbanisme",
+      title: isRTL ? "السكن والتعمير" : "Logement et urbanisme",
       icon: Home,
       links: [
         {
           name: "Ministère de l'Équipement et de l'Habitat",
           url: "http://www.equipement.tn",
-          description: "Politiques de logement et d'aménagement",
+          description: isRTL ? "سياسات السكن والتهيئة" : "Politiques de logement et d'aménagement",
           verified: true
         },
         {
           name: "Société Nationale Immobilière de Tunisie",
           url: "http://www.snit.tn",
-          description: "Logements sociaux et programmes immobiliers",
+          description: isRTL ? "السكن الاجتماعي والبرامج العقارية" : "Logements sociaux et programmes immobiliers",
           verified: true
         },
         {
           name: "Agence Foncière d'Habitation",
           url: "http://www.afh.tn",
-          description: "Promotion du logement social",
+          description: isRTL ? "ترقية السكن الاجتماعي" : "Promotion du logement social",
           verified: false
         }
       ]
     },
     {
-      title: "Emploi et formation",
+      title: isRTL ? "التشغيل والتكوين" : "Emploi et formation",
       icon: Briefcase,
       links: [
         {
           name: "Agence Nationale pour l'Emploi et le Travail Indépendant",
           url: "http://www.aneti.com.tn",
-          description: "Recherche d'emploi et formation professionnelle",
+          description: isRTL ? "البحث عن عمل والتكوين المهني" : "Recherche d'emploi et formation professionnelle",
           verified: true
         },
         {
           name: "Union Générale Tunisienne du Travail",
           url: "http://www.ugtt.org.tn",
-          description: "Syndicat des travailleurs - Défense des droits",
+          description: isRTL ? "نقابة العمال - الدفاع عن الحقوق" : "Syndicat des travailleurs - Défense des droits",
           verified: true
         },
         {
           name: "Ministère de la Formation Professionnelle et de l'Emploi",
           url: "http://www.emploi.gov.tn",
-          description: "Politiques d'emploi et de formation",
+          description: isRTL ? "سياسات التشغيل والتكوين" : "Politiques d'emploi et de formation",
           verified: true
         }
       ]
@@ -168,12 +170,12 @@ const LiensUtilesContent = () => {
       {/* Breadcrumb */}
       <div className="bg-muted/30 py-2">
         <div className="container mx-auto px-4">
-          <div className="flex items-center space-x-2 text-sm text-muted-foreground">
-            <span>Accueil</span>
-            <ChevronRight className="h-4 w-4" />
-            <span>Accès aux droits</span>
-            <ChevronRight className="h-4 w-4" />
-            <span className="text-foreground">Liens utiles</span>
+          <div className={`flex items-center gap-2 text-sm text-muted-foreground ${isRTL ? 'flex-row-reverse' : ''}`}>
+            <span>{t('home')}</span>
+            <ChevronRight className={`h-4 w-4 ${isRTL ? 'rotate-180' : ''}`} />
+            <span>{t('accessRights')}</span>
+            <ChevronRight className={`h-4 w-4 ${isRTL ? 'rotate-180' : ''}`} />
+            <span className="text-foreground">{t('usefulLinksTitle')}</span>
           </div>
         </div>
       </div>
@@ -182,21 +184,21 @@ const LiensUtilesContent = () => {
       <div className="container mx-auto px-4 py-8">
         {/* Page Header */}
         <div className="text-center mb-8 animate-fade-in">
-          <h1 className="text-3xl sm:text-4xl font-bold mb-4">Liens Utiles</h1>
+          <h1 className="text-3xl sm:text-4xl font-bold mb-4">{t('usefulLinksTitle')}</h1>
           <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-            Découvrez une sélection de sites web essentiels pour vous accompagner dans vos démarches et l'exercice de vos droits.
+            {t('usefulLinksDesc')}
           </p>
         </div>
 
         {/* Search */}
         <div className="mb-8 animate-fade-in">
           <div className="relative max-w-md mx-auto">
-            <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+            <Search className={`absolute ${isRTL ? 'right-3' : 'left-3'} top-3 h-4 w-4 text-muted-foreground`} />
             <Input
-              placeholder="Rechercher un site..."
+              placeholder={t('searchDot')}
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10"
+              className={`${isRTL ? 'pr-10 text-right' : 'pl-10'}`}
             />
           </div>
         </div>
@@ -221,7 +223,7 @@ const LiensUtilesContent = () => {
                           <div className="flex items-center gap-1 flex-shrink-0">
                             {link.verified && (
                               <Badge variant="outline" className="text-xs bg-green-50 text-green-700 border-green-200">
-                                Vérifié
+                                {t('verified')}
                               </Badge>
                             )}
                           </div>
@@ -237,10 +239,10 @@ const LiensUtilesContent = () => {
                           rel="noopener noreferrer"
                           className="inline-block w-full"
                         >
-                          <Button className="w-full" size="sm">
-                            <ExternalLink className="h-3 w-3 mr-2" />
-                            Visiter le site
-                          </Button>
+                            <Button className="w-full" size="sm">
+                              <ExternalLink className="h-3 w-3 mr-2" />
+                              {isRTL ? 'زيارة الموقع' : 'Visiter le site'}
+                            </Button>
                         </a>
                       </CardContent>
                     </Card>
@@ -253,12 +255,12 @@ const LiensUtilesContent = () => {
 
         {/* Suggest Link Section */}
         <div className="bg-muted/50 rounded-lg p-6 text-center animate-fade-in">
-          <h3 className="text-xl font-semibold mb-2">Suggérer un lien</h3>
+          <h3 className="text-xl font-semibold mb-2">{t('suggestLink')}</h3>
           <p className="text-muted-foreground mb-4">
-            Vous connaissez un site utile qui devrait figurer dans cette liste ? Partagez-le avec nous !
+            {t('suggestLinkDesc')}
           </p>
           <Button>
-            Suggérer un lien
+            {t('suggestLink')}
           </Button>
         </div>
       </div>

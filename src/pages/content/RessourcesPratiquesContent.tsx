@@ -5,11 +5,13 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Search, FileText, Download, Calendar, Eye, ArrowRight, ChevronRight } from "lucide-react";
 import { Link } from "react-router-dom";
-
+import { useLanguage } from "@/contexts/LanguageContext";
+import { useTranslation } from "@/hooks/useTranslation";
 const RessourcesPratiquesContent = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("Tous");
-
+  const { isRTL, language } = useLanguage();
+  const { t } = useTranslation();
   const resources = [
     {
       id: 1,
@@ -101,12 +103,12 @@ const RessourcesPratiquesContent = () => {
       {/* Breadcrumb */}
       <div className="bg-muted/30 py-2">
         <div className="container mx-auto px-4">
-          <div className="flex items-center space-x-2 text-sm text-muted-foreground">
-            <span>Accueil</span>
-            <ChevronRight className="h-4 w-4" />
-            <span>Accès aux droits</span>
-            <ChevronRight className="h-4 w-4" />
-            <span className="text-foreground">Ressources pratiques</span>
+          <div className={`flex items-center gap-2 text-sm text-muted-foreground ${isRTL ? 'flex-row-reverse' : ''}`}>
+            <span>{t('home')}</span>
+            <ChevronRight className={`h-4 w-4 ${isRTL ? 'rotate-180' : ''}`} />
+            <span>{t('accessRights')}</span>
+            <ChevronRight className={`h-4 w-4 ${isRTL ? 'rotate-180' : ''}`} />
+            <span className="text-foreground">{t('practicalResourcesTitle')}</span>
           </div>
         </div>
       </div>
@@ -114,22 +116,22 @@ const RessourcesPratiquesContent = () => {
       {/* Main Content */}
       <div className="container mx-auto px-4 py-8">
         {/* Page Header */}
-        <div className="text-center mb-8 animate-fade-in">
-          <h1 className="text-3xl sm:text-4xl font-bold mb-4">Ressources Pratiques</h1>
+        <div className={`text-center mb-8 animate-fade-in ${isRTL ? 'text-right' : ''}`}>
+          <h1 className="text-3xl sm:text-4xl font-bold mb-4">{t('practicalResourcesTitle')}</h1>
           <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-            Téléchargez nos modèles, formulaires et documents pratiques pour faciliter vos démarches administratives.
+            {t('practicalResourcesDesc')}
           </p>
         </div>
 
         {/* Search and Filters */}
         <div className="mb-8 animate-fade-in">
           <div className="relative mb-4">
-            <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+            <Search className={`absolute ${isRTL ? 'right-3' : 'left-3'} top-3 h-4 w-4 text-muted-foreground`} />
             <Input
-              placeholder="Rechercher une ressource..."
+              placeholder={t('searchDot')}
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10"
+              className={`${isRTL ? 'pr-10 text-right' : 'pl-10'}`}
             />
           </div>
 
@@ -151,14 +153,14 @@ const RessourcesPratiquesContent = () => {
         {/* Featured Resources */}
         {selectedCategory === "Tous" && (
           <div className="mb-12 animate-fade-in">
-            <h2 className="text-2xl font-semibold mb-6">Ressources les plus téléchargées</h2>
+            <h2 className={`text-2xl font-semibold mb-6 ${isRTL ? 'text-right' : ''}`}>{t('featuredResources')}</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {featuredResources.map((resource) => (
                 <Card key={resource.id} className="hover:shadow-lg transition-shadow duration-300 border-primary/20 hover-scale">
                   <CardHeader>
                     <div className="flex justify-between items-start mb-2">
                       <Badge variant="secondary" className="bg-primary/10 text-primary">
-                        Populaire
+                        {t('featured')}
                       </Badge>
                       <Badge variant="outline" className="text-xs">
                         {resource.category}
@@ -187,7 +189,7 @@ const RessourcesPratiquesContent = () => {
                     <div className="flex gap-2">
                       <Button className="flex-1" size="sm">
                         <Download className="h-3 w-3 mr-1" />
-                        Télécharger
+                        {t('download')}
                       </Button>
                       <Button variant="outline" size="sm">
                         <Eye className="h-3 w-3" />
@@ -203,7 +205,7 @@ const RessourcesPratiquesContent = () => {
         {/* All Resources */}
         <div className="mb-12 animate-fade-in">
           <h2 className="text-2xl font-semibold mb-6">
-            {selectedCategory === "Tous" ? "Toutes les ressources" : `Ressources - ${selectedCategory}`}
+            {selectedCategory === "Tous" ? t('allResources') : `Ressources - ${selectedCategory}`}
           </h2>
           
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
@@ -233,7 +235,7 @@ const RessourcesPratiquesContent = () => {
                           </div>
                           <div className="flex items-center">
                             <Calendar className="h-3 w-3 mr-1" />
-                            {new Date(resource.lastUpdated).toLocaleDateString('fr-FR')}
+                            {new Date(resource.lastUpdated).toLocaleDateString(language === 'ar' ? 'ar-TN' : 'fr-FR')}
                           </div>
                         </div>
                         <span>{resource.size}</span>
@@ -256,14 +258,14 @@ const RessourcesPratiquesContent = () => {
 
         {/* Newsletter Signup */}
         <div className="bg-muted/50 rounded-lg p-6 text-center animate-fade-in">
-          <h3 className="text-xl font-semibold mb-2">Restez informé des nouvelles ressources</h3>
+          <h3 className="text-xl font-semibold mb-2">{t('stayInformed')}</h3>
           <p className="text-muted-foreground mb-4">
-            Abonnez-vous à notre newsletter pour être notifié des nouveaux modèles et formulaires.
+            {isRTL ? 'اشترك ليصلك جديد الموارد' : 'Recevez les nouvelles ressources par email.'}
           </p>
           <div className="flex gap-2 max-w-md mx-auto">
-            <Input placeholder="Votre email..." className="flex-1" />
+            <Input placeholder={`${t('yourEmail')}...`} className="flex-1" />
             <Button>
-              S'abonner
+              {t('subscribe')}
             </Button>
           </div>
         </div>
