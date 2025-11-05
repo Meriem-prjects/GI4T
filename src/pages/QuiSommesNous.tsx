@@ -2,31 +2,37 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Users, Target, Eye, Heart } from "lucide-react";
 import { Link } from "react-router-dom";
+import { useTranslation } from "@/hooks/useTranslation";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 const QuiSommesNous = () => {
+  const { t } = useTranslation();
+  const { language } = useLanguage();
+  const isRTL = language === 'ar';
+
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background" dir={isRTL ? 'rtl' : 'ltr'}>
       {/* Breadcrumb */}
       <nav className="border-b bg-muted/30">
         <div className="container mx-auto px-4 py-3">
-          <div className="flex items-center space-x-2 text-sm text-muted-foreground">
-            <Link to="/" className="hover:text-primary">Accueil</Link>
+          <div className={`flex items-center ${isRTL ? 'space-x-reverse' : ''} space-x-2 text-sm text-muted-foreground`}>
+            <Link to="/" className="hover:text-primary">{t('home')}</Link>
             <span>›</span>
-            <Link to="/information/qui-sommes-nous" className="hover:text-primary">Information</Link>
+            <Link to="/information/qui-sommes-nous" className="hover:text-primary">{t('information')}</Link>
             <span>›</span>
-            <span className="text-foreground">Qui sommes-nous</span>
+            <span className="text-foreground">{t('whoWeAre')}</span>
           </div>
         </div>
       </nav>
 
       {/* Hero Section */}
       <section className="py-12 bg-gradient-to-br from-primary/5 to-primary/10">
-        <div className="container mx-auto px-4 text-center">
+        <div className={`container mx-auto px-4 ${isRTL ? 'text-right' : 'text-center'}`}>
           <h1 className="text-3xl sm:text-4xl font-bold text-foreground mb-4">
-            Qui sommes-nous ?
+            {t('whoWeAre')} ؟
           </h1>
           <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-            JustClic.tn est une plateforme citoyenne dédiée à simplifier l'accès à l'information juridique et aux droits fondamentaux en Tunisie.
+            {t('whoWeAreSubtitle')}
           </p>
         </div>
       </section>
@@ -36,103 +42,100 @@ const QuiSommesNous = () => {
         <div className="container mx-auto px-4">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-16">
             <Card className="bg-primary/5 border-primary/20">
-              <CardHeader className="text-center">
-                <Target className="h-12 w-12 text-primary mx-auto mb-4" />
-                <CardTitle className="text-xl">Notre Mission</CardTitle>
+              <CardHeader className={isRTL ? 'text-right' : 'text-center'}>
+                <Target className={`h-12 w-12 text-primary mb-4 ${isRTL ? 'mr-auto' : 'mx-auto'}`} />
+                <CardTitle className="text-xl">{t('ourMission')}</CardTitle>
               </CardHeader>
               <CardContent>
-                <p className="text-muted-foreground text-center leading-relaxed">
-                  Démocratiser l'accès à l'information juridique et faciliter l'exercice des droits fondamentaux 
-                  pour tous les citoyens tunisiens, en simplifiant des procédures complexes et en fournissant 
-                  des ressources pratiques et accessibles.
+                <p className={`text-muted-foreground leading-relaxed ${isRTL ? 'text-right' : 'text-center'}`}>
+                  {t('ourMissionText')}
                 </p>
               </CardContent>
             </Card>
 
             <Card className="bg-primary/5 border-primary/20">
-              <CardHeader className="text-center">
-                <Eye className="h-12 w-12 text-primary mx-auto mb-4" />
-                <CardTitle className="text-xl">Notre Vision</CardTitle>
+              <CardHeader className={isRTL ? 'text-right' : 'text-center'}>
+                <Eye className={`h-12 w-12 text-primary mb-4 ${isRTL ? 'mr-auto' : 'mx-auto'}`} />
+                <CardTitle className="text-xl">{t('ourVision')}</CardTitle>
               </CardHeader>
               <CardContent>
-                <p className="text-muted-foreground text-center leading-relaxed">
-                  Créer une société tunisienne où chaque citoyen connaît ses droits, peut les exercer pleinement 
-                  et a accès à une justice équitable, grâce à une information claire, fiable et facilement accessible.
+                <p className={`text-muted-foreground leading-relaxed ${isRTL ? 'text-right' : 'text-center'}`}>
+                  {t('ourVisionText')}
                 </p>
               </CardContent>
             </Card>
           </div>
 
           {/* Values */}
-          <div className="text-center mb-12">
-            <h2 className="text-2xl font-bold text-foreground mb-8">Nos Valeurs</h2>
+          <div className={isRTL ? 'text-right' : 'text-center'}>
+            <h2 className="text-2xl font-bold text-foreground mb-8">{t('ourValues')}</h2>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              <div className="text-center">
-                <Heart className="h-10 w-10 text-primary mx-auto mb-4" />
-                <h3 className="font-semibold text-lg mb-2">Accessibilité</h3>
+              <div className={isRTL ? 'text-right' : 'text-center'}>
+                <Heart className={`h-10 w-10 text-primary mb-4 ${isRTL ? 'mr-auto' : 'mx-auto'}`} />
+                <h3 className="font-semibold text-lg mb-2">{t('accessibility')}</h3>
                 <p className="text-muted-foreground text-sm">
-                  Information simple et compréhensible pour tous
+                  {t('accessibilityText')}
                 </p>
               </div>
-              <div className="text-center">
-                <Users className="h-10 w-10 text-primary mx-auto mb-4" />
-                <h3 className="font-semibold text-lg mb-2">Transparence</h3>
+              <div className={isRTL ? 'text-right' : 'text-center'}>
+                <Users className={`h-10 w-10 text-primary mb-4 ${isRTL ? 'mr-auto' : 'mx-auto'}`} />
+                <h3 className="font-semibold text-lg mb-2">{t('transparency')}</h3>
                 <p className="text-muted-foreground text-sm">
-                  Sources fiables et vérifiées
+                  {t('transparencyText')}
                 </p>
               </div>
-              <div className="text-center">
-                <Target className="h-10 w-10 text-primary mx-auto mb-4" />
-                <h3 className="font-semibold text-lg mb-2">Engagement</h3>
+              <div className={isRTL ? 'text-right' : 'text-center'}>
+                <Target className={`h-10 w-10 text-primary mb-4 ${isRTL ? 'mr-auto' : 'mx-auto'}`} />
+                <h3 className="font-semibold text-lg mb-2">{t('engagement')}</h3>
                 <p className="text-muted-foreground text-sm">
-                  Soutien constant aux citoyens
+                  {t('engagementText')}
                 </p>
               </div>
             </div>
           </div>
 
           {/* Team */}
-          <div className="text-center">
-            <h2 className="text-2xl font-bold text-foreground mb-8">Notre Équipe</h2>
+          <div className={`mt-12 ${isRTL ? 'text-right' : 'text-center'}`}>
+            <h2 className="text-2xl font-bold text-foreground mb-8">{t('ourTeam')}</h2>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
               <Card>
-                <CardHeader className="text-center">
-                  <div className="w-20 h-20 bg-primary/10 rounded-full mx-auto mb-4 flex items-center justify-center">
+                <CardHeader className={isRTL ? 'text-right' : 'text-center'}>
+                  <div className={`w-20 h-20 bg-primary/10 rounded-full mb-4 flex items-center justify-center ${isRTL ? 'mr-auto' : 'mx-auto'}`}>
                     <Users className="h-10 w-10 text-primary" />
                   </div>
-                  <CardTitle>Experts Juridiques</CardTitle>
+                  <CardTitle>{t('legalExperts')}</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <p className="text-muted-foreground text-sm">
-                    Avocats et juristes spécialisés dans le droit tunisien
+                  <p className={`text-muted-foreground text-sm ${isRTL ? 'text-right' : ''}`}>
+                    {t('legalExpertsText')}
                   </p>
                 </CardContent>
               </Card>
 
               <Card>
-                <CardHeader className="text-center">
-                  <div className="w-20 h-20 bg-primary/10 rounded-full mx-auto mb-4 flex items-center justify-center">
+                <CardHeader className={isRTL ? 'text-right' : 'text-center'}>
+                  <div className={`w-20 h-20 bg-primary/10 rounded-full mb-4 flex items-center justify-center ${isRTL ? 'mr-auto' : 'mx-auto'}`}>
                     <Target className="h-10 w-10 text-primary" />
                   </div>
-                  <CardTitle>Développeurs</CardTitle>
+                  <CardTitle>{t('developers')}</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <p className="text-muted-foreground text-sm">
-                    Équipe technique dédiée à l'amélioration continue de la plateforme
+                  <p className={`text-muted-foreground text-sm ${isRTL ? 'text-right' : ''}`}>
+                    {t('developersText')}
                   </p>
                 </CardContent>
               </Card>
 
               <Card>
-                <CardHeader className="text-center">
-                  <div className="w-20 h-20 bg-primary/10 rounded-full mx-auto mb-4 flex items-center justify-center">
+                <CardHeader className={isRTL ? 'text-right' : 'text-center'}>
+                  <div className={`w-20 h-20 bg-primary/10 rounded-full mb-4 flex items-center justify-center ${isRTL ? 'mr-auto' : 'mx-auto'}`}>
                     <Heart className="h-10 w-10 text-primary" />
                   </div>
-                  <CardTitle>Communauté</CardTitle>
+                  <CardTitle>{t('community')}</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <p className="text-muted-foreground text-sm">
-                    Citoyens actifs contribuant à l'enrichissement du contenu
+                  <p className={`text-muted-foreground text-sm ${isRTL ? 'text-right' : ''}`}>
+                    {t('communityText')}
                   </p>
                 </CardContent>
               </Card>
@@ -143,23 +146,22 @@ const QuiSommesNous = () => {
 
       {/* CTA */}
       <section className="py-16 bg-muted/30">
-        <div className="container mx-auto px-4 text-center">
+        <div className={`container mx-auto px-4 ${isRTL ? 'text-right' : 'text-center'}`}>
           <h2 className="text-2xl font-bold text-foreground mb-4">
-            Rejoignez notre mission
+            {t('joinMission')}
           </h2>
           <p className="text-muted-foreground mb-8 max-w-2xl mx-auto">
-            Ensemble, construisons une Tunisie où l'information juridique est accessible à tous. 
-            Explorez nos ressources et découvrez comment exercer vos droits.
+            {t('joinMissionText')}
           </p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+          <div className={`flex flex-col sm:flex-row gap-4 ${isRTL ? 'justify-end' : 'justify-center'}`}>
             <Link to="/observatoire">
               <Button size="lg">
-                Découvrir l'Observatoire
+                {t('discoverObservatory')}
               </Button>
             </Link>
             <Link to="/acces-aux-droits">
               <Button variant="outline" size="lg">
-                Accéder aux Ressources
+                {t('accessResources')}
               </Button>
             </Link>
           </div>

@@ -3,8 +3,14 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { Calendar, Clock, Eye, ArrowRight } from "lucide-react";
 import { Link } from "react-router-dom";
+import { useTranslation } from "@/hooks/useTranslation";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 const InformationActualites = () => {
+  const { t } = useTranslation();
+  const { language } = useLanguage();
+  const isRTL = language === 'ar';
+
   const actualites = [
     {
       id: 1,
@@ -13,7 +19,7 @@ const InformationActualites = () => {
       date: "15 Mars 2024",
       readTime: "5 min",
       views: 1234,
-      category: "Droit du travail",
+      category: t('laborLaw'),
       image: "/Feelinx_upload/justclic-logo.png",
       featured: true
     },
@@ -24,7 +30,7 @@ const InformationActualites = () => {
       date: "12 Mars 2024",
       readTime: "3 min",
       views: 892,
-      category: "État civil",
+      category: t('civilStatus'),
       image: "/Feelinx_upload/justclic-logo.png"
     },
     {
@@ -34,7 +40,7 @@ const InformationActualites = () => {
       date: "10 Mars 2024",
       readTime: "6 min",
       views: 756,
-      category: "Droit au logement",
+      category: t('housingRights'),
       image: "/Feelinx_upload/justclic-logo.png"
     },
     {
@@ -44,55 +50,55 @@ const InformationActualites = () => {
       date: "8 Mars 2024",
       readTime: "4 min",
       views: 634,
-      category: "Droit de la famille",
+      category: t('familyLaw'),
       image: "/Feelinx_upload/justclic-logo.png"
     }
   ];
 
   const categories = [
-    { name: "Droit du travail", count: 23 },
-    { name: "État civil", count: 18 },
-    { name: "Droit au logement", count: 15 },
-    { name: "Droit de la famille", count: 12 },
-    { name: "Droits sociaux", count: 9 }
+    { name: t('laborLaw'), count: 23 },
+    { name: t('civilStatus'), count: 18 },
+    { name: t('housingRights'), count: 15 },
+    { name: t('familyLaw'), count: 12 },
+    { name: t('socialRights'), count: 9 }
   ];
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background" dir={isRTL ? 'rtl' : 'ltr'}>
       {/* Breadcrumb */}
       <nav className="border-b bg-muted/30">
         <div className="container mx-auto px-4 py-3">
-          <div className="flex items-center space-x-2 text-sm text-muted-foreground">
-            <Link to="/" className="hover:text-primary">Accueil</Link>
+          <div className={`flex items-center ${isRTL ? 'space-x-reverse' : ''} space-x-2 text-sm text-muted-foreground`}>
+            <Link to="/" className="hover:text-primary">{t('home')}</Link>
             <span>›</span>
-            <Link to="/information/actualites" className="hover:text-primary">Information</Link>
+            <Link to="/information/actualites" className="hover:text-primary">{t('information')}</Link>
             <span>›</span>
-            <span className="text-foreground">Actualités</span>
+            <span className="text-foreground">{t('legalNews')}</span>
           </div>
         </div>
       </nav>
 
       {/* Hero Section */}
       <section className="py-12 bg-gradient-to-br from-primary/5 to-primary/10">
-        <div className="container mx-auto px-4 text-center">
+        <div className={`container mx-auto px-4 ${isRTL ? 'text-right' : 'text-center'}`}>
           <h1 className="text-3xl sm:text-4xl font-bold text-foreground mb-4">
-            Actualités Juridiques
+            {t('legalNews')}
           </h1>
           <p className="text-lg text-muted-foreground max-w-2xl mx-auto mb-8">
-            Restez informé des dernières évolutions juridiques, nouvelles procédures et réformes qui impactent vos droits en Tunisie.
+            {t('legalNewsSubtitle')}
           </p>
           
           {/* Newsletter Subscription */}
-          <div className="bg-white/80 backdrop-blur-sm rounded-lg p-6 max-w-md mx-auto">
-            <h3 className="font-semibold mb-3">Newsletter</h3>
-            <p className="text-sm text-muted-foreground mb-4">Recevez nos actualités par email</p>
-            <div className="flex gap-2">
+          <div className={`bg-white/80 backdrop-blur-sm rounded-lg p-6 max-w-md mx-auto ${isRTL ? 'text-right' : ''}`}>
+            <h3 className="font-semibold mb-3">{t('newsletter')}</h3>
+            <p className="text-sm text-muted-foreground mb-4">{t('receiveNewsByEmail')}</p>
+            <div className={`flex gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
               <input 
                 type="email" 
-                placeholder="Votre email"
+                placeholder={t('yourEmail')}
                 className="flex-1 px-3 py-2 border rounded-md text-sm"
               />
-              <Button size="sm">S'abonner</Button>
+              <Button size="sm">{t('subscribe')}</Button>
             </div>
           </div>
         </div>
@@ -103,13 +109,13 @@ const InformationActualites = () => {
           {/* Sidebar */}
           <aside className="lg:col-span-1">
             <Card>
-              <CardHeader>
-                <CardTitle className="text-lg">Catégories</CardTitle>
+              <CardHeader className={isRTL ? 'text-right' : ''}>
+                <CardTitle className="text-lg">{t('categories')}</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="space-y-2">
                   {categories.map((category, index) => (
-                    <div key={index} className="flex items-center justify-between py-2 px-3 rounded-lg hover:bg-muted/50 cursor-pointer">
+                    <div key={index} className={`flex items-center justify-between py-2 px-3 rounded-lg hover:bg-muted/50 cursor-pointer ${isRTL ? 'flex-row-reverse' : ''}`}>
                       <span className="text-sm">{category.name}</span>
                       <Badge variant="secondary" className="text-xs">
                         {category.count}
@@ -125,39 +131,39 @@ const InformationActualites = () => {
           <main className="lg:col-span-3">
             {/* Featured Article */}
             <div className="mb-12">
-              <h2 className="text-xl font-bold mb-6">Article à la Une</h2>
+              <h2 className={`text-xl font-bold mb-6 ${isRTL ? 'text-right' : ''}`}>{t('featuredArticle')}</h2>
               <Card className="overflow-hidden border-primary/20 bg-primary/5">
-                <div className="grid grid-cols-1 md:grid-cols-2">
-                  <div className="aspect-video md:aspect-square bg-muted/50 flex items-center justify-center">
+                <div className={`grid grid-cols-1 md:grid-cols-2 ${isRTL ? 'md:grid-flow-dense' : ''}`}>
+                  <div className={`aspect-video md:aspect-square bg-muted/50 flex items-center justify-center ${isRTL ? 'md:col-start-2' : ''}`}>
                     <img 
                       src={actualites[0].image} 
                       alt={actualites[0].title}
                       className="w-full h-full object-cover"
                     />
                   </div>
-                  <div className="p-6">
+                  <div className={`p-6 ${isRTL ? 'text-right md:col-start-1' : ''}`}>
                     <Badge className="mb-3">{actualites[0].category}</Badge>
                     <CardTitle className="text-xl mb-3">{actualites[0].title}</CardTitle>
                     <CardDescription className="mb-4 leading-relaxed">
                       {actualites[0].excerpt}
                     </CardDescription>
-                    <div className="flex items-center gap-4 text-sm text-muted-foreground mb-4">
-                      <div className="flex items-center gap-1">
+                    <div className={`flex items-center gap-4 text-sm text-muted-foreground mb-4 ${isRTL ? 'flex-row-reverse' : ''}`}>
+                      <div className={`flex items-center gap-1 ${isRTL ? 'flex-row-reverse' : ''}`}>
                         <Calendar className="h-4 w-4" />
                         {actualites[0].date}
                       </div>
-                      <div className="flex items-center gap-1">
+                      <div className={`flex items-center gap-1 ${isRTL ? 'flex-row-reverse' : ''}`}>
                         <Clock className="h-4 w-4" />
                         {actualites[0].readTime}
                       </div>
-                      <div className="flex items-center gap-1">
+                      <div className={`flex items-center gap-1 ${isRTL ? 'flex-row-reverse' : ''}`}>
                         <Eye className="h-4 w-4" />
                         {actualites[0].views}
                       </div>
                     </div>
                     <Button className="group">
-                      Lire l'article
-                      <ArrowRight className="h-4 w-4 ml-2 group-hover:translate-x-1 transition-transform" />
+                      {t('readArticle')}
+                      <ArrowRight className={`h-4 w-4 ${isRTL ? 'mr-2 group-hover:-translate-x-1' : 'ml-2 group-hover:translate-x-1'} transition-transform`} />
                     </Button>
                   </div>
                 </div>
@@ -166,7 +172,7 @@ const InformationActualites = () => {
 
             {/* Regular Articles */}
             <div>
-              <h2 className="text-xl font-bold mb-6">Dernières Actualités</h2>
+              <h2 className={`text-xl font-bold mb-6 ${isRTL ? 'text-right' : ''}`}>{t('latestNews')}</h2>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
                 {actualites.slice(1).map((article) => (
                   <Card key={article.id} className="hover:shadow-lg transition-shadow cursor-pointer">
@@ -177,15 +183,15 @@ const InformationActualites = () => {
                         className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
                       />
                     </div>
-                    <CardHeader>
-                      <div className="flex items-center justify-between mb-2">
+                    <CardHeader className={isRTL ? 'text-right' : ''}>
+                      <div className={`flex items-center justify-between mb-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
                         <Badge variant="secondary">{article.category}</Badge>
-                        <div className="flex items-center gap-4 text-xs text-muted-foreground">
-                          <div className="flex items-center gap-1">
+                        <div className={`flex items-center gap-4 text-xs text-muted-foreground ${isRTL ? 'flex-row-reverse' : ''}`}>
+                          <div className={`flex items-center gap-1 ${isRTL ? 'flex-row-reverse' : ''}`}>
                             <Clock className="h-3 w-3" />
                             {article.readTime}
                           </div>
-                          <div className="flex items-center gap-1">
+                          <div className={`flex items-center gap-1 ${isRTL ? 'flex-row-reverse' : ''}`}>
                             <Eye className="h-3 w-3" />
                             {article.views}
                           </div>
@@ -193,16 +199,16 @@ const InformationActualites = () => {
                       </div>
                       <CardTitle className="text-lg">{article.title}</CardTitle>
                     </CardHeader>
-                    <CardContent>
+                    <CardContent className={isRTL ? 'text-right' : ''}>
                       <CardDescription className="mb-4">{article.excerpt}</CardDescription>
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-1 text-sm text-muted-foreground">
+                      <div className={`flex items-center justify-between ${isRTL ? 'flex-row-reverse' : ''}`}>
+                        <div className={`flex items-center gap-1 text-sm text-muted-foreground ${isRTL ? 'flex-row-reverse' : ''}`}>
                           <Calendar className="h-4 w-4" />
                           {article.date}
                         </div>
                         <Button variant="ghost" size="sm" className="group">
-                          Lire plus
-                          <ArrowRight className="h-4 w-4 ml-2 group-hover:translate-x-1 transition-transform" />
+                          {t('readMore')}
+                          <ArrowRight className={`h-4 w-4 ${isRTL ? 'mr-2 group-hover:-translate-x-1' : 'ml-2 group-hover:translate-x-1'} transition-transform`} />
                         </Button>
                       </div>
                     </CardContent>
@@ -211,9 +217,9 @@ const InformationActualites = () => {
               </div>
 
               {/* Load More */}
-              <div className="text-center">
+              <div className={isRTL ? 'text-right' : 'text-center'}>
                 <Button variant="outline" size="lg">
-                  Charger plus d'articles
+                  {t('loadMoreArticles')}
                 </Button>
               </div>
             </div>

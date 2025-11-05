@@ -239,7 +239,57 @@ type TranslationKey =
   | 'tagGratuit'
   | 'tagPrefecture'
   | 'tagVisa'
-  | 'tagNaturalisation';
+  | 'tagNaturalisation'
+  // Information Pages
+  | 'information'
+  | 'whoWeAreSubtitle'
+  | 'ourMission'
+  | 'ourMissionText'
+  | 'ourVision'
+  | 'ourVisionText'
+  | 'ourValues'
+  | 'accessibility'
+  | 'accessibilityText'
+  | 'transparency'
+  | 'transparencyText'
+  | 'engagement'
+  | 'engagementText'
+  | 'ourTeam'
+  | 'legalExperts'
+  | 'legalExpertsText'
+  | 'developers'
+  | 'developersText'
+  | 'community'
+  | 'communityText'
+  | 'joinMission'
+  | 'joinMissionText'
+  | 'discoverObservatory'
+  | 'accessResources'
+  // News Page
+  | 'legalNews'
+  | 'legalNewsSubtitle'
+  | 'receiveNewsByEmail'
+  | 'subscribe'
+  | 'categories'
+  | 'featuredArticle'
+  | 'readArticle'
+  | 'loadMoreArticles'
+  | 'laborLaw'
+  | 'civilStatus'
+  | 'housingRights'
+  | 'familyLaw'
+  // FAQ & Chatbot Page
+  | 'faqChatbotSubtitle'
+  | 'searchInFAQ'
+  | 'popularQuestions'
+  | 'chatWithAssistant'
+  | 'askLegalQuestions'
+  | 'typeYourQuestion'
+  | 'assistantAvailable'
+  | 'needMoreHelp'
+  | 'needMoreHelpText'
+  | 'consultGuides'
+  | 'accessObservatory';
 
 const translations: Record<'fr' | 'ar', Record<TranslationKey, string>> = {
   fr: {
@@ -431,8 +481,56 @@ const translations: Record<'fr' | 'ar', Record<TranslationKey, string>> = {
     beginner: 'Débutant',
     intermediate: 'Intermédiaire',
     advanced: 'Avancé',
-    // Miscellaneous
-    finances: 'Finances',
+    // Information Pages
+    whoWeAre: 'Qui sommes-nous',
+    whoWeAreSubtitle: 'JustClic.tn est une plateforme citoyenne dédiée à simplifier l\'accès à l\'information juridique et aux droits fondamentaux en Tunisie.',
+    ourMission: 'Notre Mission',
+    ourMissionText: 'Démocratiser l\'accès à l\'information juridique et faciliter l\'exercice des droits fondamentaux pour tous les citoyens tunisiens, en simplifiant des procédures complexes et en fournissant des ressources pratiques et accessibles.',
+    ourVision: 'Notre Vision',
+    ourVisionText: 'Créer une société tunisienne où chaque citoyen connaît ses droits, peut les exercer pleinement et a accès à une justice équitable, grâce à une information claire, fiable et facilement accessible.',
+    ourValues: 'Nos Valeurs',
+    accessibility: 'Accessibilité',
+    accessibilityText: 'Information simple et compréhensible pour tous',
+    transparency: 'Transparence',
+    transparencyText: 'Sources fiables et vérifiées',
+    engagement: 'Engagement',
+    engagementText: 'Soutien constant aux citoyens',
+    ourTeam: 'Notre Équipe',
+    legalExperts: 'Experts Juridiques',
+    legalExpertsText: 'Avocats et juristes spécialisés dans le droit tunisien',
+    developers: 'Développeurs',
+    developersText: 'Équipe technique dédiée à l\'amélioration continue de la plateforme',
+    community: 'Communauté',
+    communityText: 'Citoyens actifs contribuant à l\'enrichissement du contenu',
+    joinMission: 'Rejoignez notre mission',
+    joinMissionText: 'Ensemble, construisons une Tunisie où l\'information juridique est accessible à tous. Explorez nos ressources et découvrez comment exercer vos droits.',
+    discoverObservatory: 'Découvrir l\'Observatoire',
+    accessResources: 'Accéder aux Ressources',
+    information: 'Information',
+    // News Page
+    legalNews: 'Actualités Juridiques',
+    legalNewsSubtitle: 'Restez informé des dernières évolutions juridiques, nouvelles procédures et réformes qui impactent vos droits en Tunisie.',
+    receiveNewsByEmail: 'Recevez nos actualités par email',
+    featuredArticle: 'Article à la Une',
+    readArticle: 'Lire l\'article',
+    loadMoreArticles: 'Charger plus d\'articles',
+    laborLaw: 'Droit du travail',
+    civilStatus: 'État civil',
+    housingRights: 'Droit au logement',
+    familyLaw: 'Droit de la famille',
+    categories: 'Catégories',
+    // FAQ & Chatbot Page
+    faqChatbotSubtitle: 'Trouvez rapidement des réponses à vos questions juridiques ou discutez avec notre assistant virtuel.',
+    searchInFAQ: 'Rechercher dans la FAQ...',
+    popularQuestions: 'Questions populaires',
+    chatWithAssistant: 'Discutez avec notre assistant',
+    askLegalQuestions: 'Posez vos questions juridiques en temps réel',
+    typeYourQuestion: 'Tapez votre question...',
+    assistantAvailable: 'Notre assistant est disponible 24h/24 pour répondre à vos questions',
+    needMoreHelp: 'Besoin d\'aide supplémentaire ?',
+    needMoreHelpText: 'Si vous ne trouvez pas la réponse à votre question, n\'hésitez pas à explorer nos autres ressources.',
+    consultGuides: 'Consulter les Guides',
+    accessObservatory: 'Accéder à l\'Observatoire',
     // Guide content
     guideJobSeeker: 'Guide du demandeur d\'emploi',
     guideJobSeekerDesc: 'Tout savoir sur vos droits en tant que demandeur d\'emploi : inscription, allocation, accompagnement.',
@@ -671,6 +769,56 @@ const translations: Record<'fr' | 'ar', Record<TranslationKey, string>> = {
     beginner: 'مبتدئ',
     intermediate: 'متوسط',
     advanced: 'متقدم',
+    // Information Pages
+    whoWeAre: 'من نحن',
+    whoWeAreSubtitle: 'JustClic.tn هي منصة مواطنية مخصصة لتبسيط الوصول إلى المعلومات القانونية والحقوق الأساسية في تونس.',
+    ourMission: 'مهمتنا',
+    ourMissionText: 'دمقرطة الوصول إلى المعلومات القانونية وتسهيل ممارسة الحقوق الأساسية لجميع المواطنين التونسيين، من خلال تبسيط الإجراءات المعقدة وتوفير موارد عملية وسهلة المنال.',
+    ourVision: 'رؤيتنا',
+    ourVisionText: 'بناء مجتمع تونسي يعرف فيه كل مواطن حقوقه، ويستطيع ممارستها بالكامل ويتمتع بالوصول إلى عدالة منصفة، بفضل معلومات واضحة وموثوقة وسهلة الوصول.',
+    ourValues: 'قيمنا',
+    accessibility: 'سهولة الوصول',
+    accessibilityText: 'معلومات بسيطة ومفهومة للجميع',
+    transparency: 'الشفافية',
+    transparencyText: 'مصادر موثوقة ومتحقق منها',
+    engagement: 'الالتزام',
+    engagementText: 'دعم مستمر للمواطنين',
+    ourTeam: 'فريقنا',
+    legalExperts: 'خبراء قانونيون',
+    legalExpertsText: 'محامون وفقهاء متخصصون في القانون التونسي',
+    developers: 'مطورون',
+    developersText: 'فريق تقني مكرس للتحسين المستمر للمنصة',
+    community: 'المجتمع',
+    communityText: 'مواطنون نشطون يساهمون في إثراء المحتوى',
+    joinMission: 'انضم إلى مهمتنا',
+    joinMissionText: 'معًا، لنبني تونس حيث المعلومات القانونية متاحة للجميع. استكشف مواردنا واكتشف كيفية ممارسة حقوقك.',
+    discoverObservatory: 'اكتشف المرصد',
+    accessResources: 'الوصول إلى الموارد',
+    information: 'معلومات',
+    // News Page
+    legalNews: 'الأخبار القانونية',
+    legalNewsSubtitle: 'ابق على اطلاع بآخر التطورات القانونية والإجراءات الجديدة والإصلاحات التي تؤثر على حقوقك في تونس.',
+    receiveNewsByEmail: 'تلقى أخبارنا عبر البريد الإلكتروني',
+    featuredArticle: 'المقال المميز',
+    readArticle: 'اقرأ المقال',
+    loadMoreArticles: 'تحميل المزيد من المقالات',
+    laborLaw: 'قانون العمل',
+    civilStatus: 'الحالة المدنية',
+    housingRights: 'الحق في السكن',
+    familyLaw: 'قانون الأسرة',
+    categories: 'الفئات',
+    // FAQ & Chatbot Page
+    faqChatbotSubtitle: 'ابحث بسرعة عن إجابات لأسئلتك القانونية أو تحدث مع مساعدنا الافتراضي.',
+    searchInFAQ: 'البحث في الأسئلة الشائعة...',
+    popularQuestions: 'الأسئلة الشائعة',
+    chatWithAssistant: 'تحدث مع مساعدنا',
+    askLegalQuestions: 'اطرح أسئلتك القانونية في الوقت الفعلي',
+    typeYourQuestion: 'اكتب سؤالك...',
+    assistantAvailable: 'مساعدنا متاح على مدار الساعة طوال أيام الأسبوع للإجابة على أسئلتك',
+    needMoreHelp: 'تحتاج إلى مزيد من المساعدة؟',
+    needMoreHelpText: 'إذا لم تجد إجابة على سؤالك، لا تتردد في استكشاف مواردنا الأخرى.',
+    consultGuides: 'راجع الأدلة',
+    accessObservatory: 'الوصول إلى المرصد',
     
     // Guide content
     guideJobSeeker: 'دليل الباحث عن عمل',

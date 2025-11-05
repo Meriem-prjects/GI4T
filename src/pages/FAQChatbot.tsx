@@ -6,13 +6,19 @@ import { Badge } from "@/components/ui/badge";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { MessageCircle, Search, HelpCircle, FileText, Scale, Users, Send } from "lucide-react";
 import { Link } from "react-router-dom";
+import { useTranslation } from "@/hooks/useTranslation";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 const FAQChatbot = () => {
+  const { t } = useTranslation();
+  const { language } = useLanguage();
+  const isRTL = language === 'ar';
+
   const [chatMessages, setChatMessages] = useState([
     {
       id: 1,
       type: "bot",
-      message: "Bonjour ! Je suis votre assistant juridique virtuel. Comment puis-je vous aider aujourd'hui ?",
+      message: isRTL ? "مرحبا! أنا مساعدك القانوني الافتراضي. كيف يمكنني مساعدتك اليوم؟" : "Bonjour ! Je suis votre assistant juridique virtuel. Comment puis-je vous aider aujourd'hui ?",
       timestamp: new Date()
     }
   ]);
@@ -20,7 +26,7 @@ const FAQChatbot = () => {
 
   const faqCategories = [
     {
-      title: "Droit du travail",
+      title: t('laborLaw'),
       icon: Users,
       count: 15,
       questions: [
@@ -35,7 +41,7 @@ const FAQChatbot = () => {
       ]
     },
     {
-      title: "État civil",
+      title: t('civilStatus'),
       icon: FileText,
       count: 12,
       questions: [
@@ -50,7 +56,7 @@ const FAQChatbot = () => {
       ]
     },
     {
-      title: "Droit au logement",
+      title: t('housingRights'),
       icon: Scale,
       count: 18,
       questions: [
@@ -86,7 +92,7 @@ const FAQChatbot = () => {
       const botResponse = {
         id: chatMessages.length + 2,
         type: "bot",
-        message: "Merci pour votre question. Notre équipe juridique vous répondra dans les plus brefs délais. En attendant, consultez notre FAQ ou nos guides pratiques.",
+        message: isRTL ? "شكرا على سؤالك. سيرد فريقنا القانوني في أقرب وقت ممكن. في غضون ذلك، راجع الأسئلة الشائعة أو أدلتنا العملية." : "Merci pour votre question. Notre équipe juridique vous répondra dans les plus brefs délais. En attendant, consultez notre FAQ ou nos guides pratiques.",
         timestamp: new Date()
       };
 
@@ -96,28 +102,28 @@ const FAQChatbot = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background" dir={isRTL ? 'rtl' : 'ltr'}>
       {/* Breadcrumb */}
       <nav className="border-b bg-muted/30">
         <div className="container mx-auto px-4 py-3">
-          <div className="flex items-center space-x-2 text-sm text-muted-foreground">
-            <Link to="/" className="hover:text-primary">Accueil</Link>
+          <div className={`flex items-center ${isRTL ? 'space-x-reverse' : ''} space-x-2 text-sm text-muted-foreground`}>
+            <Link to="/" className="hover:text-primary">{t('home')}</Link>
             <span>›</span>
-            <Link to="/information/faq-chatbot" className="hover:text-primary">Information</Link>
+            <Link to="/information/faq-chatbot" className="hover:text-primary">{t('information')}</Link>
             <span>›</span>
-            <span className="text-foreground">FAQ / Chatbot</span>
+            <span className="text-foreground">{t('faqChatbot')}</span>
           </div>
         </div>
       </nav>
 
       {/* Hero Section */}
       <section className="py-12 bg-gradient-to-br from-primary/5 to-primary/10">
-        <div className="container mx-auto px-4 text-center">
+        <div className={`container mx-auto px-4 ${isRTL ? 'text-right' : 'text-center'}`}>
           <h1 className="text-3xl sm:text-4xl font-bold text-foreground mb-4">
-            FAQ & Assistant Virtuel
+            {t('faqChatbot')}
           </h1>
           <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-            Trouvez rapidement des réponses à vos questions juridiques ou discutez avec notre assistant virtuel.
+            {t('faqChatbotSubtitle')}
           </p>
         </div>
       </section>
@@ -126,23 +132,23 @@ const FAQChatbot = () => {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
           {/* FAQ Section */}
           <div>
-            <div className="flex items-center gap-2 mb-6">
+            <div className={`flex items-center gap-2 mb-6 ${isRTL ? 'flex-row-reverse' : ''}`}>
               <HelpCircle className="h-6 w-6 text-primary" />
-              <h2 className="text-2xl font-bold">Questions Fréquentes</h2>
+              <h2 className="text-2xl font-bold">{t('frequentQuestions')}</h2>
             </div>
 
             {/* Search FAQ */}
             <div className="mb-6">
               <div className="relative">
-                <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                <Input placeholder="Rechercher dans la FAQ..." className="pl-10" />
+                <Search className={`absolute ${isRTL ? 'right-3' : 'left-3'} top-3 h-4 w-4 text-muted-foreground`} />
+                <Input placeholder={t('searchInFAQ')} className={isRTL ? 'pr-10 text-right' : 'pl-10'} />
               </div>
             </div>
 
             {/* Popular Questions */}
             <div className="mb-8">
-              <h3 className="font-semibold mb-4">Questions populaires</h3>
-              <div className="flex flex-wrap gap-2">
+              <h3 className={`font-semibold mb-4 ${isRTL ? 'text-right' : ''}`}>{t('popularQuestions')}</h3>
+              <div className={`flex flex-wrap gap-2 ${isRTL ? 'justify-end' : ''}`}>
                 {popularQuestions.map((question, index) => (
                   <Badge key={index} variant="outline" className="cursor-pointer hover:bg-primary hover:text-primary-foreground transition-colors">
                     {question}
@@ -157,11 +163,11 @@ const FAQChatbot = () => {
                 const Icon = category.icon;
                 return (
                   <Card key={index}>
-                    <CardHeader>
-                      <div className="flex items-center gap-3">
+                    <CardHeader className={isRTL ? 'text-right' : ''}>
+                      <div className={`flex items-center gap-3 ${isRTL ? 'flex-row-reverse' : ''}`}>
                         <Icon className="h-6 w-6 text-primary" />
                         <div className="flex-1">
-                          <CardTitle className="flex items-center justify-between">
+                          <CardTitle className={`flex items-center justify-between ${isRTL ? 'flex-row-reverse' : ''}`}>
                             {category.title}
                             <Badge variant="secondary">{category.count}</Badge>
                           </CardTitle>
@@ -172,8 +178,8 @@ const FAQChatbot = () => {
                       <Accordion type="single" collapsible>
                         {category.questions.map((faq, faqIndex) => (
                           <AccordionItem key={faqIndex} value={`item-${index}-${faqIndex}`}>
-                            <AccordionTrigger className="text-left">{faq.question}</AccordionTrigger>
-                            <AccordionContent className="text-muted-foreground leading-relaxed">
+                            <AccordionTrigger className={isRTL ? 'text-right' : 'text-left'}>{faq.question}</AccordionTrigger>
+                            <AccordionContent className={`text-muted-foreground leading-relaxed ${isRTL ? 'text-right' : ''}`}>
                               {faq.answer}
                             </AccordionContent>
                           </AccordionItem>
@@ -188,16 +194,16 @@ const FAQChatbot = () => {
 
           {/* Chatbot Section */}
           <div>
-            <div className="flex items-center gap-2 mb-6">
+            <div className={`flex items-center gap-2 mb-6 ${isRTL ? 'flex-row-reverse' : ''}`}>
               <MessageCircle className="h-6 w-6 text-primary" />
-              <h2 className="text-2xl font-bold">Assistant Virtuel</h2>
+              <h2 className="text-2xl font-bold">{t('virtualAssistant')}</h2>
             </div>
 
             <Card className="h-[600px] flex flex-col">
-              <CardHeader>
-                <CardTitle className="text-lg">Discutez avec notre assistant</CardTitle>
+              <CardHeader className={isRTL ? 'text-right' : ''}>
+                <CardTitle className="text-lg">{t('chatWithAssistant')}</CardTitle>
                 <CardDescription>
-                  Posez vos questions juridiques en temps réel
+                  {t('askLegalQuestions')}
                 </CardDescription>
               </CardHeader>
               
@@ -205,12 +211,12 @@ const FAQChatbot = () => {
               <CardContent className="flex-1 overflow-y-auto">
                 <div className="space-y-4">
                   {chatMessages.map((msg) => (
-                    <div key={msg.id} className={`flex ${msg.type === 'user' ? 'justify-end' : 'justify-start'}`}>
+                    <div key={msg.id} className={`flex ${msg.type === 'user' ? (isRTL ? 'justify-start' : 'justify-end') : (isRTL ? 'justify-end' : 'justify-start')}`}>
                       <div className={`max-w-[80%] p-3 rounded-lg ${
                         msg.type === 'user' 
                           ? 'bg-primary text-primary-foreground' 
                           : 'bg-muted text-foreground'
-                      }`}>
+                      } ${isRTL ? 'text-right' : ''}`}>
                         <p className="text-sm">{msg.message}</p>
                         <span className="text-xs opacity-70">
                           {msg.timestamp.toLocaleTimeString()}
@@ -223,20 +229,20 @@ const FAQChatbot = () => {
 
               {/* Chat Input */}
               <div className="p-4 border-t">
-                <div className="flex gap-2">
+                <div className={`flex gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
                   <Input
                     value={inputMessage}
                     onChange={(e) => setInputMessage(e.target.value)}
-                    placeholder="Tapez votre question..."
+                    placeholder={t('typeYourQuestion')}
                     onKeyPress={(e) => e.key === 'Enter' && handleSendMessage()}
-                    className="flex-1"
+                    className={`flex-1 ${isRTL ? 'text-right' : ''}`}
                   />
                   <Button onClick={handleSendMessage} size="sm">
                     <Send className="h-4 w-4" />
                   </Button>
                 </div>
-                <p className="text-xs text-muted-foreground mt-2">
-                  Notre assistant est disponible 24h/24 pour répondre à vos questions
+                <p className={`text-xs text-muted-foreground mt-2 ${isRTL ? 'text-right' : ''}`}>
+                  {t('assistantAvailable')}
                 </p>
               </div>
             </Card>
@@ -245,20 +251,20 @@ const FAQChatbot = () => {
 
         {/* Contact Section */}
         <section className="mt-16 py-12 bg-muted/30 rounded-lg">
-          <div className="text-center">
-            <h2 className="text-2xl font-bold mb-4">Besoin d'aide supplémentaire ?</h2>
+          <div className={`${isRTL ? 'text-right' : 'text-center'}`}>
+            <h2 className="text-2xl font-bold mb-4">{t('needMoreHelp')}</h2>
             <p className="text-muted-foreground mb-8 max-w-2xl mx-auto">
-              Si vous ne trouvez pas la réponse à votre question, n'hésitez pas à explorer nos autres ressources.
+              {t('needMoreHelpText')}
             </p>
-            <div className="flex flex-col sm:flex-row gap-4 justify-center">
+            <div className={`flex flex-col sm:flex-row gap-4 ${isRTL ? 'justify-end' : 'justify-center'}`}>
               <Link to="/acces-aux-droits/guides-pratiques">
                 <Button variant="outline">
-                  Consulter les Guides
+                  {t('consultGuides')}
                 </Button>
               </Link>
               <Link to="/observatoire">
                 <Button>
-                  Accéder à l'Observatoire
+                  {t('accessObservatory')}
                 </Button>
               </Link>
             </div>
