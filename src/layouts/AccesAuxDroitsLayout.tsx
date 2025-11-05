@@ -38,14 +38,14 @@ const AccesAuxDroitsLayout = () => {
       <header className="border-b bg-card animate-fade-in">
         <div className="container mx-auto px-4 py-2 sm:py-4 relative">
           <div className="flex items-center justify-between flex-wrap gap-4">
-            <Link to="/acces-aux-droits" className="flex items-center gap-2 sm:gap-4 hover:opacity-80 transition-opacity">
+            <Link to="/acces-aux-droits" className={`flex items-center gap-2 sm:gap-4 hover:opacity-80 transition-opacity ${isRTL ? 'ml-auto' : ''}`}>
               {isRTL ? (
                 <>
+                  <img src="/Feelinx_upload/logo-acces-aux-droits.png" alt={t('accessToRights')} className="h-4 sm:h-6 md:h-8 flex-shrink-0" />
                   <div className="text-right">
                     <h1 className="text-sm sm:text-base md:text-2xl font-bold text-foreground font-almarai">{t('accessToRights')}</h1>
                     <p className="text-xs sm:text-sm text-muted-foreground hidden sm:block font-almarai">{t('citizenSpace')}</p>
                   </div>
-                  <img src="/Feelinx_upload/logo-acces-aux-droits.png" alt={t('accessToRights')} className="h-4 sm:h-6 md:h-8 flex-shrink-0" />
                 </>
               ) : (
                 <>
