@@ -5,7 +5,8 @@ import { SearchAutocomplete } from "@/components/SearchAutocomplete";
 import { useTypingPlaceholder } from "@/hooks/useTypingPlaceholder";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useTranslation } from "@/hooks/useTranslation";
-import logoOdfFr from "@/assets/logo-odf-fr.png";
+import logoOdfFr from "@/assets/logo-odf-fr-new.png";
+import logoOdfAr from "@/assets/logo-odf-ar.png";
 
 const ObservatoireSection = () => {
   const navigate = useNavigate();
@@ -38,7 +39,7 @@ const ObservatoireSection = () => {
         {/* Logo */}
         <div className="flex-shrink-0">
           <img
-            src={logoOdfFr}
+            src={language === 'ar' ? logoOdfAr : logoOdfFr}
             alt="Observatoire des Droits Fondamentaux" 
             className="h-24 sm:h-28 w-auto object-contain"
           />
