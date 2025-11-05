@@ -189,7 +189,57 @@ type TranslationKey =
   // Difficulty levels
   | 'beginner'
   | 'intermediate'
-  | 'advanced';
+  | 'advanced'
+  // Miscellaneous
+  | 'finances'
+  // Guide content
+  | 'guideJobSeeker'
+  | 'guideJobSeekerDesc'
+  | 'guideHousingRights'
+  | 'guideHousingRightsDesc'
+  | 'guideHealthAccess'
+  | 'guideHealthAccessDesc'
+  | 'guideFamilyRights'
+  | 'guideFamilyRightsDesc'
+  | 'guideLegalAid'
+  | 'guideLegalAidDesc'
+  | 'guideForeigners'
+  | 'guideForeignersDesc'
+  // Resource content
+  | 'resourceOverdebtFile'
+  | 'resourceOverdebtFileDesc'
+  | 'resourceLegalAidForm'
+  | 'resourceLegalAidFormDesc'
+  | 'resourceEvictionLetter'
+  | 'resourceEvictionLetterDesc'
+  | 'resourceJobCenterClaim'
+  | 'resourceJobCenterClaimDesc'
+  | 'resourceSocialHousingRequest'
+  | 'resourceSocialHousingRequestDesc'
+  | 'resourceFineContestation'
+  | 'resourceFineContestationDesc'
+  | 'letterType'
+  | 'formType'
+  | 'dossierType'
+  // Tags
+  | 'tagPoleEmploi'
+  | 'tagAllocation'
+  | 'tagFormation'
+  | 'tagAPL'
+  | 'tagBailleur'
+  | 'tagExpulsion'
+  | 'tagCMU'
+  | 'tagSecuriteSociale'
+  | 'tagMedecin'
+  | 'tagCAF'
+  | 'tagEcole'
+  | 'tagGarde'
+  | 'tagAvocat'
+  | 'tagTribunal'
+  | 'tagGratuit'
+  | 'tagPrefecture'
+  | 'tagVisa'
+  | 'tagNaturalisation';
 
 const translations: Record<'fr' | 'ar', Record<TranslationKey, string>> = {
   fr: {
@@ -381,6 +431,56 @@ const translations: Record<'fr' | 'ar', Record<TranslationKey, string>> = {
     beginner: 'Débutant',
     intermediate: 'Intermédiaire',
     advanced: 'Avancé',
+    // Miscellaneous
+    finances: 'Finances',
+    // Guide content
+    guideJobSeeker: 'Guide du demandeur d\'emploi',
+    guideJobSeekerDesc: 'Tout savoir sur vos droits en tant que demandeur d\'emploi : inscription, allocation, accompagnement.',
+    guideHousingRights: 'Comprendre ses droits au logement',
+    guideHousingRightsDesc: 'Les différentes aides au logement, les recours en cas de problème avec le propriétaire.',
+    guideHealthAccess: 'Accès aux soins de santé',
+    guideHealthAccessDesc: 'Navigation dans le système de santé français, CMU, ACS et accès aux spécialistes.',
+    guideFamilyRights: 'Droits de la famille et enfance',
+    guideFamilyRightsDesc: 'Allocations familiales, garde d\'enfants, scolarité et protection de l\'enfance.',
+    guideLegalAid: 'Aide juridictionnelle',
+    guideLegalAidDesc: 'Comment bénéficier de l\'aide juridictionnelle, les conditions et la procédure.',
+    guideForeigners: 'Étrangers en France',
+    guideForeignersDesc: 'Titre de séjour, naturalisation, regroupement familial et droits sociaux.',
+    // Resource content
+    resourceOverdebtFile: 'Dossier de surendettement',
+    resourceOverdebtFileDesc: 'Kit complet pour constituer un dossier de surendettement',
+    resourceLegalAidForm: 'Formulaire de demande d\'aide juridictionnelle',
+    resourceLegalAidFormDesc: 'Modèle pré-rempli pour faire une demande d\'aide juridictionnelle',
+    resourceEvictionLetter: 'Lettre type de contestation d\'expulsion',
+    resourceEvictionLetterDesc: 'Modèle de courrier pour contester une procédure d\'expulsion locative',
+    resourceJobCenterClaim: 'Réclamation Pôle emploi',
+    resourceJobCenterClaimDesc: 'Modèle de réclamation en cas de problème avec Pôle emploi',
+    resourceSocialHousingRequest: 'Demande de logement social',
+    resourceSocialHousingRequestDesc: 'Formulaire et pièces justificatives pour une demande de logement social',
+    resourceFineContestation: 'Contestation d\'amende',
+    resourceFineContestationDesc: 'Modèle de courrier pour contester une amende forfaitaire',
+    letterType: 'Lettre type',
+    formType: 'Formulaire',
+    dossierType: 'Dossier',
+    // Tags
+    tagPoleEmploi: 'Pôle emploi',
+    tagAllocation: 'Allocation',
+    tagFormation: 'Formation',
+    tagAPL: 'APL',
+    tagBailleur: 'Bailleur',
+    tagExpulsion: 'Expulsion',
+    tagCMU: 'CMU',
+    tagSecuriteSociale: 'Sécurité sociale',
+    tagMedecin: 'Médecin',
+    tagCAF: 'CAF',
+    tagEcole: 'École',
+    tagGarde: 'Garde',
+    tagAvocat: 'Avocat',
+    tagTribunal: 'Tribunal',
+    tagGratuit: 'Gratuit',
+    tagPrefecture: 'Préfecture',
+    tagVisa: 'Visa',
+    tagNaturalisation: 'Naturalisation',
   },
   ar: {
     // Homepage
@@ -571,6 +671,57 @@ const translations: Record<'fr' | 'ar', Record<TranslationKey, string>> = {
     beginner: 'مبتدئ',
     intermediate: 'متوسط',
     advanced: 'متقدم',
+    
+    // Guide content
+    guideJobSeeker: 'دليل الباحث عن عمل',
+    guideJobSeekerDesc: 'كل ما تحتاج معرفته عن حقوقك كباحث عن عمل: التسجيل، الإعانة، المرافقة.',
+    guideHousingRights: 'فهم حقوق السكن',
+    guideHousingRightsDesc: 'مساعدات السكن المختلفة، الطعون في حالة وجود مشكلة مع المالك.',
+    guideHealthAccess: 'الوصول إلى الرعاية الصحية',
+    guideHealthAccessDesc: 'التنقل في نظام الرعاية الصحية الفرنسي، CMU، ACS والوصول إلى المتخصصين.',
+    guideFamilyRights: 'حقوق الأسرة والطفولة',
+    guideFamilyRightsDesc: 'الإعانات العائلية، رعاية الأطفال، التعليم وحماية الطفل.',
+    guideLegalAid: 'المساعدة القضائية',
+    guideLegalAidDesc: 'كيفية الاستفادة من المساعدة القضائية، الشروط والإجراءات.',
+    guideForeigners: 'الأجانب في فرنسا',
+    guideForeignersDesc: 'تصريح الإقامة، التجنيس، لم شمل الأسرة والحقوق الاجتماعية.',
+    
+    // Resource content
+    resourceOverdebtFile: 'ملف فرط المديونية',
+    resourceOverdebtFileDesc: 'مجموعة كاملة لتكوين ملف فرط المديونية',
+    resourceLegalAidForm: 'استمارة طلب المساعدة القضائية',
+    resourceLegalAidFormDesc: 'نموذج مملوء مسبقاً لطلب المساعدة القضائية',
+    resourceEvictionLetter: 'نموذج خطاب الطعن في الطرد',
+    resourceEvictionLetterDesc: 'نموذج رسالة للطعن في إجراءات الطرد من السكن',
+    resourceJobCenterClaim: 'شكوى مركز التوظيف',
+    resourceJobCenterClaimDesc: 'نموذج شكوى في حالة وجود مشكلة مع مركز التوظيف',
+    resourceSocialHousingRequest: 'طلب سكن اجتماعي',
+    resourceSocialHousingRequestDesc: 'استمارة ووثائق طلب سكن اجتماعي',
+    resourceFineContestation: 'الطعن في غرامة',
+    resourceFineContestationDesc: 'نموذج رسالة للطعن في غرامة محددة',
+    letterType: 'نموذج خطاب',
+    formType: 'استمارة',
+    dossierType: 'ملف',
+    
+    // Tags
+    tagPoleEmploi: 'مركز التوظيف',
+    tagAllocation: 'إعانة',
+    tagFormation: 'تدريب',
+    tagAPL: 'APL',
+    tagBailleur: 'المالك',
+    tagExpulsion: 'طرد',
+    tagCMU: 'CMU',
+    tagSecuriteSociale: 'الضمان الاجتماعي',
+    tagMedecin: 'طبيب',
+    tagCAF: 'صندوق الإعانات العائلية',
+    tagEcole: 'مدرسة',
+    tagGarde: 'حضانة',
+    tagAvocat: 'محامٍ',
+    tagTribunal: 'محكمة',
+    tagGratuit: 'مجاني',
+    tagPrefecture: 'المحافظة',
+    tagVisa: 'تأشيرة',
+    tagNaturalisation: 'التجنيس',
   },
 };
 

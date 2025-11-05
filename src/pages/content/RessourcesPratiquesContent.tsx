@@ -15,10 +15,10 @@ const RessourcesPratiquesContent = () => {
   const resources = [
     {
       id: 1,
-      title: "Formulaire de demande d'aide juridictionnelle",
-      description: "Modèle pré-rempli pour faire une demande d'aide juridictionnelle",
-      category: "Justice",
-      type: "Formulaire",
+      titleKey: 'resourceLegalAidForm',
+      descKey: 'resourceLegalAidFormDesc',
+      category: t('justice'),
+      typeKey: 'formType',
       format: "PDF",
       size: "245 KB",
       downloads: 2450,
@@ -27,10 +27,10 @@ const RessourcesPratiquesContent = () => {
     },
     {
       id: 2,
-      title: "Lettre type de contestation d'expulsion",
-      description: "Modèle de courrier pour contester une procédure d'expulsion locative",
-      category: "Logement",
-      type: "Lettre type",
+      titleKey: 'resourceEvictionLetter',
+      descKey: 'resourceEvictionLetterDesc',
+      category: t('housing'),
+      typeKey: 'letterType',
       format: "DOC",
       size: "32 KB",
       downloads: 1890,
@@ -39,10 +39,10 @@ const RessourcesPratiquesContent = () => {
     },
     {
       id: 3,
-      title: "Dossier de surendettement",
-      description: "Kit complet pour constituer un dossier de surendettement",
-      category: "Finances",
-      type: "Dossier",
+      titleKey: 'resourceOverdebtFile',
+      descKey: 'resourceOverdebtFileDesc',
+      category: t('finances'),
+      typeKey: 'dossierType',
       format: "ZIP",
       size: "1.2 MB",
       downloads: 1250,
@@ -51,10 +51,10 @@ const RessourcesPratiquesContent = () => {
     },
     {
       id: 4,
-      title: "Réclamation Pôle emploi",
-      description: "Modèle de réclamation en cas de problème avec Pôle emploi",
-      category: "Emploi",
-      type: "Lettre type",
+      titleKey: 'resourceJobCenterClaim',
+      descKey: 'resourceJobCenterClaimDesc',
+      category: t('employment'),
+      typeKey: 'letterType',
       format: "PDF",
       size: "156 KB",
       downloads: 3100,
@@ -63,10 +63,10 @@ const RessourcesPratiquesContent = () => {
     },
     {
       id: 5,
-      title: "Demande de logement social",
-      description: "Formulaire et pièces justificatives pour une demande de logement social",
-      category: "Logement",
-      type: "Dossier",
+      titleKey: 'resourceSocialHousingRequest',
+      descKey: 'resourceSocialHousingRequestDesc',
+      category: t('housing'),
+      typeKey: 'dossierType',
       format: "PDF",
       size: "890 KB",
       downloads: 1750,
@@ -75,10 +75,10 @@ const RessourcesPratiquesContent = () => {
     },
     {
       id: 6,
-      title: "Contestation d'amende",
-      description: "Modèle de courrier pour contester une amende forfaitaire",
-      category: "Justice",
-      type: "Lettre type", 
+      titleKey: 'resourceFineContestation',
+      descKey: 'resourceFineContestationDesc',
+      category: t('justice'),
+      typeKey: 'letterType', 
       format: "DOC",
       size: "28 KB",
       downloads: 920,
@@ -98,9 +98,11 @@ const RessourcesPratiquesContent = () => {
   ];
 
   const filteredResources = resources.filter(resource => {
-    const matchesSearch = resource.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         resource.description.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesCategory = selectedCategory === "Tous" || resource.category === selectedCategory;
+    const title = t(resource.titleKey as any);
+    const desc = t(resource.descKey as any);
+    const matchesSearch = title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         desc.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesCategory = selectedCategory === t('allCategories') || resource.category === selectedCategory;
     return matchesSearch && matchesCategory;
   });
 
@@ -159,7 +161,7 @@ const RessourcesPratiquesContent = () => {
         </div>
 
         {/* Featured Resources */}
-        {selectedCategory === "Tous" && (
+        {selectedCategory === t('allCategories') && (
           <div className="mb-12 animate-fade-in">
             <h2 className={`text-2xl font-semibold mb-6 ${isRTL ? 'text-right' : ''}`}>{t('featuredResources')}</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -174,9 +176,9 @@ const RessourcesPratiquesContent = () => {
                         {resource.category}
                       </Badge>
                     </div>
-                    <CardTitle className="text-lg">{resource.title}</CardTitle>
+                    <CardTitle className="text-lg">{t(resource.titleKey as any)}</CardTitle>
                     <CardDescription className="text-sm">
-                      {resource.description}
+                      {t(resource.descKey as any)}
                     </CardDescription>
                   </CardHeader>
                   <CardContent>
@@ -212,8 +214,8 @@ const RessourcesPratiquesContent = () => {
 
         {/* All Resources */}
         <div className="mb-12 animate-fade-in">
-          <h2 className="text-2xl font-semibold mb-6">
-            {selectedCategory === "Tous" ? t('allResources') : `Ressources - ${selectedCategory}`}
+          <h2 className={`text-2xl font-semibold mb-6 ${isRTL ? 'text-right' : ''}`}>
+            {selectedCategory === t('allCategories') ? t('allResources') : `${t('practicalResourcesTitle')} - ${selectedCategory}`}
           </h2>
           
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
@@ -222,14 +224,14 @@ const RessourcesPratiquesContent = () => {
                 <CardContent className="p-4">
                   <div className="flex items-start justify-between">
                     <div className="flex-1">
-                      <div className="flex items-center gap-2 mb-2">
-                        <h3 className="font-medium text-sm">{resource.title}</h3>
+                      <div className={`flex items-center gap-2 mb-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
+                        <h3 className={`font-medium text-sm ${isRTL ? 'text-right' : ''}`}>{t(resource.titleKey as any)}</h3>
                         <Badge variant="outline" className="text-xs">
-                          {resource.type}
+                          {t(resource.typeKey as any)}
                         </Badge>
                       </div>
-                      <p className="text-xs text-muted-foreground mb-3">
-                        {resource.description}
+                      <p className={`text-xs text-muted-foreground mb-3 ${isRTL ? 'text-right' : ''}`}>
+                        {t(resource.descKey as any)}
                       </p>
                       <div className="flex items-center justify-between text-xs text-muted-foreground">
                         <div className="flex items-center space-x-3">

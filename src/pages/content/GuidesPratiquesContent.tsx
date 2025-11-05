@@ -16,63 +16,63 @@ const GuidesPratiquesContent = () => {
   const guides = [
     {
       id: 1,
-      title: "Guide du demandeur d'emploi",
-      description: "Tout savoir sur vos droits en tant que demandeur d'emploi : inscription, allocation, accompagnement.",
-      category: "Emploi",
+      titleKey: 'guideJobSeeker',
+      descKey: 'guideJobSeekerDesc',
+      category: t('employment'),
       duration: "15 min",
-      difficulty: "Débutant",
+      difficulty: t('beginner'),
       downloads: 1250,
-      tags: ["Pôle emploi", "Allocation", "Formation"]
+      tagKeys: ['tagPoleEmploi', 'tagAllocation', 'tagFormation']
     },
     {
       id: 2,
-      title: "Comprendre ses droits au logement",
-      description: "Les différentes aides au logement, les recours en cas de problème avec le propriétaire.",
-      category: "Logement", 
+      titleKey: 'guideHousingRights',
+      descKey: 'guideHousingRightsDesc',
+      category: t('housing'), 
       duration: "20 min",
-      difficulty: "Intermédiaire",
+      difficulty: t('intermediate'),
       downloads: 980,
-      tags: ["APL", "Bailleur", "Expulsion"]
+      tagKeys: ['tagAPL', 'tagBailleur', 'tagExpulsion']
     },
     {
       id: 3,
-      title: "Accès aux soins de santé",
-      description: "Navigation dans le système de santé français, CMU, ACS et accès aux spécialistes.",
-      category: "Santé",
+      titleKey: 'guideHealthAccess',
+      descKey: 'guideHealthAccessDesc',
+      category: t('health'),
       duration: "12 min", 
-      difficulty: "Débutant",
+      difficulty: t('beginner'),
       downloads: 1450,
-      tags: ["CMU", "Sécurité sociale", "Médecin"]
+      tagKeys: ['tagCMU', 'tagSecuriteSociale', 'tagMedecin']
     },
     {
       id: 4,
-      title: "Droits de la famille et enfance",
-      description: "Allocations familiales, garde d'enfants, scolarité et protection de l'enfance.",
-      category: "Famille",
+      titleKey: 'guideFamilyRights',
+      descKey: 'guideFamilyRightsDesc',
+      category: t('family'),
       duration: "18 min",
-      difficulty: "Intermédiaire", 
+      difficulty: t('intermediate'), 
       downloads: 720,
-      tags: ["CAF", "École", "Garde"]
+      tagKeys: ['tagCAF', 'tagEcole', 'tagGarde']
     },
     {
       id: 5,
-      title: "Aide juridictionnelle",
-      description: "Comment bénéficier de l'aide juridictionnelle, les conditions et la procédure.",
-      category: "Justice",
+      titleKey: 'guideLegalAid',
+      descKey: 'guideLegalAidDesc',
+      category: t('justice'),
       duration: "10 min",
-      difficulty: "Débutant",
+      difficulty: t('beginner'),
       downloads: 650,
-      tags: ["Avocat", "Tribunal", "Gratuit"]
+      tagKeys: ['tagAvocat', 'tagTribunal', 'tagGratuit']
     },
     {
       id: 6,
-      title: "Étrangers en France",
-      description: "Titre de séjour, naturalisation, regroupement familial et droits sociaux.",
-      category: "Immigration",
+      titleKey: 'guideForeigners',
+      descKey: 'guideForeignersDesc',
+      category: t('immigration'),
       duration: "25 min",
-      difficulty: "Avancé",
+      difficulty: t('advanced'),
       downloads: 890,
-      tags: ["Préfecture", "Visa", "Naturalisation"]
+      tagKeys: ['tagPrefecture', 'tagVisa', 'tagNaturalisation']
     }
   ];
 
@@ -87,10 +87,13 @@ const GuidesPratiquesContent = () => {
   ];
 
   const filteredGuides = guides.filter(guide => {
-    const matchesSearch = guide.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         guide.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         guide.tags.some(tag => tag.toLowerCase().includes(searchTerm.toLowerCase()));
-    const matchesCategory = selectedCategory === "Tous" || guide.category === selectedCategory;
+    const title = t(guide.titleKey as any);
+    const desc = t(guide.descKey as any);
+    const tags = guide.tagKeys.map(key => t(key as any));
+    const matchesSearch = title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         desc.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         tags.some(tag => tag.toLowerCase().includes(searchTerm.toLowerCase()));
+    const matchesCategory = selectedCategory === t('allCategories') || guide.category === selectedCategory;
     return matchesSearch && matchesCategory;
   });
 
@@ -160,11 +163,11 @@ const GuidesPratiquesContent = () => {
                     {guide.downloads}
                   </div>
                 </div>
-                <CardTitle className={`text-lg ${isRTL ? 'text-right' : ''}`}>{guide.title}</CardTitle>
+                <CardTitle className={`text-lg ${isRTL ? 'text-right' : ''}`}>{t(guide.titleKey as any)}</CardTitle>
               </CardHeader>
               <CardContent>
                 <p className={`text-sm text-muted-foreground mb-4 ${isRTL ? 'text-right' : ''}`}>
-                  {guide.description}
+                  {t(guide.descKey as any)}
                 </p>
                 
                 <div className={`flex items-center justify-between mb-4 text-xs text-muted-foreground ${isRTL ? 'flex-row-reverse' : ''}`}>
@@ -179,9 +182,9 @@ const GuidesPratiquesContent = () => {
                 </div>
 
                 <div className="flex flex-wrap gap-1 mb-4">
-                  {guide.tags.map((tag) => (
-                    <Badge key={tag} variant="outline" className="text-xs">
-                      {tag}
+                  {guide.tagKeys.map((tagKey) => (
+                    <Badge key={tagKey} variant="outline" className="text-xs">
+                      {t(tagKey as any)}
                     </Badge>
                   ))}
                 </div>
