@@ -37,17 +37,17 @@ const Footer = () => {
           {/* Third section - Contact Info */}
           <div className={`space-y-4 ${isRTL ? 'md:order-2' : ''}`}>
             <h3 className={`text-lg font-semibold text-white ${isRTL ? 'font-almarai' : ''}`}>{t('contact')}</h3>
-            <div className="space-y-2 text-sm text-gray-300">
-              <div className={`flex items-center ${isRTL ? 'space-x-reverse space-x-2 flex-row-reverse' : 'space-x-2'}`}>
-                <Mail className="h-4 w-4" />
+            <div className={`space-y-2 text-sm text-gray-300 ${isRTL ? 'flex flex-col items-end' : ''}`}>
+              <div className={`flex items-center gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
+                <Mail className="h-4 w-4 flex-shrink-0" />
                 <span className={isRTL ? 'font-almarai' : ''}>contact@justclic.tn</span>
               </div>
-              <div className={`flex items-center ${isRTL ? 'space-x-reverse space-x-2 flex-row-reverse' : 'space-x-2'}`}>
-                <Phone className="h-4 w-4" />
+              <div className={`flex items-center gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
+                <Phone className="h-4 w-4 flex-shrink-0" />
                 <span className={isRTL ? 'font-almarai' : ''}>+216 XX XX XX XX</span>
               </div>
-              <div className={`flex items-center ${isRTL ? 'space-x-reverse space-x-2 flex-row-reverse' : 'space-x-2'}`}>
-                <MapPin className="h-4 w-4" />
+              <div className={`flex items-center gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
+                <MapPin className="h-4 w-4 flex-shrink-0" />
                 <span className={isRTL ? 'font-almarai' : ''}>Tunis, Tunisie</span>
               </div>
             </div>

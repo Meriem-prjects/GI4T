@@ -38,24 +38,12 @@ const AccesAuxDroitsLayout = () => {
       <header className="border-b bg-card animate-fade-in">
         <div className="container mx-auto px-4 py-2 sm:py-4 relative">
           <div className={`flex items-center justify-between flex-wrap gap-4 ${isRTL ? 'flex-row-reverse' : ''}`}>
-            <Link to="/acces-aux-droits" className="flex items-center hover:opacity-80 transition-opacity gap-2 sm:gap-4">
-              {!isRTL ? (
-                <>
-                  <img src="/Feelinx_upload/logo-acces-aux-droits.png" alt={t('accessToRights')} className="h-6 sm:h-8 md:h-12" />
-                  <div>
-                    <h1 className="text-sm sm:text-base md:text-2xl font-bold text-foreground">{t('accessToRights')}</h1>
-                    <p className="text-xs sm:text-sm text-muted-foreground hidden sm:block">{t('citizenSpace')}</p>
-                  </div>
-                </>
-              ) : (
-                <>
-                  <div className="text-right">
-                    <h1 className="text-sm sm:text-base md:text-2xl font-bold text-foreground font-almarai">{t('accessToRights')}</h1>
-                    <p className="text-xs sm:text-sm text-muted-foreground hidden sm:block font-almarai">{t('citizenSpace')}</p>
-                  </div>
-                  <img src="/Feelinx_upload/logo-acces-aux-droits.png" alt={t('accessToRights')} className="h-6 sm:h-8 md:h-12" />
-                </>
-              )}
+            <Link to="/acces-aux-droits" className={`flex items-center gap-2 sm:gap-4 hover:opacity-80 transition-opacity ${isRTL ? 'flex-row-reverse' : ''}`}>
+              <img src="/Feelinx_upload/logo-acces-aux-droits.png" alt={t('accessToRights')} className="h-6 sm:h-8 md:h-12 flex-shrink-0" />
+              <div className={isRTL ? 'text-right' : ''}>
+                <h1 className={`text-sm sm:text-base md:text-2xl font-bold text-foreground ${isRTL ? 'font-almarai' : ''}`}>{t('accessToRights')}</h1>
+                <p className={`text-xs sm:text-sm text-muted-foreground hidden sm:block ${isRTL ? 'font-almarai' : ''}`}>{t('citizenSpace')}</p>
+              </div>
             </Link>
             
             <nav className={`hidden md:flex items-center absolute left-1/2 transform -translate-x-1/2 ${isRTL ? 'space-x-reverse space-x-6' : 'space-x-6'}`}>
