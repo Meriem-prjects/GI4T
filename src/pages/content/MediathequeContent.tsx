@@ -89,8 +89,16 @@ const MediathequeContent = () => {
     }
   ];
 
-  const categories = ["Tous", "Témoignages", "Tutoriels", "Podcasts", "Formations", "Documentaires", "Interviews"];
-  const types = ["Tous", "Vidéo", "Audio", "Webinaire"];
+  const categories = [
+    t('allCategories'), 
+    t('testimonials'), 
+    t('tutorials'), 
+    t('podcasts'), 
+    t('trainings'), 
+    t('documentaries'), 
+    t('interviews')
+  ];
+  const types = [t('allCategories'), t('video'), t('audio'), t('webinar')];
 
   const getTypeIcon = (type: string) => {
     switch (type) {

@@ -88,7 +88,15 @@ const AlbumsPhotosContent = () => {
     }
   ];
 
-  const categories = ["Tous", "Événements", "Formations", "Campagnes", "Conférences", "Ateliers", "Cérémonies"];
+  const categories = [
+    t('allCategories'), 
+    t('eventsCategory'), 
+    t('trainings'), 
+    t('campaigns'), 
+    t('conferences'), 
+    t('workshops'), 
+    t('ceremonies')
+  ];
 
   const filteredAlbums = albums.filter(album => {
     const matchesSearch = album.title.toLowerCase().includes(searchTerm.toLowerCase()) ||

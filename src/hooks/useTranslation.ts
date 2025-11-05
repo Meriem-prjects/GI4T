@@ -160,7 +160,36 @@ type TranslationKey =
   | 'watch'
   | 'listen'
   | 'shareStory'
-  | 'shareStoryDesc';
+  | 'shareStoryDesc'
+  // Categories and filters
+  | 'allCategories'
+  | 'family'
+  | 'health'
+  | 'employment'
+  | 'finances'
+  | 'housing'
+  | 'justice'
+  | 'immigration'
+  | 'interviews'
+  | 'documentaries'
+  | 'trainings'
+  | 'podcasts'
+  | 'tutorials'
+  | 'testimonials'
+  | 'webinar'
+  | 'audio'
+  | 'ceremonies'
+  | 'workshops'
+  | 'conferences'
+  | 'campaigns'
+  | 'eventsCategory'
+  // News categories
+  | 'services'
+  | 'training'
+  // Difficulty levels
+  | 'beginner'
+  | 'intermediate'
+  | 'advanced';
 
 const translations: Record<'fr' | 'ar', Record<TranslationKey, string>> = {
   fr: {
@@ -323,6 +352,35 @@ const translations: Record<'fr' | 'ar', Record<TranslationKey, string>> = {
     listen: 'Écouter',
     shareStory: 'Partagez votre histoire',
     shareStoryDesc: 'Vous avez un témoignage à partager ?',
+    // Categories and filters
+    allCategories: 'Tous',
+    family: 'Famille',
+    health: 'Santé',
+    employment: 'Emploi',
+    finances: 'Finances',
+    housing: 'Logement',
+    justice: 'Justice',
+    immigration: 'Immigration',
+    interviews: 'Interviews',
+    documentaries: 'Documentaires',
+    trainings: 'Formations',
+    podcasts: 'Podcasts',
+    tutorials: 'Tutoriels',
+    testimonials: 'Témoignages',
+    webinar: 'Webinaire',
+    audio: 'Audio',
+    ceremonies: 'Cérémonies',
+    workshops: 'Ateliers',
+    conferences: 'Conférences',
+    campaigns: 'Campagnes',
+    eventsCategory: 'Événements',
+    // News categories
+    services: 'Services',
+    training: 'Formation',
+    // Difficulty levels
+    beginner: 'Débutant',
+    intermediate: 'Intermédiaire',
+    advanced: 'Avancé',
   },
   ar: {
     // Homepage
@@ -484,6 +542,35 @@ const translations: Record<'fr' | 'ar', Record<TranslationKey, string>> = {
     listen: 'استمع',
     shareStory: 'شارك قصتك',
     shareStoryDesc: 'هل لديك شهادة لمشاركتها؟',
+    // Categories and filters
+    allCategories: 'الكل',
+    family: 'الأسرة',
+    health: 'الصحة',
+    employment: 'التشغيل',
+    finances: 'المالية',
+    housing: 'السكن',
+    justice: 'العدالة',
+    immigration: 'الهجرة',
+    interviews: 'مقابلات',
+    documentaries: 'وثائقيات',
+    trainings: 'تكوينات',
+    podcasts: 'بودكاست',
+    tutorials: 'دروس',
+    testimonials: 'شهادات',
+    webinar: 'ندوة عبر الإنترنت',
+    audio: 'صوتي',
+    ceremonies: 'احتفالات',
+    workshops: 'ورش عمل',
+    conferences: 'مؤتمرات',
+    campaigns: 'حملات',
+    eventsCategory: 'فعاليات',
+    // News categories
+    services: 'خدمات',
+    training: 'تكوين',
+    // Difficulty levels
+    beginner: 'مبتدئ',
+    intermediate: 'متوسط',
+    advanced: 'متقدم',
   },
 };
 

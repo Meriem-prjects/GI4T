@@ -17,7 +17,7 @@ const ActualitesAccesDroits = () => {
       excerpt:
         "Le gouvernement lance une grande campagne de sensibilisation aux droits fondamentaux dans toutes les régions.",
       date: "2024-03-15",
-      category: "Campagnes",
+      category: t('campaigns'),
       views: 3240,
       readTime: "5 min",
       featured: true,
@@ -28,7 +28,7 @@ const ActualitesAccesDroits = () => {
       excerpt:
         "Des centres de médiation ouvrent leurs portes pour faciliter l'accès à la justice et aux droits.",
       date: "2024-03-12",
-      category: "Services",
+      category: t('services'),
       views: 2890,
       readTime: "3 min",
       featured: false,
@@ -39,7 +39,7 @@ const ActualitesAccesDroits = () => {
       excerpt:
         "Une session de formation intensive pour les futurs médiateurs sociaux débutera le mois prochain.",
       date: "2024-03-10",
-      category: "Formation",
+      category: t('training'),
       views: 1567,
       readTime: "4 min",
       featured: false,

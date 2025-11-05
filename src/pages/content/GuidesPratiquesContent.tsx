@@ -76,7 +76,15 @@ const GuidesPratiquesContent = () => {
     }
   ];
 
-  const categories = ["Tous", "Emploi", "Logement", "Santé", "Famille", "Justice", "Immigration"];
+  const categories = [
+    t('allCategories'), 
+    t('employment'), 
+    t('housing'), 
+    t('health'), 
+    t('family'), 
+    t('justice'), 
+    t('immigration')
+  ];
 
   const filteredGuides = guides.filter(guide => {
     const matchesSearch = guide.title.toLowerCase().includes(searchTerm.toLowerCase()) ||

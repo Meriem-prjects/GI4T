@@ -87,7 +87,15 @@ const RessourcesPratiquesContent = () => {
     }
   ];
 
-  const categories = ["Tous", "Justice", "Logement", "Finances", "Emploi", "Santé", "Famille"];
+  const categories = [
+    t('allCategories'), 
+    t('justice'), 
+    t('housing'), 
+    t('finances'), 
+    t('employment'), 
+    t('health'), 
+    t('family')
+  ];
 
   const filteredResources = resources.filter(resource => {
     const matchesSearch = resource.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
