@@ -22,7 +22,7 @@ const Index = () => {
         {/* Main Content - Card Grid Layout */}
         <main className="flex-grow">
           <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-12">
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 max-w-7xl mx-auto">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 max-w-7xl mx-auto" dir="ltr">
               <ObservatoireSection />
               <AccesAuxDroitsSection />
             </div>
