@@ -27,11 +27,11 @@ const QuiSommesNous = () => {
 
       {/* Hero Section */}
       <section className="py-12 bg-gradient-to-br from-primary/5 to-primary/10">
-        <div className={`container mx-auto px-4 ${isRTL ? 'text-right' : 'text-center'}`}>
+        <div className={`container mx-auto px-4 ${isRTL ? 'text-right' : 'text-left'}`}>
           <h1 className="text-3xl sm:text-4xl font-bold text-foreground mb-4">
             {t('whoWeAre')} ؟
           </h1>
-          <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
+          <p className={`text-lg text-muted-foreground max-w-2xl ${isRTL ? 'mr-0' : 'ml-0'}`}>
             {t('whoWeAreSubtitle')}
           </p>
         </div>
@@ -42,24 +42,24 @@ const QuiSommesNous = () => {
         <div className="container mx-auto px-4">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-16">
             <Card className="bg-primary/5 border-primary/20">
-              <CardHeader className={isRTL ? 'text-right' : 'text-center'}>
-                <Target className={`h-12 w-12 text-primary mb-4 ${isRTL ? 'mr-auto' : 'mx-auto'}`} />
+              <CardHeader className={isRTL ? 'text-right' : 'text-left'}>
+                <Target className={`h-12 w-12 text-primary mb-4 ${isRTL ? '' : ''}`} />
                 <CardTitle className="text-xl">{t('ourMission')}</CardTitle>
               </CardHeader>
               <CardContent>
-                <p className={`text-muted-foreground leading-relaxed ${isRTL ? 'text-right' : 'text-center'}`}>
+                <p className={`text-muted-foreground leading-relaxed ${isRTL ? 'text-right' : 'text-left'}`}>
                   {t('ourMissionText')}
                 </p>
               </CardContent>
             </Card>
 
             <Card className="bg-primary/5 border-primary/20">
-              <CardHeader className={isRTL ? 'text-right' : 'text-center'}>
-                <Eye className={`h-12 w-12 text-primary mb-4 ${isRTL ? 'mr-auto' : 'mx-auto'}`} />
+              <CardHeader className={isRTL ? 'text-right' : 'text-left'}>
+                <Eye className={`h-12 w-12 text-primary mb-4 ${isRTL ? '' : ''}`} />
                 <CardTitle className="text-xl">{t('ourVision')}</CardTitle>
               </CardHeader>
               <CardContent>
-                <p className={`text-muted-foreground leading-relaxed ${isRTL ? 'text-right' : 'text-center'}`}>
+                <p className={`text-muted-foreground leading-relaxed ${isRTL ? 'text-right' : 'text-left'}`}>
                   {t('ourVisionText')}
                 </p>
               </CardContent>
@@ -67,25 +67,25 @@ const QuiSommesNous = () => {
           </div>
 
           {/* Values */}
-          <div className={isRTL ? 'text-right' : 'text-center'}>
+          <div className={isRTL ? 'text-right' : 'text-left'}>
             <h2 className="text-2xl font-bold text-foreground mb-8">{t('ourValues')}</h2>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              <div className={isRTL ? 'text-right' : 'text-center'}>
-                <Heart className={`h-10 w-10 text-primary mb-4 ${isRTL ? 'mr-auto' : 'mx-auto'}`} />
+              <div className={isRTL ? 'text-right' : 'text-left'}>
+                <Heart className={`h-10 w-10 text-primary mb-4`} />
                 <h3 className="font-semibold text-lg mb-2">{t('accessibility')}</h3>
                 <p className="text-muted-foreground text-sm">
                   {t('accessibilityText')}
                 </p>
               </div>
-              <div className={isRTL ? 'text-right' : 'text-center'}>
-                <Users className={`h-10 w-10 text-primary mb-4 ${isRTL ? 'mr-auto' : 'mx-auto'}`} />
+              <div className={isRTL ? 'text-right' : 'text-left'}>
+                <Users className={`h-10 w-10 text-primary mb-4`} />
                 <h3 className="font-semibold text-lg mb-2">{t('transparency')}</h3>
                 <p className="text-muted-foreground text-sm">
                   {t('transparencyText')}
                 </p>
               </div>
-              <div className={isRTL ? 'text-right' : 'text-center'}>
-                <Target className={`h-10 w-10 text-primary mb-4 ${isRTL ? 'mr-auto' : 'mx-auto'}`} />
+              <div className={isRTL ? 'text-right' : 'text-left'}>
+                <Target className={`h-10 w-10 text-primary mb-4`} />
                 <h3 className="font-semibold text-lg mb-2">{t('engagement')}</h3>
                 <p className="text-muted-foreground text-sm">
                   {t('engagementText')}
@@ -95,46 +95,46 @@ const QuiSommesNous = () => {
           </div>
 
           {/* Team */}
-          <div className={`mt-12 ${isRTL ? 'text-right' : 'text-center'}`}>
+          <div className={`mt-12 ${isRTL ? 'text-right' : 'text-left'}`}>
             <h2 className="text-2xl font-bold text-foreground mb-8">{t('ourTeam')}</h2>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
               <Card>
-                <CardHeader className={isRTL ? 'text-right' : 'text-center'}>
-                  <div className={`w-20 h-20 bg-primary/10 rounded-full mb-4 flex items-center justify-center ${isRTL ? 'mr-auto' : 'mx-auto'}`}>
+                <CardHeader className={isRTL ? 'text-right' : 'text-left'}>
+                  <div className={`w-20 h-20 bg-primary/10 rounded-full mb-4 flex items-center justify-center`}>
                     <Users className="h-10 w-10 text-primary" />
                   </div>
                   <CardTitle>{t('legalExperts')}</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <p className={`text-muted-foreground text-sm ${isRTL ? 'text-right' : ''}`}>
+                  <p className={`text-muted-foreground text-sm ${isRTL ? 'text-right' : 'text-left'}`}>
                     {t('legalExpertsText')}
                   </p>
                 </CardContent>
               </Card>
 
               <Card>
-                <CardHeader className={isRTL ? 'text-right' : 'text-center'}>
-                  <div className={`w-20 h-20 bg-primary/10 rounded-full mb-4 flex items-center justify-center ${isRTL ? 'mr-auto' : 'mx-auto'}`}>
+                <CardHeader className={isRTL ? 'text-right' : 'text-left'}>
+                  <div className={`w-20 h-20 bg-primary/10 rounded-full mb-4 flex items-center justify-center`}>
                     <Target className="h-10 w-10 text-primary" />
                   </div>
                   <CardTitle>{t('developers')}</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <p className={`text-muted-foreground text-sm ${isRTL ? 'text-right' : ''}`}>
+                  <p className={`text-muted-foreground text-sm ${isRTL ? 'text-right' : 'text-left'}`}>
                     {t('developersText')}
                   </p>
                 </CardContent>
               </Card>
 
               <Card>
-                <CardHeader className={isRTL ? 'text-right' : 'text-center'}>
-                  <div className={`w-20 h-20 bg-primary/10 rounded-full mb-4 flex items-center justify-center ${isRTL ? 'mr-auto' : 'mx-auto'}`}>
+                <CardHeader className={isRTL ? 'text-right' : 'text-left'}>
+                  <div className={`w-20 h-20 bg-primary/10 rounded-full mb-4 flex items-center justify-center`}>
                     <Heart className="h-10 w-10 text-primary" />
                   </div>
                   <CardTitle>{t('community')}</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <p className={`text-muted-foreground text-sm ${isRTL ? 'text-right' : ''}`}>
+                  <p className={`text-muted-foreground text-sm ${isRTL ? 'text-right' : 'text-left'}`}>
                     {t('communityText')}
                   </p>
                 </CardContent>
@@ -146,14 +146,14 @@ const QuiSommesNous = () => {
 
       {/* CTA */}
       <section className="py-16 bg-muted/30">
-        <div className={`container mx-auto px-4 ${isRTL ? 'text-right' : 'text-center'}`}>
+        <div className={`container mx-auto px-4 ${isRTL ? 'text-right' : 'text-left'}`}>
           <h2 className="text-2xl font-bold text-foreground mb-4">
             {t('joinMission')}
           </h2>
-          <p className="text-muted-foreground mb-8 max-w-2xl mx-auto">
+          <p className={`text-muted-foreground mb-8 max-w-2xl ${isRTL ? 'mr-0' : 'ml-0'}`}>
             {t('joinMissionText')}
           </p>
-          <div className={`flex flex-col sm:flex-row gap-4 ${isRTL ? 'justify-end' : 'justify-center'}`}>
+          <div className={`flex flex-col sm:flex-row gap-4 ${isRTL ? 'justify-start' : 'justify-start'}`}>
             <Link to="/observatoire">
               <Button size="lg">
                 {t('discoverObservatory')}
