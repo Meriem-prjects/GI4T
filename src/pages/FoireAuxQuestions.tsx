@@ -112,7 +112,7 @@ const FoireAuxQuestions = () => {
                   <div className={`flex items-center gap-3 ${isRTL ? 'flex-row-reverse' : ''}`}>
                     <HelpCircle className="h-6 w-6 text-primary" />
                     <div className="flex-1">
-                      <CardTitle className={`flex items-center gap-3 ${isRTL ? 'justify-end' : 'justify-between'}`}>
+                      <CardTitle className={`flex items-center gap-3 ${isRTL ? 'flex-row-reverse justify-between text-right' : 'justify-between'}`}>
                         <span className={isRTL ? 'text-right' : ''}>{isRTL && category.title_ar ? category.title_ar : category.title}</span>
                         <Badge variant="secondary">{category.count}</Badge>
                       </CardTitle>
