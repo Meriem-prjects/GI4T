@@ -374,7 +374,16 @@ type TranslationKey =
   | 'jurisprudence'
   | 'odf'
   | 'event'
-  | 'publication';
+  | 'publication'
+  // Observatoire Navigation
+  | 'observatoireNavSearch'
+  | 'observatoireNavSearchDesc'
+  | 'observatoireNavFundamentalRights'
+  | 'observatoireNavFundamentalRightsDesc'
+  | 'observatoireNavAnalyses'
+  | 'observatoireNavAnalysesDesc'
+  | 'observatoireNavNews'
+  | 'observatoireNavNewsDesc';
 
 const translations: Record<'fr' | 'ar', Record<TranslationKey, string>> = {
   fr: {
@@ -748,6 +757,15 @@ const translations: Record<'fr' | 'ar', Record<TranslationKey, string>> = {
     tagPrefecture: 'Préfecture',
     tagVisa: 'Visa',
     tagNaturalisation: 'Naturalisation',
+    // Observatoire Navigation
+    observatoireNavSearch: 'Recherche',
+    observatoireNavSearchDesc: 'Recherche avancée',
+    observatoireNavFundamentalRights: 'Droits fondamentaux',
+    observatoireNavFundamentalRightsDesc: 'Textes de référence',
+    observatoireNavAnalyses: 'Analyses & Opinions',
+    observatoireNavAnalysesDesc: 'Analyses juridiques',
+    observatoireNavNews: 'Actualités',
+    observatoireNavNewsDesc: 'Dernières nouvelles',
   },
   ar: {
     // Homepage
@@ -1123,6 +1141,15 @@ const translations: Record<'fr' | 'ar', Record<TranslationKey, string>> = {
     tagPrefecture: 'المحافظة',
     tagVisa: 'تأشيرة',
     tagNaturalisation: 'التجنيس',
+    // Observatoire Navigation
+    observatoireNavSearch: 'بحث',
+    observatoireNavSearchDesc: 'بحث متقدم',
+    observatoireNavFundamentalRights: 'الحقوق الأساسية',
+    observatoireNavFundamentalRightsDesc: 'النصوص المرجعية',
+    observatoireNavAnalyses: 'تحليلات وآراء',
+    observatoireNavAnalysesDesc: 'تحليلات قانونية',
+    observatoireNavNews: 'أخبار',
+    observatoireNavNewsDesc: 'آخر الأخبار',
   },
 };
 
