@@ -13,28 +13,23 @@ const ObservatoireHeader = () => {
 
   return (
     <header className="border-b bg-card">
-      <div className="container mx-auto px-4 py-2 sm:py-4 relative">
-        <div className={`flex items-center justify-between flex-wrap gap-4 ${isRTL ? 'flex-row-reverse' : ''}`}>
+      <div className="container mx-auto px-4 py-2 sm:py-4">
+        <div className={`flex items-center justify-between gap-4 ${isRTL ? 'flex-row-reverse' : ''}`}>
+          {/* Logo and Title - stays in corner */}
           <Link to="/observatoire" className="flex items-center gap-2 sm:gap-4 hover:opacity-80 transition-opacity">
-            {!isRTL ? (
-              <>
-                <img src="/Feelinx_upload/odf-logo.png" alt="ODF Logo" className="h-6 sm:h-8 md:h-12" />
-                <div>
-                  <h1 className="text-sm sm:text-base md:text-2xl font-bold text-foreground">Observatoire des Droits Fondamentaux</h1>
-                  <p className="text-xs sm:text-sm text-muted-foreground hidden sm:block">Surveillance et protection des droits citoyens</p>
-                </div>
-              </>
-            ) : (
-              <>
-                <div className="text-right">
-                  <h1 className="text-sm sm:text-base md:text-2xl font-bold text-foreground font-almarai">مرصد الحقوق الأساسية</h1>
-                  <p className="text-xs sm:text-sm text-muted-foreground hidden sm:block font-almarai">مراقبة وحماية حقوق المواطنين</p>
-                </div>
-                <img src="/Feelinx_upload/odf-logo.png" alt="ODF Logo" className="h-6 sm:h-8 md:h-12" />
-              </>
-            )}
+            <img src="/Feelinx_upload/odf-logo.png" alt="ODF Logo" className="h-6 sm:h-8 md:h-12" />
+            <div className={isRTL ? 'text-right' : ''}>
+              <h1 className={`text-sm sm:text-base md:text-2xl font-bold text-foreground ${isRTL ? 'font-almarai' : ''}`}>
+                {isRTL ? 'مرصد الحقوق الأساسية' : 'Observatoire des Droits Fondamentaux'}
+              </h1>
+              <p className={`text-xs sm:text-sm text-muted-foreground hidden sm:block ${isRTL ? 'font-almarai' : ''}`}>
+                {isRTL ? 'مراقبة وحماية حقوق المواطنين' : 'Surveillance et protection des droits citoyens'}
+              </p>
+            </div>
           </Link>
-          <div className={`flex items-center ml-auto ${isRTL ? 'space-x-reverse space-x-2 sm:space-x-4' : 'space-x-2 sm:space-x-4'}`}>
+
+          {/* Navigation and Controls - opposite side */}
+          <div className={`flex items-center ${isRTL ? 'space-x-reverse space-x-2 sm:space-x-4' : 'space-x-2 sm:space-x-4'}`}>
             <div className="hidden sm:flex items-center space-x-2 sm:space-x-4">
               <Link to="/observatoire">
                 <Button variant="outline" size="sm" className="text-xs sm:text-sm">
@@ -67,7 +62,7 @@ const ObservatoireHeader = () => {
             {/* Mobile Menu */}
             <Sheet open={isMobileMenuOpen} onOpenChange={setIsMobileMenuOpen}>
               <SheetTrigger asChild>
-                <Button variant="ghost" size="sm" className="md:hidden p-2 absolute right-4 top-3">
+                <Button variant="ghost" size="sm" className="md:hidden p-2">
                   <Menu className="h-5 w-5" />
                 </Button>
               </SheetTrigger>
