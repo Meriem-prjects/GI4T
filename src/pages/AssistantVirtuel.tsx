@@ -5,6 +5,8 @@ import { Input } from "@/components/ui/input";
 import { MessageCircle, Send, Loader2 } from "lucide-react";
 import { useChatbotConfig } from "@/hooks/useChatbotConfig";
 import { useToast } from "@/hooks/use-toast";
+import { useLanguage } from "@/contexts/LanguageContext";
+import { useTranslation } from "@/hooks/useTranslation";
 
 interface Message {
   id: number;
@@ -16,6 +18,8 @@ interface Message {
 const AssistantVirtuel = () => {
   const { data: config, isLoading: configLoading } = useChatbotConfig();
   const { toast } = useToast();
+  const { isRTL, language } = useLanguage();
+  const { t } = useTranslation();
   const [messages, setMessages] = useState<Message[]>([]);
   const [inputMessage, setInputMessage] = useState("");
   const [isStreaming, setIsStreaming] = useState(false);
@@ -88,14 +92,14 @@ const AssistantVirtuel = () => {
       );
 
       if (!response.ok) {
-        throw new Error(`Erreur HTTP: ${response.status}`);
+        throw new Error(`${isRTL ? 'خطأ HTTP' : 'Erreur HTTP'}: ${response.status}`);
       }
 
       const reader = response.body?.getReader();
       const decoder = new TextDecoder();
 
       if (!reader) {
-        throw new Error("Impossible de lire la réponse");
+        throw new Error(isRTL ? "لا يمكن قراءة الاستجابة" : "Impossible de lire la réponse");
       }
 
       while (true) {
@@ -134,8 +138,10 @@ const AssistantVirtuel = () => {
       } else {
         console.error("Erreur lors de l'envoi du message:", error);
         toast({
-          title: "Erreur",
-          description: "Impossible de contacter l'assistant. Veuillez réessayer.",
+          title: isRTL ? "خطأ" : "Erreur",
+          description: isRTL 
+            ? "لا يمكن الاتصال بالمساعد. يرجى المحاولة مرة أخرى." 
+            : "Impossible de contacter l'assistant. Veuillez réessayer.",
           variant: "destructive"
         });
         
@@ -160,18 +166,18 @@ const AssistantVirtuel = () => {
   const fontFamily = config?.font_family || "Inter, sans-serif";
 
   return (
-    <div className="min-h-screen bg-background" style={{ fontFamily }}>
+    <div className={`min-h-screen bg-background ${isRTL ? 'font-almarai' : ''}`} style={{ fontFamily }} dir={isRTL ? 'rtl' : 'ltr'}>
       {/* Hero Section */}
       <section className="py-12 bg-gradient-to-br from-primary/5 to-primary/10">
-        <div className="container mx-auto px-4 text-center">
-          <div className="flex items-center justify-center gap-3 mb-4">
+        <div className={`container mx-auto px-4 text-center ${isRTL ? 'text-right' : ''}`}>
+          <div className={`flex items-center justify-center gap-3 mb-4 ${isRTL ? 'flex-row-reverse' : ''}`}>
             <MessageCircle className="h-10 w-10" style={{ color: primaryColor }} />
             <h1 className="text-3xl sm:text-4xl font-bold text-foreground">
-              Assistant Virtuel
+              {isRTL ? 'المساعد الافتراضي' : 'Assistant Virtuel'}
             </h1>
           </div>
           <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-            Posez vos questions juridiques en temps réel
+            {isRTL ? 'اطرح أسئلتك القانونية في الوقت الفعلي' : 'Posez vos questions juridiques en temps réel'}
           </p>
         </div>
       </section>
@@ -179,13 +185,15 @@ const AssistantVirtuel = () => {
       <div className="container mx-auto px-4 py-12">
         <div className="max-w-4xl mx-auto">
           <Card className="h-[600px] flex flex-col shadow-lg">
-            <CardHeader className="border-b">
-              <CardTitle className="text-xl flex items-center gap-2">
+            <CardHeader className={`border-b ${isRTL ? 'text-right' : ''}`}>
+              <CardTitle className={`text-xl flex items-center gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
                 <MessageCircle className="h-5 w-5" style={{ color: primaryColor }} />
-                Discutez avec notre assistant
+                {isRTL ? 'دردشة مع مساعدنا' : 'Discutez avec notre assistant'}
               </CardTitle>
-              <CardDescription>
-                Notre assistant est disponible 24h/24 pour répondre à vos questions juridiques
+              <CardDescription className={isRTL ? 'text-right' : ''}>
+                {isRTL 
+                  ? 'مساعدنا متاح على مدار الساعة طوال أيام الأسبوع للإجابة على أسئلتك القانونية'
+                  : 'Notre assistant est disponible 24h/24 pour répondre à vos questions juridiques'}
               </CardDescription>
             </CardHeader>
             
@@ -199,12 +207,12 @@ const AssistantVirtuel = () => {
                         msg.role === 'user' 
                           ? 'text-white' 
                           : 'bg-muted text-foreground'
-                      }`}
+                      } ${isRTL ? 'text-right' : ''}`}
                       style={msg.role === 'user' ? { backgroundColor: primaryColor } : {}}
                     >
                       <p className="text-sm leading-relaxed whitespace-pre-wrap">{msg.content}</p>
                       <span className="text-xs opacity-70 mt-2 block">
-                        {msg.timestamp.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}
+                        {msg.timestamp.toLocaleTimeString(language === 'ar' ? 'ar-TN' : 'fr-FR', { hour: '2-digit', minute: '2-digit' })}
                       </span>
                     </div>
                   </div>
@@ -221,11 +229,11 @@ const AssistantVirtuel = () => {
 
             {/* Chat Input */}
             <div className="p-6 border-t bg-muted/30">
-              <div className="flex gap-3">
+              <div className={`flex gap-3 ${isRTL ? 'flex-row-reverse' : ''}`}>
                 <Input
                   value={inputMessage}
                   onChange={(e) => setInputMessage(e.target.value)}
-                  placeholder="Tapez votre question..."
+                  placeholder={isRTL ? 'اكتب سؤالك...' : 'Tapez votre question...'}
                   onKeyDown={(e) => {
                     if (e.key === 'Enter' && !isStreaming) {
                       e.preventDefault();
@@ -233,7 +241,7 @@ const AssistantVirtuel = () => {
                     }
                   }}
                   disabled={isStreaming}
-                  className="flex-1 h-12"
+                  className={`flex-1 h-12 ${isRTL ? 'text-right' : ''}`}
                 />
                 <Button 
                   onClick={handleSendMessage} 
@@ -246,26 +254,28 @@ const AssistantVirtuel = () => {
                     <Loader2 className="h-4 w-4 animate-spin" />
                   ) : (
                     <>
-                      <Send className="h-4 w-4 mr-2" />
-                      Envoyer
+                      <Send className={`h-4 w-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />
+                      {isRTL ? 'إرسال' : 'Envoyer'}
                     </>
                   )}
                 </Button>
               </div>
-              <p className="text-xs text-muted-foreground mt-3 text-center">
-                Appuyez sur Entrée pour envoyer votre message
+              <p className={`text-xs text-muted-foreground mt-3 text-center ${isRTL ? 'text-right' : ''}`}>
+                {isRTL ? 'اضغط على Enter لإرسال رسالتك' : 'Appuyez sur Entrée pour envoyer votre message'}
               </p>
             </div>
           </Card>
 
           {/* Info Section */}
-          <div className="mt-8 p-6 bg-muted/30 rounded-lg">
-            <h3 className="font-semibold mb-3">Comment fonctionne l'assistant ?</h3>
-            <ul className="space-y-2 text-sm text-muted-foreground">
-              <li>• Posez vos questions en langage naturel</li>
-              <li>• Recevez des réponses juridiques adaptées à votre situation</li>
-              <li>• L'assistant utilise les documents d'apprentissage pour des réponses précises</li>
-              <li>• Votre conversation est confidentielle et sécurisée</li>
+          <div className={`mt-8 p-6 bg-muted/30 rounded-lg ${isRTL ? 'text-right' : ''}`}>
+            <h3 className="font-semibold mb-3">
+              {isRTL ? 'كيف يعمل المساعد؟' : 'Comment fonctionne l\'assistant ?'}
+            </h3>
+            <ul className={`space-y-2 text-sm text-muted-foreground ${isRTL ? 'list-none' : ''}`}>
+              <li>{isRTL ? '• اطرح أسئلتك بلغة طبيعية' : '• Posez vos questions en langage naturel'}</li>
+              <li>{isRTL ? '• احصل على إجابات قانونية مكيفة لحالتك' : '• Recevez des réponses juridiques adaptées à votre situation'}</li>
+              <li>{isRTL ? '• يستخدم المساعد وثائق التدريب للحصول على إجابات دقيقة' : '• L\'assistant utilise les documents d\'apprentissage pour des réponses précises'}</li>
+              <li>{isRTL ? '• محادثتك سرية وآمنة' : '• Votre conversation est confidentielle et sécurisée'}</li>
             </ul>
           </div>
         </div>
