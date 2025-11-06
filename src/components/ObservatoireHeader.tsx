@@ -16,7 +16,7 @@ const ObservatoireHeader = () => {
       <div className="container mx-auto px-4 py-2 sm:py-4">
         <div className={`flex items-center justify-between gap-4 ${isRTL ? 'flex-row-reverse' : ''}`}>
           {/* Logo and Title - stays in corner */}
-          <Link to="/observatoire" className={`flex items-center gap-2 sm:gap-4 hover:opacity-80 transition-opacity ${isRTL ? 'flex-row-reverse' : ''}`}>
+          <Link to="/observatoire" className="flex items-center gap-2 sm:gap-4 hover:opacity-80 transition-opacity">
             <img src="/Feelinx_upload/odf-logo.png" alt="ODF Logo" className="h-6 sm:h-8 md:h-12" />
             <div className={isRTL ? 'text-right' : ''}>
               <h1 className={`text-sm sm:text-base md:text-2xl font-bold text-foreground ${isRTL ? 'font-almarai' : ''}`}>
