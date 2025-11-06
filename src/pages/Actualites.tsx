@@ -4,9 +4,12 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { Breadcrumb, BreadcrumbList, BreadcrumbItem, BreadcrumbLink, BreadcrumbPage, BreadcrumbSeparator } from "@/components/ui/breadcrumb";
 import { Calendar, Clock, Tag, TrendingUp, Bell, Eye } from "lucide-react";
-
+import { useLanguage } from "@/contexts/LanguageContext";
+import { useTranslation } from "@/hooks/useTranslation";
 
 const Actualites = () => {
+  const { isRTL } = useLanguage();
+  const { t } = useTranslation();
   const news = [
     {
       id: 1,
@@ -55,59 +58,58 @@ const Actualites = () => {
   ];
 
   const categories = [
-    { name: "Toutes", count: 156, active: true },
-    { name: "Jurisprudence", count: 67, active: false },
-    { name: "Accès aux droits", count: 23, active: false },
-    { name: "ODF", count: 34, active: false },
-    { name: "Événement", count: 28, active: false },
-    { name: "Publication", count: 27, active: false }
+    { name: t('allNews'), count: 156, active: true },
+    { name: t('jurisprudence'), count: 67, active: false },
+    { name: t('accessToRights'), count: 23, active: false },
+    { name: t('odf'), count: 34, active: false },
+    { name: t('event'), count: 28, active: false },
+    { name: t('publication'), count: 27, active: false }
   ];
 
   const featuredNews = news.find(article => article.featured);
   const regularNews = news.filter(article => !article.featured);
 
   return (
-    <div className="container mx-auto px-4 py-6">
+    <div className={`container mx-auto px-4 py-6 ${isRTL ? 'font-almarai' : ''}`} dir={isRTL ? 'rtl' : 'ltr'}>
         {/* Breadcrumb */}
-        <Breadcrumb className="mb-6">
+        <Breadcrumb className={`mb-6 ${isRTL ? 'flex justify-end' : ''}`}>
           <BreadcrumbList>
             <BreadcrumbItem>
               <BreadcrumbLink asChild>
-                <Link to="/">Accueil</Link>
+                <Link to="/">{t('home')}</Link>
               </BreadcrumbLink>
             </BreadcrumbItem>
             <BreadcrumbSeparator />
             <BreadcrumbItem>
               <BreadcrumbLink asChild>
-                <Link to="/observatoire">Observatoire</Link>
+                <Link to="/observatoire">{t('observatory')}</Link>
               </BreadcrumbLink>
             </BreadcrumbItem>
             <BreadcrumbSeparator />
             <BreadcrumbItem>
-              <BreadcrumbPage>Actualités</BreadcrumbPage>
+              <BreadcrumbPage>{t('actualitesTitle')}</BreadcrumbPage>
             </BreadcrumbItem>
           </BreadcrumbList>
         </Breadcrumb>
 
         {/* Hero Section */}
-        <section className="text-center mb-8 sm:mb-12">
-          <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-3 sm:mb-4">Actualités</h1>
+        <section className={`mb-8 sm:mb-12 ${isRTL ? 'text-right' : 'text-center'}`}>
+          <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-3 sm:mb-4">{t('actualitesTitle')}</h1>
           <p className="text-base sm:text-lg text-muted-foreground max-w-3xl mx-auto mb-4 sm:mb-6 px-2">
-            Suivez les dernières évolutions en matière de droits fondamentaux, jurisprudence 
-            et activités de l'Observatoire des Droits Fondamentaux.
+            {t('actualitesDesc')}
           </p>
           
           {/* Newsletter Subscription */}
-          <div className="bg-primary/5 rounded-xl p-6 mb-8 max-w-2xl mx-auto">
-            <div className="flex items-center justify-center gap-2 mb-3">
+          <div className={`bg-primary/5 rounded-xl p-6 mb-8 max-w-2xl mx-auto ${isRTL ? 'text-right' : ''}`}>
+            <div className={`flex items-center gap-2 mb-3 ${isRTL ? 'justify-end' : 'justify-center'}`}>
               <Bell className="w-5 h-5 text-primary" />
-              <h3 className="font-semibold">Restez informé</h3>
+              <h3 className="font-semibold">{t('stayInformed')}</h3>
             </div>
             <p className="text-sm text-muted-foreground mb-4">
-              Recevez les dernières actualités directement dans votre boîte mail
+              {t('stayInformedText')}
             </p>
             <Button>
-              S'abonner à la newsletter
+              {t('subscribeNewsletter')}
             </Button>
           </div>
         </section>
@@ -134,32 +136,32 @@ const Actualites = () => {
         {/* Featured Article */}
         {featuredNews && (
           <section className="mb-12">
-            <div className="flex items-center gap-2 mb-4">
+            <div className={`flex items-center gap-2 mb-4 ${isRTL ? 'flex-row-reverse' : ''}`}>
               <TrendingUp className="w-5 h-5 text-primary" />
-              <h2 className="text-xl font-bold">À la Une</h2>
+              <h2 className="text-xl font-bold">{t('featured')}</h2>
             </div>
             
             <Card className="border-2 border-primary/20 hover:shadow-xl transition-all duration-300">
-              <CardHeader className="pb-4">
-                <div className="flex items-center gap-3 mb-3">
+              <CardHeader className={`pb-4 ${isRTL ? 'text-right' : ''}`}>
+                <div className={`flex items-center gap-3 mb-3 ${isRTL ? 'flex-row-reverse' : ''}`}>
                   <Badge className="bg-primary text-primary-foreground">
                     {featuredNews.category}
                   </Badge>
                   <Badge variant="outline" className="bg-yellow-50 text-yellow-700 border-yellow-200">
-                    À la Une
+                    {t('featured')}
                   </Badge>
-                  <div className="flex items-center gap-4 text-sm text-muted-foreground ml-auto">
-                    <div className="flex items-center gap-1">
+                  <div className={`flex items-center gap-4 text-sm text-muted-foreground ${isRTL ? 'mr-auto' : 'ml-auto'} ${isRTL ? 'flex-row-reverse' : ''}`}>
+                    <div className={`flex items-center gap-1 ${isRTL ? 'flex-row-reverse' : ''}`}>
                       <Calendar className="w-4 h-4" />
                       {featuredNews.date}
                     </div>
-                    <div className="flex items-center gap-1">
+                    <div className={`flex items-center gap-1 ${isRTL ? 'flex-row-reverse' : ''}`}>
                       <Clock className="w-4 h-4" />
-                      {featuredNews.readTime}
+                      {featuredNews.readTime} {t('min')}
                     </div>
-                    <div className="flex items-center gap-1">
+                    <div className={`flex items-center gap-1 ${isRTL ? 'flex-row-reverse' : ''}`}>
                       <Eye className="w-4 h-4" />
-                      {featuredNews.views} vues
+                      {featuredNews.views} {t('views')}
                     </div>
                   </div>
                 </div>
@@ -171,17 +173,17 @@ const Actualites = () => {
               </CardHeader>
               
               <CardContent className="pt-0">
-                <div className="flex items-center justify-between">
-                  <div className="flex flex-wrap gap-2">
+                <div className={`flex items-center justify-between ${isRTL ? 'flex-row-reverse' : ''}`}>
+                  <div className={`flex flex-wrap gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
                     {featuredNews.tags.map((tag) => (
                       <Badge key={tag} variant="secondary" className="text-xs">
-                        <Tag className="w-3 h-3 mr-1" />
+                        <Tag className={`w-3 h-3 ${isRTL ? 'ml-1' : 'mr-1'}`} />
                         {tag}
                       </Badge>
                     ))}
                   </div>
                   <Button size="lg">
-                    Lire l'article
+                    {t('readMore')}
                   </Button>
                 </div>
               </CardContent>
@@ -191,14 +193,14 @@ const Actualites = () => {
 
         {/* Regular Articles */}
         <section>
-          <h2 className="text-2xl font-bold mb-6">Dernières actualités</h2>
+          <h2 className={`text-2xl font-bold mb-6 ${isRTL ? 'text-right' : ''}`}>{t('latestNews')}</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {regularNews.map((article) => (
               <Card key={article.id} className="hover:shadow-lg transition-all duration-300 h-full flex flex-col">
-                <CardHeader className="pb-4 flex-1">
-                  <div className="flex items-center justify-between mb-3">
+                <CardHeader className={`pb-4 flex-1 ${isRTL ? 'text-right' : ''}`}>
+                  <div className={`flex items-center justify-between mb-3 ${isRTL ? 'flex-row-reverse' : ''}`}>
                     <Badge variant="outline">{article.category}</Badge>
-                    <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                    <div className={`flex items-center gap-1 text-xs text-muted-foreground ${isRTL ? 'flex-row-reverse' : ''}`}>
                       <Eye className="w-3 h-3" />
                       {article.views}
                     </div>
@@ -211,12 +213,12 @@ const Actualites = () => {
                     {article.excerpt}
                   </CardDescription>
                   
-                  <div className="flex items-center gap-3 text-xs text-muted-foreground mt-3">
-                    <div className="flex items-center gap-1">
+                  <div className={`flex items-center gap-3 text-xs text-muted-foreground mt-3 ${isRTL ? 'flex-row-reverse' : ''}`}>
+                    <div className={`flex items-center gap-1 ${isRTL ? 'flex-row-reverse' : ''}`}>
                       <Calendar className="w-3 h-3" />
                       {article.date}
                     </div>
-                    <div className="flex items-center gap-1">
+                    <div className={`flex items-center gap-1 ${isRTL ? 'flex-row-reverse' : ''}`}>
                       <Clock className="w-3 h-3" />
                       {article.readTime}
                     </div>
@@ -224,7 +226,7 @@ const Actualites = () => {
                 </CardHeader>
                 
                 <CardContent className="pt-0">
-                  <div className="flex flex-wrap gap-1 mb-4">
+                  <div className={`flex flex-wrap gap-1 mb-4 ${isRTL ? 'flex-row-reverse' : ''}`}>
                     {article.tags.map((tag) => (
                       <Badge key={tag} variant="secondary" className="text-xs">
                         {tag}
@@ -232,7 +234,7 @@ const Actualites = () => {
                     ))}
                   </div>
                   <Button className="w-full" size="sm">
-                    Lire la suite
+                    {t('readMore')}
                   </Button>
                 </CardContent>
               </Card>
@@ -242,7 +244,7 @@ const Actualites = () => {
           {/* Load More */}
           <div className="text-center mt-8">
             <Button variant="outline" size="lg">
-              Charger plus d'articles
+              {t('loadMoreArticles')}
             </Button>
           </div>
         </section>

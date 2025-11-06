@@ -4,8 +4,12 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { Breadcrumb, BreadcrumbList, BreadcrumbItem, BreadcrumbLink, BreadcrumbPage, BreadcrumbSeparator } from "@/components/ui/breadcrumb";
 import { FileText, Pen, TrendingUp, Eye, Calendar, User } from "lucide-react";
+import { useLanguage } from "@/contexts/LanguageContext";
+import { useTranslation } from "@/hooks/useTranslation";
 
 const AnalysesOpinions = () => {
+  const { isRTL } = useLanguage();
+  const { t } = useTranslation();
   const analyses = [
     {
       id: 1,
@@ -67,47 +71,50 @@ const AnalysesOpinions = () => {
   ];
 
   return (
-    <div className="container mx-auto px-4 py-6">
+    <div className={`container mx-auto px-4 py-6 ${isRTL ? 'font-almarai' : ''}`} dir={isRTL ? 'rtl' : 'ltr'}>
         {/* Breadcrumb */}
-        <Breadcrumb className="mb-6">
+        <Breadcrumb className={`mb-6 ${isRTL ? 'flex justify-end' : ''}`}>
           <BreadcrumbList>
             <BreadcrumbItem>
               <BreadcrumbLink asChild>
-                <Link to="/">Accueil</Link>
+                <Link to="/">{t('home')}</Link>
               </BreadcrumbLink>
             </BreadcrumbItem>
             <BreadcrumbSeparator />
             <BreadcrumbItem>
               <BreadcrumbLink asChild>
-                <Link to="/observatoire">Observatoire</Link>
+                <Link to="/observatoire">{t('observatory')}</Link>
               </BreadcrumbLink>
             </BreadcrumbItem>
             <BreadcrumbSeparator />
             <BreadcrumbItem>
-              <BreadcrumbPage>Analyses & Opinions</BreadcrumbPage>
+              <BreadcrumbPage>{t('analysesOpinions')}</BreadcrumbPage>
             </BreadcrumbItem>
           </BreadcrumbList>
         </Breadcrumb>
 
         {/* Hero Section */}
-        <section className="text-center mb-8 sm:mb-12">
-          <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-3 sm:mb-4">Analyses & Opinions</h1>
+        <section className={`mb-8 sm:mb-12 ${isRTL ? 'text-right' : 'text-center'}`}>
+          <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-3 sm:mb-4">{t('analysesOpinions')}</h1>
           <p className="text-base sm:text-lg text-muted-foreground max-w-3xl mx-auto px-2">
-            Analyses approfondies, articles d'opinion et recommandations d'experts sur les évolutions 
-            du droit et des libertés fondamentales en Tunisie.
+            {t('analysesOpinionsDesc')}
           </p>
         </section>
 
         {/* Categories */}
         <section className="mb-12">
-          <h2 className="text-2xl font-bold mb-6">Types de contenus</h2>
+          <h2 className={`text-2xl font-bold mb-6 ${isRTL ? 'text-right' : ''}`}>{t('contentTypes')}</h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {categories.map((category) => {
+            {[
+              { title: t('deepAnalyses'), count: 24, description: t('deepAnalysesDesc'), icon: FileText, color: "bg-blue-100 text-blue-800" },
+              { title: t('opinionArticles'), count: 18, description: t('opinionArticlesDesc'), icon: Pen, color: "bg-green-100 text-green-800" },
+              { title: t('policyBriefs'), count: 12, description: t('policyBriefsDesc'), icon: TrendingUp, color: "bg-purple-100 text-purple-800" }
+            ].map((category) => {
               const Icon = category.icon;
               return (
                 <Card key={category.title} className="hover:shadow-lg transition-all duration-300 cursor-pointer">
-                  <CardHeader>
-                    <div className="flex items-center justify-between mb-2">
+                  <CardHeader className={isRTL ? 'text-right' : ''}>
+                    <div className={`flex items-center justify-between mb-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
                       <Icon className="w-8 h-8 text-primary" />
                       <Badge className={category.color}>{category.count}</Badge>
                     </div>
@@ -116,7 +123,7 @@ const AnalysesOpinions = () => {
                   </CardHeader>
                   <CardContent>
                     <Button variant="outline" className="w-full">
-                      Consulter
+                      {t('consult')}
                     </Button>
                   </CardContent>
                 </Card>
@@ -127,10 +134,10 @@ const AnalysesOpinions = () => {
 
         {/* Articles récents */}
         <section>
-          <div className="flex items-center justify-between mb-6">
-            <h2 className="text-2xl font-bold">Publications Récentes</h2>
+          <div className={`flex items-center justify-between mb-6 ${isRTL ? 'flex-row-reverse' : ''}`}>
+            <h2 className="text-2xl font-bold">{t('recentPublications')}</h2>
             <Button variant="outline">
-              Voir toutes les publications
+              {t('seeAllPublications')}
             </Button>
           </div>
           
@@ -138,22 +145,22 @@ const AnalysesOpinions = () => {
             {analyses.map((article) => (
               <Card key={article.id} className="hover:shadow-lg transition-all duration-300">
                 <CardHeader>
-                  <div className="flex items-start justify-between">
-                    <div className="flex-1">
-                      <div className="flex items-center gap-3 mb-3">
+                  <div className={`flex items-start justify-between ${isRTL ? 'flex-row-reverse' : ''}`}>
+                    <div className={`flex-1 ${isRTL ? 'text-right' : ''}`}>
+                      <div className={`flex items-center gap-3 mb-3 ${isRTL ? 'flex-row-reverse' : ''}`}>
                         <Badge variant="outline">{article.category}</Badge>
-                        <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                          <div className="flex items-center gap-1">
+                        <div className={`flex items-center gap-4 text-sm text-muted-foreground ${isRTL ? 'flex-row-reverse' : ''}`}>
+                          <div className={`flex items-center gap-1 ${isRTL ? 'flex-row-reverse' : ''}`}>
                             <Calendar className="w-4 h-4" />
                             {article.date}
                           </div>
-                          <div className="flex items-center gap-1">
+                          <div className={`flex items-center gap-1 ${isRTL ? 'flex-row-reverse' : ''}`}>
                             <User className="w-4 h-4" />
                             {article.author}
                           </div>
-                          <div className="flex items-center gap-1">
+                          <div className={`flex items-center gap-1 ${isRTL ? 'flex-row-reverse' : ''}`}>
                             <Eye className="w-4 h-4" />
-                            {article.views} vues
+                            {article.views} {t('views')}
                           </div>
                         </div>
                       </div>
@@ -163,21 +170,21 @@ const AnalysesOpinions = () => {
                         {article.excerpt}
                       </CardDescription>
                       
-                      <div className="flex items-center justify-between">
-                        <div className="flex flex-wrap gap-2">
+                      <div className={`flex items-center justify-between ${isRTL ? 'flex-row-reverse' : ''}`}>
+                        <div className={`flex flex-wrap gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
                           {article.tags.map((tag) => (
                             <Badge key={tag} variant="secondary" className="text-xs">
                               {tag}
                             </Badge>
                           ))}
                         </div>
-                        <span className="text-sm text-muted-foreground">{article.readTime} de lecture</span>
+                        <span className="text-sm text-muted-foreground">{article.readTime} {t('readTime')}</span>
                       </div>
                     </div>
                     
-                    <div className="ml-6">
+                    <div className={isRTL ? 'mr-6' : 'ml-6'}>
                       <Button>
-                        Lire l'article
+                        {t('readArticle')}
                       </Button>
                     </div>
                   </div>
@@ -188,14 +195,13 @@ const AnalysesOpinions = () => {
         </section>
 
         {/* Call to action */}
-        <section className="bg-muted rounded-xl p-8 mt-12 text-center">
-          <h3 className="text-2xl font-bold mb-4">Contribuer à la réflexion</h3>
+        <section className={`bg-muted rounded-xl p-8 mt-12 ${isRTL ? 'text-right' : 'text-center'}`}>
+          <h3 className="text-2xl font-bold mb-4">{t('contributeToReflection')}</h3>
           <p className="text-muted-foreground mb-6 max-w-2xl mx-auto">
-            Vous êtes expert en droit ou chercheur ? Partagez vos analyses et contribuez 
-            au débat sur les droits fondamentaux en Tunisie.
+            {t('contributeText')}
           </p>
           <Button size="lg">
-            Proposer un article
+            {t('proposeArticle')}
           </Button>
         </section>
       </div>

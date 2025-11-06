@@ -364,7 +364,17 @@ type TranslationKey =
   | 'min'
   | 'contributeToReflection'
   | 'contributeText'
-  | 'proposeArticle';
+  | 'proposeArticle'
+  // Actualites
+  | 'actualitesTitle'
+  | 'actualitesDesc'
+  | 'stayInformedText'
+  | 'subscribeNewsletter'
+  | 'allNews'
+  | 'jurisprudence'
+  | 'odf'
+  | 'event'
+  | 'publication';
 
 const translations: Record<'fr' | 'ar', Record<TranslationKey, string>> = {
   fr: {
@@ -680,6 +690,16 @@ const translations: Record<'fr' | 'ar', Record<TranslationKey, string>> = {
     contributeToReflection: 'Contribuer à la réflexion',
     contributeText: 'Vous êtes expert en droit ou chercheur ? Partagez vos analyses et contribuez à l\'enrichissement du débat juridique.',
     proposeArticle: 'Proposer un article',
+    // Actualites
+    actualitesTitle: 'Actualités',
+    actualitesDesc: 'Suivez les dernières évolutions en matière de droits fondamentaux, jurisprudence et activités de l\'Observatoire des Droits Fondamentaux.',
+    stayInformedText: 'Recevez les dernières actualités directement dans votre boîte mail',
+    subscribeNewsletter: 'S\'abonner à la newsletter',
+    allNews: 'Toutes',
+    jurisprudence: 'Jurisprudence',
+    odf: 'ODF',
+    event: 'Événement',
+    publication: 'Publication',
     // Guide content
     guideJobSeeker: 'Guide du demandeur d\'emploi',
     guideJobSeekerDesc: 'Tout savoir sur vos droits en tant que demandeur d\'emploi : inscription, allocation, accompagnement.',
@@ -1042,6 +1062,16 @@ const translations: Record<'fr' | 'ar', Record<TranslationKey, string>> = {
     contributeToReflection: 'ساهم في التفكير',
     contributeText: 'هل أنت خبير قانوني أو باحث؟ شارك تحليلاتك وساهم في إثراء النقاش القانوني.',
     proposeArticle: 'اقترح مقالاً',
+    // Actualites
+    actualitesTitle: 'الأخبار',
+    actualitesDesc: 'تابع آخر التطورات في مجال الحقوق الأساسية والفقه القضائي وأنشطة مرصد الحقوق الأساسية',
+    stayInformedText: 'تلقَّ آخر الأخبار مباشرة في بريدك الإلكتروني',
+    subscribeNewsletter: 'اشترك في النشرة الإخبارية',
+    allNews: 'جميع الأخبار',
+    jurisprudence: 'الفقه القضائي',
+    odf: 'المرصد',
+    event: 'حدث',
+    publication: 'منشور',
     
     // Guide content
     guideJobSeeker: 'دليل الباحث عن عمل',
