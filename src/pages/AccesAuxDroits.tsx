@@ -59,10 +59,10 @@ const AccesAuxDroits = () => {
               return (
                 <Link key={index} to={card.link}>
                   <Card className="hover:shadow-lg transition-shadow cursor-pointer">
-                    <CardHeader className={`text-center ${isRTL ? 'font-almarai' : ''}`}>
+                    <CardHeader className="text-center">
                       <Icon className="h-12 w-12 text-primary mx-auto mb-4" />
-                      <CardTitle className={isRTL ? 'font-almarai' : ''}>{card.title}</CardTitle>
-                      <CardDescription className={isRTL ? 'font-almarai' : ''}>
+                      <CardTitle className={`text-center ${isRTL ? 'font-almarai' : ''}`}>{card.title}</CardTitle>
+                      <CardDescription className={`text-center ${isRTL ? 'font-almarai' : ''}`}>
                         {card.description}
                       </CardDescription>
                     </CardHeader>
@@ -83,12 +83,12 @@ const AccesAuxDroits = () => {
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
             {rightsCases.map((category, index) => (
               <Card key={index} className="hover:shadow-md transition-shadow">
-                <CardHeader className={isRTL ? 'text-right' : ''}>
-                  <CardTitle className={`flex items-center gap-2 ${isRTL ? 'flex-row-reverse font-almarai' : ''}`}>
+                <CardHeader className="text-center">
+                  <CardTitle className={`flex items-center gap-2 justify-center ${isRTL ? 'font-almarai' : ''}`}>
                     <Scale className="h-5 w-5 text-primary" />
                     {category.title}
                   </CardTitle>
-                  <CardDescription className={isRTL ? 'font-almarai text-right' : ''}>{category.desc}</CardDescription>
+                  <CardDescription className={`text-center ${isRTL ? 'font-almarai' : ''}`}>{category.desc}</CardDescription>
                 </CardHeader>
                 <CardContent>
                   <div className={`flex items-center justify-between ${isRTL ? 'flex-row-reverse' : ''}`}>
