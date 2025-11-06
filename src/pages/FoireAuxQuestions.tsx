@@ -5,10 +5,14 @@ import { Badge } from "@/components/ui/badge";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Search, HelpCircle } from "lucide-react";
 import { useFAQItems } from "@/hooks/useFAQItems";
+import { useLanguage } from "@/contexts/LanguageContext";
+import { useTranslation } from "@/hooks/useTranslation";
 
 const FoireAuxQuestions = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const { data: faqItems, isLoading } = useFAQItems(true);
+  const { isRTL, language } = useLanguage();
+  const { t } = useTranslation();
 
   // Group FAQ items by category
   const groupedFAQs = faqItems?.reduce((acc, item) => {
@@ -49,18 +53,20 @@ const FoireAuxQuestions = () => {
     : groupedFAQs;
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className={`min-h-screen bg-background ${isRTL ? 'font-almarai' : ''}`} dir={isRTL ? 'rtl' : 'ltr'}>
       {/* Hero Section */}
       <section className="py-12 bg-gradient-to-br from-primary/5 to-primary/10">
-        <div className="container mx-auto px-4 text-center">
-          <div className="flex items-center justify-center gap-3 mb-4">
+        <div className={`container mx-auto px-4 text-center ${isRTL ? 'text-right' : ''}`}>
+          <div className={`flex items-center justify-center gap-3 mb-4 ${isRTL ? 'flex-row-reverse' : ''}`}>
             <HelpCircle className="h-10 w-10 text-primary" />
             <h1 className="text-3xl sm:text-4xl font-bold text-foreground">
-              Questions Fréquentes
+              {isRTL ? 'الأسئلة الشائعة' : 'Questions Fréquentes'}
             </h1>
           </div>
           <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-            Trouvez rapidement des réponses à vos questions juridiques les plus courantes
+            {isRTL 
+              ? 'ابحث بسرعة عن إجابات لأسئلتك القانونية الأكثر شيوعًا'
+              : 'Trouvez rapidement des réponses à vos questions juridiques les plus courantes'}
           </p>
         </div>
       </section>
@@ -69,10 +75,10 @@ const FoireAuxQuestions = () => {
         {/* Search FAQ */}
         <div className="max-w-3xl mx-auto mb-12">
           <div className="relative">
-            <Search className="absolute left-4 top-4 h-5 w-5 text-muted-foreground" />
+            <Search className={`absolute ${isRTL ? 'right-4' : 'left-4'} top-4 h-5 w-5 text-muted-foreground`} />
             <Input 
-              placeholder="Rechercher dans la FAQ..." 
-              className="pl-12 h-14 text-base"
+              placeholder={isRTL ? 'البحث في الأسئلة الشائعة...' : 'Rechercher dans la FAQ...'} 
+              className={`h-14 text-base ${isRTL ? 'pr-12 text-right' : 'pl-12'}`}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
             />
@@ -83,27 +89,31 @@ const FoireAuxQuestions = () => {
         <div className="max-w-4xl mx-auto space-y-6">
           {isLoading ? (
             <Card>
-              <CardContent className="py-12">
-                <p className="text-center text-muted-foreground">Chargement des questions...</p>
+              <CardContent className={`py-12 ${isRTL ? 'text-right' : ''}`}>
+                <p className="text-center text-muted-foreground">
+                  {isRTL ? 'جاري تحميل الأسئلة...' : 'Chargement des questions...'}
+                </p>
               </CardContent>
             </Card>
           ) : !filteredFAQs || Object.keys(filteredFAQs).length === 0 ? (
             <Card>
-              <CardContent className="py-12">
+              <CardContent className={`py-12 ${isRTL ? 'text-right' : ''}`}>
                 <p className="text-center text-muted-foreground">
-                  {searchQuery ? "Aucune question ne correspond à votre recherche" : "Aucune question disponible"}
+                  {searchQuery 
+                    ? (isRTL ? "لا توجد أسئلة تطابق بحثك" : "Aucune question ne correspond à votre recherche")
+                    : (isRTL ? "لا توجد أسئلة متاحة" : "Aucune question disponible")}
                 </p>
               </CardContent>
             </Card>
           ) : (
             Object.entries(filteredFAQs).map(([categoryKey, category]) => (
               <Card key={categoryKey} className="hover:shadow-lg transition-shadow">
-                <CardHeader>
-                  <div className="flex items-center gap-3">
+                <CardHeader className={isRTL ? 'text-right' : ''}>
+                  <div className={`flex items-center gap-3 ${isRTL ? 'flex-row-reverse' : ''}`}>
                     <HelpCircle className="h-6 w-6 text-primary" />
                     <div className="flex-1">
-                      <CardTitle className="flex items-center justify-between">
-                        {category.title}
+                      <CardTitle className={`flex items-center justify-between ${isRTL ? 'flex-row-reverse' : ''}`}>
+                        {isRTL && category.title_ar ? category.title_ar : category.title}
                         <Badge variant="secondary">{category.count}</Badge>
                       </CardTitle>
                     </div>
@@ -113,11 +123,11 @@ const FoireAuxQuestions = () => {
                   <Accordion type="single" collapsible>
                     {category.questions.map((faq, faqIndex) => (
                       <AccordionItem key={faq.id} value={`item-${categoryKey}-${faqIndex}`}>
-                        <AccordionTrigger className="text-left hover:text-primary">
-                          {faq.question}
+                        <AccordionTrigger className={`hover:text-primary ${isRTL ? 'text-right' : 'text-left'}`}>
+                          {isRTL && faq.question_ar ? faq.question_ar : faq.question}
                         </AccordionTrigger>
-                        <AccordionContent className="text-muted-foreground leading-relaxed">
-                          {faq.answer}
+                        <AccordionContent className={`text-muted-foreground leading-relaxed ${isRTL ? 'text-right' : ''}`}>
+                          {isRTL && faq.answer_ar ? faq.answer_ar : faq.answer}
                         </AccordionContent>
                       </AccordionItem>
                     ))}
