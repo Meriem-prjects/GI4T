@@ -428,7 +428,7 @@ const translations: Record<'fr' | 'ar', Record<TranslationKey, string>> = {
     usefulLinksDesc: 'Retrouvez tous les sites et ressources externes utiles',
     verified: 'Vérifié',
     suggestLink: 'Suggérer un lien',
-    suggestLinkDesc: 'Vous connaissez une ressource utile ?',
+    suggestLinkDesc: 'Vous connaissez un site ou une ressource utile ? Aidez-nous à enrichir notre liste',
     // Publications
     publicationsTitle: 'Publications',
     publicationsDesc: 'Rapports, guides et analyses sur l\'accès aux droits',
@@ -482,7 +482,7 @@ const translations: Record<'fr' | 'ar', Record<TranslationKey, string>> = {
     intermediate: 'Intermédiaire',
     advanced: 'Avancé',
     // Information Pages
-    whoWeAre: 'Qui sommes-nous',
+    information: 'Information',
     whoWeAreSubtitle: 'JustClic.tn est une plateforme citoyenne dédiée à simplifier l\'accès à l\'information juridique et aux droits fondamentaux en Tunisie.',
     ourMission: 'Notre Mission',
     ourMissionText: 'Démocratiser l\'accès à l\'information juridique et faciliter l\'exercice des droits fondamentaux pour tous les citoyens tunisiens, en simplifiant des procédures complexes et en fournissant des ressources pratiques et accessibles.',
@@ -506,11 +506,11 @@ const translations: Record<'fr' | 'ar', Record<TranslationKey, string>> = {
     joinMissionText: 'Ensemble, construisons une Tunisie où l\'information juridique est accessible à tous. Explorez nos ressources et découvrez comment exercer vos droits.',
     discoverObservatory: 'Découvrir l\'Observatoire',
     accessResources: 'Accéder aux Ressources',
-    information: 'Information',
     // News Page
     legalNews: 'Actualités Juridiques',
     legalNewsSubtitle: 'Restez informé des dernières évolutions juridiques, nouvelles procédures et réformes qui impactent vos droits en Tunisie.',
     receiveNewsByEmail: 'Recevez nos actualités par email',
+    categories: 'Catégories',
     featuredArticle: 'Article à la Une',
     readArticle: 'Lire l\'article',
     loadMoreArticles: 'Charger plus d\'articles',
@@ -518,7 +518,6 @@ const translations: Record<'fr' | 'ar', Record<TranslationKey, string>> = {
     civilStatus: 'État civil',
     housingRights: 'Droit au logement',
     familyLaw: 'Droit de la famille',
-    categories: 'Catégories',
     // FAQ & Chatbot Page
     faqChatbotSubtitle: 'Trouvez rapidement des réponses à vos questions juridiques ou discutez avec notre assistant virtuel.',
     searchInFAQ: 'Rechercher dans la FAQ...',
@@ -770,7 +769,7 @@ const translations: Record<'fr' | 'ar', Record<TranslationKey, string>> = {
     intermediate: 'متوسط',
     advanced: 'متقدم',
     // Information Pages
-    whoWeAre: 'من نحن',
+    information: 'معلومات',
     whoWeAreSubtitle: 'JustClic.tn هي منصة مواطنية مخصصة لتبسيط الوصول إلى المعلومات القانونية والحقوق الأساسية في تونس.',
     ourMission: 'مهمتنا',
     ourMissionText: 'دمقرطة الوصول إلى المعلومات القانونية وتسهيل ممارسة الحقوق الأساسية لجميع المواطنين التونسيين، من خلال تبسيط الإجراءات المعقدة وتوفير موارد عملية وسهلة المنال.',
@@ -794,11 +793,11 @@ const translations: Record<'fr' | 'ar', Record<TranslationKey, string>> = {
     joinMissionText: 'معًا، لنبني تونس حيث المعلومات القانونية متاحة للجميع. استكشف مواردنا واكتشف كيفية ممارسة حقوقك.',
     discoverObservatory: 'اكتشف المرصد',
     accessResources: 'الوصول إلى الموارد',
-    information: 'معلومات',
     // News Page
     legalNews: 'الأخبار القانونية',
     legalNewsSubtitle: 'ابق على اطلاع بآخر التطورات القانونية والإجراءات الجديدة والإصلاحات التي تؤثر على حقوقك في تونس.',
     receiveNewsByEmail: 'تلقى أخبارنا عبر البريد الإلكتروني',
+    categories: 'الفئات',
     featuredArticle: 'المقال المميز',
     readArticle: 'اقرأ المقال',
     loadMoreArticles: 'تحميل المزيد من المقالات',
@@ -806,7 +805,6 @@ const translations: Record<'fr' | 'ar', Record<TranslationKey, string>> = {
     civilStatus: 'الحالة المدنية',
     housingRights: 'الحق في السكن',
     familyLaw: 'قانون الأسرة',
-    categories: 'الفئات',
     // FAQ & Chatbot Page
     faqChatbotSubtitle: 'ابحث بسرعة عن إجابات لأسئلتك القانونية أو تحدث مع مساعدنا الافتراضي.',
     searchInFAQ: 'البحث في الأسئلة الشائعة...',
