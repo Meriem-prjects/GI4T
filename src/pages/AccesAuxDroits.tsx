@@ -90,8 +90,8 @@ const AccesAuxDroits = () => {
                   </CardTitle>
                   <CardDescription className={`text-center ${isRTL ? 'font-almarai' : ''}`}>{category.desc}</CardDescription>
                 </CardHeader>
-                <CardContent>
-                  <div className={`flex items-center justify-between ${isRTL ? 'flex-row-reverse' : ''}`}>
+                <CardContent className="text-center">
+                  <div className="flex flex-col items-center gap-3">
                     <span className={`text-sm text-muted-foreground ${isRTL ? 'font-almarai' : ''}`}>
                       {category.cases} {t('cases')}
                     </span>
