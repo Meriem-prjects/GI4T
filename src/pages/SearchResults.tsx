@@ -252,7 +252,7 @@ const SearchResults = () => {
         <div className="relative">
           <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-muted-foreground" size={20} />
           <Input
-            placeholder={useAI ? t('aiModeDescription') : t('observatoireSearchPlaceholder')}
+            placeholder={useAI ? "Recherche intelligente avec IA... Posez votre question en langage naturel" : "Rechercher des documents..."}
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             onKeyDown={(e) => {
