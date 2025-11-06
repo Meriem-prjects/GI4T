@@ -17,9 +17,13 @@ import { useDocumentSearch } from "@/hooks/useDocumentSearch";
 import { useSearchFilters } from "@/hooks/useSearchFilters";
 import { createDocumentPath } from "@/lib/urlUtils";
 import { format } from "date-fns";
+import { useLanguage } from "@/contexts/LanguageContext";
+import { useTranslation } from "@/hooks/useTranslation";
 
 const SearchResults = () => {
   const [searchParams, setSearchParams] = useSearchParams();
+  const { language, isRTL } = useLanguage();
+  const { t } = useTranslation();
   
   // Fetch filter options first to get year range
   const { categories, courtTypes, jurisdictionLevels, documentTypes, yearRange, isLoading: filtersLoading } = useSearchFilters();
@@ -221,24 +225,24 @@ const SearchResults = () => {
   const activeFilters = getActiveFilters();
 
   return (
-    <div className="container mx-auto px-4 py-6">
+    <div dir={isRTL ? 'rtl' : 'ltr'} className={`container mx-auto px-4 py-6 ${isRTL ? 'font-almarai' : ''}`}>
       {/* Breadcrumb */}
-      <Breadcrumb className="mb-6">
+      <Breadcrumb className={`mb-6 ${isRTL ? 'flex justify-end' : ''}`}>
         <BreadcrumbList>
           <BreadcrumbItem>
             <BreadcrumbLink asChild>
-              <Link to="/">Accueil</Link>
+              <Link to="/">{t('home')}</Link>
             </BreadcrumbLink>
           </BreadcrumbItem>
           <BreadcrumbSeparator />
           <BreadcrumbItem>
             <BreadcrumbLink asChild>
-              <Link to="/observatoire">Observatoire</Link>
+              <Link to="/observatoire">{t('observatory')}</Link>
             </BreadcrumbLink>
           </BreadcrumbItem>
           <BreadcrumbSeparator />
           <BreadcrumbItem>
-            <BreadcrumbPage>Résultats de recherche</BreadcrumbPage>
+            <BreadcrumbPage>{t('searchResults')}</BreadcrumbPage>
           </BreadcrumbItem>
         </BreadcrumbList>
       </Breadcrumb>

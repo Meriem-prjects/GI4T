@@ -289,7 +289,82 @@ type TranslationKey =
   | 'needMoreHelp'
   | 'needMoreHelpText'
   | 'consultGuides'
-  | 'accessObservatory';
+  | 'accessObservatory'
+  // Observatoire Pages
+  | 'observatoireHeroText'
+  | 'observatoireSearchPlaceholder'
+  | 'popularSearches'
+  | 'exploreByThematic'
+  | 'dataProtection'
+  | 'dataProtectionDesc'
+  | 'freedomOfExpression'
+  | 'freedomOfExpressionDesc'
+  | 'laborRight'
+  | 'laborRightDesc'
+  | 'equalityNonDiscrimination'
+  | 'equalityDesc'
+  | 'decisions'
+  | 'featuredContent'
+  | 'recentDecisions'
+  | 'subscribeToUpdates'
+  | 'see'
+  | 'allCourts'
+  | 'allTypes'
+  | 'allPeriods'
+  // Search Results
+  | 'searchResults'
+  | 'intelligentSearchAI'
+  | 'aiModeActivated'
+  | 'aiModeDescription'
+  | 'advancedFilters'
+  | 'reset'
+  | 'courtType'
+  | 'period'
+  | 'from'
+  | 'to'
+  | 'jurisdictionLevel'
+  | 'documentType'
+  | 'sortBy'
+  | 'recent'
+  | 'relevance'
+  | 'resultsFound'
+  | 'noResultsFound'
+  | 'tryDifferentFilters'
+  | 'matchScore'
+  | 'excellentMatch'
+  | 'published'
+  | 'pages'
+  | 'keywords'
+  | 'consult'
+  // Textes Fondamentaux
+  | 'fundamentalRightsTexts'
+  | 'fundamentalRightsDesc'
+  | 'rightsByCategory'
+  | 'searchCategory'
+  | 'fundamentalRight'
+  | 'referenceTexts'
+  | 'noDocumentAvailable'
+  | 'noDocumentText'
+  | 'publishedOn'
+  | 'page'
+  | 'noCategoryFound'
+  // Analyses & Opinions
+  | 'analysesOpinions'
+  | 'analysesOpinionsDesc'
+  | 'contentTypes'
+  | 'deepAnalyses'
+  | 'deepAnalysesDesc'
+  | 'opinionArticles'
+  | 'opinionArticlesDesc'
+  | 'policyBriefs'
+  | 'policyBriefsDesc'
+  | 'recentPublications'
+  | 'seeAllPublications'
+  | 'readTime'
+  | 'min'
+  | 'contributeToReflection'
+  | 'contributeText'
+  | 'proposeArticle';
 
 const translations: Record<'fr' | 'ar', Record<TranslationKey, string>> = {
   fr: {
@@ -530,6 +605,81 @@ const translations: Record<'fr' | 'ar', Record<TranslationKey, string>> = {
     needMoreHelpText: 'Si vous ne trouvez pas la réponse à votre question, n\'hésitez pas à explorer nos autres ressources.',
     consultGuides: 'Consulter les Guides',
     accessObservatory: 'Accéder à l\'Observatoire',
+    // Observatoire Pages
+    observatoireHeroText: 'Accédez facilement aux décisions de justice, analyses juridiques et guides pratiques pour comprendre et défendre vos droits fondamentaux.',
+    observatoireSearchPlaceholder: 'Recherchez des décisions, analyses...',
+    popularSearches: 'Recherches populaires',
+    exploreByThematic: 'Explorez par Thématiques',
+    dataProtection: 'Protection des données',
+    dataProtectionDesc: 'RGPD, Vie privée, Données personnelles',
+    freedomOfExpression: 'Liberté d\'expression',
+    freedomOfExpressionDesc: 'Médias, Presse, Expression publique',
+    laborRight: 'Droit du travail',
+    laborRightDesc: 'Emploi, Conditions de travail, Syndicats',
+    equalityNonDiscrimination: 'Égalité & Non-discrimination',
+    equalityDesc: 'Égalité, Inclusion, Diversité',
+    decisions: 'décisions',
+    featuredContent: 'Contenus à la Une',
+    recentDecisions: 'Décisions Récentes',
+    subscribeToUpdates: 'S\'abonner aux mises à jour',
+    see: 'Voir',
+    allCourts: 'Tous tribunaux',
+    allTypes: 'Tous types',
+    allPeriods: 'Toute période',
+    // Search Results
+    searchResults: 'Résultats de recherche',
+    intelligentSearchAI: 'Recherche intelligente IA',
+    aiModeActivated: 'Mode IA activé',
+    aiModeDescription: 'Posez vos questions en langage naturel. L\'IA comprendra le contexte et trouvera les documents pertinents même sans mots-clés exacts.',
+    advancedFilters: 'Filtres Avancés',
+    reset: 'Réinitialiser',
+    courtType: 'Type de Tribunal',
+    period: 'Période',
+    from: 'De',
+    to: 'À',
+    jurisdictionLevel: 'Niveau de juridiction',
+    documentType: 'Type de document',
+    sortBy: 'Trier par',
+    recent: 'Récent',
+    relevance: 'Pertinence',
+    resultsFound: 'résultats trouvés',
+    noResultsFound: 'Aucun résultat trouvé',
+    tryDifferentFilters: 'Essayez différents filtres',
+    matchScore: 'Score de correspondance',
+    excellentMatch: 'Excellente correspondance',
+    published: 'Publié',
+    publishedOn: 'Publié le',
+    page: 'page',
+    pages: 'pages',
+    keywords: 'Mots-clés',
+    consult: 'Consulter',
+    // Textes Fondamentaux
+    fundamentalRightsTexts: 'Textes de jurisprudence des droits fondamentaux en Tunisie',
+    fundamentalRightsDesc: 'Explorez la jurisprudence tunisienne en matière de droits fondamentaux à travers une collection complète de décisions judiciaires, d\'analyses et de textes de référence en Tunisie.',
+    rightsByCategory: 'Droits par Catégorie',
+    searchCategory: 'Rechercher une catégorie de droit...',
+    fundamentalRight: 'Droit fondamental',
+    referenceTexts: 'Textes de Référence',
+    noDocumentAvailable: 'Aucun document disponible',
+    noDocumentText: 'Il n\'y a actuellement aucun document publié.',
+    noCategoryFound: 'Aucune catégorie trouvée pour',
+    // Analyses & Opinions
+    analysesOpinions: 'Analyses & Opinions',
+    analysesOpinionsDesc: 'Analyses approfondies, articles d\'opinion et recommandations d\'experts sur les questions juridiques actuelles en Tunisie.',
+    contentTypes: 'Types de contenus',
+    deepAnalyses: 'Analyses approfondies',
+    deepAnalysesDesc: 'Études détaillées sur les évolutions jurisprudentielles',
+    opinionArticles: 'Articles d\'opinion',
+    opinionArticlesDesc: 'Points de vue d\'experts sur les questions juridiques actuelles',
+    policyBriefs: 'Policy Briefs',
+    policyBriefsDesc: 'Recommandations pour les décideurs politiques',
+    recentPublications: 'Publications Récentes',
+    seeAllPublications: 'Voir toutes les publications',
+    readTime: 'de lecture',
+    min: 'min',
+    contributeToReflection: 'Contribuer à la réflexion',
+    contributeText: 'Vous êtes expert en droit ou chercheur ? Partagez vos analyses et contribuez à l\'enrichissement du débat juridique.',
+    proposeArticle: 'Proposer un article',
     // Guide content
     guideJobSeeker: 'Guide du demandeur d\'emploi',
     guideJobSeekerDesc: 'Tout savoir sur vos droits en tant que demandeur d\'emploi : inscription, allocation, accompagnement.',
@@ -817,6 +967,81 @@ const translations: Record<'fr' | 'ar', Record<TranslationKey, string>> = {
     needMoreHelpText: 'إذا لم تجد إجابة على سؤالك، لا تتردد في استكشاف مواردنا الأخرى.',
     consultGuides: 'راجع الأدلة',
     accessObservatory: 'الوصول إلى المرصد',
+    // Observatoire Pages
+    observatoireHeroText: 'احصل بسهولة على قرارات المحاكم والتحليلات القانونية والأدلة العملية لفهم والدفاع عن حقوقك الأساسية.',
+    observatoireSearchPlaceholder: 'ابحث عن القرارات والتحليلات...',
+    popularSearches: 'عمليات البحث الشائعة',
+    exploreByThematic: 'استكشف حسب المواضيع',
+    dataProtection: 'حماية البيانات',
+    dataProtectionDesc: 'اللائحة العامة لحماية البيانات، الخصوصية، البيانات الشخصية',
+    freedomOfExpression: 'حرية التعبير',
+    freedomOfExpressionDesc: 'وسائل الإعلام، الصحافة، التعبير العام',
+    laborRight: 'قانون العمل',
+    laborRightDesc: 'التوظيف، ظروف العمل، النقابات',
+    equalityNonDiscrimination: 'المساواة وعدم التمييز',
+    equalityDesc: 'المساواة، الشمول، التنوع',
+    decisions: 'قرارات',
+    featuredContent: 'محتوى مميز',
+    recentDecisions: 'القرارات الأخيرة',
+    subscribeToUpdates: 'اشترك في التحديثات',
+    see: 'عرض',
+    allCourts: 'جميع المحاكم',
+    allTypes: 'جميع الأنواع',
+    allPeriods: 'جميع الفترات',
+    // Search Results
+    searchResults: 'نتائج البحث',
+    intelligentSearchAI: 'بحث ذكي بالذكاء الاصطناعي',
+    aiModeActivated: 'تم تفعيل وضع الذكاء الاصطناعي',
+    aiModeDescription: 'اطرح أسئلتك بلغة طبيعية. سيفهم الذكاء الاصطناعي السياق ويجد الوثائق ذات الصلة حتى بدون كلمات مفتاحية دقيقة.',
+    advancedFilters: 'مرشحات متقدمة',
+    reset: 'إعادة تعيين',
+    courtType: 'نوع المحكمة',
+    period: 'الفترة',
+    from: 'من',
+    to: 'إلى',
+    jurisdictionLevel: 'مستوى الاختصاص',
+    documentType: 'نوع الوثيقة',
+    sortBy: 'ترتيب حسب',
+    recent: 'الأحدث',
+    relevance: 'الصلة',
+    resultsFound: 'نتيجة',
+    noResultsFound: 'لم يتم العثور على نتائج',
+    tryDifferentFilters: 'جرب مرشحات مختلفة',
+    matchScore: 'درجة التطابق',
+    excellentMatch: 'تطابق ممتاز',
+    published: 'منشور',
+    publishedOn: 'نُشر في',
+    page: 'صفحة',
+    pages: 'صفحات',
+    keywords: 'كلمات مفتاحية',
+    consult: 'استشر',
+    // Textes Fondamentaux
+    fundamentalRightsTexts: 'نصوص الفقه القضائي للحقوق الأساسية في تونس',
+    fundamentalRightsDesc: 'استكشف الفقه القضائي التونسي في مجال الحقوق الأساسية من خلال مجموعة كاملة من القرارات القضائية والتحليلات والنصوص المرجعية في تونس.',
+    rightsByCategory: 'الحقوق حسب الفئة',
+    searchCategory: 'ابحث عن فئة حق...',
+    fundamentalRight: 'حق أساسي',
+    referenceTexts: 'النصوص المرجعية',
+    noDocumentAvailable: 'لا توجد وثيقة متاحة',
+    noDocumentText: 'لا توجد حالياً أي وثيقة منشورة.',
+    noCategoryFound: 'لم يتم العثور على فئة لـ',
+    // Analyses & Opinions
+    analysesOpinions: 'التحليلات والآراء',
+    analysesOpinionsDesc: 'تحليلات معمقة، مقالات رأي وتوصيات خبراء حول القضايا القانونية الحالية في تونس.',
+    contentTypes: 'أنواع المحتوى',
+    deepAnalyses: 'تحليلات معمقة',
+    deepAnalysesDesc: 'دراسات مفصلة حول تطورات الفقه القضائي',
+    opinionArticles: 'مقالات رأي',
+    opinionArticlesDesc: 'وجهات نظر الخبراء حول القضايا القانونية الحالية',
+    policyBriefs: 'ملخصات السياسات',
+    policyBriefsDesc: 'توصيات لصناع القرار',
+    recentPublications: 'المنشورات الأخيرة',
+    seeAllPublications: 'عرض جميع المنشورات',
+    readTime: 'للقراءة',
+    min: 'دقيقة',
+    contributeToReflection: 'ساهم في التفكير',
+    contributeText: 'هل أنت خبير قانوني أو باحث؟ شارك تحليلاتك وساهم في إثراء النقاش القانوني.',
+    proposeArticle: 'اقترح مقالاً',
     
     // Guide content
     guideJobSeeker: 'دليل الباحث عن عمل',
