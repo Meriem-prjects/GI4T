@@ -13,35 +13,28 @@ const InformationLayout = () => {
       {/* Header */}
       <header className="border-b bg-card animate-fade-in">
         <div className="container mx-auto px-4 py-4">
-          <div className={`flex items-center justify-between flex-wrap gap-4 ${isRTL ? 'flex-row-reverse' : ''}`}>
-            <div className={`flex items-center ${isRTL ? 'space-x-reverse space-x-2 sm:space-x-4' : 'space-x-2 sm:space-x-4'}`}>
+          <div className={`flex items-center ${isRTL ? 'flex-row-reverse' : ''} justify-between flex-wrap gap-4`}>
+            {/* Logo and Title - positioned based on language */}
+            <div className={`flex items-center ${isRTL ? 'flex-row-reverse order-2' : 'order-1'} gap-2 sm:gap-4`}>
               <Link 
                 to="/" 
-                className="flex items-center text-sm text-muted-foreground hover:text-primary transition-colors duration-200 mr-2 sm:mr-4"
+                className={`flex items-center text-sm text-muted-foreground hover:text-primary transition-colors duration-200 ${isRTL ? 'ml-2 sm:ml-4' : 'mr-2 sm:mr-4'}`}
               >
                 {isRTL ? '→' : '←'}
               </Link>
-              <Link to="/" className="flex items-center gap-2 sm:gap-4 hover:opacity-80 transition-opacity duration-200">
-                {!isRTL ? (
-                  <>
-                    <img src="/Feelinx_upload/justclic-logo.png" alt="JustClic Logo" className="h-3 sm:h-6" />
-                    <div>
-                      <h1 className="text-lg sm:text-xl font-bold text-foreground">JustClic.tn</h1>
-                      <p className="text-xs sm:text-sm text-muted-foreground hidden sm:block">Information citoyenne simplifiée</p>
-                    </div>
-                  </>
-                ) : (
-                  <>
-                    <div className="text-right">
-                      <h1 className="text-lg sm:text-xl font-bold text-foreground font-almarai">JustClic.tn</h1>
-                      <p className="text-xs sm:text-sm text-muted-foreground hidden sm:block font-almarai">معلومات مواطنية مبسطة</p>
-                    </div>
-                    <img src="/Feelinx_upload/justclic-logo.png" alt="JustClic Logo" className="h-3 sm:h-6" />
-                  </>
-                )}
+              <Link to="/" className={`flex items-center gap-2 sm:gap-4 hover:opacity-80 transition-opacity duration-200 ${isRTL ? 'flex-row-reverse' : ''}`}>
+                <img src="/Feelinx_upload/justclic-logo.png" alt="JustClic Logo" className="h-8 sm:h-10" />
+                <div className={isRTL ? 'text-right' : ''}>
+                  <h1 className={`text-lg sm:text-xl font-bold text-foreground ${isRTL ? 'font-almarai' : ''}`}>JustClic.tn</h1>
+                  <p className={`text-xs sm:text-sm text-muted-foreground hidden sm:block ${isRTL ? 'font-almarai' : ''}`}>
+                    {isRTL ? 'معلومات مواطنية مبسطة' : 'Information citoyenne simplifiée'}
+                  </p>
+                </div>
               </Link>
             </div>
-            <div className={`flex items-center ${isRTL ? 'space-x-reverse space-x-2 sm:space-x-4' : 'space-x-2 sm:space-x-4'}`}>
+            
+            {/* Navigation buttons */}
+            <div className={`flex items-center gap-2 sm:gap-4 ${isRTL ? 'order-1' : 'order-2'}`}>
               <div className="flex items-center bg-muted rounded-full p-1">
                 <Button 
                   size="sm" 
