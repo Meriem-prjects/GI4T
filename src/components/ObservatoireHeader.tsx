@@ -16,7 +16,7 @@ const ObservatoireHeader = () => {
       <div className="container mx-auto px-4 py-2 sm:py-4">
         <div className="flex items-center justify-between gap-4">
           {/* Logo and Title */}
-          <Link to="/observatoire" className={`flex items-center gap-2 sm:gap-4 hover:opacity-80 transition-opacity ${isRTL ? 'order-2' : 'order-1'}`}>
+          <Link to="/observatoire" className="flex items-center gap-2 sm:gap-4 hover:opacity-80 transition-opacity">
             <img src="/Feelinx_upload/odf-logo.png" alt="ODF Logo" className="h-6 sm:h-8 md:h-12" />
             <div className={isRTL ? 'text-right' : ''}>
               <h1 className={`text-sm sm:text-base md:text-2xl font-bold text-foreground ${isRTL ? 'font-almarai' : ''}`}>
@@ -29,7 +29,7 @@ const ObservatoireHeader = () => {
           </Link>
 
           {/* Navigation and Controls */}
-          <div className={`flex items-center ${isRTL ? 'space-x-reverse space-x-2 sm:space-x-4 order-1' : 'space-x-2 sm:space-x-4 order-2'}`}>
+          <div className={`flex items-center ${isRTL ? 'space-x-reverse space-x-2 sm:space-x-4' : 'space-x-2 sm:space-x-4'}`}>
             <div className="hidden sm:flex items-center space-x-2 sm:space-x-4">
               <Link to="/observatoire">
                 <Button variant="outline" size="sm" className="text-xs sm:text-sm">
