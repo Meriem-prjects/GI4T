@@ -2,41 +2,44 @@ import { Button } from "@/components/ui/button";
 import { Search, BookOpen, FileText, Newspaper } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
 import { cn } from "@/lib/utils";
+import { useLanguage } from "@/contexts/LanguageContext";
+import { useTranslation } from "@/hooks/useTranslation";
 
 const ObservatoireNav = () => {
   const location = useLocation();
-
+  const { isRTL } = useLanguage();
+  const { t } = useTranslation();
   const navItems = [
     {
       path: "/observatoire/search-results",
-      label: "Recherche",
+      label: t('search'),
       icon: Search,
-      description: "Recherche avancée"
+      description: t('searchResults')
     },
     {
       path: "/observatoire/droits-fondamentaux", 
-      label: "Droits fondamentaux",
+      label: t('fundamentalRightsTexts'),
       icon: BookOpen,
-      description: "Textes de référence"
+      description: t('referenceTexts')
     },
     {
       path: "/observatoire/analyses-opinions",
-      label: "Analyses & Opinions",
+      label: t('analysesOpinions'),
       icon: FileText,
-      description: "Analyses juridiques"
+      description: t('analysesOpinionsDesc')
     },
     {
       path: "/observatoire/actualites",
-      label: "Actualités",
+      label: t('actualites'),
       icon: Newspaper,
-      description: "Dernières nouvelles"
+      description: t('latestNews')
     }
   ];
 
   return (
     <nav className="border-b bg-card/50 animate-fade-in">
       <div className="container mx-auto px-2 sm:px-4">
-        <div className="flex items-center justify-center space-x-1 overflow-x-auto py-2 scrollbar-hide scroll-smooth">
+        <div className={`flex items-center justify-center space-x-1 ${isRTL ? 'space-x-reverse' : ''} overflow-x-auto py-2 scrollbar-hide scroll-smooth`}>
           {navItems.map((item) => {
             const Icon = item.icon;
             const isActive = location.pathname === item.path;
@@ -48,10 +51,11 @@ const ObservatoireNav = () => {
                   className={cn(
                     "flex items-center gap-1 sm:gap-2 px-2 sm:px-4 py-2 h-auto flex-col min-w-0 transition-all duration-300 hover:scale-105",
                     isActive && "bg-primary text-primary-foreground shadow-md",
-                    !isActive && "hover:bg-muted hover:shadow-sm"
+                    !isActive && "hover:bg-muted hover:shadow-sm",
+                    isRTL && "font-almarai"
                   )}
                 >
-                  <div className="flex items-center gap-1 sm:gap-2">
+                  <div className={`flex items-center gap-1 sm:gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
                     <Icon className="h-3 w-3 sm:h-4 sm:w-4 flex-shrink-0 transition-transform duration-200" />
                     <span className="font-medium text-xs sm:text-sm whitespace-nowrap">{item.label}</span>
                   </div>
