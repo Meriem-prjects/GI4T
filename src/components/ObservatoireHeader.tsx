@@ -15,7 +15,7 @@ const ObservatoireHeader = () => {
     <header className="border-b bg-card">
       <div className="container mx-auto px-4 py-2 sm:py-4 relative">
         <div className={`flex items-center justify-between flex-wrap gap-4 ${isRTL ? 'flex-row-reverse' : ''}`}>
-          <Link to="/observatoire" className="flex items-center gap-2 sm:gap-4 hover:opacity-80 transition-opacity">
+          <Link to="/observatoire" className={`flex items-center gap-2 sm:gap-4 hover:opacity-80 transition-opacity absolute ${isRTL ? 'left-4' : 'right-4'} top-2 sm:top-4`}>
             {!isRTL ? (
               <>
                 <img src="/Feelinx_upload/odf-logo.png" alt="ODF Logo" className="h-6 sm:h-8 md:h-12" />
