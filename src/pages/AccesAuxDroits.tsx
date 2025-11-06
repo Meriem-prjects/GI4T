@@ -59,13 +59,13 @@ const AccesAuxDroits = () => {
               return (
                 <Link key={index} to={card.link}>
                   <Card className="hover:shadow-lg transition-shadow cursor-pointer">
-                    <CardHeader className="text-center">
-                      <Icon className="h-12 w-12 text-primary mx-auto mb-4" />
-                      <CardTitle className={`text-center ${isRTL ? 'font-almarai' : ''}`}>{card.title}</CardTitle>
-                      <CardDescription className={`text-center ${isRTL ? 'font-almarai' : ''}`}>
+                    <CardContent className="pt-6 text-center flex flex-col items-center">
+                      <Icon className="h-12 w-12 text-primary mb-4" />
+                      <h3 className={`text-lg font-semibold mb-2 ${isRTL ? 'font-almarai' : ''}`}>{card.title}</h3>
+                      <p className={`text-sm text-muted-foreground ${isRTL ? 'font-almarai' : ''}`}>
                         {card.description}
-                      </CardDescription>
-                    </CardHeader>
+                      </p>
+                    </CardContent>
                   </Card>
                 </Link>
               );
