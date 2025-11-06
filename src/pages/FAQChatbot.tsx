@@ -118,23 +118,23 @@ const FAQChatbot = () => {
 
       {/* Hero Section */}
       <section className="py-12 bg-gradient-to-br from-primary/5 to-primary/10">
-        <div className={`container mx-auto px-4 ${isRTL ? 'text-right' : 'text-center'}`}>
+        <div className={`container mx-auto px-4 ${isRTL ? 'text-right' : 'text-left'}`}>
           <h1 className="text-3xl sm:text-4xl font-bold text-foreground mb-4">
             {t('faqChatbot')}
           </h1>
-          <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
+          <p className={`text-lg text-muted-foreground max-w-2xl ${isRTL ? '' : ''}`}>
             {t('faqChatbotSubtitle')}
           </p>
         </div>
       </section>
 
       <div className="container mx-auto px-4 py-12">
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        <div className={`flex flex-col lg:flex-row gap-8 ${isRTL ? 'lg:flex-row-reverse' : ''}`}>
           {/* FAQ Section */}
-          <div>
+          <div className="flex-1">
             <div className={`flex items-center gap-2 mb-6 ${isRTL ? 'flex-row-reverse' : ''}`}>
               <HelpCircle className="h-6 w-6 text-primary" />
-              <h2 className="text-2xl font-bold">{t('frequentQuestions')}</h2>
+              <h2 className={`text-2xl font-bold ${isRTL ? 'text-right' : 'text-left'}`}>{t('frequentQuestions')}</h2>
             </div>
 
             {/* Search FAQ */}
@@ -147,8 +147,8 @@ const FAQChatbot = () => {
 
             {/* Popular Questions */}
             <div className="mb-8">
-              <h3 className={`font-semibold mb-4 ${isRTL ? 'text-right' : ''}`}>{t('popularQuestions')}</h3>
-              <div className={`flex flex-wrap gap-2 ${isRTL ? 'justify-end' : ''}`}>
+              <h3 className={`font-semibold mb-4 ${isRTL ? 'text-right' : 'text-left'}`}>{t('popularQuestions')}</h3>
+              <div className={`flex flex-wrap gap-2 ${isRTL ? 'justify-end' : 'justify-start'}`}>
                 {popularQuestions.map((question, index) => (
                   <Badge key={index} variant="outline" className="cursor-pointer hover:bg-primary hover:text-primary-foreground transition-colors">
                     {question}
@@ -193,10 +193,10 @@ const FAQChatbot = () => {
           </div>
 
           {/* Chatbot Section */}
-          <div>
+          <div className="flex-1">
             <div className={`flex items-center gap-2 mb-6 ${isRTL ? 'flex-row-reverse' : ''}`}>
               <MessageCircle className="h-6 w-6 text-primary" />
-              <h2 className="text-2xl font-bold">{t('virtualAssistant')}</h2>
+              <h2 className={`text-2xl font-bold ${isRTL ? 'text-right' : 'text-left'}`}>{t('virtualAssistant')}</h2>
             </div>
 
             <Card className="h-[600px] flex flex-col">
@@ -251,12 +251,12 @@ const FAQChatbot = () => {
 
         {/* Contact Section */}
         <section className="mt-16 py-12 bg-muted/30 rounded-lg">
-          <div className={`${isRTL ? 'text-right' : 'text-center'}`}>
+          <div className={`${isRTL ? 'text-right' : 'text-left'}`}>
             <h2 className="text-2xl font-bold mb-4">{t('needMoreHelp')}</h2>
-            <p className="text-muted-foreground mb-8 max-w-2xl mx-auto">
+            <p className="text-muted-foreground mb-8 max-w-2xl">
               {t('needMoreHelpText')}
             </p>
-            <div className={`flex flex-col sm:flex-row gap-4 ${isRTL ? 'justify-end' : 'justify-center'}`}>
+            <div className={`flex flex-col sm:flex-row gap-4 ${isRTL ? 'justify-end' : 'justify-start'}`}>
               <Link to="/acces-aux-droits/guides-pratiques">
                 <Button variant="outline">
                   {t('consultGuides')}
