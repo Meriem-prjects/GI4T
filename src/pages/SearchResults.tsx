@@ -227,8 +227,8 @@ const SearchResults = () => {
   return (
     <div dir={isRTL ? 'rtl' : 'ltr'} className={`container mx-auto px-4 py-6 ${isRTL ? 'font-almarai' : ''}`}>
       {/* Breadcrumb */}
-      <Breadcrumb className={`mb-6 ${isRTL ? 'flex justify-end' : ''}`}>
-        <BreadcrumbList>
+      <Breadcrumb className={`mb-6 w-full ${isRTL ? 'flex justify-end' : ''}`}>
+        <BreadcrumbList className={isRTL ? 'justify-end' : ''}>
           <BreadcrumbItem>
             <BreadcrumbLink asChild>
               <Link to="/">{t('home')}</Link>

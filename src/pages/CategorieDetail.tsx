@@ -149,8 +149,8 @@ const CategorieDetail = () => {
   return (
     <div className="container mx-auto px-4 py-6">
       {/* Breadcrumb */}
-      <Breadcrumb className={`mb-6 ${isRTL ? 'flex justify-end' : ''}`}>
-        <BreadcrumbList>
+      <Breadcrumb className={`mb-6 w-full ${isRTL ? 'flex justify-end' : ''}`}>
+        <BreadcrumbList className={isRTL ? 'justify-end' : ''}>
           <BreadcrumbItem>
             <BreadcrumbLink asChild>
               <Link to="/">Accueil</Link>
