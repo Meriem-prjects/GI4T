@@ -112,6 +112,7 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
   const [currentView, setCurrentView] = useState<'editor' | 'pdf' | 'pages'>('editor');
   const [currentLanguage, setCurrentLanguage] = useState<'fr' | 'ar'>('fr');
   const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [isRetranslating, setIsRetranslating] = useState(false);
   const [translatedByAI, setTranslatedByAI] = useState<{fr: boolean, ar: boolean}>({fr: false, ar: false});
   const [currentPage, setCurrentPage] = useState(1);
   const [translatedContent, setTranslatedContent] = useState<string>('');
@@ -307,6 +308,57 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
     }
   };
 
+  const handleRetranslate = async () => {
+    if (!editedData.id) {
+      toast({
+        title: "Erreur",
+        description: "Impossible de retraduire un document non sauvegardé",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    setIsRetranslating(true);
+    try {
+      console.log('🔄 Starting retranslation...');
+      const { data, error } = await supabase.functions.invoke('retranslate-document', {
+        body: { documentId: editedData.id }
+      });
+
+      if (error) throw error;
+
+      if (data.success) {
+        toast({
+          title: "✅ Retraduction terminée",
+          description: `${data.translatedLength} caractères traduits (ratio: ${data.ratio})`,
+        });
+
+        // Reload document to get new translation
+        const { data: updatedDoc, error: fetchError } = await supabase
+          .from('documents')
+          .select('*')
+          .eq('id', editedData.id)
+          .single();
+
+        if (!fetchError && updatedDoc) {
+          setEditedData(prev => ({
+            ...prev,
+            translated_content: updatedDoc.translated_content
+          }));
+        }
+      }
+    } catch (error) {
+      console.error('Retranslation error:', error);
+      toast({
+        title: "Erreur de retraduction",
+        description: error instanceof Error ? error.message : "Une erreur est survenue",
+        variant: "destructive"
+      });
+    } finally {
+      setIsRetranslating(false);
+    }
+  };
+
   const runAIAnalysis = async () => {
     if (!editedData.content) {
       toast({
@@ -344,11 +396,22 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
           ratio: translationRatio.toFixed(2)
         });
 
+        // Completeness indicator
+        let completenessEmoji = '🟢';
+        let completenessText = 'complète';
+        if (translationRatio < 0.4) {
+          completenessEmoji = '🔴';
+          completenessText = 'incomplète';
+        } else if (translationRatio < 0.8) {
+          completenessEmoji = '🟠';
+          completenessText = 'partielle';
+        }
+
         // Warn if translated content is suspiciously short (less than 40% of original)
         if (translationRatio < 0.4 && contentLength > 1000) {
           toast({
-            title: "⚠️ Traduction incomplète détectée",
-            description: `La traduction semble tronquée (${translatedLength} caractères vs ${contentLength} originaux). Relancez l'analyse IA pour une traduction complète.`,
+            title: `${completenessEmoji} Traduction ${completenessText} détectée`,
+            description: `La traduction semble tronquée (${translatedLength} caractères vs ${contentLength} originaux). Utilisez le bouton "Retraduire" pour une traduction complète.`,
             variant: "destructive",
             duration: 10000
           });
@@ -356,6 +419,11 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
             expected: `~${contentLength} chars`,
             received: `${translatedLength} chars`,
             ratio: `${(translationRatio * 100).toFixed(1)}%`
+          });
+        } else if (translationRatio >= 0.8) {
+          toast({
+            title: `${completenessEmoji} Traduction ${completenessText}`,
+            description: `${translatedLength} caractères traduits (${(translationRatio * 100).toFixed(0)}%)`,
           });
         }
         
@@ -560,10 +628,17 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
 
         setHasChanges(true);
         
-        toast({
-          title: "Analyse IA terminée",
-          description: `Analyse, extraction des métadonnées, classifications automatiques et traduction terminées en ${isPrimaryArabic ? 'arabe → français' : 'français → arabe'}.`,
-        });
+        if (contentLength > 30000) {
+          toast({
+            title: "✅ Analyse IA terminée (document long)",
+            description: `Document de ${contentLength} caractères analysé avec traduction par segments`
+          });
+        } else {
+          toast({
+            title: "✅ Analyse IA terminée",
+            description: "Les métadonnées ont été extraites avec succès"
+          });
+        }
       } else {
         throw new Error(data.error || 'Analyse échouée');
       }
@@ -1152,6 +1227,24 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
             {isAnalyzing ? 'Analyse...' : '🤖 Analyse IA'}
           </Button>
 
+          {editedData.id && editedData.content && (
+            <Button
+              onClick={handleRetranslate}
+              disabled={isRetranslating}
+              variant="outline"
+            >
+              {isRetranslating ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Retraduction...
+                </>
+              ) : (
+                <>
+                  🔄 Retraduire
+                </>
+              )}
+            </Button>
+          )}
 
           
           {isFromValidation ? (

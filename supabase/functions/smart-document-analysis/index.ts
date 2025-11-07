@@ -40,6 +40,85 @@ function parseKeywordsArray(keywords: any): string[] {
   return [];
 }
 
+// Function to split content into chunks intelligently (at paragraph boundaries)
+function splitIntoChunks(text: string, chunkSize: number = 8000): string[] {
+  const chunks: string[] = [];
+  const paragraphs = text.split(/\n\n+/);
+  
+  let currentChunk = '';
+  
+  for (const paragraph of paragraphs) {
+    if ((currentChunk + paragraph).length > chunkSize && currentChunk.length > 0) {
+      chunks.push(currentChunk.trim());
+      currentChunk = paragraph;
+    } else {
+      currentChunk += (currentChunk ? '\n\n' : '') + paragraph;
+    }
+  }
+  
+  if (currentChunk.trim()) {
+    chunks.push(currentChunk.trim());
+  }
+  
+  return chunks;
+}
+
+// Function to translate content in chunks
+async function translateInChunks(
+  content: string,
+  targetLanguage: string,
+  apiKey: string
+): Promise<string> {
+  const chunks = splitIntoChunks(content, 8000);
+  console.log(`📦 Split document into ${chunks.length} chunks`);
+  
+  const translatedChunks: string[] = [];
+  
+  for (let i = 0; i < chunks.length; i++) {
+    console.log(`🔄 Translating chunk ${i + 1}/${chunks.length} (${chunks[i].length} chars)...`);
+    
+    try {
+      const response = await fetch('https://api.openai.com/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${apiKey}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          model: "gpt-4o-mini",
+          messages: [
+            {
+              role: "system",
+              content: `Tu es un traducteur expert. Traduis EXACTEMENT le texte fourni en ${targetLanguage}. Ne résume pas, ne commente pas, traduis seulement. Garde la même structure et tous les détails.`
+            },
+            {
+              role: "user",
+              content: chunks[i]
+            }
+          ],
+          temperature: 0.3,
+          max_tokens: 12000,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error(`Translation API error: ${response.status}`);
+      }
+
+      const data = await response.json();
+      const translated = data.choices?.[0]?.message?.content || '';
+      translatedChunks.push(translated);
+      console.log(`✅ Chunk ${i + 1} translated: ${translated.length} chars`);
+      
+    } catch (error) {
+      console.error(`❌ Error translating chunk ${i + 1}:`, error);
+      translatedChunks.push(`[Erreur de traduction du segment ${i + 1}]`);
+    }
+  }
+  
+  return translatedChunks.join('\n\n');
+}
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
@@ -200,6 +279,17 @@ Réponds uniquement en JSON valide avec cette structure exacte :
   }
 }`;
 
+    // Check if we need chunk-based translation for long documents
+    const needsChunks = content.length > 30000;
+    let translatedContentResult = '';
+
+    if (needsChunks) {
+      console.log(`📄 Document is long (${content.length} chars), using chunk-based translation...`);
+      translatedContentResult = await translateInChunks(content, targetLanguage, openAIApiKey);
+      console.log(`✅ Chunk translation complete: ${translatedContentResult.length} chars`);
+    }
+
+    console.log('🤖 Calling OpenAI API for document analysis...');
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
       headers: {
@@ -207,7 +297,7 @@ Réponds uniquement en JSON valide avec cette structure exacte :
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'gpt-4o',
+        model: 'gpt-4o-mini',
         messages: [
           { role: 'system', content: systemPrompt },
           { role: 'user', content: `Analyse ce document en respectant les règles d'extraction:
@@ -220,7 +310,7 @@ ${content}` }
         ],
         response_format: { type: "json_object" },
         temperature: 0.3,
-        max_tokens: 12000,
+        max_tokens: 16000,
       }),
     });
 
@@ -281,6 +371,12 @@ ${content}` }
       if (!analysisResult[field]) {
         console.warn(`Missing required field: ${field}`);
       }
+    }
+
+    // Override translatedContent if chunk translation was used
+    if (needsChunks && translatedContentResult) {
+      analysisResult.translatedContent = translatedContentResult;
+      console.log(`🔄 Using chunk-translated content (${translatedContentResult.length} chars)`);
     }
 
     // Intelligent matching logic to find best matches by ID
