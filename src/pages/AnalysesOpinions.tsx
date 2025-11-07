@@ -19,7 +19,7 @@ const AnalysesOpinions = () => {
       date: "15 novembre 2024",
       readTime: "12 min",
       views: 1247,
-      category: "Analyse approfondie",
+      category: "Analyses juridiques",
       tags: ["Vie privée", "RGPD", "Numérique"]
     },
     {
@@ -30,7 +30,7 @@ const AnalysesOpinions = () => {
       date: "10 novembre 2024",
       readTime: "8 min",
       views: 892,
-      category: "Opinion",
+      category: "Commentaires",
       tags: ["Expression", "Réseaux sociaux", "Désinformation"]
     },
     {
@@ -41,7 +41,7 @@ const AnalysesOpinions = () => {
       date: "5 novembre 2024", 
       readTime: "15 min",
       views: 654,
-      category: "Policy Brief",
+      category: "Blogs",
       tags: ["Justice", "Accès", "Réforme"]
     }
   ];
