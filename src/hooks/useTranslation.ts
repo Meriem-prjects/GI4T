@@ -410,7 +410,7 @@ const translations: Record<'fr' | 'ar', Record<TranslationKey, string>> = {
     sitemap: 'Plan du site',
     social: 'Réseaux sociaux',
     terms: 'Conditions',
-    observatory: 'Mرصد',
+    observatory: 'Observatoire',
     awarenessСampaign: 'Campagne de sensibilisation',
     practicalGuide: 'Guide pratique',
     // Layout & Navigation
