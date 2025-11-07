@@ -8,6 +8,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useEffect, useState } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { createCategorySlug, createDocumentSlug } from "@/lib/urlUtils";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 interface Category {
   id: string;
@@ -38,6 +39,7 @@ interface Document {
 
 const CategorieDetail = () => {
   const { categorySlug } = useParams<{ categorySlug: string }>();
+  const { isRTL } = useLanguage();
   const [category, setCategory] = useState<Category | null>(null);
   const [documents, setDocuments] = useState<Document[]>([]);
   const [loading, setLoading] = useState(true);
@@ -147,7 +149,7 @@ const CategorieDetail = () => {
   return (
     <div className="container mx-auto px-4 py-6">
       {/* Breadcrumb */}
-      <Breadcrumb className="mb-6">
+      <Breadcrumb className={`mb-6 ${isRTL ? 'flex justify-end' : ''}`}>
         <BreadcrumbList>
           <BreadcrumbItem>
             <BreadcrumbLink asChild>

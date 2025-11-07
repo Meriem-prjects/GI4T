@@ -14,6 +14,7 @@ import { normalizeArabicText } from "@/lib/arabicUtils";
 import { ArticleStatistics } from "@/components/ArticleStatistics";
 import { CommentSection } from "@/components/CommentSection";
 import { useDocumentView } from "@/hooks/useDocumentView";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 interface Document {
   id: string;
@@ -78,6 +79,7 @@ interface SuggestedDocument {
 
 const DocumentDetail = () => {
   const { categorySlug, documentSlug } = useParams<{ categorySlug: string; documentSlug: string }>();
+  const { isRTL } = useLanguage();
   const [document, setDocument] = useState<Document | null>(null);
   const [category, setCategory] = useState<Category | null>(null);
   const [suggestedDocuments, setSuggestedDocuments] = useState<SuggestedDocument[]>([]);
@@ -323,7 +325,7 @@ const DocumentDetail = () => {
   return (
     <div className="container mx-auto px-4 py-6">
       {/* Breadcrumb */}
-      <Breadcrumb className="mb-6">
+      <Breadcrumb className={`mb-6 ${isRTL ? 'flex justify-end' : ''}`}>
         <BreadcrumbList>
           <BreadcrumbItem>
             <BreadcrumbLink asChild>
