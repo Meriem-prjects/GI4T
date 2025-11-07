@@ -72,8 +72,9 @@ const Actualites = () => {
   return (
     <div className={`container mx-auto px-4 py-6 ${isRTL ? 'font-almarai' : ''}`} dir={isRTL ? 'rtl' : 'ltr'}>
         {/* Breadcrumb */}
-        <Breadcrumb className={`mb-6 w-full ${isRTL ? 'flex justify-end' : ''}`}>
-          <BreadcrumbList className={isRTL ? 'justify-end' : ''}>
+        <div className="mb-6 w-full flex justify-start">
+          <Breadcrumb>
+            <BreadcrumbList className={isRTL ? 'flex-row-reverse' : ''}>
             <BreadcrumbItem>
               <BreadcrumbLink asChild>
                 <Link to="/">{t('home')}</Link>
@@ -89,8 +90,9 @@ const Actualites = () => {
             <BreadcrumbItem>
               <BreadcrumbPage>{t('actualitesTitle')}</BreadcrumbPage>
             </BreadcrumbItem>
-          </BreadcrumbList>
-        </Breadcrumb>
+            </BreadcrumbList>
+          </Breadcrumb>
+        </div>
 
         {/* Hero Section */}
         <section className={`mb-8 sm:mb-12 ${isRTL ? 'text-right' : 'text-center'}`}>

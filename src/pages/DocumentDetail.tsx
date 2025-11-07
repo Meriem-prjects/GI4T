@@ -325,8 +325,9 @@ const DocumentDetail = () => {
   return (
     <div className="container mx-auto px-4 py-6">
       {/* Breadcrumb */}
-      <Breadcrumb className={`mb-6 w-full ${isRTL ? 'flex justify-end' : ''}`}>
-        <BreadcrumbList className={isRTL ? 'justify-end' : ''}>
+      <div className="mb-6 w-full flex justify-start">
+        <Breadcrumb>
+          <BreadcrumbList className={isRTL ? 'flex-row-reverse' : ''}>
           <BreadcrumbItem>
             <BreadcrumbLink asChild>
               <Link to="/">Accueil</Link>
@@ -358,8 +359,9 @@ const DocumentDetail = () => {
           <BreadcrumbItem>
             <BreadcrumbPage className="max-w-[200px] truncate">{currentTitle}</BreadcrumbPage>
           </BreadcrumbItem>
-        </BreadcrumbList>
-      </Breadcrumb>
+          </BreadcrumbList>
+        </Breadcrumb>
+      </div>
 
       <div className="grid gap-8 lg:grid-cols-4">
         {/* Main Content */}
