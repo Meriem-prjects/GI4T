@@ -27,7 +27,7 @@ const AnalysesOpinions = () => {
   return (
     <div className={`container mx-auto px-4 py-6 ${isRTL ? 'font-almarai' : ''}`} dir={isRTL ? 'rtl' : 'ltr'}>
         {/* Breadcrumb */}
-        <div className={`mb-6 w-full ${isRTL ? 'flex justify-end' : 'flex justify-start'}`}>
+        <div className={`mb-6 w-full flex justify-start`}>
           <Breadcrumb>
             <BreadcrumbList className={isRTL ? 'flex-row-reverse' : ''}>
               <BreadcrumbItem>
