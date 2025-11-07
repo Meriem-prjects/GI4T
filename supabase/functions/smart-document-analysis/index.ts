@@ -103,6 +103,14 @@ IMPORTANTES INSTRUCTIONS POUR L'EXTRACTION DEPUIS LES MÉTADONNÉES TEXTUELLES:
 1. NE MODIFIE PAS le contenu original du document - garde-le intact
 2. TRADUIS RÉELLEMENT tout le contenu en ${targetLanguage} - ne retourne jamais de descriptions ou placeholders
 
+⚠️ RÈGLE CRITIQUE SUR "translatedContent":
+- "translatedContent" doit contenir la TRADUCTION COMPLÈTE INTÉGRALE de TOUT le contenu du document
+- NE TRADUIS PAS SEULEMENT le résumé - traduis CHAQUE PHRASE, CHAQUE PARAGRAPHE du document complet
+- La longueur de "translatedContent" doit être similaire à la longueur du contenu original (±20%)
+- "translatedSummary" est le résumé traduit (court, 3-5 phrases)
+- "translatedContent" est le contenu ENTIER traduit (long, plusieurs pages)
+- EXEMPLE: Si le document source fait 30 000 caractères, "translatedContent" doit aussi faire environ 25 000-35 000 caractères
+
 RÈGLES D'EXTRACTION SPÉCIFIQUES:
 
 EXTRACTION DEPUIS LES MÉTADONNÉES TEXTUELLES:
@@ -149,14 +157,19 @@ STRATÉGIE POUR TITRE ET SOUS-TITRE:
 
 IMPORTANT: Les champs "textualMetadataTranslated" et "translatedContent" doivent contenir les VRAIES TRADUCTIONS, pas des descriptions !
 
+⚠️ DISTINCTION CRUCIALE:
+- "summary" = résumé court du document (3-5 phrases) en ${sourceLanguage}
+- "translatedSummary" = traduction du résumé court (3-5 phrases) en ${targetLanguage}
+- "translatedContent" = TRADUCTION INTÉGRALE de TOUT le contenu du document (plusieurs pages) en ${targetLanguage}
+
 Réponds uniquement en JSON valide avec cette structure exacte :
 {
   "title": "titre principal proposé en analysant les métadonnées textuelles ET le contenu principal",
   "subtitle": "sous-titre proposé en analysant les métadonnées textuelles ET le contenu principal", 
   "translatedTitle": "traduction complète du titre en ${targetLanguage}",
   "translatedSubtitle": "traduction complète du sous-titre en ${targetLanguage}",
-  "summary": "résumé du document en ${sourceLanguage}",
-  "translatedSummary": "traduction complète du résumé en ${targetLanguage}",
+  "summary": "résumé court du document (3-5 phrases) en ${sourceLanguage}",
+  "translatedSummary": "traduction du résumé court (3-5 phrases) en ${targetLanguage}",
   "existingKeywords": ["mots-clés trouvés dans le document"],
   "suggestedKeywords": ["nouveaux mots-clés pertinents"],
   "translatedKeywords": ["traduction complète des mots-clés en ${targetLanguage}"],
@@ -177,7 +190,7 @@ Réponds uniquement en JSON valide avec cette structure exacte :
     "court_level": "traduction complète du niveau de tribunal en ${targetLanguage}"
   },
   "textualMetadataTranslated": "TRADUCTION COMPLÈTE EN ${targetLanguage} DES MÉTADONNÉES TEXTUELLES EXTRAITES",
-  "translatedContent": "TRADUCTION COMPLÈTE EN ${targetLanguage} DE TOUT LE CONTENU DU DOCUMENT",
+  "translatedContent": "⚠️ TRADUCTION INTÉGRALE COMPLÈTE EN ${targetLanguage} DE LA TOTALITÉ DU CONTENU DU DOCUMENT (TOUTES LES PAGES, TOUS LES PARAGRAPHES) - NE PAS RÉSUMER, TRADUIRE TOUT",
   "language": "${sourceLanguage}",
   "suggestions": {
     "suggestedCategory": "nom exact de la catégorie la plus appropriée",
@@ -207,7 +220,7 @@ ${content}` }
         ],
         response_format: { type: "json_object" },
         temperature: 0.3,
-        max_tokens: 4000,
+        max_tokens: 12000,
       }),
     });
 

@@ -333,6 +333,32 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
         const analysis = data.analysis;
         const isPrimaryArabic = editedData.language === 'ar';
         
+        // Validate translation completeness
+        const contentLength = editedData.content?.length || 0;
+        const translatedLength = analysis.translatedContent?.length || 0;
+        const translationRatio = contentLength > 0 ? translatedLength / contentLength : 0;
+        
+        console.log('🔍 Translation Validation:', {
+          originalContentLength: contentLength,
+          translatedContentLength: translatedLength,
+          ratio: translationRatio.toFixed(2)
+        });
+
+        // Warn if translated content is suspiciously short (less than 40% of original)
+        if (translationRatio < 0.4 && contentLength > 1000) {
+          toast({
+            title: "⚠️ Traduction incomplète détectée",
+            description: `La traduction semble tronquée (${translatedLength} caractères vs ${contentLength} originaux). Relancez l'analyse IA pour une traduction complète.`,
+            variant: "destructive",
+            duration: 10000
+          });
+          console.warn('⚠️ Translation appears incomplete:', {
+            expected: `~${contentLength} chars`,
+            received: `${translatedLength} chars`,
+            ratio: `${(translationRatio * 100).toFixed(1)}%`
+          });
+        }
+        
         // Debug: Log analysis result to verify content
         console.log('🔍 AI Analysis Result:', {
           isPrimaryArabic,
