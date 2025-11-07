@@ -6,69 +6,23 @@ import { Breadcrumb, BreadcrumbList, BreadcrumbItem, BreadcrumbLink, BreadcrumbP
 import { FileText, Pen, TrendingUp, Eye, Calendar, User } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useTranslation } from "@/hooks/useTranslation";
+import { useAllAnalysesOpinions, useDocumentTypesCounts } from "@/hooks/useDocumentsByType";
+import { format } from "date-fns";
+import { fr } from "date-fns/locale";
+import { Skeleton } from "@/components/ui/skeleton";
 
 const AnalysesOpinions = () => {
-  const { isRTL } = useLanguage();
+  const { isRTL, language } = useLanguage();
   const { t } = useTranslation();
-  const analyses = [
-    {
-      id: 1,
-      title: "L'évolution du droit à la vie privée à l'ère numérique",
-      excerpt: "Une analyse approfondie des enjeux contemporains de la protection des données personnelles en Tunisie...",
-      author: "Dr. Ahmed Ben Salem",
-      date: "15 novembre 2024",
-      readTime: "12 min",
-      views: 1247,
-      category: "Analyses juridiques",
-      tags: ["Vie privée", "RGPD", "Numérique"]
-    },
-    {
-      id: 2,
-      title: "Les défis de la liberté d'expression face aux réseaux sociaux",
-      excerpt: "Comment concilier liberté d'expression et lutte contre la désinformation sur les plateformes numériques...",
-      author: "Prof. Fatma Kallel", 
-      date: "10 novembre 2024",
-      readTime: "8 min",
-      views: 892,
-      category: "Commentaires",
-      tags: ["Expression", "Réseaux sociaux", "Désinformation"]
-    },
-    {
-      id: 3,
-      title: "Policy Brief: Renforcer l'accès à la justice",
-      excerpt: "Recommandations pour améliorer l'accessibilité et l'efficacité du système judiciaire tunisien...",
-      author: "Équipe ODF",
-      date: "5 novembre 2024", 
-      readTime: "15 min",
-      views: 654,
-      category: "Blogs",
-      tags: ["Justice", "Accès", "Réforme"]
-    }
-  ];
+  
+  // Fetch real data from database
+  const { data: documents, isLoading: documentsLoading } = useAllAnalysesOpinions();
+  const { data: typeCounts, isLoading: countsLoading } = useDocumentTypesCounts();
 
-  const categories = [
-    {
-      title: "Analyses approfondies",
-      count: 24,
-      description: "Études détaillées sur les évolutions jurisprudentielles",
-      icon: FileText,
-      color: "bg-blue-100 text-blue-800"
-    },
-    {
-      title: "Articles d'opinion",
-      count: 18,
-      description: "Points de vue d'experts sur les questions juridiques actuelles", 
-      icon: Pen,
-      color: "bg-green-100 text-green-800"
-    },
-    {
-      title: "Policy Briefs",
-      count: 12,
-      description: "Recommandations pour les décideurs politiques",
-      icon: TrendingUp,
-      color: "bg-purple-100 text-purple-800"
-    }
-  ];
+  const getTypeCount = (typeName: string) => {
+    const typeData = typeCounts?.find(tc => tc.name === typeName);
+    return typeData?.count || 0;
+  };
 
   return (
     <div className={`container mx-auto px-4 py-6 ${isRTL ? 'font-almarai' : ''}`} dir={isRTL ? 'rtl' : 'ltr'}>
@@ -105,30 +59,72 @@ const AnalysesOpinions = () => {
         <section className="mb-12">
           <h2 className={`text-2xl font-bold mb-6 ${isRTL ? 'text-right' : ''}`}>{t('contentTypes')}</h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {[
-              { title: t('deepAnalyses'), count: 24, description: t('deepAnalysesDesc'), icon: FileText, color: "bg-blue-100 text-blue-800" },
-              { title: t('opinionArticles'), count: 18, description: t('opinionArticlesDesc'), icon: Pen, color: "bg-green-100 text-green-800" },
-              { title: t('policyBriefs'), count: 12, description: t('policyBriefsDesc'), icon: TrendingUp, color: "bg-purple-100 text-purple-800" }
-            ].map((category) => {
-              const Icon = category.icon;
-              return (
-                <Card key={category.title} className="hover:shadow-lg transition-all duration-300 cursor-pointer">
-                  <CardHeader className={isRTL ? 'text-right' : ''}>
-                    <div className={`flex items-center justify-between mb-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
-                      <Icon className="w-8 h-8 text-primary" />
-                      <Badge className={category.color}>{category.count}</Badge>
-                    </div>
-                    <CardTitle className="text-lg">{category.title}</CardTitle>
-                    <CardDescription>{category.description}</CardDescription>
+            {countsLoading ? (
+              Array.from({ length: 3 }).map((_, i) => (
+                <Card key={i}>
+                  <CardHeader>
+                    <Skeleton className="h-8 w-8 mb-2" />
+                    <Skeleton className="h-6 w-3/4 mb-2" />
+                    <Skeleton className="h-4 w-full" />
                   </CardHeader>
                   <CardContent>
-                    <Button variant="outline" className="w-full">
-                      {t('consult')}
-                    </Button>
+                    <Skeleton className="h-10 w-full" />
                   </CardContent>
                 </Card>
-              );
-            })}
+              ))
+            ) : (
+              [
+                { 
+                  title: t('deepAnalyses'), 
+                  count: getTypeCount('Analyses juridiques'), 
+                  description: t('deepAnalysesDesc'), 
+                  icon: FileText, 
+                  color: "bg-blue-100 text-blue-800",
+                  type: "analyses-juridiques"
+                },
+                { 
+                  title: t('opinionArticles'), 
+                  count: getTypeCount('Commentaires'), 
+                  description: t('opinionArticlesDesc'), 
+                  icon: Pen, 
+                  color: "bg-green-100 text-green-800",
+                  type: "commentaires"
+                },
+                { 
+                  title: t('policyBriefs'), 
+                  count: getTypeCount('Blogs'), 
+                  description: t('policyBriefsDesc'), 
+                  icon: TrendingUp, 
+                  color: "bg-purple-100 text-purple-800",
+                  type: "blogs"
+                }
+              ].map((category) => {
+                const Icon = category.icon;
+                return (
+                  <Card key={category.title} className="hover:shadow-lg transition-all duration-300 cursor-pointer">
+                    <CardHeader className={isRTL ? 'text-right' : ''}>
+                      <div className={`flex items-center justify-between mb-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
+                        <Icon className="w-8 h-8 text-primary" />
+                        <Badge className={category.color}>{category.count}</Badge>
+                      </div>
+                      <CardTitle className="text-lg">{category.title}</CardTitle>
+                      <CardDescription>{category.description}</CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      <Button 
+                        variant="outline" 
+                        className="w-full"
+                        asChild
+                      >
+                        <Link to={`/observatoire/recherche?type=${category.type}`}>
+                          {t('consult')}
+                        </Link>
+                      </Button>
+                    </CardContent>
+                  </Card>
+                );
+              })
+            )}
           </div>
         </section>
 
@@ -136,62 +132,98 @@ const AnalysesOpinions = () => {
         <section>
           <div className={`flex items-center justify-between mb-6 ${isRTL ? 'flex-row-reverse' : ''}`}>
             <h2 className="text-2xl font-bold">{t('recentPublications')}</h2>
-            <Button variant="outline">
-              {t('seeAllPublications')}
+            <Button variant="outline" asChild>
+              <Link to="/observatoire/recherche">
+                {t('seeAllPublications')}
+              </Link>
             </Button>
           </div>
           
-          <div className="space-y-6">
-            {analyses.map((article) => (
-              <Card key={article.id} className="hover:shadow-lg transition-all duration-300">
-                <CardHeader>
-                  <div className={`flex items-start justify-between ${isRTL ? 'flex-row-reverse' : ''}`}>
-                    <div className={`flex-1 ${isRTL ? 'text-right' : ''}`}>
-                      <div className={`flex items-center gap-3 mb-3 ${isRTL ? 'flex-row-reverse' : ''}`}>
-                        <Badge variant="outline">{article.category}</Badge>
-                        <div className={`flex items-center gap-4 text-sm text-muted-foreground ${isRTL ? 'flex-row-reverse' : ''}`}>
-                          <div className={`flex items-center gap-1 ${isRTL ? 'flex-row-reverse' : ''}`}>
-                            <Calendar className="w-4 h-4" />
-                            {article.date}
+          {documentsLoading ? (
+            <div className="space-y-6">
+              {Array.from({ length: 3 }).map((_, i) => (
+                <Card key={i}>
+                  <CardHeader>
+                    <Skeleton className="h-6 w-1/4 mb-2" />
+                    <Skeleton className="h-8 w-3/4 mb-2" />
+                    <Skeleton className="h-4 w-full mb-2" />
+                    <Skeleton className="h-4 w-full" />
+                  </CardHeader>
+                </Card>
+              ))}
+            </div>
+          ) : documents && documents.length > 0 ? (
+            <div className="space-y-6">
+              {documents.map((article) => {
+                const title = language === 'ar' && article.title_ar ? article.title_ar : article.title;
+                const summary = language === 'ar' && article.summary_ar ? article.summary_ar : article.summary;
+                const author = language === 'ar' && article.author_ar ? article.author_ar : article.author;
+                const keywords = language === 'ar' && article.keywords_ar ? article.keywords_ar : article.keywords;
+                const categoryName = language === 'ar' && article.document_types?.name_ar 
+                  ? article.document_types.name_ar 
+                  : article.document_types?.name;
+                
+                return (
+                  <Card key={article.id} className="hover:shadow-lg transition-all duration-300">
+                    <CardHeader>
+                      <div className={`flex items-start justify-between ${isRTL ? 'flex-row-reverse' : ''}`}>
+                        <div className={`flex-1 ${isRTL ? 'text-right' : ''}`}>
+                          <div className={`flex items-center gap-3 mb-3 ${isRTL ? 'flex-row-reverse' : ''}`}>
+                            <Badge variant="outline">{categoryName}</Badge>
+                            <div className={`flex items-center gap-4 text-sm text-muted-foreground ${isRTL ? 'flex-row-reverse' : ''}`}>
+                              <div className={`flex items-center gap-1 ${isRTL ? 'flex-row-reverse' : ''}`}>
+                                <Calendar className="w-4 h-4" />
+                                {format(new Date(article.created_at), 'dd MMMM yyyy', { locale: fr })}
+                              </div>
+                              {author && (
+                                <div className={`flex items-center gap-1 ${isRTL ? 'flex-row-reverse' : ''}`}>
+                                  <User className="w-4 h-4" />
+                                  {author}
+                                </div>
+                              )}
+                            </div>
                           </div>
-                          <div className={`flex items-center gap-1 ${isRTL ? 'flex-row-reverse' : ''}`}>
-                            <User className="w-4 h-4" />
-                            {article.author}
-                          </div>
-                          <div className={`flex items-center gap-1 ${isRTL ? 'flex-row-reverse' : ''}`}>
-                            <Eye className="w-4 h-4" />
-                            {article.views} {t('views')}
-                          </div>
+                          
+                          <CardTitle className="text-xl mb-3">{title}</CardTitle>
+                          {summary && (
+                            <CardDescription className="text-base mb-4">
+                              {summary.length > 200 ? `${summary.substring(0, 200)}...` : summary}
+                            </CardDescription>
+                          )}
+                          
+                          {keywords && keywords.length > 0 && (
+                            <div className={`flex flex-wrap gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
+                              {keywords.slice(0, 3).map((tag) => (
+                                <Badge key={tag} variant="secondary" className="text-xs">
+                                  {tag}
+                                </Badge>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                        
+                        <div className={isRTL ? 'mr-6' : 'ml-6'}>
+                          <Button asChild>
+                            <Link to={`/observatoire/document/${article.id}`}>
+                              {t('readArticle')}
+                            </Link>
+                          </Button>
                         </div>
                       </div>
-                      
-                      <CardTitle className="text-xl mb-3">{article.title}</CardTitle>
-                      <CardDescription className="text-base mb-4">
-                        {article.excerpt}
-                      </CardDescription>
-                      
-                      <div className={`flex items-center justify-between ${isRTL ? 'flex-row-reverse' : ''}`}>
-                        <div className={`flex flex-wrap gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
-                          {article.tags.map((tag) => (
-                            <Badge key={tag} variant="secondary" className="text-xs">
-                              {tag}
-                            </Badge>
-                          ))}
-                        </div>
-                        <span className="text-sm text-muted-foreground">{article.readTime} {t('readTime')}</span>
-                      </div>
-                    </div>
-                    
-                    <div className={isRTL ? 'mr-6' : 'ml-6'}>
-                      <Button>
-                        {t('readArticle')}
-                      </Button>
-                    </div>
-                  </div>
-                </CardHeader>
-              </Card>
-            ))}
-          </div>
+                    </CardHeader>
+                  </Card>
+                );
+              })}
+            </div>
+          ) : (
+            <Card>
+              <CardHeader>
+                <CardDescription className={isRTL ? 'text-right' : 'text-center'}>
+                  {t('noResults')}
+                </CardDescription>
+              </CardHeader>
+            </Card>
+          )}
         </section>
 
         {/* Call to action */}
