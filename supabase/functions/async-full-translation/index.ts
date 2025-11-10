@@ -163,22 +163,50 @@ serve(async (req) => {
     if (chunk_index + 1 < total_chunks) {
       console.log(`🔗 Triggering next chunk ${chunk_index + 2}/${total_chunks}`);
       
-      // Déclencher de manière asynchrone
-      fetch(`${supabaseUrl}/functions/v1/async-full-translation`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${supabaseKey}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          document_id,
-          job_id,
-          chunk_index: chunk_index + 1,
-          total_chunks,
-          source_language,
-          target_language
-        })
-      }).catch(err => console.error('❌ Error triggering next chunk:', err));
+      let triggered = false;
+      for (let attempt = 1; attempt <= 3 && !triggered; attempt++) {
+        try {
+          const { error: invokeError } = await supabase.functions.invoke(
+            'async-full-translation',
+            {
+              body: {
+                document_id,
+                job_id,
+                chunk_index: chunk_index + 1,
+                total_chunks,
+                source_language,
+                target_language
+              }
+            }
+          );
+
+          if (invokeError) {
+            throw invokeError;
+          }
+
+          triggered = true;
+          console.log(`✅ Chunk ${chunk_index + 2} triggered successfully`);
+        } catch (err) {
+          console.error(`⚠️ Failed to trigger chunk ${chunk_index + 2}, attempt ${attempt}/3:`, err);
+          
+          if (attempt >= 3) {
+            // Échec définitif après 3 tentatives
+            await supabase
+              .from('processing_jobs')
+              .update({
+                status: 'failed',
+                error_message: `Échec du déclenchement du chunk ${chunk_index + 2} après 3 tentatives`,
+                updated_at: new Date().toISOString()
+              })
+              .eq('id', job_id);
+            
+            throw new Error(`Failed to trigger next chunk after 3 attempts`);
+          }
+          
+          // Attendre 2s avant retry
+          await new Promise(resolve => setTimeout(resolve, 2000));
+        }
+      }
 
       return new Response(
         JSON.stringify({ 

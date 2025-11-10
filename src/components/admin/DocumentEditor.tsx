@@ -156,6 +156,15 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
     
     loadCategories();
     loadDocumentTypes();
+    
+    // Cleanup Realtime channels on unmount
+    return () => {
+      supabase.getChannels().forEach(channel => {
+        if (channel.topic.startsWith('job-')) {
+          supabase.removeChannel(channel);
+        }
+      });
+    };
   }, [documentData]);
 
   // Separate effect for document categories to ensure they're loaded after data is available
@@ -223,7 +232,7 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
               currentStep: existingJob.current_step || '',
               errorMessage: existingJob.error_message || undefined
             });
-            startJobPolling(existingJob.id);
+            startRealtimeJobTracking(existingJob.id);
           }
         }
       };
@@ -281,67 +290,89 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
     }
   };
 
-  const startJobPolling = (jobId: string) => {
+  const startRealtimeJobTracking = (jobId: string) => {
+    console.log('🔴 Starting Realtime tracking for job:', jobId);
     setIsPollingJob(true);
     
-    const pollInterval = setInterval(async () => {
-      const { data: job } = await supabase
-        .from('processing_jobs')
-        .select('status, progress, current_step, error_message')
-        .eq('id', jobId)
-        .single();
-      
-      if (job) {
-        setFullTranslationJob(prev => ({
-          ...prev,
-          jobId,
-          status: job.status as any,
-          progress: job.progress,
-          currentStep: job.current_step || '',
-          errorMessage: job.error_message || undefined
-        }));
-        
-        if (job.status === 'completed') {
-          clearInterval(pollInterval);
-          setIsPollingJob(false);
+    const channel = supabase
+      .channel(`job-${jobId}`)
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'processing_jobs',
+          filter: `id=eq.${jobId}`
+        },
+        (payload) => {
+          console.log('📡 Realtime update received:', payload.new);
           
-          // Recharger le document pour afficher translated_content
-          const { data: updatedDoc } = await supabase
-            .from('documents')
-            .select('translated_content')
-            .eq('id', editedData.id!)
-            .single();
+          const job = payload.new as any;
           
-          if (updatedDoc) {
-            setEditedData(prev => ({
-              ...prev,
-              translated_content: updatedDoc.translated_content
-            }));
-            setTranslatedContent(updatedDoc.translated_content || '');
+          setFullTranslationJob({
+            jobId,
+            status: job.status,
+            progress: job.progress || 0,
+            currentStep: job.current_step || '',
+            errorMessage: job.error_message || undefined
+          });
+          
+          if (job.status === 'completed') {
+            console.log('✅ Translation completed via Realtime!');
+            
+            // Recharger le document pour afficher translated_content
+            supabase
+              .from('documents')
+              .select('translated_content')
+              .eq('id', editedData.id!)
+              .single()
+              .then(({ data: updatedDoc }) => {
+                if (updatedDoc) {
+                  setEditedData(prev => ({
+                    ...prev,
+                    translated_content: updatedDoc.translated_content
+                  }));
+                  setTranslatedContent(updatedDoc.translated_content || '');
+                }
+              });
+            
+            toast({
+              title: "✅ Traduction terminée !",
+              description: "Le document a été traduit intégralement."
+            });
+            
+            // Nettoyer le channel
+            supabase.removeChannel(channel);
+            setIsPollingJob(false);
+          } else if (job.status === 'failed') {
+            console.error('❌ Translation failed:', job.error_message);
+            
+            toast({
+              title: "❌ Échec de la traduction",
+              description: job.error_message || "Erreur inconnue",
+              variant: "destructive",
+              action: (
+                <Button variant="outline" size="sm" onClick={() => runFullTranslation()}>
+                  Réessayer
+                </Button>
+              )
+            });
+            
+            // Nettoyer le channel
+            supabase.removeChannel(channel);
+            setIsPollingJob(false);
           }
-          
-          toast({
-            title: "✅ Traduction terminée !",
-            description: "Le document a été traduit intégralement.",
-          });
-        } else if (job.status === 'failed') {
-          clearInterval(pollInterval);
-          setIsPollingJob(false);
-          
-          toast({
-            title: "❌ Échec de la traduction",
-            description: job.error_message || "Erreur inconnue",
-            variant: "destructive",
-          });
         }
-      }
-    }, 3000);  // Poll toutes les 3 secondes
+      )
+      .subscribe((status) => {
+        console.log('Realtime subscription status:', status);
+      });
     
-    // Cleanup après 30 minutes max
+    // Cleanup automatique après 1 heure
     setTimeout(() => {
-      clearInterval(pollInterval);
+      supabase.removeChannel(channel);
       setIsPollingJob(false);
-    }, 30 * 60 * 1000);
+    }, 60 * 60 * 1000);
   };
 
   const runFullTranslation = async () => {
@@ -386,8 +417,8 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
           description: `Traduction intégrale lancée en arrière-plan. Durée estimée : ${Math.round(data.estimated_duration_minutes)} min.`,
         });
         
-        // Démarrer le polling
-        startJobPolling(data.job_id);
+        // Démarrer le tracking Realtime
+        startRealtimeJobTracking(data.job_id);
       } else {
         // Traduction synchrone (document court)
         if (data.analysis?.translatedContent) {
