@@ -553,6 +553,9 @@ serve(async (req) => {
       analysisData.summary = `Document traité avec succès: ${fileContent.substring(0, 100)}...`;
     }
     
+    // Skip AI analysis for now per user request (transcription only)
+    console.log('Skipping AI analysis - transcription only requested');
+
     console.log('Document processing completed');
 
     // Get public URL for the uploaded file
@@ -576,8 +579,6 @@ serve(async (req) => {
         contentPreview: finalContent.substring(0, 100) + '...'
       });
     }
-
-    console.log('📄 Content extraction completed, document will be saved');
 
     // Save document to database with enhanced metadata
     const documentData = {
@@ -618,9 +619,7 @@ serve(async (req) => {
       archival_metadata: pdfaInfo?.metadata || null,
       archival_features: pdfaInfo?.archivalFeatures || null,
       // Processing job reference for tracking
-      processing_job_id: jobData?.id || null,
-      // Translated content will be added by background AI analysis
-      translated_content: null
+      processing_job_id: jobData?.id || null
     };
 
     console.log('Saving document with enhanced metadata:', {
@@ -647,77 +646,6 @@ serve(async (req) => {
     }
 
     console.log('Document saved to database:', document.id);
-
-    // Start AI analysis in background (non-blocking)
-    if (extractionSuccess && finalContent.length > 100) {
-      const backgroundAIAnalysis = async () => {
-        try {
-          console.log('🤖 Starting background AI analysis for document:', document.id);
-          
-          const { data: aiAnalysis, error: aiError } = await supabaseAdmin.functions.invoke('smart-document-analysis', {
-            body: {
-              textualMetadata: textualMetadata || '',
-              content: finalContent,
-              currentLanguage: language
-            }
-          });
-          
-          if (aiError) {
-            console.error('Background AI analysis error:', aiError);
-            return;
-          }
-          
-          if (aiAnalysis?.analysis) {
-            const result = aiAnalysis.analysis;
-            
-            // Update document with AI results
-            const { error: updateError } = await supabaseAdmin
-              .from('documents')
-              .update({
-                title: result.title || document.title,
-                title_ar: result.title_ar,
-                summary: result.summary || document.summary,
-                summary_ar: result.summary_ar,
-                keywords: result.keywords || [],
-                keywords_ar: result.keywords_ar || [],
-                main_topics: result.main_topics || [],
-                legal_references: result.legal_references || [],
-                entities: result.entities || [],
-                dates: result.dates || [],
-                jurisdiction: result.jurisdiction,
-                case_numbers: result.case_numbers || [],
-                legal_domains: result.legal_domains || [],
-                translated_content: result.translatedContent,
-                updated_at: new Date().toISOString()
-              })
-              .eq('id', document.id);
-            
-            if (updateError) {
-              console.error('Error updating document with AI results:', updateError);
-            } else {
-              console.log('✅ Document updated with AI analysis:', document.id);
-            }
-          }
-        } catch (error) {
-          console.error('Background AI analysis exception:', error);
-        }
-      };
-
-      // Run AI analysis in background without blocking response
-      try {
-        const edgeRuntime = getEdgeRuntime();
-        if (edgeRuntime && edgeRuntime.waitUntil) {
-          edgeRuntime.waitUntil(backgroundAIAnalysis());
-        } else {
-          // Fallback: fire and forget
-          backgroundAIAnalysis().catch(err => console.error('Background AI failed:', err));
-        }
-        console.log('🔄 AI analysis started in background');
-      } catch {
-        // Fallback: fire and forget
-        backgroundAIAnalysis().catch(err => console.error('Background AI failed:', err));
-      }
-    }
 
     // Only trigger OCR in background if direct text extraction wasn't sufficient
     if (isPDF && !shouldUsePDFReader) {

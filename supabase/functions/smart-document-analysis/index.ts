@@ -40,90 +40,6 @@ function parseKeywordsArray(keywords: any): string[] {
   return [];
 }
 
-// Function to split content into chunks intelligently (at paragraph boundaries)
-function splitIntoChunks(text: string, chunkSize: number = 6000): string[] {
-  const chunks: string[] = [];
-  const paragraphs = text.split(/\n\n+/);
-  
-  let currentChunk = '';
-  
-  for (const paragraph of paragraphs) {
-    if ((currentChunk + paragraph).length > chunkSize && currentChunk.length > 0) {
-      chunks.push(currentChunk.trim());
-      currentChunk = paragraph;
-    } else {
-      currentChunk += (currentChunk ? '\n\n' : '') + paragraph;
-    }
-  }
-  
-  if (currentChunk.trim()) {
-    chunks.push(currentChunk.trim());
-  }
-  
-  return chunks;
-}
-
-// Function to translate content in chunks
-async function translateInChunks(
-  content: string,
-  targetLanguage: string,
-  apiKey: string
-): Promise<string> {
-  const chunks = splitIntoChunks(content, 6000);
-  console.log(`📦 Split document into ${chunks.length} chunks for translation`);
-  
-  const translatedChunks: string[] = [];
-  
-  for (let i = 0; i < chunks.length; i++) {
-    console.log(`🔄 Traduction du segment ${i + 1}/${chunks.length} (${chunks[i].length} chars)...`);
-    
-    try {
-      const response = await fetch('https://api.openai.com/v1/chat/completions', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${apiKey}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          model: "gpt-4o-mini",
-          messages: [
-            {
-              role: "system",
-              content: `Tu es un traducteur expert. Traduis EXACTEMENT le texte fourni en ${targetLanguage}. Ne résume pas, ne commente pas, traduis seulement. Garde la même structure et tous les détails.`
-            },
-            {
-              role: "user",
-              content: chunks[i]
-            }
-          ],
-          temperature: 0.3,
-          max_tokens: 10000,
-        }),
-      });
-
-      if (!response.ok) {
-        throw new Error(`Translation API error: ${response.status}`);
-      }
-
-      const data = await response.json();
-      const translated = data.choices?.[0]?.message?.content || '';
-      translatedChunks.push(translated);
-      console.log(`✅ Segment ${i + 1}/${chunks.length} traduit: ${translated.length} chars`);
-      
-      // Add delay between chunks to avoid rate limits
-      if (i < chunks.length - 1) {
-        await new Promise(resolve => setTimeout(resolve, 200));
-      }
-      
-    } catch (error) {
-      console.error(`❌ Error translating chunk ${i + 1}:`, error);
-      translatedChunks.push(`[Erreur de traduction du segment ${i + 1}]`);
-    }
-  }
-  
-  return translatedChunks.join('\n\n');
-}
-
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
@@ -164,11 +80,6 @@ serve(async (req) => {
     const targetLanguage = isPrimaryArabic ? 'français' : 'arabe';
     const sourceLanguage = isPrimaryArabic ? 'arabe' : 'français';
 
-    // STEP 1: ALWAYS translate content first using chunks (regardless of size)
-    console.log(`📄 Starting automatic translation for document (${content.length} chars)...`);
-    const translatedContentResult = await translateInChunks(content, targetLanguage, openAIApiKey);
-    console.log(`✅ Translation complete: ${translatedContentResult.length} chars (${((translatedContentResult.length / content.length) * 100).toFixed(0)}%)`);
-
     const systemPrompt = `Tu es un expert en analyse de documents juridiques tunisiens. Analyse le contenu suivant et extrait les informations demandées en JSON.
 
 LANGUE DU DOCUMENT SOURCE: ${sourceLanguage}
@@ -192,14 +103,6 @@ IMPORTANTES INSTRUCTIONS POUR L'EXTRACTION DEPUIS LES MÉTADONNÉES TEXTUELLES:
 1. NE MODIFIE PAS le contenu original du document - garde-le intact
 2. TRADUIS RÉELLEMENT tout le contenu en ${targetLanguage} - ne retourne jamais de descriptions ou placeholders
 
-⚠️ RÈGLE CRITIQUE SUR "translatedContent":
-- "translatedContent" doit contenir la TRADUCTION COMPLÈTE INTÉGRALE de TOUT le contenu du document
-- NE TRADUIS PAS SEULEMENT le résumé - traduis CHAQUE PHRASE, CHAQUE PARAGRAPHE du document complet
-- La longueur de "translatedContent" doit être similaire à la longueur du contenu original (±20%)
-- "translatedSummary" est le résumé traduit (court, 3-5 phrases)
-- "translatedContent" est le contenu ENTIER traduit (long, plusieurs pages)
-- EXEMPLE: Si le document source fait 30 000 caractères, "translatedContent" doit aussi faire environ 25 000-35 000 caractères
-
 RÈGLES D'EXTRACTION SPÉCIFIQUES:
 
 EXTRACTION DEPUIS LES MÉTADONNÉES TEXTUELLES:
@@ -216,8 +119,6 @@ EXTRACTION DEPUIS LES MÉTADONNÉES TEXTUELLES:
 
 EXTRACTION DEPUIS LE CONTENU PRINCIPAL:
 13. RÉSUMÉ: Génère un résumé synthétique depuis le contenu principal du document
-
-⚠️ IMPORTANT: NE PAS INCLURE "translatedContent" DANS TA RÉPONSE - la traduction complète a déjà été effectuée séparément
 
 Catégories disponibles:
 ${categories.map(cat => `- ${cat.name} (${cat.name_ar})`).join('\n')}
@@ -246,11 +147,7 @@ STRATÉGIE POUR TITRE ET SOUS-TITRE:
 - Assure-toi que le titre reflète l'essence juridique du document
 - Le sous-titre doit compléter le titre avec des informations spécifiques (cour, date, parties, etc.)
 
-IMPORTANT: Le champ "textualMetadataTranslated" doit contenir la VRAIE TRADUCTION, pas une description !
-
-⚠️ DISTINCTION CRUCIALE:
-- "summary" = résumé court du document (3-5 phrases) en ${sourceLanguage}
-- "translatedSummary" = traduction du résumé court (3-5 phrases) en ${targetLanguage}
+IMPORTANT: Les champs "textualMetadataTranslated" et "translatedContent" doivent contenir les VRAIES TRADUCTIONS, pas des descriptions !
 
 Réponds uniquement en JSON valide avec cette structure exacte :
 {
@@ -258,8 +155,8 @@ Réponds uniquement en JSON valide avec cette structure exacte :
   "subtitle": "sous-titre proposé en analysant les métadonnées textuelles ET le contenu principal", 
   "translatedTitle": "traduction complète du titre en ${targetLanguage}",
   "translatedSubtitle": "traduction complète du sous-titre en ${targetLanguage}",
-  "summary": "résumé court du document (3-5 phrases) en ${sourceLanguage}",
-  "translatedSummary": "traduction du résumé court (3-5 phrases) en ${targetLanguage}",
+  "summary": "résumé du document en ${sourceLanguage}",
+  "translatedSummary": "traduction complète du résumé en ${targetLanguage}",
   "existingKeywords": ["mots-clés trouvés dans le document"],
   "suggestedKeywords": ["nouveaux mots-clés pertinents"],
   "translatedKeywords": ["traduction complète des mots-clés en ${targetLanguage}"],
@@ -280,6 +177,7 @@ Réponds uniquement en JSON valide avec cette structure exacte :
     "court_level": "traduction complète du niveau de tribunal en ${targetLanguage}"
   },
   "textualMetadataTranslated": "TRADUCTION COMPLÈTE EN ${targetLanguage} DES MÉTADONNÉES TEXTUELLES EXTRAITES",
+  "translatedContent": "TRADUCTION COMPLÈTE EN ${targetLanguage} DE TOUT LE CONTENU DU DOCUMENT",
   "language": "${sourceLanguage}",
   "suggestions": {
     "suggestedCategory": "nom exact de la catégorie la plus appropriée",
@@ -289,8 +187,6 @@ Réponds uniquement en JSON valide avec cette structure exacte :
   }
 }`;
 
-    // STEP 2: Call OpenAI API for metadata extraction only (translation already done)
-    console.log('🤖 Calling OpenAI API for metadata analysis...');
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
       headers: {
@@ -298,7 +194,7 @@ Réponds uniquement en JSON valide avec cette structure exacte :
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'gpt-4o-mini',
+        model: 'gpt-4o',
         messages: [
           { role: 'system', content: systemPrompt },
           { role: 'user', content: `Analyse ce document en respectant les règles d'extraction:
@@ -311,7 +207,7 @@ ${content}` }
         ],
         response_format: { type: "json_object" },
         temperature: 0.3,
-        max_tokens: 8000,
+        max_tokens: 4000,
       }),
     });
 
@@ -367,19 +263,12 @@ ${content}` }
     }
 
     // Validate required fields
-    const requiredFields = ['title', 'summary', 'language'];
+    const requiredFields = ['title', 'summary', 'language', 'translatedContent'];
     for (const field of requiredFields) {
       if (!analysisResult[field]) {
         console.warn(`Missing required field: ${field}`);
       }
     }
-
-    // STEP 3: Inject the translated content from chunk translation
-    analysisResult.translatedContent = translatedContentResult;
-    console.log(`✅ Analysis complete:
-    - Original content: ${content.length} chars
-    - Translated content: ${translatedContentResult.length} chars (${((translatedContentResult.length / content.length) * 100).toFixed(0)}% completeness)
-    - Metadata extracted: ✅`);
 
     // Intelligent matching logic to find best matches by ID
     const findBestMatch = (suggestions: any, options: any[], field: string) => {

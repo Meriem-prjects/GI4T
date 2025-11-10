@@ -333,48 +333,6 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
         const analysis = data.analysis;
         const isPrimaryArabic = editedData.language === 'ar';
         
-        // Validate translation completeness
-        const contentLength = editedData.content?.length || 0;
-        const translatedLength = analysis.translatedContent?.length || 0;
-        const translationRatio = contentLength > 0 ? translatedLength / contentLength : 0;
-        
-        console.log('🔍 Translation Validation:', {
-          originalContentLength: contentLength,
-          translatedContentLength: translatedLength,
-          ratio: translationRatio.toFixed(2)
-        });
-
-        // Completeness indicator
-        let completenessEmoji = '🟢';
-        let completenessText = 'complète';
-        if (translationRatio < 0.4) {
-          completenessEmoji = '🔴';
-          completenessText = 'incomplète';
-        } else if (translationRatio < 0.8) {
-          completenessEmoji = '🟠';
-          completenessText = 'partielle';
-        }
-
-        // Warn if translated content is suspiciously short (less than 40% of original)
-        if (translationRatio < 0.4 && contentLength > 1000) {
-          toast({
-            title: `${completenessEmoji} Traduction ${completenessText} détectée`,
-            description: `La traduction semble tronquée (${translatedLength} caractères vs ${contentLength} originaux). Utilisez le bouton "Retraduire" pour une traduction complète.`,
-            variant: "destructive",
-            duration: 10000
-          });
-          console.warn('⚠️ Translation appears incomplete:', {
-            expected: `~${contentLength} chars`,
-            received: `${translatedLength} chars`,
-            ratio: `${(translationRatio * 100).toFixed(1)}%`
-          });
-        } else if (translationRatio >= 0.8) {
-          toast({
-            title: `${completenessEmoji} Traduction ${completenessText}`,
-            description: `${translatedLength} caractères traduits (${(translationRatio * 100).toFixed(0)}%)`,
-          });
-        }
-        
         // Debug: Log analysis result to verify content
         console.log('🔍 AI Analysis Result:', {
           isPrimaryArabic,
@@ -576,17 +534,10 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
 
         setHasChanges(true);
         
-        if (contentLength > 30000) {
-          toast({
-            title: "✅ Analyse IA terminée (document long)",
-            description: `Document de ${contentLength} caractères analysé avec traduction par segments`
-          });
-        } else {
-          toast({
-            title: "✅ Analyse IA terminée",
-            description: "Les métadonnées ont été extraites avec succès"
-          });
-        }
+        toast({
+          title: "Analyse IA terminée",
+          description: `Analyse, extraction des métadonnées, classifications automatiques et traduction terminées en ${isPrimaryArabic ? 'arabe → français' : 'français → arabe'}.`,
+        });
       } else {
         throw new Error(data.error || 'Analyse échouée');
       }
@@ -1174,6 +1125,7 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
             )}
             {isAnalyzing ? 'Analyse...' : '🤖 Analyse IA'}
           </Button>
+
 
           
           {isFromValidation ? (

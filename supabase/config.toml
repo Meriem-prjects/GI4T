@@ -149,8 +149,5 @@ verify_jwt = false
 [functions.track-document-view]
 verify_jwt = false
 
-[functions.retranslate-document]
-verify_jwt = false
-
 [functions.submit-comment]
 verify_jwt = false

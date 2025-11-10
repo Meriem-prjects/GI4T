@@ -11,8 +11,6 @@ import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import ProgressTracker from './ProgressTracker';
 import { MultiCategorySelector } from './MultiCategorySelector';
-
-const SUPABASE_URL = "https://qpkybrcjcoxhkifnbxei.supabase.co";
 // PdfToImages no longer needed - using server-side pdfRest conversion
 
 interface UploadFile {
@@ -151,30 +149,13 @@ const BatchDocumentUploader: React.FC<BatchDocumentUploaderProps> = ({ onDocumen
       f.id === uploadFile.id ? { ...f, progress: 10 } : f
     ));
 
-    // Get session for authentication
-    const { data: { session } } = await supabase.auth.getSession();
-    if (!session) {
-      throw new Error('Non authentifié');
+    const { data: uploadResult, error: uploadError } = await supabase.functions.invoke('upload-document', {
+      body: formData
+    });
+
+    if (uploadError) {
+      throw new Error(`Upload failed: ${uploadError.message}`);
     }
-
-    // Use fetch instead of supabase.functions.invoke for FormData support
-    const response = await fetch(
-      `${SUPABASE_URL}/functions/v1/upload-document`,
-      {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${session.access_token}`,
-        },
-        body: formData
-      }
-    );
-
-    if (!response.ok) {
-      const errorText = await response.text();
-      throw new Error(`Upload failed: ${errorText}`);
-    }
-
-    const uploadResult = await response.json();
 
     if (!uploadResult.success) {
       throw new Error(uploadResult.error || 'Upload failed');
