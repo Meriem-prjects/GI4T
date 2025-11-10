@@ -99,6 +99,14 @@ serve(async (req) => {
     return new Response(null, { headers: corsHeaders });
   }
 
+  // Handle health check GET requests
+  if (req.method === 'GET') {
+    return new Response(
+      JSON.stringify({ ok: true, service: 'smart-document-analysis', timestamp: new Date().toISOString() }),
+      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+    );
+  }
+
   try {
     const { textualMetadata, content, currentLanguage = 'fr', mode = 'quick' } = await req.json();
 

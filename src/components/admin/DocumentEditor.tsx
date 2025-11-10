@@ -318,20 +318,137 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
     }
 
     setIsAnalyzing(true);
+    
     try {
-      const { data, error } = await supabase.functions.invoke('smart-document-analysis', {
-        body: {
-          textualMetadata: editedData.textual_metadata || '',
-          content: editedData.content,
-          currentLanguage: editedData.language || 'fr',
-          mode: 'quick' // Use quick mode by default for fast analysis without exhaustive translation
+      console.log('Starting AI analysis...');
+      
+      // Health check ping before sending the main request
+      try {
+        const healthCheck = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/smart-document-analysis`, {
+          method: 'GET',
+          headers: {
+            'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+          },
+        });
+        
+        if (!healthCheck.ok) {
+          console.warn('Health check failed:', healthCheck.status);
+          toast({
+            title: "Service IA indisponible",
+            description: "Le service d'analyse IA n'est pas disponible. Veuillez réessayer dans quelques instants.",
+            variant: "destructive",
+          });
+          setIsAnalyzing(false);
+          return;
         }
-      });
+        console.log('Health check passed');
+      } catch (pingError) {
+        console.error('Health check error:', pingError);
+        toast({
+          title: "Service IA indisponible",
+          description: "Impossible de joindre le service d'analyse. Vérifiez votre connexion.",
+          variant: "destructive",
+        });
+        setIsAnalyzing(false);
+        return;
+      }
 
-      if (error) throw error;
+      // Main analysis call with automatic retry
+      let lastError: any = null;
+      let attempt = 0;
+      const maxAttempts = 2;
+      let data: any = null;
+      let error: any = null;
+      
+      while (attempt < maxAttempts) {
+        attempt++;
+        console.log(`Analysis attempt ${attempt}/${maxAttempts}`);
+        
+        try {
+          const response = await supabase.functions.invoke('smart-document-analysis', {
+            body: {
+              textualMetadata: editedData.textual_metadata || '',
+              content: editedData.content,
+              currentLanguage: editedData.language || 'fr',
+              mode: 'quick'
+            }
+          });
+          
+          data = response.data;
+          error = response.error;
+          
+          console.log('AI Analysis response:', { data, error });
+
+          // Handle specific error cases
+          if (error) {
+            console.error('Error from edge function:', error);
+            
+            // Check for network/connection errors that should trigger retry
+            if (error.message && error.message.includes('Failed to send a request to the Edge Function')) {
+              lastError = error;
+              if (attempt < maxAttempts) {
+                console.log('Network error detected, retrying in 1 second...');
+                await new Promise(resolve => setTimeout(resolve, 1000));
+                continue;
+              }
+            }
+            
+            // Handle rate limit
+            if ((error as any).status === 429) {
+              toast({
+                title: "Trop de requêtes",
+                description: "Vous avez envoyé trop de requêtes. Veuillez patienter quelques instants.",
+                variant: "destructive",
+              });
+              setIsAnalyzing(false);
+              return;
+            }
+            
+            // Handle payment required
+            if ((error as any).status === 402) {
+              toast({
+                title: "Crédits IA épuisés",
+                description: "Vos crédits IA sont épuisés. Veuillez recharger votre compte.",
+                variant: "destructive",
+              });
+              setIsAnalyzing(false);
+              return;
+            }
+            
+            throw error;
+          }
+
+          // Handle business logic errors
+          if (!data || !data.success) {
+            if (data?.error === 'DOCUMENT_TOO_LONG_FOR_SYNC_FULL_TRANSLATION') {
+              toast({
+                title: "Document trop long",
+                description: data.message || "Ce document est trop long pour une analyse complète synchrone. Utilisez le mode rapide.",
+                variant: "destructive",
+              });
+              setIsAnalyzing(false);
+              return;
+            }
+            throw new Error(data?.error || 'Analyse échouée');
+          }
+          
+          // Success - break out of retry loop
+          break;
+          
+        } catch (attemptError) {
+          lastError = attemptError;
+          if (attempt < maxAttempts && 
+              lastError?.message?.includes('Failed to send a request to the Edge Function')) {
+            console.log('Retrying after error...');
+            await new Promise(resolve => setTimeout(resolve, 1000));
+            continue;
+          }
+          throw attemptError;
+        }
+      }
 
       if (data.success && data.analysis) {
-        const analysis = data.analysis;
+        const analysis = (data as any).analysis;
         const isPrimaryArabic = editedData.language === 'ar';
         
         // Debug: Log analysis result to verify content
@@ -542,12 +659,32 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
       } else {
         throw new Error(data.error || 'Analyse échouée');
       }
-    } catch (error) {
-      console.error('AI Analysis error:', error);
+    } catch (error: any) {
+      console.error('Error during AI analysis:', error);
+      console.error('Error details:', {
+        name: error?.name,
+        message: error?.message,
+        status: error?.status,
+        stack: error?.stack?.split('\n').slice(0, 3).join('\n')
+      });
+      
+      const isNetworkError = error?.message?.includes('Failed to send a request to the Edge Function') ||
+                             error?.message?.includes('Failed to fetch');
+      
       toast({
-        title: "Erreur d'analyse IA",
-        description: error.message || "Impossible d'analyser le document.",
-        variant: "destructive"
+        title: isNetworkError ? "Erreur de connexion" : "Erreur lors de l'analyse IA",
+        description: isNetworkError 
+          ? "Impossible de joindre le service d'analyse. Vérifiez votre connexion et réessayez."
+          : (error instanceof Error ? error.message : "Une erreur est survenue lors de l'analyse"),
+        variant: "destructive",
+        action: (
+          <button
+            onClick={() => runAIAnalysis()}
+            className="px-3 py-2 text-sm bg-primary text-primary-foreground rounded-md hover:bg-primary/90"
+          >
+            Réessayer
+          </button>
+        ),
       });
     } finally {
       setIsAnalyzing(false);
