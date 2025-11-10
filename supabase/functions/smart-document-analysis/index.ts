@@ -108,7 +108,7 @@ serve(async (req) => {
   }
 
   try {
-    const { textualMetadata, content, currentLanguage = 'fr', mode = 'quick' } = await req.json();
+    const { textualMetadata, content, currentLanguage = 'fr', mode = 'quick', documentId, documentFileName } = await req.json();
 
     console.log('Starting smart document analysis for content length:', content?.length);
     console.log('Textual metadata length:', textualMetadata?.length);
@@ -129,13 +129,73 @@ serve(async (req) => {
     const MAX_CONTENT_LENGTH_FOR_FULL = 15000; // ~12-15k characters max for full sync translation
     
     if (mode === 'full' && content.length > MAX_CONTENT_LENGTH_FOR_FULL) {
-      console.warn('Document too long for synchronous full translation:', content.length);
+      console.log(`📋 Document too long for sync translation (${content.length} chars), launching async job...`);
+      
+      // Créer un job de traduction asynchrone
+      const { data: job, error: jobError } = await supabase
+        .from('processing_jobs')
+        .insert({
+          file_name: documentFileName || 'document',
+          file_size: content.length,
+          status: 'processing',
+          progress: 0,
+          current_step: 'Démarrage de la traduction',
+          total_pages: Math.ceil(content.length / 5000)
+        })
+        .select()
+        .single();
+      
+      if (jobError) {
+        console.error('Failed to create translation job:', jobError);
+        throw new Error('Failed to create translation job');
+      }
+      
+      console.log(`✅ Created job ${job.id} for document ${documentId}`);
+      
+      // Lier le job au document si documentId fourni
+      if (documentId) {
+        const { error: linkError } = await supabase
+          .from('documents')
+          .update({ processing_job_id: job.id })
+          .eq('id', documentId);
+        
+        if (linkError) {
+          console.warn('Failed to link job to document:', linkError);
+        }
+      }
+      
+      // Déclencher la traduction asynchrone en arrière-plan
+      const edgeRuntime = (globalThis as any).EdgeRuntime;
+      if (edgeRuntime?.waitUntil) {
+        console.log('🚀 Triggering async-full-translation in background...');
+        edgeRuntime.waitUntil(
+          supabase.functions.invoke('async-full-translation', {
+            body: {
+              document_id: documentId,
+              job_id: job.id,
+              source_language: currentLanguage,
+              target_language: targetLanguage
+            }
+          }).then(({ data, error }) => {
+            if (error) {
+              console.error('Async translation invocation error:', error);
+            } else {
+              console.log('Async translation triggered successfully:', data);
+            }
+          })
+        );
+      } else {
+        console.warn('EdgeRuntime.waitUntil not available, translation may not complete');
+      }
+      
+      // Retourner immédiatement
       return new Response(
         JSON.stringify({ 
-          success: false, 
-          error: 'DOCUMENT_TOO_LONG_FOR_SYNC_FULL_TRANSLATION',
-          suggestedAction: 'use_background_full_translation',
-          message: `Document trop long (${content.length} caractères) pour une traduction synchrone complète. Limite: ${MAX_CONTENT_LENGTH_FOR_FULL} caractères.`
+          success: true,
+          mode: 'full_async',
+          job_id: job.id,
+          message: 'Traduction intégrale lancée en arrière-plan',
+          estimated_duration_minutes: Math.ceil(content.length / 5000) * 0.5
         }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );

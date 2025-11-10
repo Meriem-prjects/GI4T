@@ -120,6 +120,19 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
   const [translatedTextualMetadata, setTranslatedTextualMetadata] = useState<string>('');
   const [isCleaningArabic, setIsCleaningArabic] = useState(false);
   const [isCorrectingSpacing, setIsCorrectingSpacing] = useState(false);
+  const [fullTranslationJob, setFullTranslationJob] = useState<{
+    jobId: string | null;
+    status: 'idle' | 'processing' | 'completed' | 'failed';
+    progress: number;
+    currentStep: string;
+    errorMessage?: string;
+  }>({
+    jobId: null,
+    status: 'idle',
+    progress: 0,
+    currentStep: ''
+  });
+  const [isPollingJob, setIsPollingJob] = useState(false);
 
   useEffect(() => {
     setEditedData(documentData);
@@ -184,6 +197,41 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
     }
   }, [editedData.id]);
 
+  // Récupérer le job en cours au chargement
+  useEffect(() => {
+    if (editedData.id) {
+      const checkExistingJob = async () => {
+        const { data: doc } = await supabase
+          .from('documents')
+          .select('processing_job_id')
+          .eq('id', editedData.id)
+          .single();
+        
+        if (doc?.processing_job_id) {
+          const { data: existingJob } = await supabase
+            .from('processing_jobs')
+            .select('id, status, progress, current_step, error_message')
+            .eq('id', doc.processing_job_id)
+            .single();
+          
+          if (existingJob && existingJob.status === 'processing') {
+            console.log('📥 Reconnecting to existing translation job:', existingJob.id);
+            setFullTranslationJob({
+              jobId: existingJob.id,
+              status: 'processing',
+              progress: existingJob.progress,
+              currentStep: existingJob.current_step || '',
+              errorMessage: existingJob.error_message || undefined
+            });
+            startJobPolling(existingJob.id);
+          }
+        }
+      };
+      
+      checkExistingJob();
+    }
+  }, [editedData.id]);
+
   const autoExtractMetadata = async () => {
     if (!editedData.id) return;
     
@@ -230,6 +278,145 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
       // Silent error - don't show toast for auto-extraction failures
     } finally {
       setIsReprocessing(false);
+    }
+  };
+
+  const startJobPolling = (jobId: string) => {
+    setIsPollingJob(true);
+    
+    const pollInterval = setInterval(async () => {
+      const { data: job } = await supabase
+        .from('processing_jobs')
+        .select('status, progress, current_step, error_message')
+        .eq('id', jobId)
+        .single();
+      
+      if (job) {
+        setFullTranslationJob(prev => ({
+          ...prev,
+          jobId,
+          status: job.status as any,
+          progress: job.progress,
+          currentStep: job.current_step || '',
+          errorMessage: job.error_message || undefined
+        }));
+        
+        if (job.status === 'completed') {
+          clearInterval(pollInterval);
+          setIsPollingJob(false);
+          
+          // Recharger le document pour afficher translated_content
+          const { data: updatedDoc } = await supabase
+            .from('documents')
+            .select('translated_content')
+            .eq('id', editedData.id!)
+            .single();
+          
+          if (updatedDoc) {
+            setEditedData(prev => ({
+              ...prev,
+              translated_content: updatedDoc.translated_content
+            }));
+            setTranslatedContent(updatedDoc.translated_content || '');
+          }
+          
+          toast({
+            title: "✅ Traduction terminée !",
+            description: "Le document a été traduit intégralement.",
+          });
+        } else if (job.status === 'failed') {
+          clearInterval(pollInterval);
+          setIsPollingJob(false);
+          
+          toast({
+            title: "❌ Échec de la traduction",
+            description: job.error_message || "Erreur inconnue",
+            variant: "destructive",
+          });
+        }
+      }
+    }, 3000);  // Poll toutes les 3 secondes
+    
+    // Cleanup après 30 minutes max
+    setTimeout(() => {
+      clearInterval(pollInterval);
+      setIsPollingJob(false);
+    }, 30 * 60 * 1000);
+  };
+
+  const runFullTranslation = async () => {
+    if (!editedData.content) {
+      toast({
+        title: "Erreur",
+        description: "Aucun contenu à traduire.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    setIsAnalyzing(true);
+    
+    try {
+      console.log('Starting full translation...');
+      
+      const { data, error } = await supabase.functions.invoke('smart-document-analysis', {
+        body: {
+          textualMetadata: editedData.textual_metadata || '',
+          content: editedData.content,
+          currentLanguage: editedData.language || 'fr',
+          mode: 'full',
+          documentId: editedData.id,
+          documentFileName: editedData.originalFileName
+        }
+      });
+
+      if (error) throw error;
+
+      if (data.mode === 'full_async') {
+        // Traduction asynchrone lancée
+        setFullTranslationJob({
+          jobId: data.job_id,
+          status: 'processing',
+          progress: 0,
+          currentStep: 'Démarrage...'
+        });
+        
+        toast({
+          title: "🚀 Traduction en cours",
+          description: `Traduction intégrale lancée en arrière-plan. Durée estimée : ${Math.round(data.estimated_duration_minutes)} min.`,
+        });
+        
+        // Démarrer le polling
+        startJobPolling(data.job_id);
+      } else {
+        // Traduction synchrone (document court)
+        if (data.analysis?.translatedContent) {
+          setEditedData(prev => ({
+            ...prev,
+            translated_content: data.analysis.translatedContent
+          }));
+          setTranslatedContent(data.analysis.translatedContent);
+        }
+        
+        toast({
+          title: "✅ Traduction terminée",
+          description: "La traduction intégrale est disponible.",
+        });
+      }
+    } catch (err) {
+      console.error('Full translation error:', err);
+      toast({
+        title: "❌ Erreur",
+        description: "Impossible de lancer la traduction intégrale.",
+        variant: "destructive",
+        action: (
+          <Button variant="outline" size="sm" onClick={() => runFullTranslation()}>
+            Réessayer
+          </Button>
+        )
+      });
+    } finally {
+      setIsAnalyzing(false);
     }
   };
 
@@ -1264,6 +1451,28 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
             {isAnalyzing ? 'Analyse...' : '🤖 Analyse IA'}
           </Button>
 
+          <Button
+            variant="secondary"
+            onClick={runFullTranslation}
+            disabled={isAnalyzing || !editedData.content || editedData.content.length < 1000 || fullTranslationJob.status === 'processing'}
+            className="relative"
+          >
+            {fullTranslationJob.status === 'processing' ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Traduction {fullTranslationJob.progress}%
+              </>
+            ) : (
+              <>
+                🌍 Traduction intégrale
+                {editedData.content && editedData.content.length >= 1000 && (
+                  <Badge variant="secondary" className="ml-2">
+                    {Math.ceil(editedData.content.length / 5000)} pages
+                  </Badge>
+                )}
+              </>
+            )}
+          </Button>
 
           
           {isFromValidation ? (
@@ -1823,6 +2032,31 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
 
           {/* Content Column */}
           <div className="lg:col-span-2 space-y-6">
+            {fullTranslationJob.status === 'processing' && (
+              <Card className="border-blue-500">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Loader2 className="h-5 w-5 animate-spin text-blue-500" />
+                    Traduction intégrale en cours
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between text-sm text-muted-foreground mb-1">
+                      <span>{fullTranslationJob.currentStep}</span>
+                      <span>{fullTranslationJob.progress}%</span>
+                    </div>
+                    <div className="w-full bg-secondary rounded-full h-2 overflow-hidden">
+                      <div 
+                        className="bg-blue-500 h-full transition-all duration-300"
+                        style={{ width: `${fullTranslationJob.progress}%` }}
+                      />
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+
             {/* Summary and Keywords Section */}
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
               <Card className="p-4 lg:col-span-7">
@@ -2060,6 +2294,23 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
                 />
               )}
             </Card>
+
+            {editedData.translated_content && (
+              <Card className="p-6">
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-lg font-semibold flex items-center gap-2">
+                    <BookOpen className="h-5 w-5" />
+                    Traduction complète automatique
+                  </h3>
+                  <Badge variant="secondary">Auto-traduit</Badge>
+                </div>
+                <div className="prose max-w-none">
+                  <div className="p-4 bg-muted rounded-lg whitespace-pre-wrap max-h-[600px] overflow-y-auto">
+                    {editedData.translated_content}
+                  </div>
+                </div>
+              </Card>
+            )}
           </div>
         </div>
       )}
