@@ -131,7 +131,17 @@ serve(async (req) => {
     if (mode === 'full' && content.length > MAX_CONTENT_LENGTH_FOR_FULL) {
       console.log(`📋 Document too long for sync translation (${content.length} chars), launching async job...`);
       
-      // Créer un job de traduction asynchrone
+      // Diviser en chunks de 5000 caractères
+      const CHUNK_SIZE = 5000;
+      const chunks: string[] = [];
+      
+      for (let i = 0; i < content.length; i += CHUNK_SIZE) {
+        chunks.push(content.slice(i, i + CHUNK_SIZE));
+      }
+
+      console.log(`📦 Created ${chunks.length} chunks for async translation`);
+      
+      // Créer un job de traduction asynchrone avec tous les chunks stockés
       const { data: job, error: jobError } = await supabase
         .from('processing_jobs')
         .insert({
@@ -140,7 +150,13 @@ serve(async (req) => {
           status: 'processing',
           progress: 0,
           current_step: 'Démarrage de la traduction',
-          total_pages: Math.ceil(content.length / 5000)
+          total_pages: chunks.length,
+          result_data: {
+            chunks: chunks,
+            translated_chunks: [],
+            source_language: currentLanguage,
+            target_language: targetLanguage
+          }
         })
         .select()
         .single();
@@ -150,7 +166,7 @@ serve(async (req) => {
         throw new Error('Failed to create translation job');
       }
       
-      console.log(`✅ Created job ${job.id} for document ${documentId}`);
+      console.log(`✅ Created job ${job.id} for document ${documentId} with ${chunks.length} chunks`);
       
       // Lier le job au document si documentId fourni
       if (documentId) {
@@ -164,29 +180,23 @@ serve(async (req) => {
         }
       }
       
-      // Déclencher la traduction asynchrone en arrière-plan
-      const edgeRuntime = (globalThis as any).EdgeRuntime;
-      if (edgeRuntime?.waitUntil) {
-        console.log('🚀 Triggering async-full-translation in background...');
-        edgeRuntime.waitUntil(
-          supabase.functions.invoke('async-full-translation', {
-            body: {
-              document_id: documentId,
-              job_id: job.id,
-              source_language: currentLanguage,
-              target_language: targetLanguage
-            }
-          }).then(({ data, error }) => {
-            if (error) {
-              console.error('Async translation invocation error:', error);
-            } else {
-              console.log('Async translation triggered successfully:', data);
-            }
-          })
-        );
-      } else {
-        console.warn('EdgeRuntime.waitUntil not available, translation may not complete');
-      }
+      // Déclencher le premier chunk en arrière-plan
+      console.log('🚀 Triggering first chunk translation...');
+      fetch(`${supabaseUrl}/functions/v1/async-full-translation`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${supabaseKey}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          document_id: documentId,
+          job_id: job.id,
+          chunk_index: 0,
+          total_chunks: chunks.length,
+          source_language: currentLanguage,
+          target_language: targetLanguage
+        })
+      }).catch(err => console.error('❌ Error triggering first chunk:', err));
       
       // Retourner immédiatement
       return new Response(
@@ -194,8 +204,9 @@ serve(async (req) => {
           success: true,
           mode: 'full_async',
           job_id: job.id,
+          total_chunks: chunks.length,
           message: 'Traduction intégrale lancée en arrière-plan',
-          estimated_duration_minutes: Math.ceil(content.length / 5000) * 0.5
+          estimated_duration_minutes: Math.ceil(chunks.length * 0.5)
         }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );

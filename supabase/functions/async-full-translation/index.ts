@@ -21,170 +21,182 @@ serve(async (req) => {
   const startTime = Date.now();
   
   try {
-    const { document_id, job_id, source_language, target_language } = await req.json();
+    const { document_id, job_id, chunk_index, total_chunks, source_language, target_language } = await req.json();
 
-    console.log(`🚀 Starting async full translation for document ${document_id}, job ${job_id}`);
-    console.log(`   Source: ${source_language} → Target: ${target_language}`);
+    console.log(`🚀 Processing chunk ${chunk_index + 1}/${total_chunks} for document ${document_id}, job ${job_id}`);
 
-    if (!document_id || !job_id) {
-      throw new Error('document_id and job_id are required');
+    if (!document_id || !job_id || chunk_index === undefined || !total_chunks) {
+      throw new Error('document_id, job_id, chunk_index and total_chunks are required');
     }
 
-    // 1. Récupérer le document
-    const { data: document, error: docError } = await supabase
-      .from('documents')
-      .select('id, content, language')
-      .eq('id', document_id)
+    // 1. Récupérer le job pour obtenir les chunks stockés
+    const { data: job, error: jobError } = await supabase
+      .from('processing_jobs')
+      .select('result_data')
+      .eq('id', job_id)
       .single();
 
-    if (docError || !document) {
-      console.error('❌ Document not found:', docError);
-      await supabase
-        .from('processing_jobs')
-        .update({
-          status: 'failed',
-          error_message: 'Document introuvable',
-          updated_at: new Date().toISOString()
-        })
-        .eq('id', job_id);
-      
-      throw new Error('Document not found');
+    if (jobError || !job) {
+      console.error('❌ Job not found:', jobError);
+      throw new Error('Job not found');
     }
 
-    const content = document.content;
-    if (!content) {
-      throw new Error('Document content is empty');
-    }
-
-    console.log(`📄 Document content length: ${content.length} characters`);
-
-    // 2. Diviser en chunks de 5000 caractères
-    const CHUNK_SIZE = 5000;
-    const chunks: string[] = [];
+    const chunks = job.result_data?.chunks || [];
+    const translatedChunks = job.result_data?.translated_chunks || [];
     
-    for (let i = 0; i < content.length; i += CHUNK_SIZE) {
-      chunks.push(content.slice(i, i + CHUNK_SIZE));
+    if (!chunks[chunk_index]) {
+      throw new Error(`Chunk ${chunk_index} not found in job data`);
     }
 
-    console.log(`📦 Created ${chunks.length} chunks for translation`);
+    const currentChunk = chunks[chunk_index];
+    console.log(`📄 Chunk ${chunk_index + 1} length: ${currentChunk.length} characters`);
 
-    // 3. Traduire chaque chunk
-    const translatedChunks: string[] = [];
-    let retryCount = 0;
+    // 2. Mettre à jour la progression avant traduction
+    const progress = Math.round((chunk_index / total_chunks) * 100);
+    await supabase
+      .from('processing_jobs')
+      .update({
+        progress,
+        current_step: `Traduction chunk ${chunk_index + 1}/${total_chunks}`,
+        processed_pages: chunk_index + 1,
+        updated_at: new Date().toISOString()
+      })
+      .eq('id', job_id);
+
+    // 3. Traduire ce chunk avec retry
+    let translatedText = '';
+    let success = false;
     const MAX_RETRIES = 3;
 
-    for (let i = 0; i < chunks.length; i++) {
-      const chunkNum = i + 1;
-      const progress = Math.round((i / chunks.length) * 100);
-      
-      console.log(`🔄 Translating chunk ${chunkNum}/${chunks.length} (${progress}%)`);
-
-      // Mettre à jour la progression
-      await supabase
-        .from('processing_jobs')
-        .update({
-          progress,
-          current_step: `Traduction chunk ${chunkNum}/${chunks.length}`,
-          processed_pages: chunkNum,
-          updated_at: new Date().toISOString()
-        })
-        .eq('id', job_id);
-
-      // Traduire le chunk avec retry
-      let success = false;
-      let attempts = 0;
-
-      while (!success && attempts < MAX_RETRIES) {
-        attempts++;
+    for (let attempt = 1; attempt <= MAX_RETRIES && !success; attempt++) {
+      try {
+        console.log(`🔄 Translation attempt ${attempt}/${MAX_RETRIES} for chunk ${chunk_index + 1}`);
         
-        try {
-          const response = await fetch('https://api.openai.com/v1/chat/completions', {
-            method: 'POST',
-            headers: {
-              'Authorization': `Bearer ${openAIApiKey}`,
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-              model: 'gpt-5-mini-2025-08-07',
-              messages: [
-                { 
-                  role: 'system', 
-                  content: `Translate the following legal text to ${target_language}. Preserve all formatting, numbers, and legal terminology. Only return the translation, nothing else.`
-                },
-                { role: 'user', content: chunks[i] }
-              ],
-              max_completion_tokens: 8000,
-            }),
-          });
+        const response = await fetch('https://api.openai.com/v1/chat/completions', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${openAIApiKey}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            model: 'gpt-5-mini-2025-08-07',
+            messages: [
+              { 
+                role: 'system', 
+                content: `Translate the following legal text to ${target_language}. Preserve all formatting, numbers, and legal terminology. Only return the translation, nothing else.`
+              },
+              { role: 'user', content: currentChunk }
+            ],
+            max_completion_tokens: 8000,
+          }),
+        });
 
-          if (response.status === 429) {
-            // Rate limit - attendre plus longtemps
-            console.warn(`⏳ Rate limit hit on chunk ${chunkNum}, waiting 10 seconds...`);
-            await new Promise(resolve => setTimeout(resolve, 10000));
-            continue;
-          }
-
-          if (response.status === 402) {
-            // Crédits épuisés
-            console.error(`💳 Credits exhausted on chunk ${chunkNum}`);
-            await supabase
-              .from('processing_jobs')
-              .update({
-                status: 'failed',
-                error_message: 'Crédits OpenAI épuisés',
-                updated_at: new Date().toISOString()
-              })
-              .eq('id', job_id);
-            
-            throw new Error('Credits exhausted');
-          }
-
-          if (!response.ok) {
-            const errorText = await response.text();
-            console.error(`❌ OpenAI API error on chunk ${chunkNum}:`, response.status, errorText);
-            throw new Error(`OpenAI API error: ${response.status}`);
-          }
-
-          const data = await response.json();
-          const translatedText = data.choices[0].message.content;
-          translatedChunks.push(translatedText);
-          
-          console.log(`✅ Chunk ${chunkNum}/${chunks.length} translated successfully`);
-          success = true;
-
-          // Pause entre les chunks (rate limiting)
-          if (i < chunks.length - 1) {
-            await new Promise(resolve => setTimeout(resolve, 2000));
-          }
-
-        } catch (error) {
-          console.error(`⚠️ Error translating chunk ${chunkNum}, attempt ${attempts}:`, error);
-          
-          if (attempts >= MAX_RETRIES) {
-            // Échec définitif
-            await supabase
-              .from('processing_jobs')
-              .update({
-                status: 'failed',
-                error_message: `Échec de traduction au chunk ${chunkNum}: ${error.message}`,
-                updated_at: new Date().toISOString()
-              })
-              .eq('id', job_id);
-            
-            throw error;
-          }
-          
-          // Attendre avant de réessayer
-          await new Promise(resolve => setTimeout(resolve, 5000));
+        if (response.status === 429) {
+          console.warn(`⏳ Rate limit hit, waiting 10 seconds...`);
+          await new Promise(resolve => setTimeout(resolve, 10000));
+          continue;
         }
+
+        if (response.status === 402) {
+          console.error(`💳 Credits exhausted`);
+          await supabase
+            .from('processing_jobs')
+            .update({
+              status: 'failed',
+              error_message: 'Crédits OpenAI épuisés',
+              updated_at: new Date().toISOString()
+            })
+            .eq('id', job_id);
+          
+          throw new Error('Credits exhausted');
+        }
+
+        if (!response.ok) {
+          const errorText = await response.text();
+          console.error(`❌ OpenAI API error:`, response.status, errorText);
+          throw new Error(`OpenAI API error: ${response.status}`);
+        }
+
+        const data = await response.json();
+        translatedText = data.choices[0].message.content;
+        success = true;
+        
+        console.log(`✅ Chunk ${chunk_index + 1}/${total_chunks} translated successfully`);
+
+      } catch (error) {
+        console.error(`⚠️ Translation attempt ${attempt} failed:`, error);
+        
+        if (attempt >= MAX_RETRIES) {
+          await supabase
+            .from('processing_jobs')
+            .update({
+              status: 'failed',
+              error_message: `Échec de traduction au chunk ${chunk_index + 1}: ${error.message}`,
+              updated_at: new Date().toISOString()
+            })
+            .eq('id', job_id);
+          
+          throw error;
+        }
+        
+        await new Promise(resolve => setTimeout(resolve, 5000));
       }
     }
 
-    // 4. Concaténer les chunks traduits
+    // 4. Sauvegarder le chunk traduit dans le job
+    translatedChunks[chunk_index] = translatedText;
+    
+    await supabase
+      .from('processing_jobs')
+      .update({
+        result_data: {
+          ...job.result_data,
+          translated_chunks: translatedChunks
+        },
+        updated_at: new Date().toISOString()
+      })
+      .eq('id', job_id);
+
+    console.log(`💾 Chunk ${chunk_index + 1} saved to job`);
+
+    // 5. Si pas fini, déclencher le chunk suivant
+    if (chunk_index + 1 < total_chunks) {
+      console.log(`🔗 Triggering next chunk ${chunk_index + 2}/${total_chunks}`);
+      
+      // Déclencher de manière asynchrone
+      fetch(`${supabaseUrl}/functions/v1/async-full-translation`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${supabaseKey}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          document_id,
+          job_id,
+          chunk_index: chunk_index + 1,
+          total_chunks,
+          source_language,
+          target_language
+        })
+      }).catch(err => console.error('❌ Error triggering next chunk:', err));
+
+      return new Response(
+        JSON.stringify({ 
+          success: true, 
+          chunk_index,
+          next_chunk_triggered: true
+        }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    // 6. Dernier chunk : finaliser la traduction
+    console.log(`🎉 All chunks translated! Finalizing...`);
+    
     const fullTranslation = translatedChunks.join('\n');
     console.log(`📝 Full translation completed: ${fullTranslation.length} characters`);
 
-    // 5. Sauvegarder dans le document
+    // Sauvegarder dans le document
     const { error: updateError } = await supabase
       .from('documents')
       .update({
@@ -198,7 +210,7 @@ serve(async (req) => {
       throw updateError;
     }
 
-    // 6. Finaliser le job
+    // Finaliser le job
     const duration = Math.round((Date.now() - startTime) / 1000);
     
     await supabase
@@ -208,8 +220,10 @@ serve(async (req) => {
         progress: 100,
         current_step: 'Traduction terminée',
         result_data: {
+          ...job.result_data,
+          translated_chunks: translatedChunks,
           translated_length: fullTranslation.length,
-          chunks_processed: chunks.length,
+          chunks_processed: total_chunks,
           duration_seconds: duration
         },
         updated_at: new Date().toISOString()
@@ -221,6 +235,7 @@ serve(async (req) => {
     return new Response(
       JSON.stringify({ 
         success: true, 
+        completed: true,
         translated_length: fullTranslation.length,
         duration_seconds: duration 
       }),
