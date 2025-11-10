@@ -100,10 +100,11 @@ serve(async (req) => {
   }
 
   try {
-    const { textualMetadata, content, currentLanguage = 'fr' } = await req.json();
+    const { textualMetadata, content, currentLanguage = 'fr', mode = 'quick' } = await req.json();
 
     console.log('Starting smart document analysis for content length:', content?.length);
     console.log('Textual metadata length:', textualMetadata?.length);
+    console.log('Analysis mode:', mode);
 
     if (!content) {
       throw new Error('Content is required for analysis');
@@ -115,10 +116,32 @@ serve(async (req) => {
     const targetLanguage = isPrimaryArabic ? 'français' : 'arabe';
     const sourceLanguage = isPrimaryArabic ? 'arabe' : 'français';
     
-    if (content.length > 2000) {
-      console.log('📖 Starting exhaustive translation by chunks...');
+    // Mode 'quick': skip exhaustive translation, limit content for AI
+    // Mode 'full': use exhaustive translation for smaller documents only
+    const MAX_CONTENT_LENGTH_FOR_FULL = 15000; // ~12-15k characters max for full sync translation
+    
+    if (mode === 'full' && content.length > MAX_CONTENT_LENGTH_FOR_FULL) {
+      console.warn('Document too long for synchronous full translation:', content.length);
+      return new Response(
+        JSON.stringify({ 
+          success: false, 
+          error: 'DOCUMENT_TOO_LONG_FOR_SYNC_FULL_TRANSLATION',
+          suggestedAction: 'use_background_full_translation',
+          message: `Document trop long (${content.length} caractères) pour une traduction synchrone complète. Limite: ${MAX_CONTENT_LENGTH_FOR_FULL} caractères.`
+        }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+    
+    if (mode === 'full' && content.length > 2000) {
+      console.log('📖 Starting exhaustive translation by chunks (full mode)...');
       translatedContentFull = await translateInChunks(content, targetLanguage);
       console.log('✅ Full translation completed:', translatedContentFull.length, 'characters');
+    } else if (mode === 'quick') {
+      console.log('⚡ Quick mode: skipping exhaustive translation');
+    } else {
+      // For shorter content, translate inline in AI request to keep latency low
+      console.log('Content is short enough for inline translation');
     }
 
     // Fetch available options from database for intelligent matching
@@ -141,6 +164,14 @@ serve(async (req) => {
       jurisdictionLevels: jurisdictionLevels.length
     });
 
+    // Limit content for AI analysis in quick mode to reduce processing time and token usage
+    const contentForAI = mode === 'quick' ? content.slice(0, 12000) : content;
+    const contentTruncated = mode === 'quick' && content.length > 12000;
+    
+    if (contentTruncated) {
+      console.log(`⚡ Quick mode: analyzing first 12000 characters of ${content.length} total`);
+    }
+    
     const systemPrompt = `Tu es un expert en analyse de documents juridiques tunisiens. Analyse le contenu suivant et extrait les informations demandées en JSON.
 
 LANGUE DU DOCUMENT SOURCE: ${sourceLanguage}
@@ -264,11 +295,11 @@ MÉTADONNÉES TEXTUELLES (extraire titre, sous-titre, auteur, tribunal, case_num
 ${textualMetadata}
 
 CONTENU PRINCIPAL (extraire résumé):
-${content}` }
+${contentForAI}${contentTruncated ? '\n\n[Note: Contenu tronqué pour analyse rapide]' : ''}` }
         ],
         response_format: { type: "json_object" },
         temperature: 0.3,
-        max_tokens: 4000,
+        max_tokens: mode === 'quick' ? 2000 : 4000, // Reduce tokens in quick mode for faster response
       }),
     });
 

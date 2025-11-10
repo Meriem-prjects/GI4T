@@ -323,7 +323,8 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
         body: {
           textualMetadata: editedData.textual_metadata || '',
           content: editedData.content,
-          currentLanguage: editedData.language || 'fr'
+          currentLanguage: editedData.language || 'fr',
+          mode: 'quick' // Use quick mode by default for fast analysis without exhaustive translation
         }
       });
 
@@ -535,8 +536,8 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
         setHasChanges(true);
         
         toast({
-          title: "Analyse IA terminée",
-          description: `Analyse, extraction des métadonnées, classifications automatiques et traduction terminées en ${isPrimaryArabic ? 'arabe → français' : 'français → arabe'}.`,
+          title: "Analyse IA terminée (mode rapide)",
+          description: `Métadonnées extraites et classifications automatiques appliquées. Pour une traduction intégrale du contenu complet, utilisez l'analyse complète.`,
         });
       } else {
         throw new Error(data.error || 'Analyse échouée');
