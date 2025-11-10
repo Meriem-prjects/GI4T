@@ -577,59 +577,7 @@ serve(async (req) => {
       });
     }
 
-    // Automatic AI analysis with translation
-    let translatedContent = null;
-    
-    if (extractionSuccess && finalContent.length > 100) {
-      console.log('🤖 Starting automatic AI analysis and translation...');
-      
-      try {
-        const { data: aiAnalysis, error: aiError } = await supabaseAdmin.functions.invoke('smart-document-analysis', {
-          body: {
-            textualMetadata: textualMetadata || '',
-            content: finalContent,
-            currentLanguage: language
-          }
-        });
-        
-        if (aiError) {
-          console.error('AI analysis error:', aiError);
-        } else if (aiAnalysis?.analysis) {
-          const result = aiAnalysis.analysis;
-          
-          // Update analysis data with AI results
-          analysisData = {
-            ...analysisData,
-            title: result.title || analysisData.title,
-            title_ar: result.title_ar || analysisData.title_ar,
-            summary: result.summary || analysisData.summary,
-            summary_ar: result.summary_ar || analysisData.summary_ar,
-            keywords: result.keywords || analysisData.keywords,
-            keywords_ar: result.keywords_ar || analysisData.keywords_ar,
-            main_topics: result.main_topics || analysisData.main_topics,
-            legal_references: result.legal_references || analysisData.legal_references,
-            entities: result.entities || analysisData.entities,
-            dates: result.dates || analysisData.dates,
-            jurisdiction: result.jurisdiction || analysisData.jurisdiction,
-            case_numbers: result.case_numbers || analysisData.case_numbers,
-            legal_domains: result.legal_domains || analysisData.legal_domains
-          };
-          
-          // Store translated content
-          if (result.translatedContent) {
-            translatedContent = result.translatedContent;
-          }
-          
-          console.log('✅ AI analysis completed successfully', {
-            hasTranslation: !!result.translatedContent,
-            translationLength: result.translatedContent?.length || 0
-          });
-        }
-      } catch (aiException) {
-        console.error('AI analysis exception:', aiException);
-        // Continue with basic data if AI fails
-      }
-    }
+    console.log('📄 Content extraction completed, document will be saved');
 
     // Save document to database with enhanced metadata
     const documentData = {
@@ -671,8 +619,8 @@ serve(async (req) => {
       archival_features: pdfaInfo?.archivalFeatures || null,
       // Processing job reference for tracking
       processing_job_id: jobData?.id || null,
-      // Translated content from AI analysis
-      translated_content: translatedContent
+      // Translated content will be added by background AI analysis
+      translated_content: null
     };
 
     console.log('Saving document with enhanced metadata:', {
@@ -699,6 +647,77 @@ serve(async (req) => {
     }
 
     console.log('Document saved to database:', document.id);
+
+    // Start AI analysis in background (non-blocking)
+    if (extractionSuccess && finalContent.length > 100) {
+      const backgroundAIAnalysis = async () => {
+        try {
+          console.log('🤖 Starting background AI analysis for document:', document.id);
+          
+          const { data: aiAnalysis, error: aiError } = await supabaseAdmin.functions.invoke('smart-document-analysis', {
+            body: {
+              textualMetadata: textualMetadata || '',
+              content: finalContent,
+              currentLanguage: language
+            }
+          });
+          
+          if (aiError) {
+            console.error('Background AI analysis error:', aiError);
+            return;
+          }
+          
+          if (aiAnalysis?.analysis) {
+            const result = aiAnalysis.analysis;
+            
+            // Update document with AI results
+            const { error: updateError } = await supabaseAdmin
+              .from('documents')
+              .update({
+                title: result.title || document.title,
+                title_ar: result.title_ar,
+                summary: result.summary || document.summary,
+                summary_ar: result.summary_ar,
+                keywords: result.keywords || [],
+                keywords_ar: result.keywords_ar || [],
+                main_topics: result.main_topics || [],
+                legal_references: result.legal_references || [],
+                entities: result.entities || [],
+                dates: result.dates || [],
+                jurisdiction: result.jurisdiction,
+                case_numbers: result.case_numbers || [],
+                legal_domains: result.legal_domains || [],
+                translated_content: result.translatedContent,
+                updated_at: new Date().toISOString()
+              })
+              .eq('id', document.id);
+            
+            if (updateError) {
+              console.error('Error updating document with AI results:', updateError);
+            } else {
+              console.log('✅ Document updated with AI analysis:', document.id);
+            }
+          }
+        } catch (error) {
+          console.error('Background AI analysis exception:', error);
+        }
+      };
+
+      // Run AI analysis in background without blocking response
+      try {
+        const edgeRuntime = getEdgeRuntime();
+        if (edgeRuntime && edgeRuntime.waitUntil) {
+          edgeRuntime.waitUntil(backgroundAIAnalysis());
+        } else {
+          // Fallback: fire and forget
+          backgroundAIAnalysis().catch(err => console.error('Background AI failed:', err));
+        }
+        console.log('🔄 AI analysis started in background');
+      } catch {
+        // Fallback: fire and forget
+        backgroundAIAnalysis().catch(err => console.error('Background AI failed:', err));
+      }
+    }
 
     // Only trigger OCR in background if direct text extraction wasn't sufficient
     if (isPDF && !shouldUsePDFReader) {
