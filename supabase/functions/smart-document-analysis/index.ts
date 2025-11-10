@@ -40,6 +40,60 @@ function parseKeywordsArray(keywords: any): string[] {
   return [];
 }
 
+// Helper function to translate content in chunks for exhaustive translation
+async function translateInChunks(content: string, targetLang: string): Promise<string> {
+  const chunkSize = 5000; // Characters per chunk
+  const chunks = [];
+  
+  for (let i = 0; i < content.length; i += chunkSize) {
+    chunks.push(content.slice(i, i + chunkSize));
+  }
+  
+  console.log(`📖 Translating ${chunks.length} chunks to ${targetLang}...`);
+  
+  const translatedChunks = [];
+  for (let i = 0; i < chunks.length; i++) {
+    try {
+      const response = await fetch('https://api.openai.com/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${openAIApiKey}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          model: 'gpt-4o-mini',
+          messages: [
+            { 
+              role: 'system', 
+              content: `Translate the following legal text to ${targetLang}. Preserve all formatting, numbers, and legal terminology. Only return the translation, nothing else.`
+            },
+            { role: 'user', content: chunks[i] }
+          ],
+          max_tokens: 8000,
+          temperature: 0.1
+        }),
+      });
+      
+      if (!response.ok) {
+        console.error(`Chunk ${i + 1} translation failed:`, response.status);
+        translatedChunks.push(chunks[i]); // Fallback to original
+      } else {
+        const data = await response.json();
+        translatedChunks.push(data.choices[0].message.content);
+        console.log(`✅ Chunk ${i + 1}/${chunks.length} translated`);
+      }
+      
+      // Small delay to avoid rate limiting
+      await new Promise(resolve => setTimeout(resolve, 300));
+    } catch (error) {
+      console.error(`Error translating chunk ${i + 1}:`, error);
+      translatedChunks.push(chunks[i]); // Fallback to original
+    }
+  }
+  
+  return translatedChunks.join('\n');
+}
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
@@ -53,6 +107,17 @@ serve(async (req) => {
 
     if (!content) {
       throw new Error('Content is required for analysis');
+    }
+
+    // Start exhaustive translation in parallel for long documents
+    let translatedContentFull = '';
+    const isPrimaryArabic = currentLanguage === 'ar';
+    const targetLanguage = isPrimaryArabic ? 'français' : 'arabe';
+    
+    if (content.length > 2000) {
+      console.log('📖 Starting exhaustive translation by chunks...');
+      translatedContentFull = await translateInChunks(content, targetLanguage);
+      console.log('✅ Full translation completed:', translatedContentFull.length, 'characters');
     }
 
     // Fetch available options from database for intelligent matching
@@ -247,6 +312,12 @@ ${content}` }
         console.warn('translatedSummary does not contain Arabic characters, using fallback');
         analysisResult.translatedSummary = analysisResult.summary || '';
       }
+    }
+
+    // Inject exhaustive translation if available
+    if (translatedContentFull) {
+      analysisResult.translatedContent = translatedContentFull;
+      console.log('✅ Injected exhaustive translation into analysis result');
     }
 
     // Validate and parse keywords if they come as a single string

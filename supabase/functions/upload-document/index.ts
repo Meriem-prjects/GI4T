@@ -552,9 +552,6 @@ serve(async (req) => {
       analysisData.title = file.name.replace(/\.[^/.]+$/, ""); // Remove file extension
       analysisData.summary = `Document traité avec succès: ${fileContent.substring(0, 100)}...`;
     }
-    
-    // Skip AI analysis for now per user request (transcription only)
-    console.log('Skipping AI analysis - transcription only requested');
 
     console.log('Document processing completed');
 
@@ -580,6 +577,58 @@ serve(async (req) => {
       });
     }
 
+    // Start AI analysis with exhaustive translation if extraction was successful
+    let translatedContentVar = '';
+    if (extractionSuccess && finalContent.length > 100) {
+      console.log('🤖 Starting AI analysis with exhaustive translation...');
+      
+      try {
+        const { data: aiAnalysis, error: aiError } = await supabaseAdmin.functions.invoke(
+          'smart-document-analysis', 
+          {
+            body: {
+              textualMetadata: textualMetadata || '',
+              content: finalContent,
+              currentLanguage: language
+            }
+          }
+        );
+        
+        if (aiError) {
+          console.error('AI analysis error:', aiError);
+        } else if (aiAnalysis?.analysis) {
+          const result = aiAnalysis.analysis;
+          
+          // Update analysis data with AI results
+          analysisData = {
+            ...analysisData,
+            title: result.title || analysisData.title,
+            title_ar: result.translatedTitle || analysisData.title_ar,
+            summary: result.summary || analysisData.summary,
+            summary_ar: result.translatedSummary || analysisData.summary_ar,
+            keywords: result.existingKeywords || result.keywords || [],
+            keywords_ar: result.translatedKeywords || [],
+            main_topics: result.main_topics || [],
+            legal_references: result.legal_references || [],
+            entities: result.entities || [],
+            dates: result.dates || [],
+            jurisdiction: result.metadata?.court_level || null,
+            case_numbers: result.metadata?.case_number ? [result.metadata.case_number] : []
+          };
+          
+          // Store the complete translation
+          if (result.translatedContent) {
+            translatedContentVar = result.translatedContent;
+            console.log('✅ Full translation received:', translatedContentVar.length, 'characters');
+          }
+          
+          console.log('✅ AI analysis completed with full translation');
+        }
+      } catch (error) {
+        console.error('AI analysis exception:', error);
+      }
+    }
+
     // Save document to database with enhanced metadata
     const documentData = {
       original_filename: file.name,
@@ -589,6 +638,7 @@ serve(async (req) => {
       summary: analysisData.summary || '',
       summary_ar: analysisData.summary_ar || null,
       content: finalContent, // Store separated main content
+      translated_content: translatedContentVar || null, // Store exhaustive translation
       textual_metadata: textualMetadata || null, // Store separated textual metadata
       keywords: analysisData.keywords || [],
       keywords_ar: analysisData.keywords_ar || [],
