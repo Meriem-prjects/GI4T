@@ -41,7 +41,7 @@ function parseKeywordsArray(keywords: any): string[] {
 }
 
 // Function to split content into chunks intelligently (at paragraph boundaries)
-function splitIntoChunks(text: string, chunkSize: number = 8000): string[] {
+function splitIntoChunks(text: string, chunkSize: number = 6000): string[] {
   const chunks: string[] = [];
   const paragraphs = text.split(/\n\n+/);
   
@@ -69,13 +69,13 @@ async function translateInChunks(
   targetLanguage: string,
   apiKey: string
 ): Promise<string> {
-  const chunks = splitIntoChunks(content, 8000);
-  console.log(`📦 Split document into ${chunks.length} chunks`);
+  const chunks = splitIntoChunks(content, 6000);
+  console.log(`📦 Split document into ${chunks.length} chunks for translation`);
   
   const translatedChunks: string[] = [];
   
   for (let i = 0; i < chunks.length; i++) {
-    console.log(`🔄 Translating chunk ${i + 1}/${chunks.length} (${chunks[i].length} chars)...`);
+    console.log(`🔄 Traduction du segment ${i + 1}/${chunks.length} (${chunks[i].length} chars)...`);
     
     try {
       const response = await fetch('https://api.openai.com/v1/chat/completions', {
@@ -97,7 +97,7 @@ async function translateInChunks(
             }
           ],
           temperature: 0.3,
-          max_tokens: 12000,
+          max_tokens: 10000,
         }),
       });
 
@@ -108,7 +108,12 @@ async function translateInChunks(
       const data = await response.json();
       const translated = data.choices?.[0]?.message?.content || '';
       translatedChunks.push(translated);
-      console.log(`✅ Chunk ${i + 1} translated: ${translated.length} chars`);
+      console.log(`✅ Segment ${i + 1}/${chunks.length} traduit: ${translated.length} chars`);
+      
+      // Add delay between chunks to avoid rate limits
+      if (i < chunks.length - 1) {
+        await new Promise(resolve => setTimeout(resolve, 200));
+      }
       
     } catch (error) {
       console.error(`❌ Error translating chunk ${i + 1}:`, error);
@@ -159,6 +164,11 @@ serve(async (req) => {
     const targetLanguage = isPrimaryArabic ? 'français' : 'arabe';
     const sourceLanguage = isPrimaryArabic ? 'arabe' : 'français';
 
+    // STEP 1: ALWAYS translate content first using chunks (regardless of size)
+    console.log(`📄 Starting automatic translation for document (${content.length} chars)...`);
+    const translatedContentResult = await translateInChunks(content, targetLanguage, openAIApiKey);
+    console.log(`✅ Translation complete: ${translatedContentResult.length} chars (${((translatedContentResult.length / content.length) * 100).toFixed(0)}%)`);
+
     const systemPrompt = `Tu es un expert en analyse de documents juridiques tunisiens. Analyse le contenu suivant et extrait les informations demandées en JSON.
 
 LANGUE DU DOCUMENT SOURCE: ${sourceLanguage}
@@ -207,6 +217,8 @@ EXTRACTION DEPUIS LES MÉTADONNÉES TEXTUELLES:
 EXTRACTION DEPUIS LE CONTENU PRINCIPAL:
 13. RÉSUMÉ: Génère un résumé synthétique depuis le contenu principal du document
 
+⚠️ IMPORTANT: NE PAS INCLURE "translatedContent" DANS TA RÉPONSE - la traduction complète a déjà été effectuée séparément
+
 Catégories disponibles:
 ${categories.map(cat => `- ${cat.name} (${cat.name_ar})`).join('\n')}
 
@@ -234,12 +246,11 @@ STRATÉGIE POUR TITRE ET SOUS-TITRE:
 - Assure-toi que le titre reflète l'essence juridique du document
 - Le sous-titre doit compléter le titre avec des informations spécifiques (cour, date, parties, etc.)
 
-IMPORTANT: Les champs "textualMetadataTranslated" et "translatedContent" doivent contenir les VRAIES TRADUCTIONS, pas des descriptions !
+IMPORTANT: Le champ "textualMetadataTranslated" doit contenir la VRAIE TRADUCTION, pas une description !
 
 ⚠️ DISTINCTION CRUCIALE:
 - "summary" = résumé court du document (3-5 phrases) en ${sourceLanguage}
 - "translatedSummary" = traduction du résumé court (3-5 phrases) en ${targetLanguage}
-- "translatedContent" = TRADUCTION INTÉGRALE de TOUT le contenu du document (plusieurs pages) en ${targetLanguage}
 
 Réponds uniquement en JSON valide avec cette structure exacte :
 {
@@ -269,7 +280,6 @@ Réponds uniquement en JSON valide avec cette structure exacte :
     "court_level": "traduction complète du niveau de tribunal en ${targetLanguage}"
   },
   "textualMetadataTranslated": "TRADUCTION COMPLÈTE EN ${targetLanguage} DES MÉTADONNÉES TEXTUELLES EXTRAITES",
-  "translatedContent": "⚠️ TRADUCTION INTÉGRALE COMPLÈTE EN ${targetLanguage} DE LA TOTALITÉ DU CONTENU DU DOCUMENT (TOUTES LES PAGES, TOUS LES PARAGRAPHES) - NE PAS RÉSUMER, TRADUIRE TOUT",
   "language": "${sourceLanguage}",
   "suggestions": {
     "suggestedCategory": "nom exact de la catégorie la plus appropriée",
@@ -279,17 +289,8 @@ Réponds uniquement en JSON valide avec cette structure exacte :
   }
 }`;
 
-    // Check if we need chunk-based translation for long documents
-    const needsChunks = content.length > 30000;
-    let translatedContentResult = '';
-
-    if (needsChunks) {
-      console.log(`📄 Document is long (${content.length} chars), using chunk-based translation...`);
-      translatedContentResult = await translateInChunks(content, targetLanguage, openAIApiKey);
-      console.log(`✅ Chunk translation complete: ${translatedContentResult.length} chars`);
-    }
-
-    console.log('🤖 Calling OpenAI API for document analysis...');
+    // STEP 2: Call OpenAI API for metadata extraction only (translation already done)
+    console.log('🤖 Calling OpenAI API for metadata analysis...');
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
       headers: {
@@ -310,7 +311,7 @@ ${content}` }
         ],
         response_format: { type: "json_object" },
         temperature: 0.3,
-        max_tokens: 16000,
+        max_tokens: 8000,
       }),
     });
 
@@ -366,18 +367,19 @@ ${content}` }
     }
 
     // Validate required fields
-    const requiredFields = ['title', 'summary', 'language', 'translatedContent'];
+    const requiredFields = ['title', 'summary', 'language'];
     for (const field of requiredFields) {
       if (!analysisResult[field]) {
         console.warn(`Missing required field: ${field}`);
       }
     }
 
-    // Override translatedContent if chunk translation was used
-    if (needsChunks && translatedContentResult) {
-      analysisResult.translatedContent = translatedContentResult;
-      console.log(`🔄 Using chunk-translated content (${translatedContentResult.length} chars)`);
-    }
+    // STEP 3: Inject the translated content from chunk translation
+    analysisResult.translatedContent = translatedContentResult;
+    console.log(`✅ Analysis complete:
+    - Original content: ${content.length} chars
+    - Translated content: ${translatedContentResult.length} chars (${((translatedContentResult.length / content.length) * 100).toFixed(0)}% completeness)
+    - Metadata extracted: ✅`);
 
     // Intelligent matching logic to find best matches by ID
     const findBestMatch = (suggestions: any, options: any[], field: string) => {

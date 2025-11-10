@@ -112,7 +112,6 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
   const [currentView, setCurrentView] = useState<'editor' | 'pdf' | 'pages'>('editor');
   const [currentLanguage, setCurrentLanguage] = useState<'fr' | 'ar'>('fr');
   const [isAnalyzing, setIsAnalyzing] = useState(false);
-  const [isRetranslating, setIsRetranslating] = useState(false);
   const [translatedByAI, setTranslatedByAI] = useState<{fr: boolean, ar: boolean}>({fr: false, ar: false});
   const [currentPage, setCurrentPage] = useState(1);
   const [translatedContent, setTranslatedContent] = useState<string>('');
@@ -305,57 +304,6 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
       }
     } catch (error) {
       console.error('Document types loading error:', error);
-    }
-  };
-
-  const handleRetranslate = async () => {
-    if (!editedData.id) {
-      toast({
-        title: "Erreur",
-        description: "Impossible de retraduire un document non sauvegardé",
-        variant: "destructive"
-      });
-      return;
-    }
-
-    setIsRetranslating(true);
-    try {
-      console.log('🔄 Starting retranslation...');
-      const { data, error } = await supabase.functions.invoke('retranslate-document', {
-        body: { documentId: editedData.id }
-      });
-
-      if (error) throw error;
-
-      if (data.success) {
-        toast({
-          title: "✅ Retraduction terminée",
-          description: `${data.translatedLength} caractères traduits (ratio: ${data.ratio})`,
-        });
-
-        // Reload document to get new translation
-        const { data: updatedDoc, error: fetchError } = await supabase
-          .from('documents')
-          .select('*')
-          .eq('id', editedData.id)
-          .single();
-
-        if (!fetchError && updatedDoc) {
-          setEditedData(prev => ({
-            ...prev,
-            translated_content: updatedDoc.translated_content
-          }));
-        }
-      }
-    } catch (error) {
-      console.error('Retranslation error:', error);
-      toast({
-        title: "Erreur de retraduction",
-        description: error instanceof Error ? error.message : "Une erreur est survenue",
-        variant: "destructive"
-      });
-    } finally {
-      setIsRetranslating(false);
     }
   };
 
@@ -1226,25 +1174,6 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
             )}
             {isAnalyzing ? 'Analyse...' : '🤖 Analyse IA'}
           </Button>
-
-          {editedData.id && editedData.content && (
-            <Button
-              onClick={handleRetranslate}
-              disabled={isRetranslating}
-              variant="outline"
-            >
-              {isRetranslating ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Retraduction...
-                </>
-              ) : (
-                <>
-                  🔄 Retraduire
-                </>
-              )}
-            </Button>
-          )}
 
           
           {isFromValidation ? (
