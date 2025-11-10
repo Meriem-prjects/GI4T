@@ -113,6 +113,7 @@ serve(async (req) => {
     let translatedContentFull = '';
     const isPrimaryArabic = currentLanguage === 'ar';
     const targetLanguage = isPrimaryArabic ? 'français' : 'arabe';
+    const sourceLanguage = isPrimaryArabic ? 'arabe' : 'français';
     
     if (content.length > 2000) {
       console.log('📖 Starting exhaustive translation by chunks...');
@@ -139,11 +140,6 @@ serve(async (req) => {
       courtTypes: courtTypes.length,
       jurisdictionLevels: jurisdictionLevels.length
     });
-
-    // Use currentLanguage as absolute primary language (no auto-detection)
-    const isPrimaryArabic = currentLanguage === 'ar';
-    const targetLanguage = isPrimaryArabic ? 'français' : 'arabe';
-    const sourceLanguage = isPrimaryArabic ? 'arabe' : 'français';
 
     const systemPrompt = `Tu es un expert en analyse de documents juridiques tunisiens. Analyse le contenu suivant et extrait les informations demandées en JSON.
 
