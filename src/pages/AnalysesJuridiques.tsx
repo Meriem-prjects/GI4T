@@ -6,8 +6,7 @@ import { Breadcrumb, BreadcrumbList, BreadcrumbItem, BreadcrumbLink, BreadcrumbP
 import { FileText, Calendar, User } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useTranslation } from "@/hooks/useTranslation";
-import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
+import { useDocumentsByType } from "@/hooks/useDocumentsByType";
 import { format } from "date-fns";
 import { fr, ar } from "date-fns/locale";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -16,103 +15,7 @@ const AnalysesJuridiques = () => {
   const { isRTL, language } = useLanguage();
   const { t } = useTranslation();
   
-  // Fetch both "Analyses juridiques" and "Fiche d'analyse juridique" types with tolerance
-  const { data: documents, isLoading } = useQuery({
-    queryKey: ['analyses-juridiques-all-v2'],
-    queryFn: async () => {
-      try {
-        // 1. Get all document types with normalization
-        const { data: types, error: typesError } = await supabase
-          .from('document_types')
-          .select('id, name');
-        
-        if (typesError) {
-          console.error('Error fetching document types:', typesError);
-          throw typesError;
-        }
-
-        // Normalize function: lowercase, replace all apostrophe variants, trim
-        const normalize = (s?: string) =>
-          (s ?? '').toLowerCase().replace(/[''`´]/g, "'").replace(/\s+/g, ' ').trim();
-
-        // Target names to match
-        const targets = ["analyses juridiques", "fiche d'analyse juridique"];
-
-        // Find matching types with bidirectional matching
-        const matchingTypes = (types ?? []).filter(t => {
-          const n = normalize(t.name);
-          return targets.some(tt => n === tt || n.includes(tt) || tt.includes(n));
-        });
-
-        const typeIds = matchingTypes.map(t => t.id);
-        console.log('[AnalysesJuridiques] typeIds:', typeIds);
-
-        // 2A. Fetch documents by document_type_id
-        let byId: any[] = [];
-        if (typeIds.length > 0) {
-          const { data, error } = await supabase
-            .from('documents')
-            .select('id, title, title_ar, summary, summary_ar, author, author_ar, created_at, keywords, keywords_ar, document_type_id, document_type')
-            .in('document_type_id', typeIds)
-            .eq('published', true)
-            .order('created_at', { ascending: false });
-          
-          if (error) {
-            console.error('Error fetching documents by type ID:', error);
-          } else {
-            byId = data ?? [];
-          }
-        }
-
-        // 2B. Fallback: fetch by textual document_type field (exact match)
-        const textNames = [
-          'Analyses juridiques',
-          "Fiche d'analyse juridique",
-          "Fiche d'analyse juridique",
-        ];
-        
-        const { data: byTextExact, error: byTextError } = await supabase
-          .from('documents')
-          .select('id, title, title_ar, summary, summary_ar, author, author_ar, created_at, keywords, keywords_ar, document_type_id, document_type')
-          .in('document_type', textNames)
-          .eq('published', true);
-        
-        if (byTextError) {
-          console.error('Error fetching documents by document_type text:', byTextError);
-        }
-
-        // 2C. Fallback: fetch by textual document_type field (tolerant ILIKE)
-        const { data: byTextIlike, error: byTextIlikeError } = await supabase
-          .from('documents')
-          .select('id, title, title_ar, summary, summary_ar, author, author_ar, created_at, keywords, keywords_ar, document_type_id, document_type')
-          .or("document_type.ilike.%analyses juridiques%,document_type.ilike.%fiche d'analyse juridique%,document_type.ilike.%fiche d'analyse juridique%")
-          .eq('published', true);
-        
-        if (byTextIlikeError) {
-          console.error('Error fetching documents by document_type ILIKE:', byTextIlikeError);
-        }
-
-        console.log('[AnalysesJuridiques] counts', {
-          byIdCount: byId.length,
-          byTextExact: byTextExact?.length ?? 0,
-          byTextIlike: byTextIlike?.length ?? 0,
-        });
-
-        // 3. Merge and deduplicate from all three sources
-        const map = new Map<string, any>();
-        [...byId, ...(byTextExact ?? []), ...(byTextIlike ?? [])].forEach(d => map.set(d.id, d));
-        
-        const merged = Array.from(map.values())
-          .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
-          .slice(0, 20);
-
-        return merged;
-      } catch (error) {
-        console.error('Error in analyses juridiques query:', error);
-        throw error;
-      }
-    }
-  });
+  const { data: documents, isLoading } = useDocumentsByType('Analyses juridiques');
 
   return (
     <div className={`container mx-auto px-4 py-6 ${isRTL ? 'font-almarai' : ''}`} dir={isRTL ? 'rtl' : 'ltr'}>
