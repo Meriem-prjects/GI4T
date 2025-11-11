@@ -122,19 +122,6 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
   const [translatedTextualMetadata, setTranslatedTextualMetadata] = useState<string>('');
   const [isCleaningArabic, setIsCleaningArabic] = useState(false);
   const [isCorrectingSpacing, setIsCorrectingSpacing] = useState(false);
-  const [fullTranslationJob, setFullTranslationJob] = useState<{
-    jobId: string | null;
-    status: 'idle' | 'processing' | 'completed' | 'failed';
-    progress: number;
-    currentStep: string;
-    errorMessage?: string;
-  }>({
-    jobId: null,
-    status: 'idle',
-    progress: 0,
-    currentStep: ''
-  });
-  const [isPollingJob, setIsPollingJob] = useState(false);
   const [translatingPages, setTranslatingPages] = useState<Set<number>>(new Set());
 
   useEffect(() => {
@@ -216,40 +203,6 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
     }
   }, [editedData.id]);
 
-  // Récupérer le job en cours au chargement
-  useEffect(() => {
-    if (editedData.id) {
-      const checkExistingJob = async () => {
-        const { data: doc } = await supabase
-          .from('documents')
-          .select('processing_job_id')
-          .eq('id', editedData.id)
-          .single();
-        
-        if (doc?.processing_job_id) {
-          const { data: existingJob } = await supabase
-            .from('processing_jobs')
-            .select('id, status, progress, current_step, error_message')
-            .eq('id', doc.processing_job_id)
-            .single();
-          
-          if (existingJob && existingJob.status === 'processing') {
-            console.log('📥 Reconnecting to existing translation job:', existingJob.id);
-            setFullTranslationJob({
-              jobId: existingJob.id,
-              status: 'processing',
-              progress: existingJob.progress,
-              currentStep: existingJob.current_step || '',
-              errorMessage: existingJob.error_message || undefined
-            });
-            startRealtimeJobTracking(existingJob.id);
-          }
-        }
-      };
-      
-      checkExistingJob();
-    }
-  }, [editedData.id]);
 
   const autoExtractMetadata = async () => {
     if (!editedData.id) return;
@@ -300,216 +253,6 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
     }
   };
 
-  const startRealtimeJobTracking = (jobId: string) => {
-    console.log('🔴 Starting Realtime tracking for job:', jobId);
-    setIsPollingJob(true);
-    
-    const channel = supabase
-      .channel(`job-${jobId}`)
-      .on(
-        'postgres_changes',
-        {
-          event: 'UPDATE',
-          schema: 'public',
-          table: 'processing_jobs',
-          filter: `id=eq.${jobId}`
-        },
-        (payload) => {
-          console.log('📡 Realtime update received:', payload.new);
-          
-          const job = payload.new as any;
-          
-          setFullTranslationJob({
-            jobId,
-            status: job.status,
-            progress: job.progress || 0,
-            currentStep: job.current_step || '',
-            errorMessage: job.error_message || undefined
-          });
-          
-          if (job.status === 'completed') {
-            console.log('✅ Translation completed via Realtime!');
-            
-            // Recharger le document pour afficher translated_content
-            supabase
-              .from('documents')
-              .select('translated_content')
-              .eq('id', editedData.id!)
-              .single()
-              .then(({ data: updatedDoc }) => {
-                if (updatedDoc) {
-                  setEditedData(prev => ({
-                    ...prev,
-                    translated_content: updatedDoc.translated_content
-                  }));
-                  setTranslatedContent(updatedDoc.translated_content || '');
-                }
-              });
-            
-            toast({
-              title: "✅ Traduction terminée !",
-              description: "Le document a été traduit intégralement."
-            });
-            
-            // Nettoyer le channel
-            supabase.removeChannel(channel);
-            setIsPollingJob(false);
-          } else if (job.status === 'failed') {
-            console.error('❌ Translation failed:', job.error_message);
-            
-            toast({
-              title: "❌ Échec de la traduction",
-              description: job.error_message || "Erreur inconnue",
-              variant: "destructive",
-              action: (
-                <Button variant="outline" size="sm" onClick={() => runFullTranslation()}>
-                  Réessayer
-                </Button>
-              )
-            });
-            
-            // Nettoyer le channel
-            supabase.removeChannel(channel);
-            setIsPollingJob(false);
-          }
-        }
-      )
-      .subscribe((status) => {
-        console.log('Realtime subscription status:', status);
-      });
-    
-    // Cleanup automatique après 1 heure
-    setTimeout(() => {
-      supabase.removeChannel(channel);
-      setIsPollingJob(false);
-    }, 60 * 60 * 1000);
-  };
-
-  const runFullTranslation = async () => {
-    if (!editedData.content) {
-      console.error('❌ [runFullTranslation] No content to translate');
-      toast({
-        title: "Erreur",
-        description: "Aucun contenu à traduire.",
-        variant: "destructive"
-      });
-      return;
-    }
-
-    console.log('🚀 [runFullTranslation] Starting full translation...');
-    console.log('📄 Document ID:', editedData.id);
-    console.log('📝 Content length:', editedData.content?.length);
-    console.log('🌍 Language:', editedData.language);
-    
-    setIsAnalyzing(true);
-    
-    try {
-      const requestBody = {
-        textualMetadata: editedData.textual_metadata || '',
-        content: editedData.content,
-        currentLanguage: editedData.language || 'fr',
-        mode: 'full',
-        documentId: editedData.id,
-        documentFileName: editedData.originalFileName
-      };
-      
-      console.log('📤 [runFullTranslation] Invoking smart-document-analysis with body:', {
-        ...requestBody,
-        content: `${requestBody.content?.substring(0, 100)}... (${requestBody.content?.length} chars)`
-      });
-      
-      const { data, error } = await supabase.functions.invoke('smart-document-analysis', {
-        body: requestBody
-      });
-
-      console.log('📥 [runFullTranslation] Edge function response:', { data, error });
-
-      if (error) {
-        console.error('❌ [runFullTranslation] Edge function returned error:', error);
-        throw error;
-      }
-
-      if (!data) {
-        console.error('❌ [runFullTranslation] No data returned from edge function');
-        throw new Error('Aucune donnée reçue de la fonction de traduction');
-      }
-
-      console.log('✅ [runFullTranslation] Received data mode:', data.mode);
-
-      if (data.mode === 'full_async') {
-        console.log('⏳ [runFullTranslation] Async translation started');
-        console.log('🆔 Job ID:', data.job_id);
-        console.log('⏱️ Estimated duration:', data.estimated_duration_minutes, 'minutes');
-        
-        // Traduction asynchrone lancée
-        setFullTranslationJob({
-          jobId: data.job_id,
-          status: 'processing',
-          progress: 0,
-          currentStep: 'Démarrage...'
-        });
-        
-        toast({
-          title: "🚀 Traduction en cours",
-          description: `Traduction intégrale lancée en arrière-plan. Durée estimée : ${Math.round(data.estimated_duration_minutes)} min.`,
-        });
-        
-        // Démarrer le tracking Realtime
-        console.log('🔴 [runFullTranslation] Starting realtime tracking for job:', data.job_id);
-        startRealtimeJobTracking(data.job_id);
-      } else {
-        console.log('⚡ [runFullTranslation] Sync translation completed');
-        
-        // Traduction synchrone (document court)
-        if (data.analysis?.translatedContent) {
-          console.log('📝 [runFullTranslation] Translated content length:', data.analysis.translatedContent.length);
-          
-          setEditedData(prev => ({
-            ...prev,
-            translated_content: data.analysis.translatedContent
-          }));
-          setTranslatedContent(data.analysis.translatedContent);
-        } else {
-          console.warn('⚠️ [runFullTranslation] No translated content in response');
-        }
-        
-        toast({
-          title: "✅ Traduction terminée",
-          description: "La traduction intégrale est disponible.",
-        });
-      }
-    } catch (err: any) {
-      console.error('❌ [runFullTranslation] Critical error:', err);
-      console.error('❌ Error name:', err?.name);
-      console.error('❌ Error message:', err?.message);
-      console.error('❌ Error stack:', err?.stack);
-      console.error('❌ Full error object:', JSON.stringify(err, null, 2));
-      
-      let errorMessage = "Impossible de lancer la traduction intégrale.";
-      
-      if (err?.message) {
-        errorMessage = err.message;
-      } else if (typeof err === 'string') {
-        errorMessage = err;
-      }
-      
-      console.error('💬 [runFullTranslation] Showing error toast with message:', errorMessage);
-      
-      toast({
-        title: "❌ Erreur de traduction",
-        description: errorMessage,
-        variant: "destructive",
-        action: (
-          <Button variant="outline" size="sm" onClick={() => runFullTranslation()}>
-            Réessayer
-          </Button>
-        )
-      });
-    } finally {
-      console.log('🏁 [runFullTranslation] Finished (analyzing state reset)');
-      setIsAnalyzing(false);
-    }
-  };
 
   const translatePage = async (pageNumber: number) => {
     if (!editedData.id || !editedData.page_contents) {
@@ -1710,29 +1453,6 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
             {isAnalyzing ? 'Analyse...' : '🤖 Analyse IA'}
           </Button>
 
-          <Button
-            variant="secondary"
-            onClick={runFullTranslation}
-            disabled={isAnalyzing || !editedData.content || editedData.content.length < 1000 || fullTranslationJob.status === 'processing'}
-            className="relative"
-          >
-            {fullTranslationJob.status === 'processing' ? (
-              <>
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                Traduction {fullTranslationJob.progress}%
-              </>
-            ) : (
-              <>
-                🌍 Traduction intégrale
-                {editedData.content && editedData.content.length >= 1000 && (
-                  <Badge variant="secondary" className="ml-2">
-                    {Math.ceil(editedData.content.length / 5000)} pages
-                  </Badge>
-                )}
-              </>
-            )}
-          </Button>
-
           
           {isFromValidation ? (
             <div className="flex space-x-2">
@@ -2415,33 +2135,9 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
             </Card>
           </div>
 
+
           {/* Content Column */}
           <div className="lg:col-span-2 space-y-6">
-            {fullTranslationJob.status === 'processing' && (
-              <Card className="border-blue-500">
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Loader2 className="h-5 w-5 animate-spin text-blue-500" />
-                    Traduction intégrale en cours
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-2">
-                    <div className="flex items-center justify-between text-sm text-muted-foreground mb-1">
-                      <span>{fullTranslationJob.currentStep}</span>
-                      <span>{fullTranslationJob.progress}%</span>
-                    </div>
-                    <div className="w-full bg-secondary rounded-full h-2 overflow-hidden">
-                      <div 
-                        className="bg-blue-500 h-full transition-all duration-300"
-                        style={{ width: `${fullTranslationJob.progress}%` }}
-                      />
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            )}
-
             {/* Summary and Keywords Section */}
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
               <Card className="p-4 lg:col-span-7">
