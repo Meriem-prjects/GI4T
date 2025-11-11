@@ -16,6 +16,7 @@ import NotFound from "./pages/NotFound";
 import TextesFondamentaux from "./pages/TextesFondamentaux";
 import AnalysesOpinions from "./pages/AnalysesOpinions";
 import AnalysesJuridiques from "./pages/AnalysesJuridiques";
+import AnalysesJuridiquesByCategory from "./pages/AnalysesJuridiquesByCategory";
 import Commentaires from "./pages/Commentaires";
 import Blogs from "./pages/Blogs";
 import Actualites from "./pages/Actualites";
@@ -77,6 +78,8 @@ const App = () => (
             <Route path="/observatoire/document/:documentId" element={<DocumentDetail />} />
             <Route path="/observatoire/analyses-opinions" element={<AnalysesOpinions />} />
             <Route path="/observatoire/analyses-juridiques" element={<AnalysesJuridiques />} />
+            <Route path="/observatoire/analyses-juridiques/:categorySlug" element={<AnalysesJuridiquesByCategory />} />
+            <Route path="/observatoire/analyses-juridiques/:categorySlug/:documentSlug" element={<DocumentDetail />} />
             <Route path="/observatoire/commentaires" element={<Commentaires />} />
             <Route path="/observatoire/blogs" element={<Blogs />} />
             <Route path="/observatoire/actualites" element={<Actualites />} />
