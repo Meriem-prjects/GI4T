@@ -170,6 +170,13 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
     };
   }, [documentData]);
 
+  // Sync local state when editedData.translated_content changes (after consolidation)
+  useEffect(() => {
+    if (editedData.translated_content && editedData.translated_content !== translatedContent) {
+      setTranslatedContent(editedData.translated_content);
+    }
+  }, [editedData.translated_content]);
+
   // Separate effect for document categories to ensure they're loaded after data is available
   useEffect(() => {
     if (documentCategories.length > 0) {
@@ -1475,8 +1482,8 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
       // Show original content in primary language
       return editedData.fullContent || editedData.content;
     } else {
-      // Show translated content in secondary language
-      return translatedContent || editedData.fullContent || editedData.content;
+      // Show translated content in secondary language - prioritize consolidated page translations
+      return editedData.translated_content || translatedContent || editedData.fullContent || editedData.content;
     }
   };
 
