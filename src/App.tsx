@@ -15,6 +15,9 @@ import SearchResults from "./pages/SearchResults";
 import NotFound from "./pages/NotFound";
 import TextesFondamentaux from "./pages/TextesFondamentaux";
 import AnalysesOpinions from "./pages/AnalysesOpinions";
+import AnalysesJuridiques from "./pages/AnalysesJuridiques";
+import Commentaires from "./pages/Commentaires";
+import Blogs from "./pages/Blogs";
 import Actualites from "./pages/Actualites";
 import AccesAuxDroits from "./pages/AccesAuxDroits";
 import GuidesPratiques from "./pages/GuidesPratiques";
@@ -71,7 +74,11 @@ const App = () => (
             <Route path="/observatoire/droits-fondamentaux" element={<TextesFondamentaux />} />
             <Route path="/observatoire/droits-fondamentaux/:categorySlug" element={<CategorieDetail />} />
             <Route path="/observatoire/droits-fondamentaux/:categorySlug/:documentSlug" element={<DocumentDetail />} />
+            <Route path="/observatoire/document/:documentId" element={<DocumentDetail />} />
             <Route path="/observatoire/analyses-opinions" element={<AnalysesOpinions />} />
+            <Route path="/observatoire/analyses-juridiques" element={<AnalysesJuridiques />} />
+            <Route path="/observatoire/commentaires" element={<Commentaires />} />
+            <Route path="/observatoire/blogs" element={<Blogs />} />
             <Route path="/observatoire/actualites" element={<Actualites />} />
           </Route>
           

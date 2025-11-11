@@ -118,7 +118,7 @@ const AnalysesOpinions = () => {
                         className="w-full"
                         asChild
                       >
-                        <Link to={`/observatoire/recherche?type=${category.type}`}>
+                        <Link to={`/observatoire/${category.type}`}>
                           {t('consult')}
                         </Link>
                       </Button>
