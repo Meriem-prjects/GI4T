@@ -31,20 +31,21 @@ const AnalysesJuridiques = () => {
           throw typesError;
         }
 
-        // Normalize function: lowercase, replace curly apostrophes, trim
+        // Normalize function: lowercase, replace all apostrophe variants, trim
         const normalize = (s?: string) =>
-          (s ?? '').toLowerCase().replace(/[']/g, "'").replace(/\s+/g, ' ').trim();
+          (s ?? '').toLowerCase().replace(/[''`´]/g, "'").replace(/\s+/g, ' ').trim();
 
         // Target names to match
         const targets = ["analyses juridiques", "fiche d'analyse juridique"];
 
-        // Find matching types
+        // Find matching types with bidirectional matching
         const matchingTypes = (types ?? []).filter(t => {
           const n = normalize(t.name);
-          return targets.some(tt => n === tt || n.includes(tt));
+          return targets.some(tt => n === tt || n.includes(tt) || tt.includes(n));
         });
 
         const typeIds = matchingTypes.map(t => t.id);
+        console.log('[AnalysesJuridiques] typeIds:', typeIds);
 
         // 2A. Fetch documents by document_type_id
         let byId: any[] = [];
@@ -63,14 +64,14 @@ const AnalysesJuridiques = () => {
           }
         }
 
-        // 2B. Fallback: fetch by textual document_type field
+        // 2B. Fallback: fetch by textual document_type field (exact match)
         const textNames = [
           'Analyses juridiques',
           "Fiche d'analyse juridique",
           "Fiche d'analyse juridique",
         ];
         
-        const { data: byText, error: byTextError } = await supabase
+        const { data: byTextExact, error: byTextError } = await supabase
           .from('documents')
           .select('id, title, title_ar, summary, summary_ar, author, author_ar, created_at, keywords, keywords_ar, document_type_id, document_type')
           .in('document_type', textNames)
@@ -80,9 +81,26 @@ const AnalysesJuridiques = () => {
           console.error('Error fetching documents by document_type text:', byTextError);
         }
 
-        // 3. Merge and deduplicate
+        // 2C. Fallback: fetch by textual document_type field (tolerant ILIKE)
+        const { data: byTextIlike, error: byTextIlikeError } = await supabase
+          .from('documents')
+          .select('id, title, title_ar, summary, summary_ar, author, author_ar, created_at, keywords, keywords_ar, document_type_id, document_type')
+          .or("document_type.ilike.%analyses juridiques%,document_type.ilike.%fiche d'analyse juridique%,document_type.ilike.%fiche d'analyse juridique%")
+          .eq('published', true);
+        
+        if (byTextIlikeError) {
+          console.error('Error fetching documents by document_type ILIKE:', byTextIlikeError);
+        }
+
+        console.log('[AnalysesJuridiques] counts', {
+          byIdCount: byId.length,
+          byTextExact: byTextExact?.length ?? 0,
+          byTextIlike: byTextIlike?.length ?? 0,
+        });
+
+        // 3. Merge and deduplicate from all three sources
         const map = new Map<string, any>();
-        [...byId, ...(byText ?? [])].forEach(d => map.set(d.id, d));
+        [...byId, ...(byTextExact ?? []), ...(byTextIlike ?? [])].forEach(d => map.set(d.id, d));
         
         const merged = Array.from(map.values())
           .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
