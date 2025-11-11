@@ -24,6 +24,8 @@ interface PageContent {
   pageNumber: number;
   content: string;
   confidence?: number;
+  translated_content?: string;
+  translation_status?: 'pending' | 'translating' | 'completed' | 'error';
 }
 
 interface DocumentData {
@@ -133,6 +135,7 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
     currentStep: ''
   });
   const [isPollingJob, setIsPollingJob] = useState(false);
+  const [translatingPages, setTranslatingPages] = useState<Set<number>>(new Set());
 
   useEffect(() => {
     setEditedData(documentData);
@@ -498,6 +501,109 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
     } finally {
       console.log('🏁 [runFullTranslation] Finished (analyzing state reset)');
       setIsAnalyzing(false);
+    }
+  };
+
+  const translatePage = async (pageNumber: number) => {
+    if (!editedData.id || !editedData.page_contents) {
+      toast({
+        title: "Erreur",
+        description: "Document invalide.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    const page = editedData.page_contents.find(p => p.pageNumber === pageNumber);
+    if (!page) {
+      toast({
+        title: "Erreur",
+        description: `Page ${pageNumber} introuvable.`,
+        variant: "destructive"
+      });
+      return;
+    }
+
+    // Mark page as translating
+    setTranslatingPages(prev => new Set(prev).add(pageNumber));
+    
+    // Update local state to show "translating" status
+    setEditedData(prev => ({
+      ...prev,
+      page_contents: prev.page_contents?.map(p => 
+        p.pageNumber === pageNumber 
+          ? { ...p, translation_status: 'translating' }
+          : p
+      )
+    }));
+
+    try {
+      console.log(`🔄 Translating page ${pageNumber}...`);
+      
+      const { data, error } = await supabase.functions.invoke('translate-page', {
+        body: {
+          document_id: editedData.id,
+          page_number: pageNumber,
+          content: page.content,
+          source_language: editedData.language || 'fr',
+          target_language: editedData.language === 'fr' ? 'ar' : 'fr'
+        }
+      });
+
+      if (error) {
+        console.error('Error translating page:', error);
+        throw error;
+      }
+
+      if (!data?.translated_content) {
+        throw new Error('Aucune traduction reçue');
+      }
+
+      console.log(`✅ Page ${pageNumber} translated successfully`);
+      
+      // Update local state with translation
+      setEditedData(prev => ({
+        ...prev,
+        page_contents: prev.page_contents?.map(p => 
+          p.pageNumber === pageNumber 
+            ? { 
+                ...p, 
+                translated_content: data.translated_content,
+                translation_status: 'completed'
+              }
+            : p
+        )
+      }));
+
+      toast({
+        title: "✅ Page traduite",
+        description: `Page ${pageNumber} traduite avec succès.`,
+      });
+
+    } catch (err: any) {
+      console.error(`Error translating page ${pageNumber}:`, err);
+      
+      // Update status to error
+      setEditedData(prev => ({
+        ...prev,
+        page_contents: prev.page_contents?.map(p => 
+          p.pageNumber === pageNumber 
+            ? { ...p, translation_status: 'error' }
+            : p
+        )
+      }));
+
+      toast({
+        title: "Erreur de traduction",
+        description: err?.message || `Impossible de traduire la page ${pageNumber}.`,
+        variant: "destructive"
+      });
+    } finally {
+      setTranslatingPages(prev => {
+        const newSet = new Set(prev);
+        newSet.delete(pageNumber);
+        return newSet;
+      });
     }
   };
 
@@ -1587,6 +1693,11 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-lg font-semibold">
               Contenu par page ({editedData.processed_pages}/{editedData.total_pages} pages traitées)
+              {editedData.page_contents.filter(p => p.translation_status === 'completed').length > 0 && (
+                <Badge variant="outline" className="ml-2">
+                  {editedData.page_contents.filter(p => p.translation_status === 'completed').length}/{editedData.page_contents.length} traduites
+                </Badge>
+              )}
             </h3>
             <div className="flex items-center space-x-2">
               <Button
@@ -1611,42 +1722,148 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
             </div>
           </div>
           
-          {editedData.page_contents.find(p => p.pageNumber === currentPage) && (
-            <div 
-              className="prose prose-sm max-w-none p-6 border rounded bg-muted/30 min-h-[500px]"
-              dir={currentLanguage === 'ar' ? 'rtl' : 'ltr'}
-            >
-              <div className="flex items-center justify-between mb-4 pb-2 border-b">
-                <h4 className="font-semibold text-base m-0">
-                  Page {currentPage}
-                </h4>
-                {editedData.page_contents.find(p => p.pageNumber === currentPage)?.confidence && (
-                  <Badge variant="outline">
-                    Confiance: {Math.round((editedData.page_contents.find(p => p.pageNumber === currentPage)?.confidence || 0) * 100)}%
-                  </Badge>
-                )}
+          {editedData.page_contents.find(p => p.pageNumber === currentPage) && (() => {
+            const currentPageData = editedData.page_contents.find(p => p.pageNumber === currentPage)!;
+            const targetLang = editedData.language === 'fr' ? 'ar' : 'fr';
+            const isTranslating = translatingPages.has(currentPage);
+            const hasTranslation = currentPageData.translated_content;
+            const translationStatus = currentPageData.translation_status;
+            
+            return (
+              <div className="space-y-4">
+                {/* Side-by-side view */}
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                  {/* Original content */}
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <Label className="text-sm font-semibold">
+                        {editedData.language === 'fr' ? 'Français (Original)' : 'العربية (الأصل)'}
+                      </Label>
+                      {currentPageData.confidence && (
+                        <Badge variant="outline" className="text-xs">
+                          Confiance: {Math.round(currentPageData.confidence * 100)}%
+                        </Badge>
+                      )}
+                    </div>
+                    <div 
+                      className="prose prose-sm max-w-none p-4 border rounded bg-muted/30 min-h-[400px] max-h-[600px] overflow-y-auto"
+                      dir={editedData.language === 'ar' ? 'rtl' : 'ltr'}
+                    >
+                      <div className="whitespace-pre-wrap text-sm leading-relaxed">
+                        {currentPageData.content || 'Contenu non disponible'}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Translated content */}
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <Label className="text-sm font-semibold">
+                        {targetLang === 'ar' ? 'العربية (ترجمة)' : 'Français (Traduction)'}
+                      </Label>
+                      <div className="flex items-center gap-2">
+                        {translationStatus === 'completed' && (
+                          <Badge variant="default" className="text-xs bg-green-500">
+                            <CheckCircle className="h-3 w-3 mr-1" />
+                            Traduit
+                          </Badge>
+                        )}
+                        {translationStatus === 'error' && (
+                          <Badge variant="destructive" className="text-xs">
+                            <XCircle className="h-3 w-3 mr-1" />
+                            Erreur
+                          </Badge>
+                        )}
+                        {isTranslating && (
+                          <Badge variant="secondary" className="text-xs">
+                            <Loader2 className="h-3 w-3 mr-1 animate-spin" />
+                            Traduction...
+                          </Badge>
+                        )}
+                      </div>
+                    </div>
+                    <div 
+                      className="prose prose-sm max-w-none p-4 border rounded min-h-[400px] max-h-[600px] overflow-y-auto relative"
+                      dir={targetLang === 'ar' ? 'rtl' : 'ltr'}
+                      style={{ backgroundColor: hasTranslation ? 'hsl(var(--muted) / 0.3)' : 'hsl(var(--muted) / 0.1)' }}
+                    >
+                      {isTranslating ? (
+                        <div className="flex items-center justify-center h-[400px]">
+                          <div className="text-center space-y-2">
+                            <Loader2 className="h-8 w-8 animate-spin mx-auto text-primary" />
+                            <p className="text-sm text-muted-foreground">Traduction en cours...</p>
+                          </div>
+                        </div>
+                      ) : hasTranslation ? (
+                        <div className="whitespace-pre-wrap text-sm leading-relaxed">
+                          {currentPageData.translated_content}
+                        </div>
+                      ) : (
+                        <div className="flex items-center justify-center h-[400px]">
+                          <div className="text-center space-y-4">
+                            <p className="text-sm text-muted-foreground">Cette page n'a pas encore été traduite</p>
+                            <Button
+                              onClick={() => translatePage(currentPage)}
+                              disabled={isTranslating}
+                              size="sm"
+                            >
+                              <Brain className="h-4 w-4 mr-2" />
+                              Traduire cette page
+                            </Button>
+                          </div>
+                        </div>
+                      )}
+                      
+                      {/* Retranslate button if already translated */}
+                      {hasTranslation && !isTranslating && (
+                        <div className="absolute top-2 right-2">
+                          <Button
+                            onClick={() => translatePage(currentPage)}
+                            variant="outline"
+                            size="sm"
+                          >
+                            <Brain className="h-3 w-3 mr-1" />
+                            Retraduire
+                          </Button>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
               </div>
-              <div className="whitespace-pre-wrap text-sm leading-relaxed">
-                {editedData.page_contents.find(p => p.pageNumber === currentPage)?.content || 'Contenu non disponible'}
-              </div>
-            </div>
-          )}
+            );
+          })()}
           
           {/* Pages overview */}
           <div className="mt-6">
             <h4 className="text-sm font-semibold mb-3">Aperçu des pages</h4>
             <div className="grid grid-cols-5 sm:grid-cols-10 gap-2">
-              {editedData.page_contents.map((page) => (
-                <Button
-                  key={page.pageNumber}
-                  variant={currentPage === page.pageNumber ? "default" : "outline"}
-                  size="sm"
-                  onClick={() => setCurrentPage(page.pageNumber)}
-                  className="h-8 w-12 text-xs"
-                >
-                  {page.pageNumber}
-                </Button>
-              ))}
+              {editedData.page_contents.map((page) => {
+                const isTranslated = page.translation_status === 'completed';
+                const isTranslating = translatingPages.has(page.pageNumber);
+                const hasError = page.translation_status === 'error';
+                
+                return (
+                  <Button
+                    key={page.pageNumber}
+                    variant={currentPage === page.pageNumber ? "default" : "outline"}
+                    size="sm"
+                    onClick={() => setCurrentPage(page.pageNumber)}
+                    className="h-8 w-12 text-xs relative"
+                  >
+                    {page.pageNumber}
+                    {isTranslated && (
+                      <CheckCircle className="h-3 w-3 absolute -top-1 -right-1 text-green-500 bg-background rounded-full" />
+                    )}
+                    {isTranslating && (
+                      <Loader2 className="h-3 w-3 absolute -top-1 -right-1 text-primary bg-background rounded-full animate-spin" />
+                    )}
+                    {hasError && (
+                      <XCircle className="h-3 w-3 absolute -top-1 -right-1 text-destructive bg-background rounded-full" />
+                    )}
+                  </Button>
+                );
+              })}
             </div>
           </div>
         </Card>
