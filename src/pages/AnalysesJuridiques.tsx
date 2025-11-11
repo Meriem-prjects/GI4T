@@ -16,45 +16,83 @@ const AnalysesJuridiques = () => {
   const { isRTL, language } = useLanguage();
   const { t } = useTranslation();
   
-  // Fetch both "Analyses juridiques" and "Fiche d'analyse juridique" types
+  // Fetch both "Analyses juridiques" and "Fiche d'analyse juridique" types with tolerance
   const { data: documents, isLoading } = useQuery({
-    queryKey: ['analyses-juridiques-all'],
+    queryKey: ['analyses-juridiques-all-v2'],
     queryFn: async () => {
-      // Get both document types
-      const { data: types, error: typesError } = await supabase
-        .from('document_types')
-        .select('id')
-        .in('name', ['Analyses juridiques', 'Fiche d\'analyse juridique']);
-      
-      if (typesError) throw typesError;
-      if (!types || types.length === 0) return [];
-      
-      const typeIds = types.map(t => t.id);
-      
-      // Get all documents for these types
-      const { data, error } = await supabase
-        .from('documents')
-        .select(`
-          id,
-          title,
-          title_ar,
-          summary,
-          summary_ar,
-          author,
-          author_ar,
-          created_at,
-          keywords,
-          keywords_ar,
-          document_type_id,
-          document_types(name, name_ar)
-        `)
-        .in('document_type_id', typeIds)
-        .eq('published', true)
-        .order('created_at', { ascending: false })
-        .limit(20);
-      
-      if (error) throw error;
-      return data || [];
+      try {
+        // 1. Get all document types with normalization
+        const { data: types, error: typesError } = await supabase
+          .from('document_types')
+          .select('id, name');
+        
+        if (typesError) {
+          console.error('Error fetching document types:', typesError);
+          throw typesError;
+        }
+
+        // Normalize function: lowercase, replace curly apostrophes, trim
+        const normalize = (s?: string) =>
+          (s ?? '').toLowerCase().replace(/[']/g, "'").replace(/\s+/g, ' ').trim();
+
+        // Target names to match
+        const targets = ["analyses juridiques", "fiche d'analyse juridique"];
+
+        // Find matching types
+        const matchingTypes = (types ?? []).filter(t => {
+          const n = normalize(t.name);
+          return targets.some(tt => n === tt || n.includes(tt));
+        });
+
+        const typeIds = matchingTypes.map(t => t.id);
+
+        // 2A. Fetch documents by document_type_id
+        let byId: any[] = [];
+        if (typeIds.length > 0) {
+          const { data, error } = await supabase
+            .from('documents')
+            .select('id, title, title_ar, summary, summary_ar, author, author_ar, created_at, keywords, keywords_ar, document_type_id, document_type')
+            .in('document_type_id', typeIds)
+            .eq('published', true)
+            .order('created_at', { ascending: false });
+          
+          if (error) {
+            console.error('Error fetching documents by type ID:', error);
+          } else {
+            byId = data ?? [];
+          }
+        }
+
+        // 2B. Fallback: fetch by textual document_type field
+        const textNames = [
+          'Analyses juridiques',
+          "Fiche d'analyse juridique",
+          "Fiche d'analyse juridique",
+        ];
+        
+        const { data: byText, error: byTextError } = await supabase
+          .from('documents')
+          .select('id, title, title_ar, summary, summary_ar, author, author_ar, created_at, keywords, keywords_ar, document_type_id, document_type')
+          .in('document_type', textNames)
+          .eq('published', true);
+        
+        if (byTextError) {
+          console.error('Error fetching documents by document_type text:', byTextError);
+        }
+
+        // 3. Merge and deduplicate
+        const map = new Map<string, any>();
+        [...byId, ...(byText ?? [])].forEach(d => map.set(d.id, d));
+        
+        const merged = Array.from(map.values())
+          .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+          .slice(0, 20);
+
+        return merged;
+      } catch (error) {
+        console.error('Error in analyses juridiques query:', error);
+        throw error;
+      }
     }
   });
 
