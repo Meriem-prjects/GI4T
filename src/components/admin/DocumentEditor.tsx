@@ -580,6 +580,22 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
         description: `Page ${pageNumber} traduite avec succès.`,
       });
 
+      // Check if all pages are now translated and consolidate automatically
+      const updatedPageContents = editedData.page_contents?.map(p => 
+        p.pageNumber === pageNumber 
+          ? { ...p, translated_content: data.translated_content, translation_status: 'completed' as const }
+          : p
+      );
+
+      const allTranslated = updatedPageContents?.every(
+        page => page.translated_content && page.translated_content.trim() !== ''
+      );
+
+      if (allTranslated) {
+        console.log('🎉 All pages translated! Auto-consolidating...');
+        setTimeout(() => consolidatePageTranslations(), 500);
+      }
+
     } catch (err: any) {
       console.error(`Error translating page ${pageNumber}:`, err);
       
@@ -603,6 +619,55 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
         const newSet = new Set(prev);
         newSet.delete(pageNumber);
         return newSet;
+      });
+    }
+  };
+
+  const consolidatePageTranslations = async () => {
+    if (!editedData.page_contents || !editedData.id) return;
+    
+    // Collect all page translations in order
+    const translations = editedData.page_contents
+      .sort((a, b) => a.pageNumber - b.pageNumber)
+      .map(page => page.translated_content || '')
+      .filter(content => content.trim() !== '');
+    
+    if (translations.length === 0) {
+      toast({
+        title: "⚠️ Aucune traduction",
+        description: "Aucune page traduite à consolider.",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    // Join all translations
+    const consolidatedContent = translations.join('\n\n');
+    
+    // Update local state
+    setTranslatedContent(consolidatedContent);
+    setEditedData(prev => ({
+      ...prev,
+      translated_content: consolidatedContent
+    }));
+    
+    // Update database
+    const { error } = await supabase
+      .from('documents')
+      .update({ translated_content: consolidatedContent })
+      .eq('id', editedData.id);
+    
+    if (error) {
+      console.error('Error consolidating translations:', error);
+      toast({
+        title: "❌ Erreur",
+        description: "Impossible de consolider les traductions.",
+        variant: "destructive"
+      });
+    } else {
+      toast({
+        title: "✅ Traduction consolidée !",
+        description: `Les ${translations.length} pages traduites ont été consolidées dans l'onglet Contenu.`,
       });
     }
   };
@@ -1698,8 +1763,23 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
                   {editedData.page_contents.filter(p => p.translation_status === 'completed').length}/{editedData.page_contents.length} traduites
                 </Badge>
               )}
+              {translatedContent && editedData.page_contents.filter(p => p.translation_status === 'completed').length > 0 && (
+                <Badge variant="default" className="ml-2 bg-green-500">
+                  ✅ Consolidée
+                </Badge>
+              )}
             </h3>
             <div className="flex items-center space-x-2">
+              {editedData.page_contents.filter(p => p.translation_status === 'completed').length > 0 && (
+                <Button
+                  onClick={consolidatePageTranslations}
+                  variant="secondary"
+                  size="sm"
+                >
+                  <FileText className="h-4 w-4 mr-2" />
+                  Consolider ({editedData.page_contents.filter(p => p.translation_status === 'completed').length}/{editedData.page_contents.length})
+                </Button>
+              )}
               <Button
                 variant="outline"
                 size="sm"
