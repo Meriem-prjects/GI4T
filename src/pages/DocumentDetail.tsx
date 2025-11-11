@@ -347,9 +347,26 @@ const DocumentDetail = () => {
     );
   }
 
-  // Use translated content by default, original if showOriginal is true
-  const displayContent = showOriginal ? document.content : (document.translated_content || document.content);
+  // Choose content based on interface language and original language
+  const prefersArabic = language === 'ar';
+  let displayContent: string;
+
+  if (prefersArabic) {
+    if (showOriginal) {
+      displayContent = document.content;
+    } else {
+      displayContent = document.language === 'ar' ? document.content : (document.translated_content || document.content);
+    }
+  } else {
+    if (showOriginal) {
+      displayContent = document.content;
+    } else {
+      displayContent = document.language === 'fr' ? document.content : (document.translated_content || document.content);
+    }
+  }
+
   const formattedContent = renderFormattedContent(displayContent);
+  const isShowingTranslated = !!document.translated_content && displayContent === document.translated_content;
   
   // Use Arabic fields based on interface language
   const currentTitle = language === 'ar' && document.title_ar ? document.title_ar : document.title;
@@ -635,7 +652,7 @@ const DocumentDetail = () => {
             {document.translated_content && document.translated_content !== document.content && (
               <div className="text-center mb-6">
                 <Badge variant="secondary" className="bg-blue-100 text-blue-800">
-                  {showOriginal ? "Version originale" : "Version traduite par l'IA"}
+                  {isShowingTranslated ? "Version traduite par l'IA" : "Version originale"}
                 </Badge>
               </div>
             )}
