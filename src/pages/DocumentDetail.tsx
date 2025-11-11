@@ -488,26 +488,49 @@ const DocumentDetail = () => {
                   {document.created_at && (
                     <div className={`flex items-center gap-3 ${language === 'ar' ? 'flex-row-reverse justify-start' : 'justify-center md:justify-start'}`}>
                       <Calendar className="w-5 h-5 text-muted-foreground" />
-                      <span className="font-medium">{language === 'ar' ? 'تاريخ النشر:' : 'Date de publication:'}</span>
-                      <span>{formatDate(document.created_at)}</span>
+                      {language === 'ar' ? (
+                        <span><span className="font-medium">تاريخ النشر:</span> {formatDate(document.created_at)}</span>
+                      ) : (
+                        <>
+                          <span className="font-medium">Date de publication:</span>
+                          <span>{formatDate(document.created_at)}</span>
+                        </>
+                      )}
                     </div>
                   )}
                   
                   {category && (
                     <div className={`flex items-center gap-3 ${language === 'ar' ? 'flex-row-reverse justify-start' : 'justify-center md:justify-start'}`}>
                       <Scale className="w-5 h-5 text-muted-foreground" />
-                      <span className="font-medium">{language === 'ar' ? 'فئة الحق الأساسي:' : 'Catégorie de droit fondamental:'}</span>
-                      <Badge className="font-normal" style={{ backgroundColor: category.color, color: '#ffffff' }}>
-                        {language === 'ar' && category.name_ar ? category.name_ar : category.name}
-                      </Badge>
+                      {language === 'ar' ? (
+                        <span>
+                          <span className="font-medium">فئة الحق الأساسي:</span>{' '}
+                          <Badge className="font-normal" style={{ backgroundColor: category.color, color: '#ffffff' }}>
+                            {category.name_ar || category.name}
+                          </Badge>
+                        </span>
+                      ) : (
+                        <>
+                          <span className="font-medium">Catégorie de droit fondamental:</span>
+                          <Badge className="font-normal" style={{ backgroundColor: category.color, color: '#ffffff' }}>
+                            {category.name}
+                          </Badge>
+                        </>
+                      )}
                     </div>
                   )}
 
                   {currentAuthor && (
                     <div className={`flex items-center gap-3 ${language === 'ar' ? 'flex-row-reverse justify-start' : 'justify-center md:justify-start'}`}>
                       <User className="w-5 h-5 text-muted-foreground" />
-                      <span className="font-medium">{language === 'ar' ? 'المؤلف:' : 'Auteur:'}</span>
-                      <span>{currentAuthor}</span>
+                      {language === 'ar' ? (
+                        <span><span className="font-medium">المؤلف:</span> {currentAuthor}</span>
+                      ) : (
+                        <>
+                          <span className="font-medium">Auteur:</span>
+                          <span>{currentAuthor}</span>
+                        </>
+                      )}
                     </div>
                   )}
                 </div>
@@ -516,40 +539,70 @@ const DocumentDetail = () => {
                   {currentCourt && (
                     <div className={`flex items-center gap-3 ${language === 'ar' ? 'flex-row-reverse justify-start' : 'justify-center md:justify-start'}`}>
                       <Building2 className="w-5 h-5 text-muted-foreground" />
-                      <span className="font-medium">{language === 'ar' ? 'نوع المحكمة:' : 'Type de tribunal:'}</span>
-                      <span>{currentCourt}</span>
+                      {language === 'ar' ? (
+                        <span><span className="font-medium">نوع المحكمة:</span> {currentCourt}</span>
+                      ) : (
+                        <>
+                          <span className="font-medium">Type de tribunal:</span>
+                          <span>{currentCourt}</span>
+                        </>
+                      )}
                     </div>
                   )}
 
                   {(document.court_category_type || document.court_category_type_ar) && (
                     <div className={`flex items-center gap-3 ${language === 'ar' ? 'flex-row-reverse justify-start' : 'justify-center md:justify-start'}`}>
                       <Scale className="w-5 h-5 text-muted-foreground" />
-                      <span className="font-medium">{language === 'ar' ? 'فئة المحكمة:' : 'Catégorie du tribunal:'}</span>
-                      <span>{capitalizeFirstLetter((language === 'ar' ? document.court_category_type_ar : document.court_category_type) || (language === 'ar' ? "غير محدد" : "Non spécifié"))}</span>
+                      {language === 'ar' ? (
+                        <span><span className="font-medium">فئة المحكمة:</span> {capitalizeFirstLetter(document.court_category_type_ar || document.court_category_type || "غير محدد")}</span>
+                      ) : (
+                        <>
+                          <span className="font-medium">Catégorie du tribunal:</span>
+                          <span>{capitalizeFirstLetter(document.court_category_type || "Non spécifié")}</span>
+                        </>
+                      )}
                     </div>
                   )}
 
                   {currentCourtLevel && (
                     <div className={`flex items-center gap-3 ${language === 'ar' ? 'flex-row-reverse justify-start' : 'justify-center md:justify-start'}`}>
                       <MapPin className="w-5 h-5 text-muted-foreground" />
-                      <span className="font-medium">{language === 'ar' ? 'مستوى القضاء:' : 'Niveau de juridiction:'}</span>
-                      <span>{currentCourtLevel}</span>
+                      {language === 'ar' ? (
+                        <span><span className="font-medium">مستوى القضاء:</span> {currentCourtLevel}</span>
+                      ) : (
+                        <>
+                          <span className="font-medium">Niveau de juridiction:</span>
+                          <span>{currentCourtLevel}</span>
+                        </>
+                      )}
                     </div>
                   )}
 
                   {document.year && (
                     <div className={`flex items-center gap-3 ${language === 'ar' ? 'flex-row-reverse justify-start' : 'justify-center md:justify-start'}`}>
                       <Calendar className="w-5 h-5 text-muted-foreground" />
-                      <span className="font-medium">{language === 'ar' ? 'السنة:' : 'Année:'}</span>
-                      <span>{document.year}</span>
+                      {language === 'ar' ? (
+                        <span><span className="font-medium">السنة:</span> {document.year}</span>
+                      ) : (
+                        <>
+                          <span className="font-medium">Année:</span>
+                          <span>{document.year}</span>
+                        </>
+                      )}
                     </div>
                   )}
 
                   {document.case_number && (
                     <div className={`flex items-center gap-3 ${language === 'ar' ? 'flex-row-reverse justify-start' : 'justify-center md:justify-start'}`}>
                       <FileText className="w-5 h-5 text-muted-foreground" />
-                      <span className="font-medium">{language === 'ar' ? 'رقم القضية:' : 'Numéro d\'affaire:'}</span>
-                      <span>{document.case_number}</span>
+                      {language === 'ar' ? (
+                        <span><span className="font-medium">رقم القضية:</span> {document.case_number}</span>
+                      ) : (
+                        <>
+                          <span className="font-medium">Numéro d'affaire:</span>
+                          <span>{document.case_number}</span>
+                        </>
+                      )}
                     </div>
                   )}
                 </div>
