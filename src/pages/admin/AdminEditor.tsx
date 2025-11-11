@@ -43,6 +43,9 @@ interface DocumentData {
   plaintiff_ar?: string;
   defendant?: string;
   defendant_ar?: string;
+  page_contents?: any[];
+  total_pages?: number;
+  processed_pages?: number;
 }
 
 
@@ -135,6 +138,9 @@ const AdminEditor = () => {
         plaintiff_ar: document.plaintiff_ar || '',
         defendant: document.defendant || '',
         defendant_ar: document.defendant_ar || '',
+        page_contents: (document.page_contents as any[]) || [],
+        total_pages: document.total_pages || 0,
+        processed_pages: document.processed_pages || 0,
       };
 
       setCurrentDocument(mappedDocument);
