@@ -6,7 +6,8 @@ import { Breadcrumb, BreadcrumbList, BreadcrumbItem, BreadcrumbLink, BreadcrumbP
 import { FileText, Calendar, User } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useTranslation } from "@/hooks/useTranslation";
-import { useDocumentsByType } from "@/hooks/useDocumentsByType";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 import { format } from "date-fns";
 import { fr, ar } from "date-fns/locale";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -15,7 +16,47 @@ const AnalysesJuridiques = () => {
   const { isRTL, language } = useLanguage();
   const { t } = useTranslation();
   
-  const { data: documents, isLoading } = useDocumentsByType('Analyses juridiques');
+  // Fetch both "Analyses juridiques" and "Fiche d'analyse juridique" types
+  const { data: documents, isLoading } = useQuery({
+    queryKey: ['analyses-juridiques-all'],
+    queryFn: async () => {
+      // Get both document types
+      const { data: types, error: typesError } = await supabase
+        .from('document_types')
+        .select('id')
+        .in('name', ['Analyses juridiques', 'Fiche d\'analyse juridique']);
+      
+      if (typesError) throw typesError;
+      if (!types || types.length === 0) return [];
+      
+      const typeIds = types.map(t => t.id);
+      
+      // Get all documents for these types
+      const { data, error } = await supabase
+        .from('documents')
+        .select(`
+          id,
+          title,
+          title_ar,
+          summary,
+          summary_ar,
+          author,
+          author_ar,
+          created_at,
+          keywords,
+          keywords_ar,
+          document_type_id,
+          document_types(name, name_ar)
+        `)
+        .in('document_type_id', typeIds)
+        .eq('published', true)
+        .order('created_at', { ascending: false })
+        .limit(20);
+      
+      if (error) throw error;
+      return data || [];
+    }
+  });
 
   return (
     <div className={`container mx-auto px-4 py-6 ${isRTL ? 'font-almarai' : ''}`} dir={isRTL ? 'rtl' : 'ltr'}>
