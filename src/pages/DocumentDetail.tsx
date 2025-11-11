@@ -78,7 +78,11 @@ interface SuggestedDocument {
 }
 
 const DocumentDetail = () => {
-  const { categorySlug, documentSlug } = useParams<{ categorySlug: string; documentSlug: string }>();
+  const { categorySlug, documentSlug, documentId } = useParams<{ 
+    categorySlug?: string; 
+    documentSlug?: string; 
+    documentId?: string;
+  }>();
   const { isRTL } = useLanguage();
   const [document, setDocument] = useState<Document | null>(null);
   const [category, setCategory] = useState<Category | null>(null);
@@ -92,6 +96,67 @@ const DocumentDetail = () => {
 
   useEffect(() => {
     const fetchDocument = async () => {
+      // Handle direct document ID route (for analyses juridiques, commentaires, blogs)
+      if (documentId) {
+        console.log('Fetching document by ID:', documentId);
+        
+        const { data, error } = await supabase
+          .from('documents')
+          .select(`
+            *,
+            categories (
+              id,
+              name,
+              name_ar,
+              color
+            )
+          `)
+          .eq('id', documentId)
+          .eq('published', true)
+          .single();
+
+        if (error) {
+          console.error('Error fetching document by ID:', error);
+          setLoading(false);
+          return;
+        }
+
+        if (data) {
+          setDocument(data as any);
+          if (data.categories) {
+            setCategory(data.categories as Category);
+          }
+          
+          // Fetch suggested documents based on document type
+          if (data.document_type_id) {
+            const { data: suggested } = await supabase
+              .from('documents')
+              .select(`
+                id,
+                title,
+                title_ar,
+                summary,
+                document_type,
+                created_at,
+                page_count,
+                categories (name, name_ar)
+              `)
+              .eq('document_type_id', data.document_type_id)
+              .eq('published', true)
+              .neq('id', documentId)
+              .limit(3);
+            
+            if (suggested) {
+              setSuggestedDocuments(suggested as SuggestedDocument[]);
+            }
+          }
+        }
+        
+        setLoading(false);
+        return;
+      }
+      
+      // Original logic for categorySlug/documentSlug route
       if (!categorySlug || !documentSlug) {
         console.log('Missing categorySlug or documentSlug:', { categorySlug, documentSlug });
         return;
@@ -204,7 +269,7 @@ const DocumentDetail = () => {
     };
 
     fetchDocument();
-  }, [categorySlug, documentSlug]);
+  }, [categorySlug, documentSlug, documentId]);
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('fr-FR', {
@@ -340,13 +405,28 @@ const DocumentDetail = () => {
             </BreadcrumbLink>
           </BreadcrumbItem>
           <BreadcrumbSeparator />
-          <BreadcrumbItem>
-            <BreadcrumbLink asChild>
-              <Link to="/observatoire/droits-fondamentaux">Droits fondamentaux</Link>
-            </BreadcrumbLink>
-          </BreadcrumbItem>
-          <BreadcrumbSeparator />
-          {category && (
+          {documentId ? (
+            // For direct document access (analyses juridiques, commentaires, blogs)
+            <>
+              <BreadcrumbItem>
+                <BreadcrumbLink asChild>
+                  <Link to="/observatoire/analyses-opinions">Analyses & Opinions</Link>
+                </BreadcrumbLink>
+              </BreadcrumbItem>
+              <BreadcrumbSeparator />
+            </>
+          ) : (
+            // For category-based documents
+            <>
+              <BreadcrumbItem>
+                <BreadcrumbLink asChild>
+                  <Link to="/observatoire/droits-fondamentaux">Droits fondamentaux</Link>
+                </BreadcrumbLink>
+              </BreadcrumbItem>
+              <BreadcrumbSeparator />
+            </>
+          )}
+          {category && !documentId && (
             <>
               <BreadcrumbItem>
                 <BreadcrumbLink asChild>

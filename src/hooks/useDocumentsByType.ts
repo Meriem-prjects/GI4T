@@ -23,15 +23,26 @@ export const useDocumentsByType = (documentTypeName: string) => {
   return useQuery({
     queryKey: ['documents-by-type', documentTypeName],
     queryFn: async () => {
+      console.log('Fetching documents for type:', documentTypeName);
+      
       // First get the document type ID
       const { data: docType, error: typeError } = await supabase
         .from('document_types')
-        .select('id')
+        .select('id, name')
         .eq('name', documentTypeName)
         .maybeSingle();
       
-      if (typeError) throw typeError;
-      if (!docType) return [];
+      if (typeError) {
+        console.error('Error fetching document type:', typeError);
+        throw typeError;
+      }
+      
+      if (!docType) {
+        console.log('Document type not found:', documentTypeName);
+        return [];
+      }
+      
+      console.log('Found document type:', docType);
       
       // Then get documents of this type
       const { data, error } = await supabase
@@ -48,15 +59,21 @@ export const useDocumentsByType = (documentTypeName: string) => {
           keywords,
           keywords_ar,
           document_type_id,
+          published,
+          status,
           document_types(name, name_ar)
         `)
         .eq('document_type_id', docType.id)
         .eq('published', true)
-        .eq('status', 'processed')
         .order('created_at', { ascending: false })
-        .limit(10);
+        .limit(20);
       
-      if (error) throw error;
+      if (error) {
+        console.error('Error fetching documents:', error);
+        throw error;
+      }
+      
+      console.log('Found documents:', data?.length, data);
       return data as DocumentByType[] || [];
     },
     enabled: !!documentTypeName
