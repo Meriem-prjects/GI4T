@@ -320,6 +320,10 @@ STRATÉGIE POUR TITRE ET SOUS-TITRE:
 
 IMPORTANT: Les champs "textualMetadataTranslated" et "translatedContent" doivent contenir les VRAIES TRADUCTIONS, pas des descriptions !
 
+${mode === 'quick' 
+  ? `⚠️ MODE RAPIDE: Pour "translatedContent", fournis UNIQUEMENT un court extrait traduit (200-300 mots max) du début du document, pas la traduction complète.` 
+  : `Pour "translatedContent", traduis le contenu complet du document en ${targetLanguage}.`}
+
 Réponds uniquement en JSON valide avec cette structure exacte :
 {
   "title": "titre principal proposé en analysant les métadonnées textuelles ET le contenu principal",
@@ -348,7 +352,7 @@ Réponds uniquement en JSON valide avec cette structure exacte :
     "court_level": "traduction complète du niveau de tribunal en ${targetLanguage}"
   },
   "textualMetadataTranslated": "TRADUCTION COMPLÈTE EN ${targetLanguage} DES MÉTADONNÉES TEXTUELLES EXTRAITES",
-  "translatedContent": "TRADUCTION COMPLÈTE EN ${targetLanguage} DE TOUT LE CONTENU DU DOCUMENT",
+  "translatedContent": "${mode === 'quick' ? 'EXTRAIT TRADUIT (200-300 mots) du début du document en ' + targetLanguage : 'TRADUCTION COMPLÈTE EN ' + targetLanguage + ' DE TOUT LE CONTENU DU DOCUMENT'}",
   "language": "${sourceLanguage}",
   "suggestions": {
     "suggestedCategory": "nom exact de la catégorie la plus appropriée",
@@ -378,7 +382,7 @@ ${contentForAI}${contentTruncated ? '\n\n[Note: Contenu tronqué pour analyse ra
         ],
         response_format: { type: "json_object" },
         temperature: 0.3,
-        max_tokens: mode === 'quick' ? 2000 : 4000, // Reduce tokens in quick mode for faster response
+        max_tokens: mode === 'quick' ? 3500 : 8000, // Increased token limits to avoid truncation
       }),
     });
 
@@ -395,6 +399,14 @@ ${contentForAI}${contentTruncated ? '\n\n[Note: Contenu tronqué pour analyse ra
 
     let analysisResult;
     try {
+      // Check if response is complete (should end with })
+      const trimmedResponse = aiResponse.trim();
+      if (!trimmedResponse.endsWith('}') && !trimmedResponse.endsWith('"}')) {
+        console.error('AI response appears truncated, does not end with }');
+        console.error('Last 100 chars:', trimmedResponse.slice(-100));
+        throw new Error('AI response was truncated - increase max_tokens or reduce content size');
+      }
+      
       // Parse the JSON response directly (since we forced json_object format)
       analysisResult = JSON.parse(aiResponse);
     } catch (parseError) {
