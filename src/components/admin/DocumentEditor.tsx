@@ -377,6 +377,7 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
 
   const runFullTranslation = async () => {
     if (!editedData.content) {
+      console.error('❌ [runFullTranslation] No content to translate');
       toast({
         title: "Erreur",
         description: "Aucun contenu à traduire.",
@@ -385,25 +386,51 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
       return;
     }
 
+    console.log('🚀 [runFullTranslation] Starting full translation...');
+    console.log('📄 Document ID:', editedData.id);
+    console.log('📝 Content length:', editedData.content?.length);
+    console.log('🌍 Language:', editedData.language);
+    
     setIsAnalyzing(true);
     
     try {
-      console.log('Starting full translation...');
+      const requestBody = {
+        textualMetadata: editedData.textual_metadata || '',
+        content: editedData.content,
+        currentLanguage: editedData.language || 'fr',
+        mode: 'full',
+        documentId: editedData.id,
+        documentFileName: editedData.originalFileName
+      };
+      
+      console.log('📤 [runFullTranslation] Invoking smart-document-analysis with body:', {
+        ...requestBody,
+        content: `${requestBody.content?.substring(0, 100)}... (${requestBody.content?.length} chars)`
+      });
       
       const { data, error } = await supabase.functions.invoke('smart-document-analysis', {
-        body: {
-          textualMetadata: editedData.textual_metadata || '',
-          content: editedData.content,
-          currentLanguage: editedData.language || 'fr',
-          mode: 'full',
-          documentId: editedData.id,
-          documentFileName: editedData.originalFileName
-        }
+        body: requestBody
       });
 
-      if (error) throw error;
+      console.log('📥 [runFullTranslation] Edge function response:', { data, error });
+
+      if (error) {
+        console.error('❌ [runFullTranslation] Edge function returned error:', error);
+        throw error;
+      }
+
+      if (!data) {
+        console.error('❌ [runFullTranslation] No data returned from edge function');
+        throw new Error('Aucune donnée reçue de la fonction de traduction');
+      }
+
+      console.log('✅ [runFullTranslation] Received data mode:', data.mode);
 
       if (data.mode === 'full_async') {
+        console.log('⏳ [runFullTranslation] Async translation started');
+        console.log('🆔 Job ID:', data.job_id);
+        console.log('⏱️ Estimated duration:', data.estimated_duration_minutes, 'minutes');
+        
         // Traduction asynchrone lancée
         setFullTranslationJob({
           jobId: data.job_id,
@@ -418,15 +445,22 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
         });
         
         // Démarrer le tracking Realtime
+        console.log('🔴 [runFullTranslation] Starting realtime tracking for job:', data.job_id);
         startRealtimeJobTracking(data.job_id);
       } else {
+        console.log('⚡ [runFullTranslation] Sync translation completed');
+        
         // Traduction synchrone (document court)
         if (data.analysis?.translatedContent) {
+          console.log('📝 [runFullTranslation] Translated content length:', data.analysis.translatedContent.length);
+          
           setEditedData(prev => ({
             ...prev,
             translated_content: data.analysis.translatedContent
           }));
           setTranslatedContent(data.analysis.translatedContent);
+        } else {
+          console.warn('⚠️ [runFullTranslation] No translated content in response');
         }
         
         toast({
@@ -434,11 +468,26 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
           description: "La traduction intégrale est disponible.",
         });
       }
-    } catch (err) {
-      console.error('Full translation error:', err);
+    } catch (err: any) {
+      console.error('❌ [runFullTranslation] Critical error:', err);
+      console.error('❌ Error name:', err?.name);
+      console.error('❌ Error message:', err?.message);
+      console.error('❌ Error stack:', err?.stack);
+      console.error('❌ Full error object:', JSON.stringify(err, null, 2));
+      
+      let errorMessage = "Impossible de lancer la traduction intégrale.";
+      
+      if (err?.message) {
+        errorMessage = err.message;
+      } else if (typeof err === 'string') {
+        errorMessage = err;
+      }
+      
+      console.error('💬 [runFullTranslation] Showing error toast with message:', errorMessage);
+      
       toast({
-        title: "❌ Erreur",
-        description: "Impossible de lancer la traduction intégrale.",
+        title: "❌ Erreur de traduction",
+        description: errorMessage,
         variant: "destructive",
         action: (
           <Button variant="outline" size="sm" onClick={() => runFullTranslation()}>
@@ -447,6 +496,7 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
         )
       });
     } finally {
+      console.log('🏁 [runFullTranslation] Finished (analyzing state reset)');
       setIsAnalyzing(false);
     }
   };
