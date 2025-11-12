@@ -328,6 +328,12 @@ type TranslationKey =
   | 'recent'
   | 'relevance'
   | 'resultsFound'
+  | 'decisionsFound'
+  | 'decisionSingular'
+  | 'decisionPlural'
+  | 'foundSingular'
+  | 'foundPlural'
+  | 'for'
   | 'noResultsFound'
   | 'tryDifferentFilters'
   | 'matchScore'
@@ -662,6 +668,12 @@ const translations: Record<'fr' | 'ar', Record<TranslationKey, string>> = {
     recent: 'Récent',
     relevance: 'Pertinence',
     resultsFound: 'résultats trouvés',
+    decisionsFound: 'décisions trouvées',
+    decisionSingular: 'décision',
+    decisionPlural: 'décisions',
+    foundSingular: 'trouvée',
+    foundPlural: 'trouvées',
+    for: 'pour',
     noResultsFound: 'Aucun résultat trouvé',
     tryDifferentFilters: 'Essayez différents filtres',
     matchScore: 'Score de correspondance',
@@ -1043,6 +1055,12 @@ const translations: Record<'fr' | 'ar', Record<TranslationKey, string>> = {
     recent: 'الأحدث',
     relevance: 'الصلة',
     resultsFound: 'نتيجة',
+    decisionsFound: 'قرار',
+    decisionSingular: 'قرار',
+    decisionPlural: 'قرارات',
+    foundSingular: 'موجود',
+    foundPlural: 'موجودة',
+    for: 'لـ',
     noResultsFound: 'لم يتم العثور على نتائج',
     tryDifferentFilters: 'جرب مرشحات مختلفة',
     matchScore: 'درجة التطابق',

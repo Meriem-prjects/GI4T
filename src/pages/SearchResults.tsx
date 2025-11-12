@@ -550,9 +550,20 @@ const SearchResults = () => {
               ) : (
                 <div className="flex items-center gap-2">
                   <span className="text-sm text-muted-foreground">
-                    {totalResults} décision{totalResults !== 1 ? 's' : ''} trouvée{totalResults !== 1 ? 's' : ''}
-                    {searchQuery && (
-                      <span className="font-medium"> pour "{searchQuery}"</span>
+                    {language === 'ar' ? (
+                      <>
+                        {totalResults} {totalResults === 1 ? t('decisionSingular') : t('decisionPlural')} {t('foundPlural')}
+                        {searchQuery && (
+                          <span className="font-medium"> {t('for')} "{searchQuery}"</span>
+                        )}
+                      </>
+                    ) : (
+                      <>
+                        {totalResults} {t(totalResults === 1 ? 'decisionSingular' : 'decisionPlural')} {t(totalResults === 1 ? 'foundSingular' : 'foundPlural')}
+                        {searchQuery && (
+                          <span className="font-medium"> {t('for')} "{searchQuery}"</span>
+                        )}
+                      </>
                     )}
                   </span>
                   {useAI && searchData?.aiPowered && (
@@ -599,8 +610,8 @@ const SearchResults = () => {
             </div>
           ) : searchResults.length === 0 ? (
             <div className="text-center py-12">
-              <p className="text-lg text-muted-foreground">Aucune décision trouvée</p>
-              <p className="text-sm text-muted-foreground mt-2">Essayez de modifier vos critères de recherche</p>
+              <p className="text-lg text-muted-foreground">{t('noResultsFound')}</p>
+              <p className="text-sm text-muted-foreground mt-2">{t('tryDifferentFilters')}</p>
             </div>
           ) : (
             <TooltipProvider>
