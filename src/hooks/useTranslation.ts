@@ -401,7 +401,7 @@ const translations: Record<'fr' | 'ar', Record<TranslationKey, string>> = {
     observatoryTitle: 'Observatoire des Droits Fondamentaux',
     observatoryDescription: 'Consultez, analysez et comprenez la jurisprudence tunisienne sur les droits fondamentaux',
     searchPlaceholder: 'Rechercher une décision, un mot-clé...',
-    accessToAdminLaw: 'Accès aux Droits Administratif',
+    accessToAdminLaw: 'Accès au droit administratif',
     accessDescription: 'Comprendre ses droits, savoir comment agir : des outils concrets pour tous les citoyens',
     interactiveMap: 'Carte interactive',
     newsSection: 'Actualités',
