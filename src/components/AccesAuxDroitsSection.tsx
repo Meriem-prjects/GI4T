@@ -23,7 +23,7 @@ const AccesAuxDroitsSection = () => {
   }} className="border-0 shadow-2xl hover:shadow-3xl transition-all cursor-pointer hover:scale-[1.02] duration-300">
       <CardContent className="p-8 sm:p-12 flex flex-col items-center justify-center space-y-8 min-h-[500px]">
         {/* Logo centered at top */}
-        <div className="flex items-center justify-center">
+        <div className="flex items-center justify-center mx-0 px-0 py-0 my-0">
           <img src={accesDroitsLogo} alt="Accès aux Droits" className="h-40 sm:h-48 md:h-56 w-auto object-contain" />
         </div>
         
