@@ -4,6 +4,7 @@ import { Map } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useTranslation } from "@/hooks/useTranslation";
+import accesDroitsLogo from "@/assets/acces-droits-logo.png";
 
 const AccesAuxDroitsSection = () => {
   const navigate = useNavigate();
@@ -26,17 +27,29 @@ const AccesAuxDroitsSection = () => {
       className="border-0 shadow-2xl hover:shadow-3xl transition-all cursor-pointer hover:scale-[1.02] duration-300"
     >
       <CardContent className="p-8 sm:p-12 flex flex-col items-center justify-center space-y-8 min-h-[500px]">
-        {/* Title */}
-        <h2 className={`text-blue-900 text-3xl sm:text-4xl font-spartan font-bold text-center max-w-md ${isRTL ? 'font-almarai' : ''}`}>
-          {t('accessToAdminLaw')}
-        </h2>
+        {/* Content Grid: Text on left, Logo on right */}
+        <div className="w-full grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
+          {/* Left side: Text */}
+          <div className="flex flex-col space-y-6">
+            <h2 className={`text-blue-900 text-3xl sm:text-4xl font-spartan font-bold text-center md:text-left ${isRTL ? 'font-almarai' : ''}`}>
+              {t('accessToAdminLaw')}
+            </h2>
+            <p className={`text-blue-800 text-base sm:text-lg text-center md:text-left leading-relaxed ${isRTL ? 'font-almarai' : ''}`}>
+              {t('accessDescription')}
+            </p>
+          </div>
 
-        {/* Description */}
-        <p className={`text-blue-800 text-base sm:text-lg text-center max-w-md leading-relaxed ${isRTL ? 'font-almarai' : ''}`}>
-          {t('accessDescription')}
-        </p>
+          {/* Right side: Logo */}
+          <div className="flex items-center justify-center">
+            <img
+              src={accesDroitsLogo}
+              alt="Accès aux Droits"
+              className="h-40 sm:h-48 md:h-56 w-auto object-contain"
+            />
+          </div>
+        </div>
 
-        {/* Primary CTA */}
+        {/* Primary CTA - aligned with search bar width */}
         <div 
           className="w-full max-w-md"
           onClick={(e) => e.stopPropagation()}
