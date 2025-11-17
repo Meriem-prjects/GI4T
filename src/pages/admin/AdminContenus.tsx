@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Checkbox } from '@/components/ui/checkbox';
 import { 
   Search, 
   FileText, 
@@ -16,7 +17,8 @@ import {
   MoreVertical,
   CheckCircle,
   Clock,
-  AlertCircle
+  AlertCircle,
+  X
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -80,6 +82,8 @@ const AdminContenus = () => {
   const [categoryFilter, setCategoryFilter] = useState('all');
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [documentToDelete, setDocumentToDelete] = useState<string | null>(null);
+  const [selectedDocuments, setSelectedDocuments] = useState<string[]>([]);
+  const [bulkDeleteDialogOpen, setBulkDeleteDialogOpen] = useState(false);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -241,6 +245,78 @@ const AdminContenus = () => {
     }
   };
 
+  const bulkDeleteDocuments = async () => {
+    try {
+      const { error } = await supabase
+        .from('documents')
+        .delete()
+        .in('id', selectedDocuments);
+
+      if (error) throw error;
+
+      setDocuments(prev => prev.filter(doc => !selectedDocuments.includes(doc.id)));
+      setSelectedDocuments([]);
+      toast({
+        title: "Documents supprimés",
+        description: `${selectedDocuments.length} document(s) supprimé(s) avec succès`,
+      });
+    } catch (error) {
+      console.error('Error deleting documents:', error);
+      toast({
+        title: "Erreur",
+        description: "Impossible de supprimer les documents",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const bulkSubmitForValidation = async () => {
+    try {
+      const { error } = await supabase
+        .from('documents')
+        .update({ status: 'pending_validation' })
+        .in('id', selectedDocuments);
+
+      if (error) throw error;
+
+      setDocuments(prev =>
+        prev.map(doc =>
+          selectedDocuments.includes(doc.id)
+            ? { ...doc, status: 'pending_validation' }
+            : doc
+        )
+      );
+      setSelectedDocuments([]);
+      toast({
+        title: "Documents soumis pour validation",
+        description: `${selectedDocuments.length} document(s) soumis avec succès`,
+      });
+    } catch (error) {
+      console.error('Error submitting documents for validation:', error);
+      toast({
+        title: "Erreur",
+        description: "Impossible de soumettre les documents pour validation",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const toggleSelectAll = () => {
+    if (selectedDocuments.length === filteredDocuments.length) {
+      setSelectedDocuments([]);
+    } else {
+      setSelectedDocuments(filteredDocuments.map(doc => doc.id));
+    }
+  };
+
+  const toggleSelectDocument = (documentId: string) => {
+    setSelectedDocuments(prev =>
+      prev.includes(documentId)
+        ? prev.filter(id => id !== documentId)
+        : [...prev, documentId]
+    );
+  };
+
   const getStatusBadge = (status: string) => {
     switch (status) {
       case 'draft':
@@ -300,18 +376,32 @@ const AdminContenus = () => {
       {/* Filters */}
       <Card>
         <CardContent className="p-4">
-          <div className="flex flex-col sm:flex-row gap-4">
-            <div className="flex-1">
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
-                <Input
-                  placeholder="Rechercher par titre, résumé ou nom de fichier..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-10"
-                />
-              </div>
+          <div className="flex flex-col gap-4">
+            <div className="flex items-center gap-4">
+              <Checkbox
+                checked={selectedDocuments.length === filteredDocuments.length && filteredDocuments.length > 0}
+                onCheckedChange={toggleSelectAll}
+                id="select-all"
+              />
+              <label
+                htmlFor="select-all"
+                className="text-sm font-medium cursor-pointer"
+              >
+                Tout sélectionner ({filteredDocuments.length})
+              </label>
             </div>
+            <div className="flex flex-col sm:flex-row gap-4">
+              <div className="flex-1">
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
+                  <Input
+                    placeholder="Rechercher par titre, résumé ou nom de fichier..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="pl-10"
+                  />
+                </div>
+              </div>
             <Select value={statusFilter} onValueChange={setStatusFilter}>
               <SelectTrigger className="w-48">
                 <SelectValue placeholder="Statut" />
@@ -374,15 +464,67 @@ const AdminContenus = () => {
               </SelectContent>
             </Select>
           </div>
+          </div>
         </CardContent>
       </Card>
+
+      {/* Bulk Actions Bar */}
+      {selectedDocuments.length > 0 && (
+        <Card className="border-primary bg-primary/5">
+          <CardContent className="p-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-4">
+                <span className="font-medium">
+                  {selectedDocuments.length} document(s) sélectionné(s)
+                </span>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setSelectedDocuments([])}
+                >
+                  <X className="w-4 h-4 mr-2" />
+                  Désélectionner tout
+                </Button>
+              </div>
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={bulkSubmitForValidation}
+                >
+                  <CheckCircle className="w-4 h-4 mr-2" />
+                  Faire valider
+                </Button>
+                <Button
+                  variant="destructive"
+                  size="sm"
+                  onClick={() => setBulkDeleteDialogOpen(true)}
+                >
+                  <Trash2 className="w-4 h-4 mr-2" />
+                  Supprimer
+                </Button>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Documents Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {filteredDocuments.map((document) => (
-          <Card key={document.id} className="hover:shadow-lg transition-shadow">
+          <Card 
+            key={document.id} 
+            className={`hover:shadow-lg transition-shadow ${
+              selectedDocuments.includes(document.id) ? 'ring-2 ring-primary' : ''
+            }`}
+          >
             <CardHeader className="pb-3">
-              <div className="flex items-start justify-between">
+              <div className="flex items-start justify-between gap-2">
+                <Checkbox
+                  checked={selectedDocuments.includes(document.id)}
+                  onCheckedChange={() => toggleSelectDocument(document.id)}
+                  onClick={(e) => e.stopPropagation()}
+                />
                 <div className="flex-1 min-w-0">
                   <CardTitle className="text-base line-clamp-2 mb-2">
                     {document.title}
@@ -584,6 +726,30 @@ const AdminContenus = () => {
                   setDocumentToDelete(null);
                   setDeleteDialogOpen(false);
                 }
+              }}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              Supprimer
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Bulk Delete Confirmation Dialog */}
+      <AlertDialog open={bulkDeleteDialogOpen} onOpenChange={setBulkDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Confirmer la suppression multiple</AlertDialogTitle>
+            <AlertDialogDescription>
+              Êtes-vous sûr de vouloir supprimer {selectedDocuments.length} document(s) ? Cette action est irréversible.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Annuler</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                bulkDeleteDocuments();
+                setBulkDeleteDialogOpen(false);
               }}
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
             >
