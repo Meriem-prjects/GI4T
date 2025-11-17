@@ -22,21 +22,15 @@ const AccesAuxDroitsSection = () => {
     backgroundColor: '#FFDA52'
   }} className="border-0 shadow-2xl hover:shadow-3xl transition-all cursor-pointer hover:scale-[1.02] duration-300">
       <CardContent className="p-8 sm:p-12 flex flex-col items-center justify-center space-y-8 min-h-[500px]">
-        {/* Content Grid: Text on left, Logo on right */}
-        <div className="w-full grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
-          {/* Left side: Text */}
-          <div className="flex flex-col space-y-6">
-            
-            <p className={`text-blue-800 text-base sm:text-lg text-center md:text-left leading-relaxed ${isRTL ? 'font-almarai' : ''}`}>
-              {t('accessDescription')}
-            </p>
-          </div>
-
-          {/* Right side: Logo */}
-          <div className="flex items-center justify-center">
-            <img src={accesDroitsLogo} alt="Accès aux Droits" className="h-40 sm:h-48 md:h-56 w-auto object-contain" />
-          </div>
+        {/* Logo centered at top */}
+        <div className="flex items-center justify-center">
+          <img src={accesDroitsLogo} alt="Accès aux Droits" className="h-40 sm:h-48 md:h-56 w-auto object-contain" />
         </div>
+        
+        {/* Description text */}
+        <p className={`text-blue-800 text-base sm:text-lg text-center leading-relaxed max-w-2xl ${isRTL ? 'font-almarai' : ''}`}>
+          {t('accessDescription')}
+        </p>
 
         {/* Primary CTA - aligned with search bar width */}
         <div className="w-full max-w-md" onClick={e => e.stopPropagation()}>
