@@ -4,7 +4,7 @@ import { Map } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useTranslation } from "@/hooks/useTranslation";
-import logoAccesDroitsFr from "@/assets/logo-acces-droits-fr.png";
+import logoAccesDroitsFr from "@/assets/logo-acces-droits-new.png";
 import logoAccesDroitsAr from "@/assets/logo-acces-aux-droits.png";
 const AccesAuxDroitsSection = () => {
   const navigate = useNavigate();
@@ -28,7 +28,7 @@ const AccesAuxDroitsSection = () => {
           <img 
             src={isRTL ? logoAccesDroitsAr : logoAccesDroitsFr} 
             alt="Accès aux Droits" 
-            className="h-40 sm:h-48 md:h-56 w-auto object-contain"
+            className="h-32 sm:h-40 md:h-48 w-auto object-contain"
           />
         </div>
         
