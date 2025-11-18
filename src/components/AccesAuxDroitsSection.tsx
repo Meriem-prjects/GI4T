@@ -4,6 +4,8 @@ import { Map } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useTranslation } from "@/hooks/useTranslation";
+import logoAccesDroitsFr from "@/assets/logo-acces-droits-fr.png";
+import logoAccesDroitsAr from "@/assets/logo-acces-aux-droits.png";
 
 const AccesAuxDroitsSection = () => {
   const navigate = useNavigate();
@@ -26,6 +28,15 @@ const AccesAuxDroitsSection = () => {
       className="border-0 shadow-2xl hover:shadow-3xl transition-all cursor-pointer hover:scale-[1.02] duration-300"
     >
       <CardContent className="p-8 sm:p-12 flex flex-col items-center justify-center space-y-8 min-h-[500px]">
+        {/* Logo */}
+        <div className="flex justify-center items-center mb-4">
+          <img 
+            src={isRTL ? logoAccesDroitsAr : logoAccesDroitsFr}
+            alt="Accès aux Droits"
+            className="h-32 sm:h-40 w-auto object-contain"
+          />
+        </div>
+        
         {/* Title */}
         <h2 className={`text-blue-900 text-3xl sm:text-4xl font-spartan font-bold text-center max-w-md ${isRTL ? 'font-almarai' : ''}`}>
           {t('accessToAdminLaw')}
