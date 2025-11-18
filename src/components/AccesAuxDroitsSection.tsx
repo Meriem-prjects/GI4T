@@ -4,7 +4,7 @@ import { Map } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useTranslation } from "@/hooks/useTranslation";
-import logoAccesDroitsFr from "@/assets/logo-acces-droits-new.png";
+import logoAccesDroitsFr from "@/assets/logo-acces-droits-fr-final.png";
 import logoAccesDroitsAr from "@/assets/logo-acces-aux-droits.png";
 const AccesAuxDroitsSection = () => {
   const navigate = useNavigate();
