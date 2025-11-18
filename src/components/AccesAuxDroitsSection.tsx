@@ -5,10 +5,11 @@ import { Link, useNavigate } from "react-router-dom";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useTranslation } from "@/hooks/useTranslation";
 import logoAccesDroitsFr from "@/assets/logo-acces-droits-fr.png";
+import logoAccesDroitsAr from "@/assets/logo-acces-droits-ar.png";
 
 const AccesAuxDroitsSection = () => {
   const navigate = useNavigate();
-  const { isRTL } = useLanguage();
+  const { language, isRTL } = useLanguage();
   const { t } = useTranslation();
 
   return (
@@ -30,7 +31,7 @@ const AccesAuxDroitsSection = () => {
         {/* Logo */}
         <div className="flex-shrink-0">
           <img
-            src={logoAccesDroitsFr}
+            src={language === 'ar' ? logoAccesDroitsAr : logoAccesDroitsFr}
             alt="Accès aux Droits" 
             className="h-32 sm:h-40 md:h-48 w-auto object-contain"
           />
