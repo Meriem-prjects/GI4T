@@ -42,6 +42,7 @@ interface Document {
   category_id?: string;
   document_type_id?: string;
   translated_content?: string;
+  published?: boolean;
   document_categories?: Array<{
     category_id: string;
     categories: {
@@ -322,7 +323,7 @@ const AdminContenus = () => {
       case 'draft':
         return <Badge variant="outline" className="bg-yellow-50 text-yellow-700 border-yellow-200"><Clock className="w-3 h-3 mr-1" />Brouillon</Badge>;
       case 'processed':
-        return <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200"><CheckCircle className="w-3 h-3 mr-1" />Publié</Badge>;
+        return <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200"><CheckCircle className="w-3 h-3 mr-1" />Traité</Badge>;
       case 'pending_validation':
         return <Badge variant="outline" className="bg-orange-50 text-orange-700 border-orange-200"><AlertCircle className="w-3 h-3 mr-1" />En validation</Badge>;
       case 'processing':
@@ -589,6 +590,12 @@ const AdminContenus = () => {
               {/* Status and Language */}
               <div className="flex items-center gap-2 flex-wrap">
                 {getStatusBadge(document.status)}
+                {document.published && (
+                  <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">
+                    <Eye className="w-3 h-3 mr-1" />
+                    Visible au public
+                  </Badge>
+                )}
                 <Badge variant="outline" className="text-xs">
                   <Globe className="w-3 h-3 mr-1" />
                   {document.language.toUpperCase()}
