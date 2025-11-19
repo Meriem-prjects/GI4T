@@ -1398,7 +1398,7 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
               ) : (
                 <>
                   <BookOpen className="mr-2 h-4 w-4" />
-                  Pages ({editedData.processed_pages}/{editedData.total_pages})
+                  Traduire page par page
                 </>
               )}
             </Button>
