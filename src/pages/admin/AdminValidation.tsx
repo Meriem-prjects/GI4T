@@ -23,6 +23,7 @@ interface Document {
   keywords: string[];
   keywords_ar?: string[];
   category_id?: string;
+  published?: boolean;
   document_categories?: Array<{
     category_id: string;
     categories: {
@@ -113,7 +114,10 @@ const AdminValidation = () => {
     try {
       const { error } = await supabase
         .from('documents')
-        .update({ status: 'processed' })
+        .update({ 
+          status: 'processed',
+          published: true
+        })
         .eq('id', documentId);
 
       if (error) throw error;
@@ -137,7 +141,10 @@ const AdminValidation = () => {
     try {
       const { error } = await supabase
         .from('documents')
-        .update({ status: 'draft' })
+        .update({ 
+          status: 'draft',
+          published: false
+        })
         .eq('id', documentId);
 
       if (error) throw error;
