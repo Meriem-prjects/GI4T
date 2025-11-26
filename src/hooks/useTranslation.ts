@@ -389,7 +389,8 @@ type TranslationKey =
   | 'observatoireNavAnalyses'
   | 'observatoireNavAnalysesDesc'
   | 'observatoireNavNews'
-  | 'observatoireNavNewsDesc';
+  | 'observatoireNavNewsDesc'
+  | 'ourSections';
 
 const translations: Record<'fr' | 'ar', Record<TranslationKey, string>> = {
   fr: {
@@ -778,6 +779,7 @@ const translations: Record<'fr' | 'ar', Record<TranslationKey, string>> = {
     observatoireNavAnalysesDesc: 'Analyses juridiques',
     observatoireNavNews: 'Actualités',
     observatoireNavNewsDesc: 'Dernières nouvelles',
+    ourSections: 'Nos Rubriques',
   },
   ar: {
     // Homepage
@@ -1168,6 +1170,7 @@ const translations: Record<'fr' | 'ar', Record<TranslationKey, string>> = {
     observatoireNavAnalysesDesc: 'تحليلات قانونية',
     observatoireNavNews: 'أخبار',
     observatoireNavNewsDesc: 'آخر الأخبار',
+    ourSections: 'أقسامنا',
   },
 };
 
