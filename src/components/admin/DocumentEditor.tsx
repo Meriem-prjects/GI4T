@@ -1388,7 +1388,7 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
       </div>
 
       {/* Workflow IA Guide - Timeline */}
-      <Card className="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-950/30 dark:to-indigo-950/30 border-blue-200 dark:border-blue-800">
+      <Card className="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-950/30 dark:to-indigo-950/30 border-blue-200 dark:border-blue-800" dir="ltr">
         <CardContent className="p-6">
           <div className="flex items-center gap-2 mb-4">
             <Brain className="h-5 w-5 text-blue-600 dark:text-blue-400" />
