@@ -19,6 +19,7 @@ import { useDocumentCategories, useUpdateDocumentCategories } from '@/hooks/useD
 import PDFViewer from './PDFViewer';
 import { renderFormattedContent, formatContent } from '@/utils/contentFormatter';
 import { normalizeArabicText, normalizeArabicForDisplay, handleArabicInput } from '@/lib/arabicUtils';
+import { useTranslation } from '@/hooks/useTranslation';
 
 interface PageContent {
   pageNumber: number;
@@ -90,6 +91,7 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const isFromValidation = searchParams.get('source') === 'validation';
+  const { t } = useTranslation();
   
   const [editedData, setEditedData] = useState<DocumentData>(documentData);
   const [showPreview, setShowPreview] = useState(false);
@@ -1383,7 +1385,77 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
             </Badge>
           </div>
         </div>
-        
+      </div>
+
+      {/* Workflow IA Guide - Timeline */}
+      <Card className="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-950/30 dark:to-indigo-950/30 border-blue-200 dark:border-blue-800">
+        <CardContent className="p-6">
+          <div className="flex items-center gap-2 mb-4">
+            <Brain className="h-5 w-5 text-blue-600 dark:text-blue-400" />
+            <h4 className="font-semibold text-blue-900 dark:text-blue-100">{t('workflowGuide')}</h4>
+          </div>
+          
+          <div className="flex flex-col md:flex-row gap-6">
+            {/* Étape 1 - Analyse IA */}
+            <div className="flex-1 flex items-start gap-3">
+              <div className="flex-shrink-0 w-8 h-8 bg-blue-600 dark:bg-blue-500 text-white rounded-full flex items-center justify-center font-bold text-sm">
+                1
+              </div>
+              <div className="flex-1">
+                <p className="font-semibold text-blue-900 dark:text-blue-100 mb-1">
+                  🤖 {t('aiAnalysisStep')}
+                </p>
+                <p className="text-xs text-blue-700 dark:text-blue-300 leading-relaxed">
+                  {t('aiAnalysisStepDesc')}
+                </p>
+              </div>
+            </div>
+            
+            {/* Flèche */}
+            <div className="hidden md:flex items-center justify-center">
+              <ChevronRight className="h-6 w-6 text-blue-400 dark:text-blue-600" />
+            </div>
+            
+            {/* Étape 2 - Traduction page par page */}
+            <div className="flex-1 flex items-start gap-3">
+              <div className="flex-shrink-0 w-8 h-8 bg-emerald-600 dark:bg-emerald-500 text-white rounded-full flex items-center justify-center font-bold text-sm">
+                2
+              </div>
+              <div className="flex-1">
+                <p className="font-semibold text-emerald-900 dark:text-emerald-100 mb-1">
+                  📖 {t('translatePagesStep')}
+                </p>
+                <p className="text-xs text-emerald-700 dark:text-emerald-300 leading-relaxed">
+                  {t('translatePagesStepDesc')}
+                </p>
+              </div>
+            </div>
+            
+            {/* Flèche */}
+            <div className="hidden md:flex items-center justify-center">
+              <ChevronRight className="h-6 w-6 text-blue-400 dark:text-blue-600" />
+            </div>
+            
+            {/* Étape 3 - Consolidation */}
+            <div className="flex-1 flex items-start gap-3">
+              <div className="flex-shrink-0 w-8 h-8 bg-amber-500 dark:bg-amber-600 text-white rounded-full flex items-center justify-center font-bold text-sm">
+                3
+              </div>
+              <div className="flex-1">
+                <p className="font-semibold text-amber-900 dark:text-amber-100 mb-1">
+                  📄 {t('consolidateStep')}
+                </p>
+                <p className="text-xs text-amber-700 dark:text-amber-300 leading-relaxed">
+                  {t('consolidateStepDesc')}
+                </p>
+              </div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Action Buttons */}
+      <div className="flex items-center justify-between">
         <div className="flex items-center space-x-2">
           {editedData.page_contents && editedData.page_contents.length > 0 && (
             <Button

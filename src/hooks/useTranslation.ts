@@ -390,7 +390,15 @@ type TranslationKey =
   | 'observatoireNavAnalysesDesc'
   | 'observatoireNavNews'
   | 'observatoireNavNewsDesc'
-  | 'ourSections';
+  | 'ourSections'
+  // Workflow IA Timeline
+  | 'workflowGuide'
+  | 'aiAnalysisStep'
+  | 'aiAnalysisStepDesc'
+  | 'translatePagesStep'
+  | 'translatePagesStepDesc'
+  | 'consolidateStep'
+  | 'consolidateStepDesc';
 
 const translations: Record<'fr' | 'ar', Record<TranslationKey, string>> = {
   fr: {
@@ -780,6 +788,14 @@ const translations: Record<'fr' | 'ar', Record<TranslationKey, string>> = {
     observatoireNavNews: 'Actualités',
     observatoireNavNewsDesc: 'Dernières nouvelles',
     ourSections: 'Nos Rubriques',
+    // Workflow IA Timeline
+    workflowGuide: 'Workflow de traitement IA',
+    aiAnalysisStep: 'Analyse IA',
+    aiAnalysisStepDesc: 'Extrait et traduit les métadonnées (titre, résumé, mots-clés...) + extrait court du contenu (~300 mots)',
+    translatePagesStep: 'Traduire page par page',
+    translatePagesStepDesc: 'Traduit le contenu complet de chaque page individuellement',
+    consolidateStep: 'Consolider',
+    consolidateStepDesc: 'Fusionne toutes les pages traduites en un seul contenu',
   },
   ar: {
     // Homepage
@@ -1171,6 +1187,14 @@ const translations: Record<'fr' | 'ar', Record<TranslationKey, string>> = {
     observatoireNavNews: 'أخبار',
     observatoireNavNewsDesc: 'آخر الأخبار',
     ourSections: 'أقسامنا',
+    // Workflow IA Timeline
+    workflowGuide: 'سير عمل المعالجة بالذكاء الاصطناعي',
+    aiAnalysisStep: 'التحليل بالذكاء الاصطناعي',
+    aiAnalysisStepDesc: 'استخراج وترجمة البيانات الوصفية (العنوان، الملخص، الكلمات المفتاحية...) + مقتطف قصير من المحتوى (~300 كلمة)',
+    translatePagesStep: 'ترجمة صفحة بصفحة',
+    translatePagesStepDesc: 'ترجمة المحتوى الكامل لكل صفحة بشكل فردي',
+    consolidateStep: 'دمج',
+    consolidateStepDesc: 'دمج جميع الصفحات المترجمة في محتوى واحد',
   },
 };
 
