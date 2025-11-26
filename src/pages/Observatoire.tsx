@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Database, Mic, Briefcase, Heart, Scale } from "lucide-react";
+import { Scale, FileText, Newspaper } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -64,38 +64,30 @@ const Observatoire = () => {
     ? ["اللائحة العامة لحماية البيانات", "حرية التعبير", "قانون العمل", "المساواة"]
     : ["RGPD", "Liberté d'expression", "Droit du travail", "Égalité"];
   
-  const thematicCards = [
+  const navigationCards = [
     {
-      title: t('dataProtection'),
-      description: t('dataProtectionDesc'),
-      count: `47 ${t('decisions')}`,
-      icon: Database,
-      color: "bg-blue-500",
-      bgColor: "bg-blue-50"
+      title: t('observatoireNavFundamentalRights'),
+      description: t('observatoireNavFundamentalRightsDesc'),
+      icon: Scale,
+      color: "bg-blue-600",
+      bgColor: "bg-blue-50",
+      link: "/observatoire/droits-fondamentaux"
     },
     {
-      title: t('freedomOfExpression'),
-      description: t('freedomOfExpressionDesc'),
-      count: `32 ${t('decisions')}`,
-      icon: Mic,
-      color: "bg-green-500",
-      bgColor: "bg-green-50"
+      title: t('observatoireNavAnalyses'),
+      description: t('observatoireNavAnalysesDesc'),
+      icon: FileText,
+      color: "bg-emerald-600",
+      bgColor: "bg-emerald-50",
+      link: "/observatoire/analyses-opinions"
     },
     {
-      title: t('laborRight'),
-      description: t('laborRightDesc'),
-      count: `28 ${t('decisions')}`,
-      icon: Briefcase,
-      color: "bg-yellow-500",
-      bgColor: "bg-yellow-50"
-    },
-    {
-      title: t('equalityNonDiscrimination'),
-      description: t('equalityDesc'),
-      count: `41 ${t('decisions')}`,
-      icon: Heart,
-      color: "bg-pink-500",
-      bgColor: "bg-pink-50"
+      title: t('observatoireNavNews'),
+      description: t('observatoireNavNewsDesc'),
+      icon: Newspaper,
+      color: "bg-amber-500",
+      bgColor: "bg-amber-50",
+      link: "/observatoire/actualites"
     }
   ];
 
@@ -201,17 +193,21 @@ const Observatoire = () => {
         </div>
       </section>
 
-      {/* Thematic Exploration */}
+      {/* Navigation Sections */}
       <section className="py-8 md:py-16">
         <div className="container mx-auto px-4">
           <h2 className={`text-2xl md:text-3xl font-bold text-center mb-8 md:mb-12 ${isRTL ? 'text-right' : ''}`}>
-            {t('exploreByThematic')}
+            {t('ourSections')}
           </h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
-            {thematicCards.map((card) => {
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
+            {navigationCards.map((card) => {
               const Icon = card.icon;
               return (
-                <Card key={card.title} className={`hover:shadow-lg transition-all duration-300 cursor-pointer ${card.bgColor} hover:scale-105`}>
+                <Card 
+                  key={card.title} 
+                  className={`hover:shadow-lg transition-all duration-300 cursor-pointer ${card.bgColor} hover:scale-105`}
+                  onClick={() => navigate(card.link)}
+                >
                   <CardHeader className="pb-4">
                     <div className={`flex items-center gap-4 mb-4 ${isRTL ? 'flex-row-reverse' : ''}`}>
                       <div className={`w-12 h-12 ${card.color} rounded-lg flex items-center justify-center`}>
@@ -222,7 +218,6 @@ const Observatoire = () => {
                     <CardDescription className={`text-sm ${isRTL ? 'text-right' : ''}`}>{card.description}</CardDescription>
                   </CardHeader>
                   <CardContent className="pt-0">
-                    <p className={`text-sm text-muted-foreground mb-4 ${isRTL ? 'text-right' : ''}`}>{card.count}</p>
                     <Button variant="outline" size="sm" className="w-full md:w-auto">{t('explore')}</Button>
                   </CardContent>
                 </Card>
