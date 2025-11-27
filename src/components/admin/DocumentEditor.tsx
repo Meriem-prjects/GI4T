@@ -575,13 +575,15 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
 
       await new Promise(resolve => setTimeout(resolve, 1000));
       
-      // Use consolidated content for AI analysis
-      const contentToAnalyze = sourceLanguage === 'fr' ? consolidatedContent : editedData.content;
-      
-      const { data: analysisData, error: analysisError } = await supabase.functions.invoke('document-analysis', {
+      // Use smart-document-analysis with both original and translated content
+      const { data: analysisData, error: analysisError } = await supabase.functions.invoke('smart-document-analysis', {
         body: {
-          content: contentToAnalyze,
-          language: sourceLanguage,
+          textualMetadata: editedData.textual_metadata || '',
+          content: editedData.content,  // Original content
+          translatedContent: consolidatedContent,  // Consolidated translated content
+          currentLanguage: sourceLanguage,
+          mode: 'quick',
+          documentType: documentTypes.find(dt => dt.id === editedData.document_type_id)?.name || 'Analyses juridiques'
         },
       });
 
@@ -590,23 +592,102 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
         throw analysisError;
       }
 
-      if (analysisData?.analysis) {
+      if (analysisData?.success && analysisData?.analysis) {
         const analysis = analysisData.analysis;
+        const isPrimaryArabic = sourceLanguage === 'ar';
         
-        setEditedData(prev => ({
-          ...prev,
-          keywords: analysis.keywords || prev.keywords || [],
-          keywords_ar: analysis.keywords_ar || prev.keywords_ar || [],
-          author: analysis.author || prev.author || '',
-          author_ar: analysis.author_ar || prev.author_ar || '',
-          bibliography: analysis.bibliography || prev.bibliography || '',
-          bibliography_ar: analysis.bibliography_ar || prev.bibliography_ar || '',
-          textual_metadata: analysis.textual_metadata || prev.textual_metadata || '',
-        }));
+        // Map results correctly based on primary language
+        if (isPrimaryArabic) {
+          // Arabic is primary - analysis result goes to Arabic fields, translation to French
+          setEditedData(prev => ({
+            ...prev,
+            title_ar: analysis.title ? normalizeArabicForDisplay(analysis.title) : prev.title_ar,
+            title: analysis.translatedTitle || prev.title,
+            summary_ar: analysis.summary ? normalizeArabicForDisplay(analysis.summary) : prev.summary_ar,
+            summary: analysis.translatedSummary || prev.summary,
+            author_ar: analysis.metadata?.author ? normalizeArabicForDisplay(analysis.metadata.author) : prev.author_ar,
+            author: analysis.metadataTranslated?.author || prev.author,
+            bibliography_ar: analysis.metadata?.bibliography 
+              ? normalizeArabicForDisplay(analysis.metadata.bibliography) 
+              : prev.bibliography_ar,
+            bibliography: analysis.metadataTranslated?.bibliography || prev.bibliography,
+            keywords_ar: (() => {
+              const existing = (prev.keywords_ar || []).map(k => normalizeArabicForDisplay(k.trim())).filter(k => k && /[\u0600-\u06FF]/.test(k));
+              const rawNewKeys = parseKeywordsArray(analysis.existingKeywords || []);
+              const newKeys = rawNewKeys.map(k => normalizeArabicForDisplay(k.trim())).filter(k => k && /[\u0600-\u06FF]/.test(k));
+              const combined = [...existing, ...newKeys];
+              const seen = new Set();
+              return combined.filter(k => {
+                const normalized = k.toLowerCase().trim().replace(/\s+/g, ' ');
+                if (seen.has(normalized)) return false;
+                seen.add(normalized);
+                return true;
+              });
+            })(),
+            keywords: (() => {
+              const existing = (prev.keywords || []).map(k => k.trim()).filter(k => k && !/[\u0600-\u06FF]/.test(k));
+              const rawNewKeys = parseKeywordsArray(analysis.translatedKeywords || []);
+              const newKeys = rawNewKeys.filter(k => k && !/[\u0600-\u06FF]/.test(k));
+              const combined = [...existing, ...newKeys];
+              const seen = new Set();
+              return combined.filter(k => {
+                const normalized = k.toLowerCase().trim().replace(/\s+/g, ' ');
+                if (seen.has(normalized)) return false;
+                seen.add(normalized);
+                return true;
+              });
+            })(),
+            legal_references_ar: analysis.metadata?.legal_references || prev.legal_references_ar,
+            legal_references: analysis.metadataTranslated?.legal_references || prev.legal_references,
+          }));
+        } else {
+          // French is primary - analysis result goes to French fields, translation to Arabic
+          setEditedData(prev => ({
+            ...prev,
+            title: analysis.title || prev.title,
+            title_ar: analysis.translatedTitle ? normalizeArabicForDisplay(analysis.translatedTitle) : prev.title_ar,
+            summary: analysis.summary || prev.summary,
+            summary_ar: analysis.translatedSummary ? normalizeArabicForDisplay(analysis.translatedSummary) : prev.summary_ar,
+            author: analysis.metadata?.author || prev.author,
+            author_ar: analysis.metadataTranslated?.author ? normalizeArabicForDisplay(analysis.metadataTranslated.author) : prev.author_ar,
+            bibliography: analysis.metadata?.bibliography || prev.bibliography,
+            bibliography_ar: analysis.metadataTranslated?.bibliography 
+              ? normalizeArabicForDisplay(analysis.metadataTranslated.bibliography)
+              : prev.bibliography_ar,
+            keywords: (() => {
+              const existing = (prev.keywords || []).map(k => k.trim()).filter(k => k && !/[\u0600-\u06FF]/.test(k));
+              const rawNewKeys = parseKeywordsArray(analysis.existingKeywords || []);
+              const newKeys = rawNewKeys.filter(k => k && !/[\u0600-\u06FF]/.test(k));
+              const combined = [...existing, ...newKeys];
+              const seen = new Set();
+              return combined.filter(k => {
+                const normalized = k.toLowerCase().trim().replace(/\s+/g, ' ');
+                if (seen.has(normalized)) return false;
+                seen.add(normalized);
+                return true;
+              });
+            })(),
+            keywords_ar: (() => {
+              const existing = (prev.keywords_ar || []).map(k => normalizeArabicForDisplay(k.trim())).filter(k => k && /[\u0600-\u06FF]/.test(k));
+              const rawNewKeys = parseKeywordsArray(analysis.translatedKeywords || []);
+              const newKeys = rawNewKeys.map(k => normalizeArabicForDisplay(k.trim())).filter(k => k && /[\u0600-\u06FF]/.test(k));
+              const combined = [...existing, ...newKeys];
+              const seen = new Set();
+              return combined.filter(k => {
+                const normalized = k.toLowerCase().trim().replace(/\s+/g, ' ');
+                if (seen.has(normalized)) return false;
+                seen.add(normalized);
+                return true;
+              });
+            })(),
+            legal_references: analysis.metadata?.legal_references || prev.legal_references,
+            legal_references_ar: analysis.metadataTranslated?.legal_references || prev.legal_references_ar,
+          }));
+        }
         
         toast({
           title: "✅ Analyse IA terminée",
-          description: "Métadonnées et bibliographie extraites",
+          description: "Métadonnées extraites et traduites dans les deux langues",
         });
       }
 
