@@ -757,6 +757,15 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
             plaintiff: analysis.metadataTranslated?.plaintiff || prev.plaintiff,
             defendant: analysis.metadataTranslated?.defendant || prev.defendant,
             court_level: analysis.metadataTranslated?.court_level || prev.court_level,
+            // Analysis-specific fields (Arabic primary)
+            validation_date: analysis.metadata?.validation_date || prev.validation_date,
+            legal_references_ar: analysis.metadata?.legal_references || prev.legal_references_ar,
+            bibliography_ar: analysis.metadata?.bibliography 
+              ? normalizeArabicForDisplay(analysis.metadata.bibliography) 
+              : prev.bibliography_ar,
+            // Traductions en français
+            legal_references: analysis.metadataTranslated?.legal_references || prev.legal_references,
+            bibliography: analysis.metadataTranslated?.bibliography || prev.bibliography,
             // Keep original Arabic content, don't replace it
             keywords_ar: (() => {
               const existing = (prev.keywords_ar || []).map(k => normalizeArabicForDisplay(k.trim())).filter(k => k && /[\u0600-\u06FF]/.test(k));
@@ -828,6 +837,15 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
             plaintiff_ar: analysis.metadataTranslated?.plaintiff ? normalizeArabicForDisplay(analysis.metadataTranslated.plaintiff) : prev.plaintiff_ar,
             defendant_ar: analysis.metadataTranslated?.defendant ? normalizeArabicForDisplay(analysis.metadataTranslated.defendant) : prev.defendant_ar,
             court_level_ar: analysis.metadataTranslated?.court_level ? normalizeArabicForDisplay(analysis.metadataTranslated.court_level) : prev.court_level_ar,
+            // Analysis-specific fields (French primary)
+            validation_date: analysis.metadata?.validation_date || prev.validation_date,
+            legal_references: analysis.metadata?.legal_references || prev.legal_references,
+            bibliography: analysis.metadata?.bibliography || prev.bibliography,
+            // Traductions en arabe
+            legal_references_ar: analysis.metadataTranslated?.legal_references || prev.legal_references_ar,
+            bibliography_ar: analysis.metadataTranslated?.bibliography 
+              ? normalizeArabicForDisplay(analysis.metadataTranslated.bibliography)
+              : prev.bibliography_ar,
             // Keep original French content, don't replace it
             keywords: (() => {
               const existing = (prev.keywords || []).map(k => k.trim()).filter(k => k && !/[\u0600-\u06FF]/.test(k));
