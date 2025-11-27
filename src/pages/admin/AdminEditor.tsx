@@ -43,6 +43,11 @@ interface DocumentData {
   plaintiff_ar?: string;
   defendant?: string;
   defendant_ar?: string;
+  validation_date?: string;
+  legal_references?: string[];
+  legal_references_ar?: string[];
+  bibliography?: string;
+  bibliography_ar?: string;
   page_contents?: any[];
   total_pages?: number;
   processed_pages?: number;
@@ -138,6 +143,11 @@ const AdminEditor = () => {
         plaintiff_ar: document.plaintiff_ar || '',
         defendant: document.defendant || '',
         defendant_ar: document.defendant_ar || '',
+        validation_date: document.validation_date || '',
+        legal_references: document.legal_references || [],
+        legal_references_ar: document.legal_references_ar || [],
+        bibliography: document.bibliography || '',
+        bibliography_ar: document.bibliography_ar || '',
         page_contents: (document.page_contents as any[]) || [],
         total_pages: document.total_pages || 0,
         processed_pages: document.processed_pages || 0,
