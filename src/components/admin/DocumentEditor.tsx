@@ -458,52 +458,147 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
       return;
     }
 
+    if (!editedData.id) {
+      toast({ title: "Erreur", description: "Aucun document chargé", variant: "destructive" });
+      return;
+    }
+
     setIsAnalyzing(true);
     const totalPages = editedData.page_contents.length;
-    let completedPages = 0;
+    const sourceLanguage = editedData.language || 'fr';
+    const targetLanguage = sourceLanguage === 'fr' ? 'ar' : 'fr';
 
     try {
-      // Step 1: Translate all untranslated pages
+      // Step 1: Translate all pages - Collect locally
       toast({
         title: "🔄 Workflow complet démarré",
         description: `Traduction de ${totalPages} pages...`,
       });
-
+      
+      const translationsMap = new Map<number, string>();
+      
+      // Pre-fill with existing translations
       for (const page of editedData.page_contents) {
-        if (!page.translated_content || page.translated_content.trim() === '') {
-          console.log(`Translating page ${page.pageNumber}/${totalPages}...`);
-          
-          await translatePage(page.pageNumber);
-          completedPages++;
-          
-          toast({
-            title: "📄 Traduction en cours",
-            description: `Page ${completedPages}/${totalPages} traduite`,
-          });
-
-          // Pause to avoid rate limiting
-          await new Promise(resolve => setTimeout(resolve, 500));
-        } else {
-          completedPages++;
+        if (page.translated_content && page.translated_content.trim() !== '') {
+          translationsMap.set(page.pageNumber, page.translated_content);
         }
       }
+      
+      // Translate missing pages
+      for (let i = 0; i < editedData.page_contents.length; i++) {
+        const page = editedData.page_contents[i];
+        
+        if (translationsMap.has(page.pageNumber)) {
+          console.log(`Page ${page.pageNumber} déjà traduite, passage à la suivante`);
+          continue;
+        }
+        
+        console.log(`Translating page ${page.pageNumber}/${totalPages}...`);
+        
+        // Call translation API directly
+        const { data, error } = await supabase.functions.invoke('translate-page', {
+          body: {
+            document_id: editedData.id,
+            page_number: page.pageNumber,
+            content: page.content,
+            source_language: sourceLanguage,
+            target_language: targetLanguage,
+          },
+        });
 
-      // Step 2: Consolidate translations
+        if (error || !data?.translated_content) {
+          throw new Error(`Erreur traduction page ${page.pageNumber}: ${error?.message || 'Pas de contenu traduit'}`);
+        }
+        
+        translationsMap.set(page.pageNumber, data.translated_content);
+        
+        toast({
+          title: "📄 Traduction en cours",
+          description: `Page ${i + 1}/${totalPages} traduite`,
+        });
+        
+        // Small delay to avoid rate limiting
+        await new Promise(resolve => setTimeout(resolve, 500));
+      }
+      
+      // Step 2: Consolidate with local data
       toast({
         title: "🔄 Consolidation",
         description: "Assemblage des traductions...",
       });
       
-      await consolidatePageTranslations();
+      const sortedPages = Array.from(translationsMap.entries()).sort((a, b) => a[0] - b[0]);
+      const consolidatedContent = sortedPages.map(([_, content]) => content).join('\n\n');
+      
+      // Update page_contents with all translations
+      const updatedPageContents = editedData.page_contents.map(p => ({
+        ...p,
+        translated_content: translationsMap.get(p.pageNumber) || p.translated_content || '',
+        translation_status: 'completed' as const
+      }));
+      
+      // Update state once with all data
+      setEditedData(prev => ({
+        ...prev,
+        page_contents: updatedPageContents,
+        translated_content: consolidatedContent
+      }));
+      
+      setTranslatedContent(consolidatedContent);
+      
+      // Persist to database
+      await supabase.from('documents').update({ 
+        translated_content: consolidatedContent,
+        page_contents: updatedPageContents as any
+      }).eq('id', editedData.id);
+      
+      toast({
+        title: "✅ Consolidation terminée",
+        description: `${sortedPages.length} pages consolidées avec succès`,
+      });
 
-      // Step 3: Run AI analysis with full content
+      // Step 3: Run AI analysis with full consolidated content
       toast({
         title: "🧠 Analyse IA",
         description: "Extraction des métadonnées avec le contenu complet...",
       });
 
       await new Promise(resolve => setTimeout(resolve, 1000));
-      await runAIAnalysis();
+      
+      // Use consolidated content for AI analysis
+      const contentToAnalyze = sourceLanguage === 'fr' ? consolidatedContent : editedData.content;
+      
+      const { data: analysisData, error: analysisError } = await supabase.functions.invoke('document-analysis', {
+        body: {
+          content: contentToAnalyze,
+          language: sourceLanguage,
+        },
+      });
+
+      if (analysisError) {
+        console.error('Error in AI analysis:', analysisError);
+        throw analysisError;
+      }
+
+      if (analysisData?.analysis) {
+        const analysis = analysisData.analysis;
+        
+        setEditedData(prev => ({
+          ...prev,
+          keywords: analysis.keywords || prev.keywords || [],
+          keywords_ar: analysis.keywords_ar || prev.keywords_ar || [],
+          author: analysis.author || prev.author || '',
+          author_ar: analysis.author_ar || prev.author_ar || '',
+          bibliography: analysis.bibliography || prev.bibliography || '',
+          bibliography_ar: analysis.bibliography_ar || prev.bibliography_ar || '',
+          textual_metadata: analysis.textual_metadata || prev.textual_metadata || '',
+        }));
+        
+        toast({
+          title: "✅ Analyse IA terminée",
+          description: "Métadonnées et bibliographie extraites",
+        });
+      }
 
       toast({
         title: "✅ Workflow terminé !",
