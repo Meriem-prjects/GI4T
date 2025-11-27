@@ -1534,103 +1534,172 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
         </div>
       </div>
 
-      {/* Workflow IA Guide - Timeline */}
-      <Card className="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-950/30 dark:to-indigo-950/30 border-blue-200 dark:border-blue-800" dir="ltr">
-        <CardContent className="p-6">
-          <div className="flex items-center gap-2 mb-4">
-            <Brain className="h-5 w-5 text-blue-600 dark:text-blue-400" />
-            <h4 className="font-semibold text-blue-900 dark:text-blue-100">{t('workflowGuide')}</h4>
-          </div>
-          
-          <div className="flex flex-col md:flex-row gap-6">
-            {/* Étape 1 - Analyse IA */}
-            <div className="flex-1 flex items-start gap-3">
-              <div className="flex-shrink-0 w-8 h-8 bg-blue-600 dark:bg-blue-500 text-white rounded-full flex items-center justify-center font-bold text-sm">
-                1
-              </div>
-              <div className="flex-1">
-                <p className="font-semibold text-blue-900 dark:text-blue-100 mb-1">
-                  🤖 {t('aiAnalysisStep')}
-                </p>
-                <p className="text-xs text-blue-700 dark:text-blue-300 leading-relaxed">
-                  {t('aiAnalysisStepDesc')}
-                </p>
-              </div>
-            </div>
-            
-            {/* Flèche */}
-            <div className="hidden md:flex items-center justify-center">
-              <ChevronRight className="h-6 w-6 text-blue-400 dark:text-blue-600" />
-            </div>
-            
-            {/* Étape 2 - Traduction page par page */}
-            <div className="flex-1 flex items-start gap-3">
-              <div className="flex-shrink-0 w-8 h-8 bg-emerald-600 dark:bg-emerald-500 text-white rounded-full flex items-center justify-center font-bold text-sm">
-                2
-              </div>
-              <div className="flex-1">
-                <p className="font-semibold text-emerald-900 dark:text-emerald-100 mb-1">
-                  📖 {t('translatePagesStep')}
-                </p>
-                <p className="text-xs text-emerald-700 dark:text-emerald-300 leading-relaxed">
-                  {t('translatePagesStepDesc')}
-                </p>
-              </div>
-            </div>
-            
-            {/* Flèche */}
-            <div className="hidden md:flex items-center justify-center">
-              <ChevronRight className="h-6 w-6 text-blue-400 dark:text-blue-600" />
-            </div>
-            
-            {/* Étape 3 - Consolidation */}
-            <div className="flex-1 flex items-start gap-3">
-              <div className="flex-shrink-0 w-8 h-8 bg-amber-500 dark:bg-amber-600 text-white rounded-full flex items-center justify-center font-bold text-sm">
-                3
-              </div>
-              <div className="flex-1">
-                <p className="font-semibold text-amber-900 dark:text-amber-100 mb-1">
-                  📄 {t('consolidateStep')}
-                </p>
-                <p className="text-xs text-amber-700 dark:text-amber-300 leading-relaxed">
-                  {t('consolidateStepDesc')}
-                </p>
-              </div>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Workflow guide for analysis documents */}
+      {/* Workflow IA Guide - Timeline (dynamique selon le type de document) */}
       {(() => {
         const currentDocType = documentTypes.find(dt => dt.id === editedData.document_type_id);
-        const isAnalysisDoc = currentDocType?.name === 'Analyses juridiques' || currentDocType?.name === 'Fiche d\'analyse';
+        const isAnalysisDocument = currentDocType?.name === 'Analyses juridiques';
+        
+        return (
+          <Card className="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-950/30 dark:to-indigo-950/30 border-blue-200 dark:border-blue-800" dir="ltr">
+            <CardContent className="p-6">
+              <div className="flex items-center gap-2 mb-4">
+                <Brain className="h-5 w-5 text-blue-600 dark:text-blue-400" />
+                <h4 className="font-semibold text-blue-900 dark:text-blue-100">
+                  {isAnalysisDocument ? '📚 Workflow recommandé pour documents d\'analyse' : '🧠 Workflow de traitement IA'}
+                </h4>
+              </div>
+              
+              {isAnalysisDocument ? (
+                /* Workflow pour documents d'analyse : Traduire → Consolider → Analyse IA */
+                <>
+                  <p className="text-xs text-blue-700 dark:text-blue-300 mb-4">
+                    Pour une extraction optimale de la bibliographie (située en fin de document), suivez cet ordre :
+                  </p>
+                  <div className="flex flex-col md:flex-row gap-6">
+                    {/* Étape 1 - Traduction */}
+                    <div className="flex-1 flex items-start gap-3">
+                      <div className="flex-shrink-0 w-8 h-8 bg-emerald-600 dark:bg-emerald-500 text-white rounded-full flex items-center justify-center font-bold text-sm">
+                        1
+                      </div>
+                      <div className="flex-1">
+                        <p className="font-semibold text-emerald-900 dark:text-emerald-100 mb-1">
+                          📖 Traduire toutes les pages
+                        </p>
+                        <p className="text-xs text-emerald-700 dark:text-emerald-300 leading-relaxed">
+                          Traduit le contenu complet de chaque page (y compris la bibliographie en fin de document)
+                        </p>
+                      </div>
+                    </div>
+                    
+                    {/* Flèche */}
+                    <div className="hidden md:flex items-center justify-center">
+                      <ChevronRight className="h-6 w-6 text-blue-400 dark:text-blue-600" />
+                    </div>
+                    
+                    {/* Étape 2 - Consolidation */}
+                    <div className="flex-1 flex items-start gap-3">
+                      <div className="flex-shrink-0 w-8 h-8 bg-amber-500 dark:bg-amber-600 text-white rounded-full flex items-center justify-center font-bold text-sm">
+                        2
+                      </div>
+                      <div className="flex-1">
+                        <p className="font-semibold text-amber-900 dark:text-amber-100 mb-1">
+                          📄 Consolider
+                        </p>
+                        <p className="text-xs text-amber-700 dark:text-amber-300 leading-relaxed">
+                          Fusionne toutes les pages traduites en un seul contenu continu
+                        </p>
+                      </div>
+                    </div>
+                    
+                    {/* Flèche */}
+                    <div className="hidden md:flex items-center justify-center">
+                      <ChevronRight className="h-6 w-6 text-blue-400 dark:text-blue-600" />
+                    </div>
+                    
+                    {/* Étape 3 - Analyse IA */}
+                    <div className="flex-1 flex items-start gap-3">
+                      <div className="flex-shrink-0 w-8 h-8 bg-blue-600 dark:bg-blue-500 text-white rounded-full flex items-center justify-center font-bold text-sm">
+                        3
+                      </div>
+                      <div className="flex-1">
+                        <p className="font-semibold text-blue-900 dark:text-blue-100 mb-1">
+                          🤖 Analyse IA
+                        </p>
+                        <p className="text-xs text-blue-700 dark:text-blue-300 leading-relaxed">
+                          Extrait les métadonnées et la bibliographie du contenu complet traduit
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </>
+              ) : (
+                /* Workflow pour jurisprudence : Analyse IA → Traduction → Consolidation */
+                <div className="flex flex-col md:flex-row gap-6">
+                  {/* Étape 1 - Analyse IA */}
+                  <div className="flex-1 flex items-start gap-3">
+                    <div className="flex-shrink-0 w-8 h-8 bg-blue-600 dark:bg-blue-500 text-white rounded-full flex items-center justify-center font-bold text-sm">
+                      1
+                    </div>
+                    <div className="flex-1">
+                      <p className="font-semibold text-blue-900 dark:text-blue-100 mb-1">
+                        🤖 {t('aiAnalysisStep')}
+                      </p>
+                      <p className="text-xs text-blue-700 dark:text-blue-300 leading-relaxed">
+                        {t('aiAnalysisStepDesc')}
+                      </p>
+                    </div>
+                  </div>
+                  
+                  {/* Flèche */}
+                  <div className="hidden md:flex items-center justify-center">
+                    <ChevronRight className="h-6 w-6 text-blue-400 dark:text-blue-600" />
+                  </div>
+                  
+                  {/* Étape 2 - Traduction page par page */}
+                  <div className="flex-1 flex items-start gap-3">
+                    <div className="flex-shrink-0 w-8 h-8 bg-emerald-600 dark:bg-emerald-500 text-white rounded-full flex items-center justify-center font-bold text-sm">
+                      2
+                    </div>
+                    <div className="flex-1">
+                      <p className="font-semibold text-emerald-900 dark:text-emerald-100 mb-1">
+                        📖 {t('translatePagesStep')}
+                      </p>
+                      <p className="text-xs text-emerald-700 dark:text-emerald-300 leading-relaxed">
+                        {t('translatePagesStepDesc')}
+                      </p>
+                    </div>
+                  </div>
+                  
+                  {/* Flèche */}
+                  <div className="hidden md:flex items-center justify-center">
+                    <ChevronRight className="h-6 w-6 text-blue-400 dark:text-blue-600" />
+                  </div>
+                  
+                  {/* Étape 3 - Consolidation */}
+                  <div className="flex-1 flex items-start gap-3">
+                    <div className="flex-shrink-0 w-8 h-8 bg-amber-500 dark:bg-amber-600 text-white rounded-full flex items-center justify-center font-bold text-sm">
+                      3
+                    </div>
+                    <div className="flex-1">
+                      <p className="font-semibold text-amber-900 dark:text-amber-100 mb-1">
+                        📄 {t('consolidateStep')}
+                      </p>
+                      <p className="text-xs text-amber-700 dark:text-amber-300 leading-relaxed">
+                        {t('consolidateStepDesc')}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        );
+      })()}
+
+      {/* Bouton workflow complet pour documents d'analyse */}
+      {(() => {
+        const currentDocType = documentTypes.find(dt => dt.id === editedData.document_type_id);
+        const isAnalysisDoc = currentDocType?.name === 'Analyses juridiques';
         
         if (isAnalysisDoc && editedData.page_contents && editedData.page_contents.length > 0) {
-          const hasUntranslatedPages = editedData.page_contents.some(p => !p.translated_content || p.translated_content.trim() === '');
-          
           return (
-            <Card className="border-blue-200 bg-blue-50/50 dark:border-blue-800 dark:bg-blue-950/30">
+            <Card className="border-emerald-200 bg-emerald-50/50 dark:border-emerald-800 dark:bg-emerald-950/30">
               <CardContent className="pt-4">
                 <div className="flex items-start gap-3">
-                  <Brain className="h-5 w-5 text-blue-600 dark:text-blue-400 mt-0.5 flex-shrink-0" />
+                  <Brain className="h-5 w-5 text-emerald-600 dark:text-emerald-400 mt-0.5 flex-shrink-0" />
                   <div className="space-y-2 flex-1">
-                    <p className="text-sm font-medium text-blue-900 dark:text-blue-100">
-                      📚 Workflow recommandé pour documents d'analyse
+                    <p className="text-sm font-medium text-emerald-900 dark:text-emerald-100">
+                      ⚡ Workflow automatisé complet
                     </p>
-                    <p className="text-xs text-blue-700 dark:text-blue-300">
-                      Pour une extraction optimale de la bibliographie (située en fin de document), utilisez le workflow complet :
+                    <p className="text-xs text-emerald-700 dark:text-emerald-300">
+                      Exécute automatiquement les 3 étapes : traduction de toutes les pages → consolidation → analyse IA complète
                     </p>
-                    <ol className="text-xs text-blue-700 dark:text-blue-300 space-y-1 ml-4 list-decimal">
-                      <li>Traduire toutes les pages</li>
-                      <li>Consolider les traductions</li>
-                      <li>Lancer l'analyse IA sur le contenu complet</li>
-                    </ol>
                     <Button
                       onClick={runFullAnalysisWorkflow}
                       disabled={isAnalyzing}
                       size="sm"
                       className="mt-2"
+                      variant="default"
                     >
                       {isAnalyzing ? (
                         <>
