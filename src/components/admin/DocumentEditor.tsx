@@ -110,11 +110,11 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
   const [newReference, setNewReference] = useState('');
   const [newReferenceAr, setNewReferenceAr] = useState('');
   
-  // Detect if document is "Fiche d'analyse"
+  // Detect if document is "Analyses juridiques"
   const isAnalysisDocument = React.useMemo(() => {
     if (!editedData.document_type_id || documentTypes.length === 0) return false;
     const docType = documentTypes.find(dt => dt.id === editedData.document_type_id);
-    return docType?.name === 'Fiche d\'analyse';
+    return docType?.name === 'Analyses juridiques';
   }, [editedData.document_type_id, documentTypes]);
   
   // Track if we've already normalized data on load to avoid re-normalizing
