@@ -449,6 +449,81 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
     }
   };
 
+  // Full workflow for analysis documents: translate all pages → consolidate → AI analysis
+  const runFullAnalysisWorkflow = async () => {
+    if (!editedData.page_contents || editedData.page_contents.length === 0) {
+      toast({
+        title: "❌ Aucune page disponible",
+        description: "Le document doit contenir des pages à traduire.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    setIsAnalyzing(true);
+    const totalPages = editedData.page_contents.length;
+    let completedPages = 0;
+
+    try {
+      // Step 1: Translate all untranslated pages
+      toast({
+        title: "🔄 Workflow complet démarré",
+        description: `Traduction de ${totalPages} pages...`,
+      });
+
+      for (const page of editedData.page_contents) {
+        if (!page.translated_content || page.translated_content.trim() === '') {
+          console.log(`Translating page ${page.pageNumber}/${totalPages}...`);
+          
+          await translatePage(page.pageNumber);
+          completedPages++;
+          
+          toast({
+            title: "📄 Traduction en cours",
+            description: `Page ${completedPages}/${totalPages} traduite`,
+          });
+
+          // Pause to avoid rate limiting
+          await new Promise(resolve => setTimeout(resolve, 500));
+        } else {
+          completedPages++;
+        }
+      }
+
+      // Step 2: Consolidate translations
+      toast({
+        title: "🔄 Consolidation",
+        description: "Assemblage des traductions...",
+      });
+      
+      await consolidatePageTranslations();
+
+      // Step 3: Run AI analysis with full content
+      toast({
+        title: "🧠 Analyse IA",
+        description: "Extraction des métadonnées avec le contenu complet...",
+      });
+
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      await runAIAnalysis();
+
+      toast({
+        title: "✅ Workflow terminé !",
+        description: "Document traduit et analysé avec succès.",
+      });
+
+    } catch (error) {
+      console.error('Error in full analysis workflow:', error);
+      toast({
+        title: "❌ Erreur dans le workflow",
+        description: error instanceof Error ? error.message : "Une erreur est survenue.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsAnalyzing(false);
+    }
+  };
+
   // Helper to parse and clean keywords array
   const parseKeywordsArray = (keywords: any[]): string[] => {
     if (!keywords || !Array.isArray(keywords)) return [];
@@ -581,15 +656,16 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
         console.log(`Analysis attempt ${attempt}/${maxAttempts}`);
         
         try {
-          const response = await supabase.functions.invoke('smart-document-analysis', {
-            body: {
-              textualMetadata: editedData.textual_metadata || '',
-              content: editedData.content,
-              currentLanguage: editedData.language || 'fr',
-              mode: 'quick',
-              documentType: documentTypes.find(dt => dt.id === editedData.document_type_id)?.name || ''
-            }
-          });
+      const response = await supabase.functions.invoke('smart-document-analysis', {
+        body: {
+          textualMetadata: editedData.textual_metadata || '',
+          content: editedData.content,
+          translatedContent: editedData.translated_content || '', // Include consolidated translation
+          currentLanguage: editedData.language || 'fr',
+          mode: 'quick',
+          documentType: documentTypes.find(dt => dt.id === editedData.document_type_id)?.name || ''
+        }
+      });
           
           data = response.data;
           error = response.error;
@@ -1526,6 +1602,58 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
           </div>
         </CardContent>
       </Card>
+
+      {/* Workflow guide for analysis documents */}
+      {(() => {
+        const currentDocType = documentTypes.find(dt => dt.id === editedData.document_type_id);
+        const isAnalysisDoc = currentDocType?.name === 'Analyses juridiques' || currentDocType?.name === 'Fiche d\'analyse';
+        
+        if (isAnalysisDoc && editedData.page_contents && editedData.page_contents.length > 0) {
+          const hasUntranslatedPages = editedData.page_contents.some(p => !p.translated_content || p.translated_content.trim() === '');
+          
+          return (
+            <Card className="border-blue-200 bg-blue-50/50 dark:border-blue-800 dark:bg-blue-950/30">
+              <CardContent className="pt-4">
+                <div className="flex items-start gap-3">
+                  <Brain className="h-5 w-5 text-blue-600 dark:text-blue-400 mt-0.5 flex-shrink-0" />
+                  <div className="space-y-2 flex-1">
+                    <p className="text-sm font-medium text-blue-900 dark:text-blue-100">
+                      📚 Workflow recommandé pour documents d'analyse
+                    </p>
+                    <p className="text-xs text-blue-700 dark:text-blue-300">
+                      Pour une extraction optimale de la bibliographie (située en fin de document), utilisez le workflow complet :
+                    </p>
+                    <ol className="text-xs text-blue-700 dark:text-blue-300 space-y-1 ml-4 list-decimal">
+                      <li>Traduire toutes les pages</li>
+                      <li>Consolider les traductions</li>
+                      <li>Lancer l'analyse IA sur le contenu complet</li>
+                    </ol>
+                    <Button
+                      onClick={runFullAnalysisWorkflow}
+                      disabled={isAnalyzing}
+                      size="sm"
+                      className="mt-2"
+                    >
+                      {isAnalyzing ? (
+                        <>
+                          <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                          Workflow en cours...
+                        </>
+                      ) : (
+                        <>
+                          <Brain className="h-4 w-4 mr-2" />
+                          Lancer le workflow complet
+                        </>
+                      )}
+                    </Button>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          );
+        }
+        return null;
+      })()}
 
       {/* Action Buttons */}
       <div className="flex items-center justify-between">
