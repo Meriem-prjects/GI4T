@@ -20,6 +20,8 @@ import PDFViewer from './PDFViewer';
 import { renderFormattedContent, formatContent } from '@/utils/contentFormatter';
 import { normalizeArabicText, normalizeArabicForDisplay, handleArabicInput } from '@/lib/arabicUtils';
 import { useTranslation } from '@/hooks/useTranslation';
+import ProgressTracker from './ProgressTracker';
+import { WorkflowTimeline } from './WorkflowTimeline';
 
 interface PageContent {
   pageNumber: number;
@@ -148,6 +150,8 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
   const [isCleaningArabic, setIsCleaningArabic] = useState(false);
   const [isCorrectingSpacing, setIsCorrectingSpacing] = useState(false);
   const [translatingPages, setTranslatingPages] = useState<Set<number>>(new Set());
+  const [workflowStep, setWorkflowStep] = useState<string | null>(null);
+  const [completedWorkflowSteps, setCompletedWorkflowSteps] = useState<string[]>([]);
 
   useEffect(() => {
     setEditedData(documentData);
@@ -464,6 +468,8 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
     }
 
     setIsAnalyzing(true);
+    setWorkflowStep('translation');
+    setCompletedWorkflowSteps([]);
     const totalPages = editedData.page_contents.length;
     const sourceLanguage = editedData.language || 'fr';
     const targetLanguage = sourceLanguage === 'fr' ? 'ar' : 'fr';
@@ -522,6 +528,8 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
       }
       
       // Step 2: Consolidate with local data
+      setCompletedWorkflowSteps(['translation']);
+      setWorkflowStep('consolidation');
       toast({
         title: "🔄 Consolidation",
         description: "Assemblage des traductions...",
@@ -558,6 +566,8 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
       });
 
       // Step 3: Run AI analysis with full consolidated content
+      setCompletedWorkflowSteps(['translation', 'consolidation']);
+      setWorkflowStep('analysis');
       toast({
         title: "🧠 Analyse IA",
         description: "Extraction des métadonnées avec le contenu complet...",
@@ -600,6 +610,8 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
         });
       }
 
+      setCompletedWorkflowSteps(['translation', 'consolidation', 'analysis']);
+      setWorkflowStep(null);
       toast({
         title: "✅ Workflow terminé !",
         description: "Document traduit et analysé avec succès.",
@@ -614,6 +626,7 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
       });
     } finally {
       setIsAnalyzing(false);
+      setWorkflowStep(null);
     }
   };
 
@@ -1628,6 +1641,31 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
           </div>
         </div>
       </div>
+
+      {/* Workflow Timeline - Only show when workflow is running */}
+      {workflowStep && (
+        <WorkflowTimeline
+          currentStep={workflowStep}
+          completedSteps={completedWorkflowSteps}
+          steps={[
+            {
+              id: 'translation',
+              label: 'Traduction des pages',
+              description: 'Traduction automatique de toutes les pages du document'
+            },
+            {
+              id: 'consolidation',
+              label: 'Consolidation',
+              description: 'Assemblage de toutes les traductions en un document complet'
+            },
+            {
+              id: 'analysis',
+              label: 'Analyse IA',
+              description: 'Extraction des métadonnées et analyse du contenu'
+            }
+          ]}
+        />
+      )}
 
       {/* Workflow IA Guide - Timeline (dynamique selon le type de document) */}
       {(() => {
