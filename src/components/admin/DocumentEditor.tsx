@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import SimpleTextEditor from './SimpleTextEditor';
@@ -105,10 +105,16 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
   const [hasChanges, setHasChanges] = useState(false);
   const [categories, setCategories] = useState<Category[]>([]);
   const [documentTypes, setDocumentTypes] = useState<DocumentType[]>([]);
+  const documentTypesRef = useRef<DocumentType[]>([]);
   const [selectedCourtType, setSelectedCourtType] = useState<string>('');
   const [selectedCategoryIds, setSelectedCategoryIds] = useState<string[]>([]);
   const [newReference, setNewReference] = useState('');
   const [newReferenceAr, setNewReferenceAr] = useState('');
+  
+  // Synchronize ref with state to avoid stale closure
+  useEffect(() => {
+    documentTypesRef.current = documentTypes;
+  }, [documentTypes]);
   
   // Detect if document is "Analyses juridiques" or "Fiche d'analyse"
   const isAnalysisDocument = React.useMemo(() => {
@@ -725,9 +731,16 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
             // Keep original content unchanged
             // Apply AI suggestions for dropdown fields, but preserve analysis document type
             document_type_id: (() => {
-              const currentDocType = documentTypes.find(dt => dt.id === prev.document_type_id);
+              const currentDocType = documentTypesRef.current.find(dt => dt.id === prev.document_type_id);
               const isCurrentAnalysis = currentDocType?.name === 'Analyses juridiques' || 
                                         currentDocType?.name === 'Fiche d\'analyse';
+              console.log('Document type preservation check (AR):', {
+                prevDocTypeId: prev.document_type_id,
+                documentTypesCount: documentTypesRef.current.length,
+                currentDocTypeName: currentDocType?.name,
+                isCurrentAnalysis,
+                suggestionId: suggestionIds.documentTypeId
+              });
               return isCurrentAnalysis ? prev.document_type_id : (suggestionIds.documentTypeId || prev.document_type_id);
             })(),
             // Metadata in Arabic (primary language)
@@ -789,9 +802,16 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
             // Keep original content unchanged
             // Apply AI suggestions for dropdown fields, but preserve analysis document type
             document_type_id: (() => {
-              const currentDocType = documentTypes.find(dt => dt.id === prev.document_type_id);
+              const currentDocType = documentTypesRef.current.find(dt => dt.id === prev.document_type_id);
               const isCurrentAnalysis = currentDocType?.name === 'Analyses juridiques' || 
                                         currentDocType?.name === 'Fiche d\'analyse';
+              console.log('Document type preservation check (FR):', {
+                prevDocTypeId: prev.document_type_id,
+                documentTypesCount: documentTypesRef.current.length,
+                currentDocTypeName: currentDocType?.name,
+                isCurrentAnalysis,
+                suggestionId: suggestionIds.documentTypeId
+              });
               return isCurrentAnalysis ? prev.document_type_id : (suggestionIds.documentTypeId || prev.document_type_id);
             })(),
             // Metadata in French (primary language)
