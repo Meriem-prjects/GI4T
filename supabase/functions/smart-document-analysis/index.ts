@@ -108,15 +108,18 @@ serve(async (req) => {
   }
 
   try {
-    const { textualMetadata, content, currentLanguage = 'fr', mode = 'quick', documentId, documentFileName } = await req.json();
+    const { textualMetadata, content, currentLanguage = 'fr', mode = 'quick', documentId, documentFileName, documentType } = await req.json();
 
     console.log('Starting smart document analysis for content length:', content?.length);
     console.log('Textual metadata length:', textualMetadata?.length);
     console.log('Analysis mode:', mode);
+    console.log('Document type:', documentType);
 
     if (!content) {
       throw new Error('Content is required for analysis');
     }
+
+    const isAnalysisDocument = documentType === 'Fiche d\'analyse';
 
     // Start exhaustive translation in parallel for long documents
     let translatedContentFull = '';
@@ -251,7 +254,73 @@ serve(async (req) => {
       console.log(`⚡ Quick mode: analyzing first 12000 characters of ${content.length} total`);
     }
     
-    const systemPrompt = `Tu es un expert en analyse de documents juridiques tunisiens. Analyse le contenu suivant et extrait les informations demandées en JSON.
+    const systemPrompt = isAnalysisDocument 
+      ? `Tu es un expert en analyse de documents juridiques tunisiens. Analyse le contenu suivant (TYPE: FICHE D'ANALYSE) et extrait les informations demandées en JSON.
+
+LANGUE DU DOCUMENT SOURCE: ${sourceLanguage}
+LANGUE CIBLE POUR LES TRADUCTIONS: ${targetLanguage}
+
+⚠️ RÈGLE ABSOLUE SUR LES TRADUCTIONS:
+- Si le document source est en ${sourceLanguage}, les champs "title", "subtitle", "summary", "metadata" doivent être en ${sourceLanguage}
+- Les champs "translatedTitle", "translatedSubtitle", "translatedSummary", "metadataTranslated" doivent être EXCLUSIVEMENT en ${targetLanguage}
+- Si targetLanguage est "arabe", tu DOIS écrire en caractères arabes (Unicode U+0600 à U+06FF)
+- Si targetLanguage est "français", tu DOIS écrire en caractères latins
+
+⚠️ RÈGLE ABSOLUE SUR LES MOTS-CLÉS:
+- "existingKeywords" doit être un tableau de chaînes en ${sourceLanguage}
+- "translatedKeywords" doit être un tableau de chaînes en ${targetLanguage}
+- Chaque mot-clé doit être une chaîne séparée dans le tableau
+- Exemple correct: ["mot1", "mot2", "mot3"]
+
+FICHE D'ANALYSE - CHAMPS SPÉCIFIQUES À EXTRAIRE:
+1. TITRE: Extrais le thème principal/titre de l'analyse depuis les métadonnées ou le contenu
+2. AUTEUR: Nom de l'auteur de l'analyse (OBLIGATOIRE - privilégier "مرصد الحقوق الأساسية" si présent)
+3. DATE DE VALIDATION: Date de validation du document (si présente)
+4. RÉFÉRENCES LÉGALES: Liste des textes juridiques, lois, articles cités (Constitution, codes, conventions internationales, etc.)
+5. BIBLIOGRAPHIE: Sources et références bibliographiques citées à la fin du document
+6. RÉSUMÉ: Génère un résumé synthétique du contenu de l'analyse
+7. MOTS-CLÉS: Extrais ou génère des mots-clés pertinents pour l'analyse
+
+⚠️ IMPORTANT: Pour une FICHE D'ANALYSE, ne cherche PAS d'informations sur tribunal, numéro d'affaire, demandeur, défendeur, etc.
+
+Catégories disponibles:
+${categories.map(cat => `- ${cat.name} (${cat.name_ar})`).join('\n')}
+
+${mode === 'quick' 
+  ? `⚠️ MODE RAPIDE: Pour "translatedContent", fournis UNIQUEMENT un court extrait traduit (200-300 mots max) du début du document.` 
+  : `Pour "translatedContent", traduis le contenu complet du document en ${targetLanguage}.`}
+
+Réponds uniquement en JSON valide avec cette structure exacte :
+{
+  "title": "titre principal de l'analyse",
+  "subtitle": "sous-titre contextuel (optionnel)", 
+  "translatedTitle": "traduction complète du titre en ${targetLanguage}",
+  "translatedSubtitle": "traduction complète du sous-titre en ${targetLanguage}",
+  "summary": "résumé de l'analyse en ${sourceLanguage}",
+  "translatedSummary": "traduction complète du résumé en ${targetLanguage}",
+  "existingKeywords": ["mots-clés trouvés dans le document"],
+  "suggestedKeywords": ["nouveaux mots-clés pertinents"],
+  "translatedKeywords": ["traduction complète des mots-clés en ${targetLanguage}"],
+  "metadata": {
+    "author": "nom de l'auteur de l'analyse (OBLIGATOIRE)",
+    "validation_date": "date de validation si présente (format YYYY-MM-DD)",
+    "legal_references": ["référence légale 1", "référence légale 2"],
+    "bibliography": "texte complet de la bibliographie"
+  },
+  "metadataTranslated": {
+    "author": "traduction complète de l'auteur en ${targetLanguage}",
+    "legal_references": ["traduction référence 1", "traduction référence 2"],
+    "bibliography": "traduction complète de la bibliographie en ${targetLanguage}"
+  },
+  "textualMetadataTranslated": "TRADUCTION COMPLÈTE EN ${targetLanguage} DES MÉTADONNÉES TEXTUELLES",
+  "translatedContent": "${mode === 'quick' ? 'EXTRAIT TRADUIT (200-300 mots)' : 'TRADUCTION COMPLÈTE'}",
+  "language": "${sourceLanguage}",
+  "suggestions": {
+    "suggestedCategory": "nom exact de la catégorie la plus appropriée",
+    "suggestedDocumentType": "Fiche d'analyse"
+  }
+}`
+      : `Tu es un expert en analyse de documents juridiques tunisiens. Analyse le contenu suivant (TYPE: FICHE DE JURISPRUDENCE) et extrait les informations demandées en JSON.
 
 LANGUE DU DOCUMENT SOURCE: ${sourceLanguage}
 LANGUE CIBLE POUR LES TRADUCTIONS: ${targetLanguage}

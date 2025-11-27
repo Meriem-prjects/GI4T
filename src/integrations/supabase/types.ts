@@ -402,6 +402,8 @@ export type Database = {
           archival_metadata: Json | null
           author: string | null
           author_ar: string | null
+          bibliography: string | null
+          bibliography_ar: string | null
           case_number: string | null
           case_numbers: string[] | null
           category_id: string | null
@@ -431,6 +433,7 @@ export type Database = {
           language: string | null
           legal_domains: string[] | null
           legal_references: string[] | null
+          legal_references_ar: string[] | null
           main_topics: string[] | null
           original_filename: string
           page_contents: Json | null
@@ -456,6 +459,7 @@ export type Database = {
           translated_content: string | null
           updated_at: string
           user_id: string | null
+          validation_date: string | null
           year: number | null
         }
         Insert: {
@@ -463,6 +467,8 @@ export type Database = {
           archival_metadata?: Json | null
           author?: string | null
           author_ar?: string | null
+          bibliography?: string | null
+          bibliography_ar?: string | null
           case_number?: string | null
           case_numbers?: string[] | null
           category_id?: string | null
@@ -492,6 +498,7 @@ export type Database = {
           language?: string | null
           legal_domains?: string[] | null
           legal_references?: string[] | null
+          legal_references_ar?: string[] | null
           main_topics?: string[] | null
           original_filename: string
           page_contents?: Json | null
@@ -517,6 +524,7 @@ export type Database = {
           translated_content?: string | null
           updated_at?: string
           user_id?: string | null
+          validation_date?: string | null
           year?: number | null
         }
         Update: {
@@ -524,6 +532,8 @@ export type Database = {
           archival_metadata?: Json | null
           author?: string | null
           author_ar?: string | null
+          bibliography?: string | null
+          bibliography_ar?: string | null
           case_number?: string | null
           case_numbers?: string[] | null
           category_id?: string | null
@@ -553,6 +563,7 @@ export type Database = {
           language?: string | null
           legal_domains?: string[] | null
           legal_references?: string[] | null
+          legal_references_ar?: string[] | null
           main_topics?: string[] | null
           original_filename?: string
           page_contents?: Json | null
@@ -578,6 +589,7 @@ export type Database = {
           translated_content?: string | null
           updated_at?: string
           user_id?: string | null
+          validation_date?: string | null
           year?: number | null
         }
         Relationships: [
