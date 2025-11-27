@@ -40,58 +40,23 @@ function parseKeywordsArray(keywords: any): string[] {
   return [];
 }
 
-// Helper function to translate content in chunks for exhaustive translation
-async function translateInChunks(content: string, targetLang: string): Promise<string> {
-  const chunkSize = 5000; // Characters per chunk
-  const chunks = [];
+// Helper to extract content including bibliography (at the end of documents)
+function extractContentWithBibliography(content: string, isAnalysis: boolean, limit: number = 12000): string {
+  if (content.length <= limit) return content;
   
-  for (let i = 0; i < content.length; i += chunkSize) {
-    chunks.push(content.slice(i, i + chunkSize));
+  if (isAnalysis) {
+    // For analysis documents: include 60% from start + 40% from end (for bibliography)
+    const startChars = Math.floor(limit * 0.6);
+    const endChars = Math.floor(limit * 0.4);
+    
+    const start = content.slice(0, startChars);
+    const end = content.slice(-endChars);
+    
+    return `${start}\n\n[... contenu intermédiaire omis pour limiter la taille ...]\n\n${end}`;
   }
   
-  console.log(`📖 Translating ${chunks.length} chunks to ${targetLang}...`);
-  
-  const translatedChunks = [];
-  for (let i = 0; i < chunks.length; i++) {
-    try {
-      const response = await fetch('https://api.openai.com/v1/chat/completions', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${openAIApiKey}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          model: 'gpt-4o-mini',
-          messages: [
-            { 
-              role: 'system', 
-              content: `Translate the following legal text to ${targetLang}. Preserve all formatting, numbers, and legal terminology. Only return the translation, nothing else.`
-            },
-            { role: 'user', content: chunks[i] }
-          ],
-          max_tokens: 8000,
-          temperature: 0.1
-        }),
-      });
-      
-      if (!response.ok) {
-        console.error(`Chunk ${i + 1} translation failed:`, response.status);
-        translatedChunks.push(chunks[i]); // Fallback to original
-      } else {
-        const data = await response.json();
-        translatedChunks.push(data.choices[0].message.content);
-        console.log(`✅ Chunk ${i + 1}/${chunks.length} translated`);
-      }
-      
-      // Small delay to avoid rate limiting
-      await new Promise(resolve => setTimeout(resolve, 300));
-    } catch (error) {
-      console.error(`Error translating chunk ${i + 1}:`, error);
-      translatedChunks.push(chunks[i]); // Fallback to original
-    }
-  }
-  
-  return translatedChunks.join('\n');
+  // For other documents, keep current behavior
+  return content.slice(0, limit);
 }
 
 serve(async (req) => {
@@ -108,9 +73,10 @@ serve(async (req) => {
   }
 
   try {
-    const { textualMetadata, content, currentLanguage = 'fr', mode = 'quick', documentId, documentFileName, documentType } = await req.json();
+    const { textualMetadata, content, translatedContent, currentLanguage = 'fr', mode = 'quick', documentId, documentFileName, documentType } = await req.json();
 
     console.log('Starting smart document analysis for content length:', content?.length);
+    console.log('Translated content length:', translatedContent?.length);
     console.log('Textual metadata length:', textualMetadata?.length);
     console.log('Analysis mode:', mode);
     console.log('Document type:', documentType);
@@ -247,12 +213,31 @@ serve(async (req) => {
       jurisdictionLevels: jurisdictionLevels.length
     });
 
-    // Limit content for AI analysis in quick mode to reduce processing time and token usage
-    const contentForAI = mode === 'quick' ? content.slice(0, 12000) : content;
-    const contentTruncated = mode === 'quick' && content.length > 12000;
+    // For analysis documents with translated content, combine both for comprehensive analysis
+    let fullContentForAnalysis = content;
+    
+    if (isAnalysisDocument && translatedContent && translatedContent.trim() !== '') {
+      // Combine original + translated to ensure AI has access to bibliography at the end
+      fullContentForAnalysis = `
+=== CONTENU ORIGINAL (${sourceLanguage}) ===
+${content}
+
+=== CONTENU TRADUIT (${targetLanguage}) ===
+${translatedContent}
+`;
+      console.log('📚 Using combined original + translated content for analysis document');
+      console.log('Combined content length:', fullContentForAnalysis.length);
+    }
+
+    // Use intelligent extraction that includes the end of document (for bibliography)
+    const contentForAI = mode === 'quick' 
+      ? extractContentWithBibliography(fullContentForAnalysis, isAnalysisDocument, 18000)
+      : fullContentForAnalysis;
+    
+    const contentTruncated = mode === 'quick' && fullContentForAnalysis.length > 18000;
     
     if (contentTruncated) {
-      console.log(`⚡ Quick mode: analyzing first 12000 characters of ${content.length} total`);
+      console.log(`⚡ Quick mode: analyzing ${contentForAI.length} characters (with bibliography) of ${fullContentForAnalysis.length} total`);
     }
     
     const systemPrompt = isAnalysisDocument 
@@ -279,6 +264,12 @@ FICHE D'ANALYSE - CHAMPS SPÉCIFIQUES À EXTRAIRE:
 3. DATE DE VALIDATION: Date de validation du document (si présente)
 4. RÉFÉRENCES LÉGALES: Liste des textes juridiques, lois, articles cités (Constitution, codes, conventions internationales, etc.)
 5. BIBLIOGRAPHIE: Sources et références bibliographiques citées à la fin du document
+   ⚠️ IMPORTANT BIBLIOGRAPHIE: Cherche spécifiquement les sections avec ces marqueurs:
+   - "قائمة في بعض المراجع" (Liste de quelques références)
+   - "المراجع" (Références)
+   - "قائمة المراجع" (Liste des références)
+   - "Bibliographie" ou "Références bibliographiques"
+   La bibliographie se trouve généralement à la FIN du document.
 6. RÉSUMÉ: Génère un résumé synthétique du contenu de l'analyse
 7. MOTS-CLÉS: Extrais ou génère des mots-clés pertinents pour l'analyse
 
