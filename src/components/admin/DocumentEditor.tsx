@@ -116,13 +116,11 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
     documentTypesRef.current = documentTypes;
   }, [documentTypes]);
   
-  // Detect if document is "Analyses juridiques" or "Fiche d'analyse"
+  // Detect if document is "Analyses juridiques"
   const isAnalysisDocument = React.useMemo(() => {
     if (!editedData.document_type_id || documentTypes.length === 0) return false;
     const docType = documentTypes.find(dt => dt.id === editedData.document_type_id);
     return docType?.name === 'Analyses juridiques' || 
-           docType?.name === 'Fiche d\'analyse' ||
-           docType?.name_ar === 'جذاذة تحليل' ||
            docType?.name_ar === 'التحليلات القانونية';
   }, [editedData.document_type_id, documentTypes]);
   
