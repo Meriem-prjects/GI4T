@@ -85,8 +85,7 @@ serve(async (req) => {
       throw new Error('Content is required for analysis');
     }
 
-    const isAnalysisDocument = documentType === 'Analyses juridiques' || 
-                               documentType === 'Fiche d\'analyse';
+    const isAnalysisDocument = documentType === 'Analyses juridiques';
 
     // Start exhaustive translation in parallel for long documents
     let translatedContentFull = '';
