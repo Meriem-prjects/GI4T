@@ -110,11 +110,14 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
   const [newReference, setNewReference] = useState('');
   const [newReferenceAr, setNewReferenceAr] = useState('');
   
-  // Detect if document is "Analyses juridiques"
+  // Detect if document is "Analyses juridiques" or "Fiche d'analyse"
   const isAnalysisDocument = React.useMemo(() => {
     if (!editedData.document_type_id || documentTypes.length === 0) return false;
     const docType = documentTypes.find(dt => dt.id === editedData.document_type_id);
-    return docType?.name === 'Analyses juridiques';
+    return docType?.name === 'Analyses juridiques' || 
+           docType?.name === 'Fiche d\'analyse' ||
+           docType?.name_ar === 'جذاذة تحليل' ||
+           docType?.name_ar === 'التحليلات القانونية';
   }, [editedData.document_type_id, documentTypes]);
   
   // Track if we've already normalized data on load to avoid re-normalizing
@@ -720,8 +723,13 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
             summary_ar: analysis.summary ? normalizeArabicForDisplay(analysis.summary) : prev.summary_ar,
             summary: analysis.translatedSummary || prev.summary,
             // Keep original content unchanged
-            // Apply AI suggestions for dropdown fields
-            document_type_id: suggestionIds.documentTypeId || prev.document_type_id,
+            // Apply AI suggestions for dropdown fields, but preserve analysis document type
+            document_type_id: (() => {
+              const currentDocType = documentTypes.find(dt => dt.id === prev.document_type_id);
+              const isCurrentAnalysis = currentDocType?.name === 'Analyses juridiques' || 
+                                        currentDocType?.name === 'Fiche d\'analyse';
+              return isCurrentAnalysis ? prev.document_type_id : (suggestionIds.documentTypeId || prev.document_type_id);
+            })(),
             // Metadata in Arabic (primary language)
             author_ar: analysis.metadata?.author ? normalizeArabicForDisplay(analysis.metadata.author) : prev.author_ar,
             court_ar: analysis.metadata?.court ? normalizeArabicForDisplay(analysis.metadata.court) : prev.court_ar,
@@ -779,8 +787,13 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
             summary: analysis.summary || prev.summary,
             summary_ar: analysis.translatedSummary ? normalizeArabicForDisplay(analysis.translatedSummary) : prev.summary_ar,
             // Keep original content unchanged
-            // Apply AI suggestions for dropdown fields
-            document_type_id: suggestionIds.documentTypeId || prev.document_type_id,
+            // Apply AI suggestions for dropdown fields, but preserve analysis document type
+            document_type_id: (() => {
+              const currentDocType = documentTypes.find(dt => dt.id === prev.document_type_id);
+              const isCurrentAnalysis = currentDocType?.name === 'Analyses juridiques' || 
+                                        currentDocType?.name === 'Fiche d\'analyse';
+              return isCurrentAnalysis ? prev.document_type_id : (suggestionIds.documentTypeId || prev.document_type_id);
+            })(),
             // Metadata in French (primary language)
             author: analysis.metadata?.author || prev.author,
             court: analysis.metadata?.court || prev.court,
