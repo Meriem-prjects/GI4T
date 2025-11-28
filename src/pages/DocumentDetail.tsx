@@ -510,60 +510,75 @@ const DocumentDetail = () => {
             <div className={`bg-muted/30 rounded-lg p-6 mb-8 ${language === 'ar' ? 'dir-rtl' : ''}`}>
               {isAnalysisDocument() ? (
                 // Format pour Analyses juridiques, Commentaires, Blogs
-                <div className={`grid md:grid-cols-2 gap-6 ${language === 'ar' ? 'text-right' : ''}`}>
-                  <div className="space-y-3">
-                    {document.created_at && (
-                      <div className={`flex items-center gap-3 ${language === 'ar' ? 'flex-row-reverse justify-start' : 'justify-center md:justify-start'}`}>
-                        <Calendar className="w-5 h-5 text-muted-foreground" />
-                        {language === 'ar' ? (
-                          <span><span className="font-medium">تاريخ النشر:</span> {formatDate(document.created_at)}</span>
-                        ) : (
-                          <>
-                            <span className="font-medium">Date de publication:</span>
-                            <span>{formatDate(document.created_at)}</span>
-                          </>
-                        )}
-                      </div>
-                    )}
-                    
-                    {category && (
-                      <div className={`flex items-center gap-3 ${language === 'ar' ? 'flex-row-reverse justify-start' : 'justify-center md:justify-start'}`}>
-                        <Scale className="w-5 h-5 text-muted-foreground" />
-                        {language === 'ar' ? (
-                          <span>
-                            <span className="font-medium">فئة الحق الأساسي:</span>{' '}
-                            <Badge className="font-normal" style={{ backgroundColor: category.color, color: '#ffffff' }}>
-                              {category.name_ar || category.name}
-                            </Badge>
-                          </span>
-                        ) : (
-                          <>
-                            <span className="font-medium">Catégorie de droit fondamental:</span>
-                            <Badge className="font-normal" style={{ backgroundColor: category.color, color: '#ffffff' }}>
-                              {category.name}
-                            </Badge>
-                          </>
-                        )}
-                      </div>
-                    )}
+                <>
+                  <div className={`grid md:grid-cols-2 gap-6 ${language === 'ar' ? 'text-right' : ''}`}>
+                    <div className="space-y-3">
+                      {document.created_at && (
+                        <div className={`flex items-center gap-3 ${language === 'ar' ? 'flex-row-reverse justify-start' : 'justify-center md:justify-start'}`}>
+                          <Calendar className="w-5 h-5 text-muted-foreground" />
+                          {language === 'ar' ? (
+                            <span><span className="font-medium">تاريخ النشر:</span> {formatDate(document.created_at)}</span>
+                          ) : (
+                            <>
+                              <span className="font-medium">Date de publication:</span>
+                              <span>{formatDate(document.created_at)}</span>
+                            </>
+                          )}
+                        </div>
+                      )}
+                      
+                      {category && (
+                        <div className={`flex items-center gap-3 ${language === 'ar' ? 'flex-row-reverse justify-start' : 'justify-center md:justify-start'}`}>
+                          <Scale className="w-5 h-5 text-muted-foreground" />
+                          {language === 'ar' ? (
+                            <span>
+                              <span className="font-medium">فئة الحق الأساسي:</span>{' '}
+                              <Badge className="font-normal" style={{ backgroundColor: category.color, color: '#ffffff' }}>
+                                {category.name_ar || category.name}
+                              </Badge>
+                            </span>
+                          ) : (
+                            <>
+                              <span className="font-medium">Catégorie de droit fondamental:</span>
+                              <Badge className="font-normal" style={{ backgroundColor: category.color, color: '#ffffff' }}>
+                                {category.name}
+                              </Badge>
+                            </>
+                          )}
+                        </div>
+                      )}
+                    </div>
+
+                    <div className="space-y-3">
+                      {currentAuthor && (
+                        <div className={`flex items-center gap-3 ${language === 'ar' ? 'flex-row-reverse justify-start' : 'justify-center md:justify-start'}`}>
+                          <User className="w-5 h-5 text-muted-foreground" />
+                          {language === 'ar' ? (
+                            <span><span className="font-medium">المؤلف:</span> {currentAuthor}</span>
+                          ) : (
+                            <>
+                              <span className="font-medium">Auteur:</span>
+                              <span>{currentAuthor}</span>
+                            </>
+                          )}
+                        </div>
+                      )}
+                    </div>
                   </div>
 
-                  <div className="space-y-3">
-                    {currentAuthor && (
-                      <div className={`flex items-center gap-3 ${language === 'ar' ? 'flex-row-reverse justify-start' : 'justify-center md:justify-start'}`}>
-                        <User className="w-5 h-5 text-muted-foreground" />
-                        {language === 'ar' ? (
-                          <span><span className="font-medium">المؤلف:</span> {currentAuthor}</span>
-                        ) : (
-                          <>
-                            <span className="font-medium">Auteur:</span>
-                            <span>{currentAuthor}</span>
-                          </>
-                        )}
+                  {/* Section Bibliographie - intégrée dans les métadonnées */}
+                  {currentBibliography && (
+                    <div className="mt-6 pt-6 border-t border-border">
+                      <h4 className={`font-semibold text-sm uppercase tracking-wide mb-3 flex items-center gap-2 ${language === 'ar' ? 'flex-row-reverse' : ''}`}>
+                        <BookOpen className="w-4 h-4" />
+                        {language === 'ar' ? 'المراجع / الببليوغرافيا' : 'Références / Bibliographie'}
+                      </h4>
+                      <div className={`text-sm leading-relaxed whitespace-pre-wrap ${language === 'ar' ? 'text-right' : ''}`}>
+                        {currentBibliography}
                       </div>
-                    )}
-                  </div>
-                </div>
+                    </div>
+                  )}
+                </>
               ) : (
                 // Format pour Fiches de jurisprudence
                 <>
@@ -797,18 +812,6 @@ const DocumentDetail = () => {
             )}
           </div>
 
-          {/* Bibliography Section for Analysis documents */}
-          {isAnalysisDocument() && currentBibliography && (
-            <div className={`bg-muted/30 rounded-lg p-6 mb-8 ${language === 'ar' ? 'dir-rtl text-right' : ''}`}>
-              <h3 className="font-semibold text-lg mb-3 flex items-center gap-2">
-                <BookOpen className="w-5 h-5" />
-                {language === 'ar' ? 'المراجع / الببليوغرافيا' : 'Références / Bibliographie'}
-              </h3>
-              <div className="text-sm leading-relaxed whitespace-pre-wrap">
-                {currentBibliography}
-              </div>
-            </div>
-          )}
 
           {/* Document Content */}
           <div className={`max-w-none ${language === 'ar' ? 'dir-rtl' : ''}`}>
