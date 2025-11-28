@@ -37,6 +37,12 @@ interface Document {
   court_category_type: string;
   court_category_type_ar: string;
   document_type: string;
+  document_type_id: string;
+  document_types?: {
+    id: string;
+    name: string;
+    name_ar: string;
+  };
   created_at: string;
   status: string;
   file_url: string;
@@ -54,6 +60,8 @@ interface Document {
   plaintiff_ar?: string;
   defendant?: string;
   defendant_ar?: string;
+  bibliography?: string;
+  bibliography_ar?: string;
 }
 
 interface Category {
@@ -109,6 +117,11 @@ const DocumentDetail = () => {
               name,
               name_ar,
               color
+            ),
+            document_types (
+              id,
+              name,
+              name_ar
             )
           `)
           .eq('id', documentId)
@@ -198,7 +211,12 @@ const DocumentDetail = () => {
           .from('documents')
           .select(`
             *,
-            document_categories!inner(category_id)
+            document_categories!inner(category_id),
+            document_types (
+              id,
+              name,
+              name_ar
+            )
           `)
           .eq('document_categories.category_id', matchingCategory.id);
 
@@ -377,6 +395,13 @@ const DocumentDetail = () => {
   const currentPlaintiff = language === 'ar' && document.plaintiff_ar ? document.plaintiff_ar : document.plaintiff;
   const currentDefendant = language === 'ar' && document.defendant_ar ? document.defendant_ar : document.defendant;
   const currentKeywords = language === 'ar' && document.keywords_ar ? document.keywords_ar : document.keywords;
+  const currentBibliography = language === 'ar' && document.bibliography_ar ? document.bibliography_ar : document.bibliography;
+  
+  // Detect if this is an analysis document (not jurisprudence)
+  const isAnalysisDocument = () => {
+    const typeName = document.document_types?.name;
+    return ['Analyses juridiques', 'Commentaires', 'Blogs'].includes(typeName || '');
+  };
   
   // Format court level: replace underscores with spaces and translate for Arabic
   const formatCourtLevel = (level: string | null) => {
@@ -483,174 +508,235 @@ const DocumentDetail = () => {
 
             {/* Metadata */}
             <div className={`bg-muted/30 rounded-lg p-6 mb-8 ${language === 'ar' ? 'dir-rtl' : ''}`}>
-              <div className={`grid md:grid-cols-2 gap-6 ${language === 'ar' ? 'text-right' : ''}`}>
-                <div className="space-y-3">
-                  {document.created_at && (
-                    <div className={`flex items-center gap-3 ${language === 'ar' ? 'flex-row-reverse justify-start' : 'justify-center md:justify-start'}`}>
-                      <Calendar className="w-5 h-5 text-muted-foreground" />
-                      {language === 'ar' ? (
-                        <span><span className="font-medium">تاريخ النشر:</span> {formatDate(document.created_at)}</span>
-                      ) : (
-                        <>
-                          <span className="font-medium">Date de publication:</span>
-                          <span>{formatDate(document.created_at)}</span>
-                        </>
-                      )}
-                    </div>
-                  )}
-                  
-                  {category && (
-                    <div className={`flex items-center gap-3 ${language === 'ar' ? 'flex-row-reverse justify-start' : 'justify-center md:justify-start'}`}>
-                      <Scale className="w-5 h-5 text-muted-foreground" />
-                      {language === 'ar' ? (
-                        <span>
-                          <span className="font-medium">فئة الحق الأساسي:</span>{' '}
-                          <Badge className="font-normal" style={{ backgroundColor: category.color, color: '#ffffff' }}>
-                            {category.name_ar || category.name}
-                          </Badge>
-                        </span>
-                      ) : (
-                        <>
-                          <span className="font-medium">Catégorie de droit fondamental:</span>
-                          <Badge className="font-normal" style={{ backgroundColor: category.color, color: '#ffffff' }}>
-                            {category.name}
-                          </Badge>
-                        </>
-                      )}
-                    </div>
-                  )}
-
-                  {currentAuthor && (
-                    <div className={`flex items-center gap-3 ${language === 'ar' ? 'flex-row-reverse justify-start' : 'justify-center md:justify-start'}`}>
-                      <User className="w-5 h-5 text-muted-foreground" />
-                      {language === 'ar' ? (
-                        <span><span className="font-medium">المؤلف:</span> {currentAuthor}</span>
-                      ) : (
-                        <>
-                          <span className="font-medium">Auteur:</span>
-                          <span>{currentAuthor}</span>
-                        </>
-                      )}
-                    </div>
-                  )}
-                </div>
-
-                <div className="space-y-3">
-                  {currentCourt && (
-                    <div className={`flex items-center gap-3 ${language === 'ar' ? 'flex-row-reverse justify-start' : 'justify-center md:justify-start'}`}>
-                      <Building2 className="w-5 h-5 text-muted-foreground" />
-                      {language === 'ar' ? (
-                        <span><span className="font-medium">نوع المحكمة:</span> {currentCourt}</span>
-                      ) : (
-                        <>
-                          <span className="font-medium">Type de tribunal:</span>
-                          <span>{currentCourt}</span>
-                        </>
-                      )}
-                    </div>
-                  )}
-
-                  {(document.court_category_type || document.court_category_type_ar) && (
-                    <div className={`flex items-center gap-3 ${language === 'ar' ? 'flex-row-reverse justify-start' : 'justify-center md:justify-start'}`}>
-                      <Scale className="w-5 h-5 text-muted-foreground" />
-                      {language === 'ar' ? (
-                        <span><span className="font-medium">فئة المحكمة:</span> {capitalizeFirstLetter(document.court_category_type_ar || document.court_category_type || "غير محدد")}</span>
-                      ) : (
-                        <>
-                          <span className="font-medium">Catégorie du tribunal:</span>
-                          <span>{capitalizeFirstLetter(document.court_category_type || "Non spécifié")}</span>
-                        </>
-                      )}
-                    </div>
-                  )}
-
-                  {currentCourtLevel && (
-                    <div className={`flex items-center gap-3 ${language === 'ar' ? 'flex-row-reverse justify-start' : 'justify-center md:justify-start'}`}>
-                      <MapPin className="w-5 h-5 text-muted-foreground" />
-                      {language === 'ar' ? (
-                        <span><span className="font-medium">مستوى القضاء:</span> {currentCourtLevel}</span>
-                      ) : (
-                        <>
-                          <span className="font-medium">Niveau de juridiction:</span>
-                          <span>{currentCourtLevel}</span>
-                        </>
-                      )}
-                    </div>
-                  )}
-
-                  {document.year && (
-                    <div className={`flex items-center gap-3 ${language === 'ar' ? 'flex-row-reverse justify-start' : 'justify-center md:justify-start'}`}>
-                      <Calendar className="w-5 h-5 text-muted-foreground" />
-                      {language === 'ar' ? (
-                        <span><span className="font-medium">السنة:</span> {document.year}</span>
-                      ) : (
-                        <>
-                          <span className="font-medium">Année:</span>
-                          <span>{document.year}</span>
-                        </>
-                      )}
-                    </div>
-                  )}
-
-                  {document.case_number && (
-                    <div className={`flex items-center gap-3 ${language === 'ar' ? 'flex-row-reverse justify-start' : 'justify-center md:justify-start'}`}>
-                      <FileText className="w-5 h-5 text-muted-foreground" />
-                      {language === 'ar' ? (
-                        <span><span className="font-medium">رقم القضية:</span> {document.case_number}</span>
-                      ) : (
-                        <>
-                          <span className="font-medium">Numéro d'affaire:</span>
-                          <span>{document.case_number}</span>
-                        </>
-                      )}
-                    </div>
-                  )}
-                </div>
-              </div>
-
-              {/* Parties Section - 4 lines, 2 columns */}
-              {(currentPlaintiff || currentDefendant) && (
-                <div className="mt-6 pt-6 border-t border-border">
-                  <div className={`grid md:grid-cols-2 gap-6 ${language === 'ar' ? 'md:grid-cols-2' : ''}`}>
-                    {/* First column - Plaintiff for French, Defendant for Arabic */}
-                    <div className={`space-y-2 ${language === 'ar' ? 'text-right md:order-2' : ''}`}>
-                      <h4 className="font-semibold text-sm text-muted-foreground uppercase tracking-wide">
-                        {language === 'ar' ? 'المدعى عليه' : 'Demandeur / Plaignant'}
-                      </h4>
-                      <div className="space-y-1">
+              {isAnalysisDocument() ? (
+                // Format pour Analyses juridiques, Commentaires, Blogs
+                <div className={`grid md:grid-cols-2 gap-6 ${language === 'ar' ? 'text-right' : ''}`}>
+                  <div className="space-y-3">
+                    {document.created_at && (
+                      <div className={`flex items-center gap-3 ${language === 'ar' ? 'flex-row-reverse justify-start' : 'justify-center md:justify-start'}`}>
+                        <Calendar className="w-5 h-5 text-muted-foreground" />
                         {language === 'ar' ? (
-                          currentDefendant && (
-                            <div className="text-sm">{currentDefendant}</div>
-                          )
+                          <span><span className="font-medium">تاريخ النشر:</span> {formatDate(document.created_at)}</span>
                         ) : (
-                          currentPlaintiff && (
-                            <div className="text-sm">{currentPlaintiff}</div>
-                          )
+                          <>
+                            <span className="font-medium">Date de publication:</span>
+                            <span>{formatDate(document.created_at)}</span>
+                          </>
                         )}
                       </div>
-                    </div>
+                    )}
                     
-                    {/* Second column - Defendant for French, Plaintiff for Arabic */}
-                    <div className={`space-y-2 ${language === 'ar' ? 'text-right md:order-1' : ''}`}>
-                      <h4 className="font-semibold text-sm text-muted-foreground uppercase tracking-wide">
-                        {language === 'ar' ? 'المدعي' : 'Défendeur'}
-                      </h4>
-                      <div className="space-y-1">
+                    {category && (
+                      <div className={`flex items-center gap-3 ${language === 'ar' ? 'flex-row-reverse justify-start' : 'justify-center md:justify-start'}`}>
+                        <Scale className="w-5 h-5 text-muted-foreground" />
                         {language === 'ar' ? (
-                          currentPlaintiff && (
-                            <div className="text-sm">{currentPlaintiff}</div>
-                          )
+                          <span>
+                            <span className="font-medium">فئة الحق الأساسي:</span>{' '}
+                            <Badge className="font-normal" style={{ backgroundColor: category.color, color: '#ffffff' }}>
+                              {category.name_ar || category.name}
+                            </Badge>
+                          </span>
                         ) : (
-                          currentDefendant && (
-                            <div className="text-sm">{currentDefendant}</div>
-                          )
+                          <>
+                            <span className="font-medium">Catégorie de droit fondamental:</span>
+                            <Badge className="font-normal" style={{ backgroundColor: category.color, color: '#ffffff' }}>
+                              {category.name}
+                            </Badge>
+                          </>
                         )}
                       </div>
-                    </div>
+                    )}
+                  </div>
+
+                  <div className="space-y-3">
+                    {currentAuthor && (
+                      <div className={`flex items-center gap-3 ${language === 'ar' ? 'flex-row-reverse justify-start' : 'justify-center md:justify-start'}`}>
+                        <User className="w-5 h-5 text-muted-foreground" />
+                        {language === 'ar' ? (
+                          <span><span className="font-medium">المؤلف:</span> {currentAuthor}</span>
+                        ) : (
+                          <>
+                            <span className="font-medium">Auteur:</span>
+                            <span>{currentAuthor}</span>
+                          </>
+                        )}
+                      </div>
+                    )}
                   </div>
                 </div>
+              ) : (
+                // Format pour Fiches de jurisprudence
+                <>
+                  <div className={`grid md:grid-cols-2 gap-6 ${language === 'ar' ? 'text-right' : ''}`}>
+                    <div className="space-y-3">
+                      {document.created_at && (
+                        <div className={`flex items-center gap-3 ${language === 'ar' ? 'flex-row-reverse justify-start' : 'justify-center md:justify-start'}`}>
+                          <Calendar className="w-5 h-5 text-muted-foreground" />
+                          {language === 'ar' ? (
+                            <span><span className="font-medium">تاريخ النشر:</span> {formatDate(document.created_at)}</span>
+                          ) : (
+                            <>
+                              <span className="font-medium">Date de publication:</span>
+                              <span>{formatDate(document.created_at)}</span>
+                            </>
+                          )}
+                        </div>
+                      )}
+                      
+                      {category && (
+                        <div className={`flex items-center gap-3 ${language === 'ar' ? 'flex-row-reverse justify-start' : 'justify-center md:justify-start'}`}>
+                          <Scale className="w-5 h-5 text-muted-foreground" />
+                          {language === 'ar' ? (
+                            <span>
+                              <span className="font-medium">فئة الحق الأساسي:</span>{' '}
+                              <Badge className="font-normal" style={{ backgroundColor: category.color, color: '#ffffff' }}>
+                                {category.name_ar || category.name}
+                              </Badge>
+                            </span>
+                          ) : (
+                            <>
+                              <span className="font-medium">Catégorie de droit fondamental:</span>
+                              <Badge className="font-normal" style={{ backgroundColor: category.color, color: '#ffffff' }}>
+                                {category.name}
+                              </Badge>
+                            </>
+                          )}
+                        </div>
+                      )}
+
+                      {currentAuthor && (
+                        <div className={`flex items-center gap-3 ${language === 'ar' ? 'flex-row-reverse justify-start' : 'justify-center md:justify-start'}`}>
+                          <User className="w-5 h-5 text-muted-foreground" />
+                          {language === 'ar' ? (
+                            <span><span className="font-medium">المؤلف:</span> {currentAuthor}</span>
+                          ) : (
+                            <>
+                              <span className="font-medium">Auteur:</span>
+                              <span>{currentAuthor}</span>
+                            </>
+                          )}
+                        </div>
+                      )}
+                    </div>
+
+                    <div className="space-y-3">
+                      {currentCourt && (
+                        <div className={`flex items-center gap-3 ${language === 'ar' ? 'flex-row-reverse justify-start' : 'justify-center md:justify-start'}`}>
+                          <Building2 className="w-5 h-5 text-muted-foreground" />
+                          {language === 'ar' ? (
+                            <span><span className="font-medium">نوع المحكمة:</span> {currentCourt}</span>
+                          ) : (
+                            <>
+                              <span className="font-medium">Type de tribunal:</span>
+                              <span>{currentCourt}</span>
+                            </>
+                          )}
+                        </div>
+                      )}
+
+                      {(document.court_category_type || document.court_category_type_ar) && (
+                        <div className={`flex items-center gap-3 ${language === 'ar' ? 'flex-row-reverse justify-start' : 'justify-center md:justify-start'}`}>
+                          <Scale className="w-5 h-5 text-muted-foreground" />
+                          {language === 'ar' ? (
+                            <span><span className="font-medium">فئة المحكمة:</span> {capitalizeFirstLetter(document.court_category_type_ar || document.court_category_type || "غير محدد")}</span>
+                          ) : (
+                            <>
+                              <span className="font-medium">Catégorie du tribunal:</span>
+                              <span>{capitalizeFirstLetter(document.court_category_type || "Non spécifié")}</span>
+                            </>
+                          )}
+                        </div>
+                      )}
+
+                      {currentCourtLevel && (
+                        <div className={`flex items-center gap-3 ${language === 'ar' ? 'flex-row-reverse justify-start' : 'justify-center md:justify-start'}`}>
+                          <MapPin className="w-5 h-5 text-muted-foreground" />
+                          {language === 'ar' ? (
+                            <span><span className="font-medium">مستوى القضاء:</span> {currentCourtLevel}</span>
+                          ) : (
+                            <>
+                              <span className="font-medium">Niveau de juridiction:</span>
+                              <span>{currentCourtLevel}</span>
+                            </>
+                          )}
+                        </div>
+                      )}
+
+                      {document.year && (
+                        <div className={`flex items-center gap-3 ${language === 'ar' ? 'flex-row-reverse justify-start' : 'justify-center md:justify-start'}`}>
+                          <Calendar className="w-5 h-5 text-muted-foreground" />
+                          {language === 'ar' ? (
+                            <span><span className="font-medium">السنة:</span> {document.year}</span>
+                          ) : (
+                            <>
+                              <span className="font-medium">Année:</span>
+                              <span>{document.year}</span>
+                            </>
+                          )}
+                        </div>
+                      )}
+
+                      {document.case_number && (
+                        <div className={`flex items-center gap-3 ${language === 'ar' ? 'flex-row-reverse justify-start' : 'justify-center md:justify-start'}`}>
+                          <FileText className="w-5 h-5 text-muted-foreground" />
+                          {language === 'ar' ? (
+                            <span><span className="font-medium">رقم القضية:</span> {document.case_number}</span>
+                          ) : (
+                            <>
+                              <span className="font-medium">Numéro d'affaire:</span>
+                              <span>{document.case_number}</span>
+                            </>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Parties Section - 4 lines, 2 columns */}
+                  {(currentPlaintiff || currentDefendant) && (
+                    <div className="mt-6 pt-6 border-t border-border">
+                      <div className={`grid md:grid-cols-2 gap-6 ${language === 'ar' ? 'md:grid-cols-2' : ''}`}>
+                        {/* First column - Plaintiff for French, Defendant for Arabic */}
+                        <div className={`space-y-2 ${language === 'ar' ? 'text-right md:order-2' : ''}`}>
+                          <h4 className="font-semibold text-sm text-muted-foreground uppercase tracking-wide">
+                            {language === 'ar' ? 'المدعى عليه' : 'Demandeur / Plaignant'}
+                          </h4>
+                          <div className="space-y-1">
+                            {language === 'ar' ? (
+                              currentDefendant && (
+                                <div className="text-sm">{currentDefendant}</div>
+                              )
+                            ) : (
+                              currentPlaintiff && (
+                                <div className="text-sm">{currentPlaintiff}</div>
+                              )
+                            )}
+                          </div>
+                        </div>
+                        
+                        {/* Second column - Defendant for French, Plaintiff for Arabic */}
+                        <div className={`space-y-2 ${language === 'ar' ? 'text-right md:order-1' : ''}`}>
+                          <h4 className="font-semibold text-sm text-muted-foreground uppercase tracking-wide">
+                            {language === 'ar' ? 'المدعي' : 'Défendeur'}
+                          </h4>
+                          <div className="space-y-1">
+                            {language === 'ar' ? (
+                              currentPlaintiff && (
+                                <div className="text-sm">{currentPlaintiff}</div>
+                              )
+                            ) : (
+                              currentDefendant && (
+                                <div className="text-sm">{currentDefendant}</div>
+                              )
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </>
               )}
-            </div>
+             </div>
 
             {/* Article Statistics */}
             <div className="max-w-4xl mx-auto my-8">
@@ -710,6 +796,19 @@ const DocumentDetail = () => {
               </div>
             )}
           </div>
+
+          {/* Bibliography Section for Analysis documents */}
+          {isAnalysisDocument() && currentBibliography && (
+            <div className={`bg-muted/30 rounded-lg p-6 mb-8 ${language === 'ar' ? 'dir-rtl text-right' : ''}`}>
+              <h3 className="font-semibold text-lg mb-3 flex items-center gap-2">
+                <BookOpen className="w-5 h-5" />
+                {language === 'ar' ? 'المراجع / الببليوغرافيا' : 'Références / Bibliographie'}
+              </h3>
+              <div className="text-sm leading-relaxed whitespace-pre-wrap">
+                {currentBibliography}
+              </div>
+            </div>
+          )}
 
           {/* Document Content */}
           <div className={`max-w-none ${language === 'ar' ? 'dir-rtl' : ''}`}>
