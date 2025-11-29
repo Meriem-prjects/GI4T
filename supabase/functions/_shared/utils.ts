@@ -19,8 +19,11 @@ export const ensureString = (value: string | undefined | null, fallback = ''): s
 export const sanitizeArabicText = (text: string | null | undefined): string => {
   if (!text) return '';
   
+  // Step 0: Fix common OCR errors first
+  let sanitized = fixArabicOCRErrors(text);
+  
   // Step 1: NFKC normalization
-  let sanitized = text.normalize('NFKC');
+  sanitized = sanitized.normalize('NFKC');
   
   // Step 2: Strip control characters
   sanitized = sanitized
@@ -83,11 +86,58 @@ export const sanitizeArabicText = (text: string | null | undefined): string => {
 };
 
 /**
+ * Fixes common OCR misrecognitions for Arabic text
+ */
+export const fixArabicOCRErrors = (text: string): string => {
+  let result = text;
+  
+  // Fix Lam-Alif ligatures that are sometimes misrecognized
+  const ligatureFixes: [RegExp, string][] = [
+    [/ﻻ/g, 'لا'],           // Ligature Lam-Alif
+    [/ﻷ/g, 'لأ'],           // Ligature Lam-Alif Hamza
+    [/ﻹ/g, 'لإ'],           // Ligature Lam-Alif Hamza below
+    [/ﻵ/g, 'لآ'],           // Ligature Lam-Alif Madda
+  ];
+  
+  for (const [pattern, replacement] of ligatureFixes) {
+    result = result.replace(pattern, replacement);
+  }
+  
+  // Remove zero-width characters and control characters
+  result = result.replace(/[\u200B-\u200F\u202A-\u202E\uFEFF]/g, '');
+  
+  // Normalize different space types to standard space
+  result = result.replace(/[\u00A0\u2000-\u200A\u202F\u205F\u3000]/g, ' ');
+  
+  return result;
+};
+
+/**
  * Separates glued Arabic words using linguistic patterns
- * Detects transitions between Arabic words and common patterns
+ * Enhanced with new rules for better word separation
  */
 const separateGluedArabicWords = (text: string): string => {
   let result = text;
+  
+  // RÈGLE 1: Séparer après Taa Marbouta (ة) suivie d'une lettre arabe (sauf ال)
+  // Exemple: "حرّيةتكوين" → "حرّية تكوين"
+  result = result.replace(/(ة)([\u0621-\u064A](?!ل))/g, '$1 $2');
+  
+  // RÈGLE 2: Séparer le Waw conjonctif (و) entre deux mots longs
+  // Exemple: "الأحزابو" → "الأحزاب و"
+  result = result.replace(/([\u0621-\u064A]{2,})(و)([\u0621-\u064A]{2,})/g, '$1 $2 $3');
+  
+  // RÈGLE 3: Séparer avant ال (article défini) quand précédé d'un mot sans espace
+  // Exemple: "القضاءالدّستوري" → "القضاء الدّستوري"
+  result = result.replace(/([\u0621-\u064A]{3,})(ال[\u0621-\u064A]{2,})/g, '$1 $2');
+  
+  // RÈGLE 4: Séparer après ي final suivi d'un mot (sauf si shadda suit)
+  // Exemple: "الدّستوريو" → "الدّستوري و"
+  result = result.replace(/(ي)([\u0621-\u064A](?!ّ))/g, '$1 $2');
+  
+  // RÈGLE 5: Séparer les mots composés avec أ (Alif Hamza) initial
+  // Exemple: "الجمعيّاتأو" → "الجمعيّات أو"
+  result = result.replace(/([\u0621-\u064A]{3,})(أ[\u0621-\u064A]{1,})/g, '$1 $2');
   
   // Pattern 1: Separate Arabic definite article ال when glued to next word
   // Match: Arabic letters followed by ال followed by Arabic letters
@@ -120,8 +170,14 @@ const separateGluedArabicWords = (text: string): string => {
   // Detect sequences of 4+ Arabic letters followed by ال followed by 4+ letters
   result = result.replace(/([\u0621-\u064A]{4,})(ال[\u0621-\u064A]{4,})/g, '$1 $2');
   
-  // Pattern 8: Add space between long glued Arabic blocks (6+ letters each)
-  result = result.replace(/([\u0621-\u064A]{6,})([\u0621-\u064A]{6,})/g, '$1 $2');
+  // RÈGLE 6: Mots très longs (>12 caractères sans espaces) - probablement collés
+  result = result.replace(/(\b[\u0621-\u064A]{12,}\b)/g, (match) => {
+    // Chercher des points de séparation naturels
+    let separated = match;
+    separated = separated.replace(/(ة)([\u0621-\u064A])/g, '$1 $2');
+    separated = separated.replace(/([\u0621-\u064A]{3,})(و)([\u0621-\u064A]{3,})/g, '$1 $2 $3');
+    return separated;
+  });
   
   // Final: normalize spaces around punctuation
   result = result.replace(/\s*([،:;؛])\s*/g, '$1 ');
