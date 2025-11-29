@@ -239,6 +239,26 @@ function separateContent(text: string): { textualMetadata: string; content: stri
   };
 }
 
+// Function to detect Arabic text quality issues (spaced letters)
+function hasArabicSpacingIssues(text: string): boolean {
+  if (!text) return false;
+  
+  // Count Arabic characters
+  const arabicChars = (text.match(/[\u0600-\u06FF]/g) || []).length;
+  if (arabicChars < 50) return false; // Not enough Arabic text to analyze
+  
+  // Detect patterns typical of incorrect spacing
+  // Pattern: Arabic letter + space + Arabic letter (repeated)
+  const spacedLetters = (text.match(/[\u0600-\u06FF]\s[\u0600-\u06FF]\s[\u0600-\u06FF]/g) || []).length;
+  
+  // Calculate ratio of spaced patterns to total Arabic text
+  const ratio = spacedLetters / (arabicChars / 3);
+  console.log(`📊 Arabic spacing analysis: ${spacedLetters} spaced patterns, ${arabicChars} Arabic chars, ratio: ${ratio.toFixed(3)}`);
+  
+  // If more than 10% of text has spaced patterns, it's likely malformed
+  return ratio > 0.1;
+}
+
 // Helper function to access EdgeRuntime safely
 function getEdgeRuntime(): any {
   try {
@@ -412,6 +432,14 @@ serve(async (req) => {
            extractionSuccess = true;
            totalPagesVar = readerData.numPages || 1;
            shouldUsePDFReader = true;
+           
+           // Check Arabic text quality - force OCR if badly encoded
+           if (language === 'ar' && sanitizedExtractedText.length > 0 && hasArabicSpacingIssues(sanitizedExtractedText)) {
+             console.log('⚠️ Arabic text quality issues detected - forcing Google Vision OCR');
+             shouldUsePDFReader = false;
+             fileContent = 'Document PDF avec texte mal encodé - OCR requis';
+             extractionSuccess = false;
+           }
            
            // Create page contents from extracted text (sanitize each page)
            pageContents = (readerData.texts || []).map((text: string, index: number) => {
