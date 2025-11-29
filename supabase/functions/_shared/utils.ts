@@ -7,6 +7,99 @@ export const ensureString = (value: string | undefined | null, fallback = ''): s
   return value ?? fallback;
 };
 
+// Arabic Presentation Forms-B (U+FE70-U+FEFF) to base character mapping
+const presentationFormsMap: Record<number, string> = {
+  // Alef variations
+  0xFE8D: 'ا', 0xFE8E: 'ا',
+  // Ba variations
+  0xFE8F: 'ب', 0xFE90: 'ب', 0xFE91: 'ب', 0xFE92: 'ب',
+  // Ta variations
+  0xFE95: 'ت', 0xFE96: 'ت', 0xFE97: 'ت', 0xFE98: 'ت',
+  // Tha variations
+  0xFE99: 'ث', 0xFE9A: 'ث', 0xFE9B: 'ث', 0xFE9C: 'ث',
+  // Jeem variations
+  0xFE9D: 'ج', 0xFE9E: 'ج', 0xFE9F: 'ج', 0xFEA0: 'ج',
+  // Hha variations
+  0xFEA1: 'ح', 0xFEA2: 'ح', 0xFEA3: 'ح', 0xFEA4: 'ح',
+  // Kha variations
+  0xFEA5: 'خ', 0xFEA6: 'خ', 0xFEA7: 'خ', 0xFEA8: 'خ',
+  // Dal
+  0xFEA9: 'د', 0xFEAA: 'د',
+  // Thal
+  0xFEAB: 'ذ', 0xFEAC: 'ذ',
+  // Ra
+  0xFEAD: 'ر', 0xFEAE: 'ر',
+  // Zay
+  0xFEAF: 'ز', 0xFEB0: 'ز',
+  // Seen variations
+  0xFEB1: 'س', 0xFEB2: 'س', 0xFEB3: 'س', 0xFEB4: 'س',
+  // Sheen variations
+  0xFEB5: 'ش', 0xFEB6: 'ش', 0xFEB7: 'ش', 0xFEB8: 'ش',
+  // Sad variations
+  0xFEB9: 'ص', 0xFEBA: 'ص', 0xFEBB: 'ص', 0xFEBC: 'ص',
+  // Dad variations
+  0xFEBD: 'ض', 0xFEBE: 'ض', 0xFEBF: 'ض', 0xFEC0: 'ض',
+  // Tah variations
+  0xFEC1: 'ط', 0xFEC2: 'ط', 0xFEC3: 'ط', 0xFEC4: 'ط',
+  // Zah variations
+  0xFEC5: 'ظ', 0xFEC6: 'ظ', 0xFEC7: 'ظ', 0xFEC8: 'ظ',
+  // Ain variations
+  0xFEC9: 'ع', 0xFECA: 'ع', 0xFECB: 'ع', 0xFECC: 'ع',
+  // Ghain variations
+  0xFECD: 'غ', 0xFECE: 'غ', 0xFECF: 'غ', 0xFED0: 'غ',
+  // Fa variations
+  0xFED1: 'ف', 0xFED2: 'ف', 0xFED3: 'ف', 0xFED4: 'ف',
+  // Qaf variations
+  0xFED5: 'ق', 0xFED6: 'ق', 0xFED7: 'ق', 0xFED8: 'ق',
+  // Kaf variations
+  0xFED9: 'ك', 0xFEDA: 'ك', 0xFEDB: 'ك', 0xFEDC: 'ك',
+  // Lam variations
+  0xFEDD: 'ل', 0xFEDE: 'ل', 0xFEDF: 'ل', 0xFEE0: 'ل',
+  // Meem variations
+  0xFEE1: 'م', 0xFEE2: 'م', 0xFEE3: 'م', 0xFEE4: 'م',
+  // Noon variations
+  0xFEE5: 'ن', 0xFEE6: 'ن', 0xFEE7: 'ن', 0xFEE8: 'ن',
+  // Heh variations
+  0xFEE9: 'ه', 0xFEEA: 'ه', 0xFEEB: 'ه', 0xFEEC: 'ه',
+  // Waw variations
+  0xFEED: 'و', 0xFEEE: 'و',
+  // Ya variations
+  0xFEEF: 'ي', 0xFEF0: 'ي', 0xFEF1: 'ي', 0xFEF2: 'ي', 0xFEF3: 'ي', 0xFEF4: 'ي',
+  // Hamza variations
+  0xFE80: 'ء',
+  // Alef with Madda
+  0xFE81: 'آ', 0xFE82: 'آ',
+  // Alef with Hamza above
+  0xFE83: 'أ', 0xFE84: 'أ',
+  // Waw with Hamza
+  0xFE85: 'ؤ', 0xFE86: 'ؤ',
+  // Alef with Hamza below
+  0xFE87: 'إ', 0xFE88: 'إ',
+  // Ya with Hamza
+  0xFE89: 'ئ', 0xFE8A: 'ئ', 0xFE8B: 'ئ', 0xFE8C: 'ئ',
+  // Ta Marbuta
+  0xFE93: 'ة', 0xFE94: 'ة',
+  // Lam-Alef ligatures
+  0xFEF5: 'لا', 0xFEF6: 'لا', 0xFEF7: 'لأ', 0xFEF8: 'لأ',
+  0xFEF9: 'لإ', 0xFEFA: 'لإ', 0xFEFB: 'لآ', 0xFEFC: 'لآ'
+};
+
+/**
+ * Converts Arabic Presentation Forms-B to base characters
+ */
+function convertPresentationForms(text: string): string {
+  let result = '';
+  for (const char of text) {
+    const code = char.charCodeAt(0);
+    if (code >= 0xFE70 && code <= 0xFEFF) {
+      result += presentationFormsMap[code] || char;
+    } else {
+      result += char;
+    }
+  }
+  return result;
+}
+
 /**
  * Sanitizes Arabic text using NFKC normalization plus cleanup
  * - Converts presentation forms to base characters
@@ -19,8 +112,11 @@ export const ensureString = (value: string | undefined | null, fallback = ''): s
 export const sanitizeArabicText = (text: string | null | undefined): string => {
   if (!text) return '';
   
+  // Step 0: Convert Arabic Presentation Forms BEFORE NFKC
+  let sanitized = convertPresentationForms(text);
+  
   // Step 1: NFKC normalization
-  let sanitized = text.normalize('NFKC');
+  sanitized = sanitized.normalize('NFKC');
   
   // Step 2: Strip control characters
   sanitized = sanitized
@@ -100,43 +196,63 @@ export const sanitizeArabicText = (text: string | null | undefined): string => {
 /**
  * Separates glued Arabic words using linguistic patterns
  * Detects transitions between Arabic words and common patterns
+ * Combined range: U+0600-U+06FF (Arabic) + U+FE70-U+FEFF (Presentation Forms)
  */
 const separateGluedArabicWords = (text: string): string => {
   let result = text;
   
+  // Define combined Arabic range (standard + presentation forms)
+  const ARABIC_RANGE = '[\u0600-\u06FF\uFE70-\uFEFF]';
+  
   // Pattern 1: Separate Arabic definite article ال when glued to next word
-  // Match: Arabic letters followed by ال followed by Arabic letters
-  result = result.replace(/([\u0600-\u06FF])(ال[\u0600-\u06FF])/g, '$1 $2');
+  result = result.replace(new RegExp(`(${ARABIC_RANGE})(ال${ARABIC_RANGE})`, 'g'), '$1 $2');
   
   // Pattern 2: Separate common prepositions (ل، في، من، إلى، على، ب) glued to words
-  result = result.replace(/([\u0600-\u06FF])(ل[\u0600-\u06FF]{2,})/g, '$1 $2');
-  result = result.replace(/([\u0600-\u06FF])(في[\u0600-\u06FF]{2,})/g, '$1 $2');
-  result = result.replace(/([\u0600-\u06FF])(من[\u0600-\u06FF]{2,})/g, '$1 $2');
-  result = result.replace(/([\u0600-\u06FF])(إلى[\u0600-\u06FF]{2,})/g, '$1 $2');
-  result = result.replace(/([\u0600-\u06FF])(على[\u0600-\u06FF]{2,})/g, '$1 $2');
-  result = result.replace(/([\u0600-\u06FF])(ب[\u0600-\u06FF]{3,})/g, '$1 $2');
+  result = result.replace(new RegExp(`(${ARABIC_RANGE})(ل${ARABIC_RANGE}{2,})`, 'g'), '$1 $2');
+  result = result.replace(new RegExp(`(${ARABIC_RANGE})(في${ARABIC_RANGE}{2,})`, 'g'), '$1 $2');
+  result = result.replace(new RegExp(`(${ARABIC_RANGE})(من${ARABIC_RANGE}{2,})`, 'g'), '$1 $2');
+  result = result.replace(new RegExp(`(${ARABIC_RANGE})(إلى${ARABIC_RANGE}{2,})`, 'g'), '$1 $2');
+  result = result.replace(new RegExp(`(${ARABIC_RANGE})(على${ARABIC_RANGE}{2,})`, 'g'), '$1 $2');
+  result = result.replace(new RegExp(`(${ARABIC_RANGE})(ب${ARABIC_RANGE}{3,})`, 'g'), '$1 $2');
   
   // Pattern 3: Separate ALL numbers (not just years) from Arabic words
-  result = result.replace(/([\u0600-\u06FF])(\d+)/g, '$1 $2');
-  result = result.replace(/(\d+)([\u0600-\u06FF])/g, '$1 $2');
+  result = result.replace(new RegExp(`(${ARABIC_RANGE})(\\d+)`, 'g'), '$1 $2');
+  result = result.replace(new RegExp(`(\\d+)(${ARABIC_RANGE})`, 'g'), '$1 $2');
   
   // Pattern 4: Force space around punctuation
-  result = result.replace(/([\u0600-\u06FF])([(){}\[\]«»"""',،:;؛\-–—])/g, '$1 $2');
-  result = result.replace(/([(){}\[\]«»"""',،:;؛\-–—])([\u0600-\u06FF])/g, '$1 $2');
+  result = result.replace(new RegExp(`(${ARABIC_RANGE})([(){}\\[\\]«»"""',،:;؛\\-–—])`, 'g'), '$1 $2');
+  result = result.replace(new RegExp(`([(){}\\[\\]«»"""',،:;؛\\-–—])(${ARABIC_RANGE})`, 'g'), '$1 $2');
   
   // Pattern 5: Separate when Arabic word ends and another starts with common patterns
-  // Detect: consonant + vowel + consonant + ال (definite article start)
-  result = result.replace(/([\u0621-\u064A][\u064B-\u0652]?[\u0621-\u064A])(ال[\u0621-\u064A])/g, '$1 $2');
+  result = result.replace(/([\u0621-\u064A\uFE70-\uFEFF][\u064B-\u0652]?[\u0621-\u064A\uFE70-\uFEFF])(ال[\u0621-\u064A\uFE70-\uFEFF])/g, '$1 $2');
   
   // Pattern 6: Separate لسنة (li-sanat = "for the year") when glued
-  result = result.replace(/([\u0600-\u06FF])(لسنة)/g, '$1 $2');
+  result = result.replace(new RegExp(`(${ARABIC_RANGE})(لسنة)`, 'g'), '$1 $2');
   
   // Pattern 7: Separate when we have multiple capital-like patterns (e.g., القضاء الإداري)
-  // Detect sequences of 4+ Arabic letters followed by ال followed by 4+ letters
-  result = result.replace(/([\u0621-\u064A]{4,})(ال[\u0621-\u064A]{4,})/g, '$1 $2');
+  result = result.replace(/([\u0621-\u064A\uFE70-\uFEFF]{4,})(ال[\u0621-\u064A\uFE70-\uFEFF]{4,})/g, '$1 $2');
   
   // Pattern 8: Add space between long glued Arabic blocks (6+ letters each)
-  result = result.replace(/([\u0621-\u064A]{6,})([\u0621-\u064A]{6,})/g, '$1 $2');
+  result = result.replace(/([\u0621-\u064A\uFE70-\uFEFF]{6,})([\u0621-\u064A\uFE70-\uFEFF]{6,})/g, '$1 $2');
+  
+  // NEW Pattern 9: Intelligent word boundary detection using common endings and beginnings
+  // Common word endings
+  const WORD_ENDINGS = ['ة', 'ي', 'ن', 'م', 'ه', 'ا', 'ك', 'ت'];
+  // Common word beginnings (articles, prepositions)
+  const WORD_BEGINNINGS = ['ال', 'و', 'ب', 'ل', 'في', 'من', 'إلى', 'على'];
+  
+  for (const ending of WORD_ENDINGS) {
+    for (const beginning of WORD_BEGINNINGS) {
+      const pattern = new RegExp(`(${ending})(${beginning})`, 'g');
+      result = result.replace(pattern, '$1 $2');
+    }
+  }
+  
+  // NEW Pattern 10: Improve punctuation spacing
+  // Force space after period when followed by Arabic letter
+  result = result.replace(new RegExp(`\\.([${ARABIC_RANGE}])`, 'g'), '. $1');
+  // Separate hyphens glued between words
+  result = result.replace(new RegExp(`([${ARABIC_RANGE}])-([${ARABIC_RANGE}])`, 'g'), '$1 - $2');
   
   // Final: normalize spaces around punctuation
   result = result.replace(/\s*([،:;؛])\s*/g, '$1 ');

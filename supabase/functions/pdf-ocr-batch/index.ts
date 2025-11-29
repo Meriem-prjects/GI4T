@@ -190,7 +190,37 @@ async function ocrImage(imageData: string, pageNumber: number, googleVisionApiKe
       : 0.95; // Default high confidence for Google Vision
 
     // Sanitize Arabic text if detected
-    const sanitizedContent = detectedLanguage === 'ar' ? sanitizeArabicText(extractedText) : extractedText;
+    let sanitizedContent = detectedLanguage === 'ar' ? sanitizeArabicText(extractedText) : extractedText;
+
+    // Apply AI Arabic spacing correction per page for better quality
+    if (detectedLanguage === 'ar' && sanitizedContent.length > 50 && sanitizedContent.length < 4000) {
+      console.log(`🔧 Applying AI Arabic spacing correction to page ${pageNumber}...`);
+      try {
+        const fixerResponse = await fetch(
+          'https://qpkybrcjcoxhkifnbxei.supabase.co/functions/v1/arabic-spacing-fixer',
+          {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${Deno.env.get('SUPABASE_ANON_KEY')}`,
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ text: sanitizedContent })
+          }
+        );
+        
+        if (fixerResponse.ok) {
+          const fixerResult = await fixerResponse.json();
+          if (fixerResult.success && fixerResult.correctedText) {
+            sanitizedContent = fixerResult.correctedText;
+            console.log(`✅ AI correction applied to page ${pageNumber} (method: ${fixerResult.method})`);
+          }
+        } else {
+          console.warn(`AI correction failed for page ${pageNumber}: ${fixerResponse.status}`);
+        }
+      } catch (e) {
+        console.warn(`AI correction error for page ${pageNumber}, continuing with sanitized text:`, e);
+      }
+    }
 
     console.log(`✅ Page ${pageNumber} extracted: ${sanitizedContent.length} chars, language: ${detectedLanguage}, confidence: ${confidence}`);
 
