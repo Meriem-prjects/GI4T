@@ -1,7 +1,7 @@
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 
-import { getErrorMessage, sanitizeArabicText } from "../_shared/utils.ts";
+import { getErrorMessage, fixArabicOCRErrors, sanitizeArabicText } from "../_shared/utils.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -108,8 +108,11 @@ serve(async (req) => {
 
     console.log(`OCR completed. Language: ${result.language}, Text length: ${result.text?.length || 0}`);
 
+    // Apply OCR error corrections first
+    let extractedText = fixArabicOCRErrors(result.text || '');
+    
     // Sanitize Arabic text if detected
-    let sanitizedText = result.language === 'ar' ? sanitizeArabicText(result.text) : result.text;
+    let sanitizedText = result.language === 'ar' ? sanitizeArabicText(extractedText) : extractedText;
     
     // Apply AI spacing correction for Arabic texts <= 12k chars
     if (result.language === 'ar' && sanitizedText && sanitizedText.length <= 12000) {

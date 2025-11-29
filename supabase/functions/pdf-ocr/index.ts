@@ -1,7 +1,7 @@
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 
-import { getErrorMessage } from "../_shared/utils.ts";
+import { getErrorMessage, fixArabicOCRErrors, sanitizeArabicText } from "../_shared/utils.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -78,9 +78,14 @@ serve(async (req) => {
     }
 
     const data = await response.json();
-    const extractedText = data.choices[0].message.content;
+    let extractedText = data.choices[0].message.content;
 
     console.log(`Text extracted successfully. Length: ${extractedText.length}`);
+
+    // Apply OCR error corrections and Arabic text sanitization
+    extractedText = fixArabicOCRErrors(extractedText);
+    extractedText = sanitizeArabicText(extractedText);
+    console.log(`Text corrected with heuristics. Final length: ${extractedText.length}`);
 
     return new Response(JSON.stringify({
       success: true,
