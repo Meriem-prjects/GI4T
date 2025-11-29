@@ -129,9 +129,9 @@ async function getExistingPages(jobId: string): Promise<number[]> {
   }
 }
 
-// OCR a single image using Gemini 2.5 Pro via Lovable AI with enhanced prompts and rate limiting
-async function ocrImage(imageData: string, pageNumber: number, lovableApiKey: string, retryCount = 0): Promise<PageContent> {
-  console.log(`Starting OCR for page ${pageNumber} with Gemini 2.5 Pro...`);
+// OCR a single image using OpenAI Vision API with enhanced prompts and rate limiting
+async function ocrImage(imageData: string, pageNumber: number, openaiApiKey: string, retryCount = 0): Promise<PageContent> {
+  console.log(`Starting OCR for page ${pageNumber}...`);
   
   // Add delay to prevent rate limiting
   if (retryCount > 0) {
@@ -143,27 +143,24 @@ async function ocrImage(imageData: string, pageNumber: number, lovableApiKey: st
     await new Promise(resolve => setTimeout(resolve, 1000));
   }
   
-  // Enhanced prompt for better OCR accuracy with Arabic focus
-  const systemPrompt = `Tu es un expert OCR spécialisé dans l'extraction de texte juridique et administratif en français et en arabe.
-INSTRUCTIONS CRITIQUES:
-- Extrais CHAQUE caractère exactement comme tu le vois
-- Pour l'arabe, préserve TOUS les espaces entre les lettres sans les corriger
-- Ne joins JAMAIS les lettres arabes même si elles semblent former un mot
-- Transcris lettre par lettre, caractère par caractère
-- Préserve la mise en forme, les paragraphes et la structure
-- Identifie correctement les textes bilingues français/arabe
-- Pour les documents scannés de faible qualité, fais de ton mieux pour déchiffrer le texte
-- Ignore les filigranes et les marques d'eau
-- Réponds au format JSON strict: {"text": "texte complet extrait tel quel", "language": "fr|ar|mixed", "confidence": 0.XX}`;
+  // Enhanced prompt for better OCR accuracy
+  const systemPrompt = `Tu es un expert OCR spécialisé dans l'extraction de texte juridique et administratif en français et en arabe. 
+  INSTRUCTIONS CRITIQUES:
+  - Extrais TOUT le texte visible avec une précision maximale
+  - Préserve la mise en forme, les paragraphes et la structure
+  - Identifie correctement les textes bilingues français/arabe
+  - Pour les documents scannés de faible qualité, fais de ton mieux pour déchiffrer le texte
+  - Ignore les filigranes et les marques d'eau
+  - Réponds au format JSON strict: {"text": "texte complet extrait", "language": "fr|ar|mixed", "confidence": 0.XX}`;
 
-  const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+  const response = await fetch('https://api.openai.com/v1/chat/completions', {
     method: 'POST',
     headers: {
-      'Authorization': `Bearer ${lovableApiKey}`,
+      'Authorization': `Bearer ${openaiApiKey}`,
       'Content-Type': 'application/json',
     },
     body: JSON.stringify({
-      model: 'google/gemini-2.5-pro',
+      model: 'gpt-4o',
       messages: [
         {
           role: 'system',
@@ -174,7 +171,7 @@ INSTRUCTIONS CRITIQUES:
           content: [
             {
               type: 'text',
-              text: `Page ${pageNumber}: Extrais tout le texte de cette image caractère par caractère sans corriger les espacements. Si c'est un document scanné ou de faible qualité, fais de ton mieux pour lire le texte même s'il est flou ou déformé.`
+              text: `Page ${pageNumber}: Extrais tout le texte de cette image de document. Si c'est un document scanné ou de faible qualité, fais de ton mieux pour lire le texte même s'il est flou ou déformé.`
             },
             {
               type: 'image_url',
@@ -193,7 +190,7 @@ INSTRUCTIONS CRITIQUES:
 
   if (!response.ok) {
     const errorText = await response.text();
-    console.error(`Lovable AI (Gemini) OCR error for page ${pageNumber}:`, response.status, errorText);
+    console.error(`OCR API error for page ${pageNumber}:`, response.status, errorText);
     
     // Enhanced retry logic with exponential backoff
     if (retryCount < 3 && (response.status === 429 || response.status >= 500)) {
@@ -253,7 +250,7 @@ INSTRUCTIONS CRITIQUES:
 }
 
 // Enhanced fallback processing chain for PDFs with resume support
-async function processPdfWithOCR(pdfBuffer: ArrayBuffer, lovableApiKey: string, jobId: string, filename?: string, isResume: boolean = false, preservedLanguage: string = 'fr'): Promise<BatchOCRResult> {
+async function processPdfWithOCR(pdfBuffer: ArrayBuffer, openaiApiKey: string, jobId: string, filename?: string, isResume: boolean = false, preservedLanguage: string = 'fr'): Promise<BatchOCRResult> {
   console.log('Starting enhanced PDF OCR processing with multi-level fallback...');
   
   // Check if PDF might be password-protected
@@ -434,7 +431,7 @@ async function processPdfWithOCR(pdfBuffer: ArrayBuffer, lovableApiKey: string, 
     // Process images sequentially to prevent rate limiting (reduced from batch processing)
     for (const image of imagesToProcess) {
       try {
-        const pageContent = await ocrImage(image.imageData, image.pageNumber, lovableApiKey);
+        const pageContent = await ocrImage(image.imageData, image.pageNumber, openaiApiKey);
         pages.push(pageContent);
         languages[pageContent.language] = (languages[pageContent.language] || 0) + 1;
         
@@ -541,8 +538,8 @@ async function processPdfWithOCR(pdfBuffer: ArrayBuffer, lovableApiKey: string, 
   };
   }
 
-  // Fallback: send the raw PDF to Gemini 2.5 Pro via Lovable AI to extract all text at once
-  console.log('Falling back to direct PDF OCR via Gemini 2.5 Pro...');
+  // Fallback: send the raw PDF to OpenAI Vision API to extract all text at once
+  console.log('Falling back to direct PDF OCR via OpenAI Vision...');
   
   await updateJobProgress(jobId, {
     current_step: 'direct_pdf_ocr',
@@ -558,25 +555,20 @@ async function processPdfWithOCR(pdfBuffer: ArrayBuffer, lovableApiKey: string, 
   }
   const base64Pdf = btoa(parts.join(''));
 
-  const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+  const response = await fetch('https://api.openai.com/v1/chat/completions', {
     method: 'POST',
     headers: {
-      'Authorization': `Bearer ${lovableApiKey}`,
+      'Authorization': `Bearer ${openaiApiKey}`,
       'Content-Type': 'application/json',
     },
     body: JSON.stringify({
-      model: 'google/gemini-2.5-pro',
+      model: 'gpt-4o',
       messages: [
-        { role: 'system', content: `Tu es un expert OCR multi-pages avec expertise en arabe et français. 
-INSTRUCTIONS: 
-- Extrais CHAQUE caractère exactement comme tu le vois de TOUTES les pages
-- Pour l'arabe, préserve TOUS les espaces entre lettres sans corriger
-- Détecte la langue principale
-- Réponds en JSON: {"text": "...", "language": "fr|ar|en", "confidence": 0.95}` },
+        { role: 'system', content: 'Tu es un expert en extraction de texte multi-pages. Extrais TOUT le texte du PDF fourni (toutes les pages), sans commentaire, et détecte la langue principale. Réponds en JSON: {"text": "...", "language": "fr|ar|en", "confidence": 0.95}.' },
         {
           role: 'user',
           content: [
-            { type: 'text', text: 'Extrais et concatène le texte caractère par caractère de toutes les pages de ce PDF sans corriger les espacements:' },
+            { type: 'text', text: 'Extrais et concatène le texte de toutes les pages de ce PDF:' },
             { type: 'image_url', image_url: { url: `data:application/pdf;base64,${base64Pdf}` } },
           ],
         },
@@ -589,14 +581,14 @@ INSTRUCTIONS:
 
   if (!response.ok) {
     const errText = await response.text();
-    throw new Error(`Lovable AI (Gemini) PDF OCR error: ${response.status} - ${errText}`);
+    throw new Error(`OpenAI PDF OCR error: ${response.status} - ${errText}`);
   }
 
   const data = await response.json();
   const content = data.choices?.[0]?.message?.content;
 
   if (!content) {
-    throw new Error('No content returned from Gemini PDF OCR');
+    throw new Error('No content returned from OpenAI PDF OCR');
   }
 
   try {
@@ -661,9 +653,9 @@ serve(async (req) => {
   let jobId: string | null = null;
   
   try {
-    const lovableApiKey = Deno.env.get('LOVABLE_API_KEY');
-    if (!lovableApiKey) {
-      throw new Error('Lovable API key not configured');
+    const openaiApiKey = Deno.env.get('OPENAI_API_KEY');
+    if (!openaiApiKey) {
+      throw new Error('OpenAI API key not configured');
     }
 
     const formData = await req.formData();
@@ -718,7 +710,7 @@ serve(async (req) => {
       });
     }
 
-    const result = await processPdfWithOCR(pdfBuffer, lovableApiKey, jobId, filename, isResume, preservedLanguage);
+    const result = await processPdfWithOCR(pdfBuffer, openaiApiKey, jobId, filename, isResume, preservedLanguage);
 
     if (!result.success) {
       throw new Error(result.error || 'Failed to process PDF with OCR');
