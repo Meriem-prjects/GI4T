@@ -16,9 +16,9 @@ serve(async (req) => {
   try {
     console.log('Image OCR function called');
     
-    const openaiApiKey = Deno.env.get('OPENAI_API_KEY');
-    if (!openaiApiKey) {
-      throw new Error('OpenAI API key not configured');
+    const lovableApiKey = Deno.env.get('LOVABLE_API_KEY');
+    if (!lovableApiKey) {
+      throw new Error('Lovable API key not configured');
     }
 
     const formData = await req.formData();
@@ -59,28 +59,35 @@ serve(async (req) => {
     const mimeType = file.type || 'image/jpeg';
     console.log(`Image converted successfully, MIME type: ${mimeType}`);
 
-    console.log('Sending to OpenAI Vision API for OCR and language detection...');
+    console.log('Sending to Gemini 2.5 Pro via Lovable AI for OCR and language detection...');
 
-    // Use OpenAI Vision API to extract text from image and detect language
-    const response = await fetch('https://api.openai.com/v1/chat/completions', {
+    // Use Gemini 2.5 Pro via Lovable AI Gateway to extract text from image and detect language
+    const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${openaiApiKey}`,
+        'Authorization': `Bearer ${lovableApiKey}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'gpt-4o',
+        model: 'google/gemini-2.5-pro',
         messages: [
           {
             role: 'system',
-            content: 'Tu es un expert en extraction de texte et détection de langue. Extrais tout le texte visible dans cette image et détecte la langue principale du texte. Réponds au format JSON: {"text": "texte extrait", "language": "code langue (fr/ar/en)", "confidence": 0.95}'
+            content: `Tu es un expert OCR spécialisé en extraction de texte avec une expertise particulière pour l'arabe et le français. 
+INSTRUCTIONS CRITIQUES:
+- Extrais CHAQUE caractère exactement comme tu le vois
+- Pour l'arabe, préserve TOUS les espaces entre les lettres sans les corriger
+- Ne joins JAMAIS les lettres arabes même si elles semblent former un mot
+- Transcris lettre par lettre, caractère par caractère
+- Détecte la langue principale (fr/ar/en)
+- Réponds au format JSON: {"text": "texte extrait tel quel", "language": "code langue", "confidence": 0.XX}`
           },
           {
             role: 'user',
             content: [
               {
                 type: 'text',
-                text: 'Extrais le texte de cette image et détecte sa langue principale:'
+                text: 'Extrais le texte de cette image caractère par caractère sans corriger les espacements:'
               },
               {
                 type: 'image_url',
@@ -99,8 +106,8 @@ serve(async (req) => {
 
     if (!response.ok) {
       const errorText = await response.text();
-      console.error('OpenAI API error:', errorText);
-      throw new Error(`OpenAI API error: ${response.status} - ${errorText}`);
+      console.error('Lovable AI (Gemini) API error:', errorText);
+      throw new Error(`Lovable AI API error: ${response.status} - ${errorText}`);
     }
 
     const data = await response.json();
