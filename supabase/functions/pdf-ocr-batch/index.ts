@@ -129,128 +129,107 @@ async function getExistingPages(jobId: string): Promise<number[]> {
   }
 }
 
-// OCR a single image using OpenAI Vision API with enhanced prompts and rate limiting
-async function ocrImage(imageData: string, pageNumber: number, openaiApiKey: string, retryCount = 0): Promise<PageContent> {
-  console.log(`Starting OCR for page ${pageNumber}...`);
+// OCR a single image using Google Cloud Vision API
+async function ocrImage(imageData: string, pageNumber: number, googleVisionApiKey: string, retryCount = 0): Promise<PageContent> {
+  const maxRetries = 3;
+  const baseDelay = 2000; // 2 seconds
   
-  // Add delay to prevent rate limiting
-  if (retryCount > 0) {
-    const delay = Math.min(2000 * Math.pow(2, retryCount), 10000); // Exponential backoff, max 10s
-    console.log(`Waiting ${delay}ms before retry...`);
-    await new Promise(resolve => setTimeout(resolve, delay));
-  } else {
-    // Base delay between requests to prevent rate limiting
-    await new Promise(resolve => setTimeout(resolve, 1000));
-  }
-  
-  // Enhanced prompt for better OCR accuracy
-  const systemPrompt = `Tu es un expert OCR spécialisé dans l'extraction de texte juridique et administratif en français et en arabe. 
-  INSTRUCTIONS CRITIQUES:
-  - Extrais TOUT le texte visible avec une précision maximale
-  - Préserve la mise en forme, les paragraphes et la structure
-  - Identifie correctement les textes bilingues français/arabe
-  - Pour les documents scannés de faible qualité, fais de ton mieux pour déchiffrer le texte
-  - Ignore les filigranes et les marques d'eau
-  - Réponds au format JSON strict: {"text": "texte complet extrait", "language": "fr|ar|mixed", "confidence": 0.XX}`;
-
-  const response = await fetch('https://api.openai.com/v1/chat/completions', {
-    method: 'POST',
-    headers: {
-      'Authorization': `Bearer ${openaiApiKey}`,
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-      model: 'gpt-4o',
-      messages: [
-        {
-          role: 'system',
-          content: systemPrompt
-        },
-        {
-          role: 'user',
-          content: [
-            {
-              type: 'text',
-              text: `Page ${pageNumber}: Extrais tout le texte de cette image de document. Si c'est un document scanné ou de faible qualité, fais de ton mieux pour lire le texte même s'il est flou ou déformé.`
-            },
-            {
-              type: 'image_url',
-              image_url: {
-                url: `data:image/jpeg;base64,${imageData}`
-              }
-            }
-          ]
-        }
-      ],
-      max_tokens: 4000,
-      temperature: 0.1,
-      response_format: { type: "json_object" }
-    }),
-  });
-
-  if (!response.ok) {
-    const errorText = await response.text();
-    console.error(`OCR API error for page ${pageNumber}:`, response.status, errorText);
-    
-    // Enhanced retry logic with exponential backoff
-    if (retryCount < 3 && (response.status === 429 || response.status >= 500)) {
-      console.log(`Retrying OCR for page ${pageNumber} (attempt ${retryCount + 1})...`);
-      return ocrImage(imageData, pageNumber, openaiApiKey, retryCount + 1);
-    }
-    
-    // For rate limiting, throw a specific error
-    if (response.status === 429) {
-      throw new Error(`Rate limit exceeded for page ${pageNumber}. Please try again later.`);
-    }
-    
-    throw new Error(`OCR failed for page ${pageNumber}: ${response.status} - ${errorText}`);
-  }
-
-  const data = await response.json();
-  const content = data.choices?.[0]?.message?.content;
-
-  if (!content) {
-    console.warn(`No content returned for page ${pageNumber}`);
-    return {
-      pageNumber,
-      content: '',
-      confidence: 0,
-      language: 'fr'
-    };
-  }
-
   try {
-    const parsed = JSON.parse(content);
+    console.log(`🔍 Google Vision OCR Page ${pageNumber} (attempt ${retryCount + 1}/${maxRetries + 1})...`);
+
+    // Call Google Cloud Vision API with DOCUMENT_TEXT_DETECTION
+    const response = await fetch(
+      `https://vision.googleapis.com/v1/images:annotate?key=${googleVisionApiKey}`,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          requests: [{
+            image: { content: imageData },
+            features: [{ type: 'DOCUMENT_TEXT_DETECTION' }],
+            imageContext: {
+              languageHints: ['ar', 'fr']  // Prioritize Arabic and French
+            }
+          }]
+        })
+      }
+    );
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(`Google Vision API error: ${response.status} - ${errorText}`);
+    }
+
+    const data = await response.json();
     
+    if (data.responses[0]?.error) {
+      throw new Error(`Google Vision error: ${data.responses[0].error.message}`);
+    }
+
+    const fullTextAnnotation = data.responses[0]?.fullTextAnnotation;
+    
+    if (!fullTextAnnotation?.text) {
+      console.log(`⚠️ No text detected on page ${pageNumber}`);
+      return {
+        pageNumber,
+        content: '',
+        confidence: 0,
+        language: 'fr'
+      };
+    }
+
+    const extractedText = fullTextAnnotation.text;
+    
+    // Detect language and confidence from Google Vision
+    const detectedLanguages = fullTextAnnotation.pages?.[0]?.property?.detectedLanguages || [];
+    const detectedLanguage = detectedLanguages.length > 0
+      ? detectedLanguages[0].languageCode
+      : 'fr';
+    const confidence = detectedLanguages.length > 0
+      ? detectedLanguages[0].confidence
+      : 0.95; // Default high confidence for Google Vision
+
     // Sanitize Arabic text if detected
-    const sanitizedContent = parsed.language === 'ar' ? sanitizeArabicText(parsed.text || '') : (parsed.text || '');
-    
-    const result = {
+    const sanitizedContent = detectedLanguage === 'ar' ? sanitizeArabicText(extractedText) : extractedText;
+
+    console.log(`✅ Page ${pageNumber} extracted: ${sanitizedContent.length} chars, language: ${detectedLanguage}, confidence: ${confidence}`);
+
+    return {
       pageNumber,
       content: sanitizedContent,
-      confidence: parsed.confidence || 0.9,
-      language: parsed.language || 'fr'
+      confidence: confidence,
+      language: detectedLanguage
     };
+
+  } catch (error) {
+    // Enhanced error handling with specific error types
+    const errorMessage = error instanceof Error ? error.message : String(error);
     
-    console.log(`Page ${pageNumber} OCR completed. Language: ${result.language}, Text length: ${result.content.length}`);
-    return result;
-  } catch (parseError) {
-    console.warn(`Failed to parse JSON response for page ${pageNumber}, using raw content:`, parseError);
+    // Check for rate limit errors
+    if (errorMessage.includes('rate_limit') || errorMessage.includes('429') || errorMessage.includes('RESOURCE_EXHAUSTED')) {
+      console.error(`⚠️ Rate limit hit on page ${pageNumber}, attempt ${retryCount + 1}`);
+      
+      if (retryCount < maxRetries) {
+        const delay = baseDelay * Math.pow(2, retryCount); // Exponential backoff
+        console.log(`⏳ Waiting ${delay}ms before retry...`);
+        await new Promise(resolve => setTimeout(resolve, delay));
+        return ocrImage(imageData, pageNumber, googleVisionApiKey, retryCount + 1);
+      }
+    }
     
-    // Sanitize raw content too
-    const sanitizedRawContent = sanitizeArabicText(content);
+    console.error(`❌ Google Vision OCR failed for page ${pageNumber}:`, errorMessage);
     
     return {
       pageNumber,
-      content: sanitizedRawContent,
-      confidence: 0.8,
+      content: `[Erreur OCR page ${pageNumber}: ${errorMessage}]`,
+      confidence: 0,
       language: 'fr'
     };
   }
 }
 
 // Enhanced fallback processing chain for PDFs with resume support
-async function processPdfWithOCR(pdfBuffer: ArrayBuffer, openaiApiKey: string, jobId: string, filename?: string, isResume: boolean = false, preservedLanguage: string = 'fr'): Promise<BatchOCRResult> {
+async function processPdfWithOCR(pdfBuffer: ArrayBuffer, googleVisionApiKey: string, jobId: string, filename?: string, isResume: boolean = false, preservedLanguage: string = 'fr'): Promise<BatchOCRResult> {
   console.log('Starting enhanced PDF OCR processing with multi-level fallback...');
   
   // Check if PDF might be password-protected
@@ -431,7 +410,7 @@ async function processPdfWithOCR(pdfBuffer: ArrayBuffer, openaiApiKey: string, j
     // Process images sequentially to prevent rate limiting (reduced from batch processing)
     for (const image of imagesToProcess) {
       try {
-        const pageContent = await ocrImage(image.imageData, image.pageNumber, openaiApiKey);
+        const pageContent = await ocrImage(image.imageData, image.pageNumber, googleVisionApiKey);
         pages.push(pageContent);
         languages[pageContent.language] = (languages[pageContent.language] || 0) + 1;
         
@@ -653,9 +632,9 @@ serve(async (req) => {
   let jobId: string | null = null;
   
   try {
-    const openaiApiKey = Deno.env.get('OPENAI_API_KEY');
-    if (!openaiApiKey) {
-      throw new Error('OpenAI API key not configured');
+    const googleVisionApiKey = Deno.env.get('GOOGLE_VISION_API_KEY');
+    if (!googleVisionApiKey) {
+      throw new Error('Google Vision API key not configured');
     }
 
     const formData = await req.formData();
@@ -710,7 +689,7 @@ serve(async (req) => {
       });
     }
 
-    const result = await processPdfWithOCR(pdfBuffer, openaiApiKey, jobId, filename, isResume, preservedLanguage);
+    const result = await processPdfWithOCR(pdfBuffer, googleVisionApiKey, jobId, filename, isResume, preservedLanguage);
 
     if (!result.success) {
       throw new Error(result.error || 'Failed to process PDF with OCR');

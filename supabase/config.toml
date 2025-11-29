@@ -157,3 +157,6 @@ verify_jwt = false
 
 [functions.translate-page]
 verify_jwt = false
+
+[functions.google-vision-ocr]
+verify_jwt = false

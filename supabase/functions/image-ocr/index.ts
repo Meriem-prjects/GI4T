@@ -16,9 +16,9 @@ serve(async (req) => {
   try {
     console.log('Image OCR function called');
     
-    const openaiApiKey = Deno.env.get('OPENAI_API_KEY');
-    if (!openaiApiKey) {
-      throw new Error('OpenAI API key not configured');
+    const googleVisionApiKey = Deno.env.get('GOOGLE_VISION_API_KEY');
+    if (!googleVisionApiKey) {
+      throw new Error('Google Vision API key not configured');
     }
 
     const formData = await req.formData();
@@ -56,63 +56,72 @@ serve(async (req) => {
       throw new Error('Erreur de conversion de l\'image');
     }
 
-    const mimeType = file.type || 'image/jpeg';
-    console.log(`Image converted successfully, MIME type: ${mimeType}`);
+    console.log('Sending to Google Vision API for OCR...');
 
-    console.log('Sending to OpenAI Vision API for OCR and language detection...');
-
-    // Use OpenAI Vision API to extract text from image and detect language
-    const response = await fetch('https://api.openai.com/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${openaiApiKey}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        model: 'gpt-4o',
-        messages: [
-          {
-            role: 'system',
-            content: 'Tu es un expert en extraction de texte et détection de langue. Extrais tout le texte visible dans cette image et détecte la langue principale du texte. Réponds au format JSON: {"text": "texte extrait", "language": "code langue (fr/ar/en)", "confidence": 0.95}'
-          },
-          {
-            role: 'user',
-            content: [
-              {
-                type: 'text',
-                text: 'Extrais le texte de cette image et détecte sa langue principale:'
-              },
-              {
-                type: 'image_url',
-                image_url: {
-                  url: `data:${mimeType};base64,${base64Image}`
-                }
-              }
-            ]
-          }
-        ],
-        max_tokens: 4000,
-        temperature: 0,
-        response_format: { type: "json_object" }
-      }),
-    });
+    // Call Google Cloud Vision API with DOCUMENT_TEXT_DETECTION
+    const response = await fetch(
+      `https://vision.googleapis.com/v1/images:annotate?key=${googleVisionApiKey}`,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          requests: [{
+            image: { content: base64Image },
+            features: [{ type: 'DOCUMENT_TEXT_DETECTION' }],
+            imageContext: {
+              languageHints: ['ar', 'fr', 'en']  // Prioritize Arabic, French, English
+            }
+          }]
+        })
+      }
+    );
 
     if (!response.ok) {
       const errorText = await response.text();
-      console.error('OpenAI API error:', errorText);
-      throw new Error(`OpenAI API error: ${response.status} - ${errorText}`);
+      console.error('Google Vision API error:', errorText);
+      throw new Error(`Google Vision API error: ${response.status} - ${errorText}`);
     }
 
     const data = await response.json();
-    const result = JSON.parse(data.choices[0].message.content);
+    
+    if (data.responses[0]?.error) {
+      throw new Error(`Google Vision error: ${data.responses[0].error.message}`);
+    }
 
-    console.log(`OCR completed. Language: ${result.language}, Text length: ${result.text?.length || 0}`);
+    const fullTextAnnotation = data.responses[0]?.fullTextAnnotation;
+    
+    if (!fullTextAnnotation?.text) {
+      console.log('No text detected in image');
+      return new Response(JSON.stringify({
+        success: true,
+        content: '',
+        language: 'unknown',
+        confidence: 0,
+        fullText: '',
+        extractedText: ''
+      }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
 
-    // Sanitize Arabic text if detected
-    let sanitizedText = result.language === 'ar' ? sanitizeArabicText(result.text) : result.text;
+    let extractedText = fullTextAnnotation.text;
+    
+    // Detect language from Google Vision response
+    const detectedLanguages = fullTextAnnotation.pages?.[0]?.property?.detectedLanguages || [];
+    const detectedLanguage = detectedLanguages.length > 0 
+      ? detectedLanguages[0].languageCode 
+      : 'unknown';
+    const confidence = detectedLanguages.length > 0
+      ? detectedLanguages[0].confidence
+      : 0.95;
+
+    console.log(`Google Vision detected: language=${detectedLanguage}, confidence=${confidence}`);
+
+    // Sanitize Arabic text
+    let sanitizedText = detectedLanguage === 'ar' ? sanitizeArabicText(extractedText) : extractedText;
     
     // Apply AI spacing correction for Arabic texts <= 12k chars
-    if (result.language === 'ar' && sanitizedText && sanitizedText.length <= 12000) {
+    if (detectedLanguage === 'ar' && sanitizedText && sanitizedText.length <= 12000) {
       try {
         console.log('Applying AI spacing correction for Arabic OCR text...');
         const spacingResponse = await fetch(`${Deno.env.get('SUPABASE_URL')}/functions/v1/arabic-spacing-fixer`, {
@@ -139,8 +148,8 @@ serve(async (req) => {
     return new Response(JSON.stringify({
       success: true,
       content: sanitizedText || '',
-      language: result.language || 'fr',
-      confidence: result.confidence || 0.9,
+      language: detectedLanguage,
+      confidence: confidence,
       fullText: sanitizedText || '',
       extractedText: sanitizedText || ''
     }), {
