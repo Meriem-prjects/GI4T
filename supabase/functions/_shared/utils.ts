@@ -61,6 +61,21 @@ export const sanitizeArabicText = (text: string | null | undefined): string => {
   // Remove spaces between letter and diacritics
   sanitized = sanitized.replace(/([\u0621-\u064A])\s+([\u064B-\u0652\u0670])/g, '$1$2');
   
+  // NEW: Remove spaces inside quotation marks
+  sanitized = sanitized.replace(/"\s+/g, '"');  // Quote + space → Quote
+  sanitized = sanitized.replace(/\s+"/g, '"');  // Space + quote → Quote
+  sanitized = sanitized.replace(/«\s+/g, '«');  // French quotes
+  sanitized = sanitized.replace(/\s+»/g, '»');
+  
+  // NEW: Fix specific OCR patterns
+  // "الأ ولى" → "الأولى"
+  sanitized = sanitized.replace(/الأ\s+و/g, 'الأو');
+  // "الإ علان" → "الإعلان"
+  sanitized = sanitized.replace(/الإ\s+ع/g, 'الإع');
+  // More generic Hamza patterns
+  sanitized = sanitized.replace(/أ\s+([حرنملتك])/g, 'أ$1');
+  sanitized = sanitized.replace(/إ\s+([حرنملتك])/g, 'إ$1');
+  
   // Fix common broken patterns like "ا لع ا رض" -> "العارض"
   // Pattern: broken definite article at start
   sanitized = sanitized.replace(/ا\s*ل\s*([\u0621-\u064A])/g, 'ال$1');

@@ -76,7 +76,19 @@ Entrée: "قا منائب ا لعارض بتقديمعريضة"
 Sortie: "قام نائب العارض بتقديم عريضة"
 
 Entrée: "ا لدّعوى ا لح الية"
-Sortie: "الدعوى الحالية"`
+Sortie: "الدعوى الحالية"
+
+Entrée: "الأ ولى"
+Sortie: "الأولى"
+
+Entrée: "الإ علان"
+Sortie: "الإعلان"
+
+Entrée: " جميع " (avec espaces dans les guillemets)
+Sortie: "جميع"
+
+Entrée: "في10ديسمبر1948"
+Sortie: "في 10 ديسمبر 1948"`
           },
           {
             role: 'user',
