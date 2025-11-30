@@ -149,6 +149,7 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
   const [translatedTextualMetadata, setTranslatedTextualMetadata] = useState<string>('');
   const [isCleaningArabic, setIsCleaningArabic] = useState(false);
   const [isCorrectingSpacing, setIsCorrectingSpacing] = useState(false);
+  const [correctionProgress, setCorrectionProgress] = useState<{ current: number; total: number }>({ current: 0, total: 0 });
   const [translatingPages, setTranslatingPages] = useState<Set<number>>(new Set());
   const [workflowStep, setWorkflowStep] = useState<string | null>(null);
   const [completedWorkflowSteps, setCompletedWorkflowSteps] = useState<string[]>([]);
@@ -1671,6 +1672,84 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
     }
   };
 
+  const correctArabicSpacingPageByPage = async () => {
+    if (!editedData.page_contents || editedData.page_contents.length === 0) {
+      toast({
+        title: "Aucune page disponible",
+        description: "Ce document n'a pas de pages individuelles pour la correction.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    setIsCorrectingSpacing(true);
+    const totalPages = editedData.page_contents.length;
+    let correctedCount = 0;
+    let errorCount = 0;
+    const correctedPages = [...editedData.page_contents];
+
+    try {
+      // Process pages sequentially to avoid rate limiting
+      for (let i = 0; i < editedData.page_contents.length; i++) {
+        const page = editedData.page_contents[i];
+        setCorrectionProgress({ current: i + 1, total: totalPages });
+
+        // Skip empty pages
+        if (!page.content || page.content.trim() === '') {
+          continue;
+        }
+
+        try {
+          console.log(`Correcting page ${page.pageNumber}/${totalPages}...`);
+          
+          const { data, error } = await supabase.functions.invoke('arabic-spacing-fixer', {
+            body: { text: page.content }
+          });
+
+          if (error) throw error;
+
+          if (data?.success && data.correctedText) {
+            correctedPages[i] = { ...page, content: data.correctedText };
+            correctedCount++;
+          }
+        } catch (pageError: any) {
+          console.warn(`Page ${page.pageNumber} correction failed:`, pageError);
+          errorCount++;
+          // Keep original content on error
+        }
+      }
+
+      // Update page_contents with corrected content
+      const consolidatedContent = correctedPages
+        .sort((a, b) => a.pageNumber - b.pageNumber)
+        .map(p => p.content)
+        .filter(c => c && c.trim() !== '')
+        .join('\n\n');
+
+      setEditedData(prev => ({
+        ...prev,
+        page_contents: correctedPages,
+        content: consolidatedContent
+      }));
+
+      toast({
+        title: "✅ Correction terminée",
+        description: `${correctedCount}/${totalPages} pages corrigées${errorCount > 0 ? ` (${errorCount} erreurs)` : ''}`,
+      });
+
+    } catch (error: any) {
+      console.error('Page-by-page correction error:', error);
+      toast({
+        title: "Erreur de correction",
+        description: error.message || "Impossible de corriger les pages",
+        variant: "destructive"
+      });
+    } finally {
+      setIsCorrectingSpacing(false);
+      setCorrectionProgress({ current: 0, total: 0 });
+    }
+  };
+
   const correctArabicSpacing = async () => {
     if (!editedData.content || editedData.language !== 'ar') {
       toast({
@@ -1681,49 +1760,56 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
       return;
     }
 
-    if (editedData.content.length > 12000) {
-      toast({
-        title: "Texte trop long",
-        description: "La correction IA est limitée à 12 000 caractères. Utilisez 'Nettoyer AR' pour les heuristiques seulement.",
-        variant: "destructive"
-      });
+    // Si le texte est court, correction directe
+    if (editedData.content.length <= 12000) {
+      setIsCorrectingSpacing(true);
+      try {
+        console.log('Calling AI spacing correction for content...');
+        
+        const { data, error } = await supabase.functions.invoke('arabic-spacing-fixer', {
+          body: { text: editedData.content }
+        });
+
+        if (error) throw error;
+
+        if (data?.success && data.correctedText) {
+          setEditedData(prev => ({
+            ...prev,
+            content: data.correctedText
+          }));
+          
+          toast({
+            title: "Correction réussie",
+            description: `Espacement corrigé (méthode: ${data.method || 'AI'})`,
+          });
+        } else {
+          throw new Error('Pas de texte corrigé retourné');
+        }
+      } catch (error: any) {
+        console.error('Arabic spacing correction error:', error);
+        toast({
+          title: "Erreur de correction",
+          description: error.message || "Impossible de corriger l'espacement",
+          variant: "destructive"
+        });
+      } finally {
+        setIsCorrectingSpacing(false);
+      }
       return;
     }
 
-    setIsCorrectingSpacing(true);
-    try {
-      console.log('Calling AI spacing correction for content...');
-      
-      const { data, error } = await supabase.functions.invoke('arabic-spacing-fixer', {
-        body: { text: editedData.content }
-      });
-
-      if (error) throw error;
-
-      if (data?.success && data.correctedText) {
-        setEditedData(prev => ({
-          ...prev,
-          content: data.correctedText
-        }));
-        
-        toast({
-          title: "Correction réussie",
-          description: `Espacement corrigé (méthode: ${data.method || 'AI'})`,
-          variant: "default"
-        });
-      } else {
-        throw new Error('Pas de texte corrigé retourné');
-      }
-    } catch (error: any) {
-      console.error('Arabic spacing correction error:', error);
-      toast({
-        title: "Erreur de correction",
-        description: error.message || "Impossible de corriger l'espacement",
-        variant: "destructive"
-      });
-    } finally {
-      setIsCorrectingSpacing(false);
+    // Texte long : utiliser la correction page par page si disponible
+    if (editedData.page_contents && editedData.page_contents.length > 0) {
+      await correctArabicSpacingPageByPage();
+      return;
     }
+
+    // Texte long sans pages : afficher un message explicatif
+    toast({
+      title: "Texte trop long",
+      description: "Ce document dépasse 12 000 caractères et n'a pas de pages individuelles. Utilisez 'Nettoyer AR' pour les corrections heuristiques.",
+      variant: "destructive"
+    });
   };
 
   return (
@@ -2035,14 +2121,20 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
               onClick={correctArabicSpacing} 
               disabled={isCorrectingSpacing || !editedData.content}
               variant="outline"
-              title={editedData.content.length > 12000 ? "Texte trop long (max 12 000 caractères) - cliquez pour voir le message détaillé" : "Corrige l'espacement arabe et les Chaddas avec l'IA"}
+              title={editedData.content.length > 12000 
+                ? `Texte long (${editedData.content.length.toLocaleString()} car.) - correction page par page` 
+                : "Corrige l'espacement arabe et les Chaddas avec l'IA"}
             >
               {isCorrectingSpacing ? (
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
               ) : (
                 <Brain className="mr-2 h-4 w-4" />
               )}
-              {isCorrectingSpacing ? 'Correction...' : '✨ Corriger AR'}
+              {isCorrectingSpacing 
+                ? (correctionProgress.total > 0 
+                    ? `${correctionProgress.current}/${correctionProgress.total}` 
+                    : 'Correction...')
+                : '✨ Corriger AR'}
             </Button>
           )}
 
