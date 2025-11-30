@@ -332,63 +332,6 @@ All colors MUST be HSL.
   display: none;
 }
 
-/* TipTap Editor Arabic/RTL Styles */
-.ProseMirror {
-  outline: none;
-}
-
-.ProseMirror[dir="rtl"] {
-  direction: rtl;
-  text-align: right;
-  font-family: 'Amiri', 'Noto Sans Arabic', serif;
-  font-feature-settings: "liga" 1, "calt" 1, "ccmp" 1, "locl" 1;
-  text-rendering: optimizeLegibility;
-  font-variant-ligatures: contextual;
-  line-height: 2;
-}
-
-.ProseMirror[dir="rtl"] h1,
-.ProseMirror[dir="rtl"] h2,
-.ProseMirror[dir="rtl"] h3 {
-  text-align: right;
-  font-family: 'Amiri', 'Noto Sans Arabic', serif;
-  font-weight: 700;
-}
-
-.ProseMirror[dir="rtl"] p {
-  text-align: right;
-  line-height: 2;
-  unicode-bidi: embed;
-}
-
-.ProseMirror[dir="rtl"] ul,
-.ProseMirror[dir="rtl"] ol {
-  padding-right: 1.5rem;
-  padding-left: 0;
-}
-
-.ProseMirror[dir="rtl"] blockquote {
-  border-right: 3px solid hsl(var(--border));
-  border-left: none;
-  padding-right: 1rem;
-  padding-left: 0;
-  margin-right: 0;
-}
-
-.ProseMirror[dir="ltr"] {
-  direction: ltr;
-  text-align: left;
-  font-family: 'Inter', 'Poppins', sans-serif;
-}
-
-.ProseMirror p.is-editor-empty:first-child::before {
-  color: hsl(var(--muted-foreground));
-  content: attr(data-placeholder);
-  float: left;
-  height: 0;
-  pointer-events: none;
-}
-
 .leaflet-popup-content-wrapper {
   border-radius: 8px;
   box-shadow: 0 2px 8px rgba(0,0,0,0.15);
