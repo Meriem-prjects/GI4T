@@ -147,15 +147,19 @@ export const sanitizeArabicText = (text: string | null | undefined): string => {
   // Step 4: Reorder diacritics
   sanitized = sanitized.replace(/([\u064B-\u0650\u0652])(\u0651)/g, '$2$1');
   
-  // Step 4.5: FIX CHADDA (Shadda ّ U+0651) SPACING ISSUES
-  // Pattern 1: Letter + space(s) + Chadda → Letter + Chadda (no space)
-  sanitized = sanitized.replace(/([\u0621-\u064A\u0647])\s+([\u0651])/g, '$1$2');
-  // Pattern 2: Chadda + space(s) → remove trailing space
-  sanitized = sanitized.replace(/([\u0651])\s+/g, '$1');
-  // Pattern 3: Orphaned Chadda at start of line/word → remove
-  sanitized = sanitized.replace(/^\s*\u0651\s*/gm, '');
-  sanitized = sanitized.replace(/\s\u0651\s/g, ' ');
-  // Pattern 4: Multiple Chaddas → single Chadda
+  // Step 4.5: FIX CHADDA (Shadda ّ U+0651) SPACING ISSUES - Enhanced patterns
+  // Pattern A: "حر ّية" → "حرّية" (lettre + espace + chadda + lettre → lettre + chadda + lettre)
+  sanitized = sanitized.replace(/([\u0621-\u064A\u0647])\s+(\u0651)([\u0621-\u064A\u0647])/g, '$1$2$3');
+  // Pattern B: Chadda orpheline en fin de mot/ligne → attacher au mot précédent
+  sanitized = sanitized.replace(/([\u0621-\u064A\u0647])\s+(\u0651)(\s|$)/g, '$1$2$3');
+  // Pattern C: Chadda au début suivie d'un mot → supprimer la chadda orpheline
+  sanitized = sanitized.replace(/^(\s*)\u0651\s*/gm, '$1');
+  sanitized = sanitized.replace(/(\s)\u0651(\s)/g, '$1');
+  // Pattern D: Plusieurs espaces autour de la chadda
+  sanitized = sanitized.replace(/\s+(\u0651)\s+/g, '$1');
+  // Pattern E: Lettre + space + Chadda (sans lettre suivante) → Lettre + Chadda
+  sanitized = sanitized.replace(/([\u0621-\u064A\u0647])\s+(\u0651)/g, '$1$2');
+  // Pattern F: Multiple Chaddas → single Chadda
   sanitized = sanitized.replace(/\u0651{2,}/g, '\u0651');
   
   // Step 5: DEGLUE PASS - Fix broken intra-word spaces
@@ -201,8 +205,18 @@ export const sanitizeArabicText = (text: string | null | undefined): string => {
   sanitized = sanitized.replace(/([\u0621-\u064A])\s+([\u0621-\u064A])\s+([\u0621-\u064A])\s+([\u0621-\u064A])/g, '$1$2$3$4');
   sanitized = sanitized.replace(/([\u0621-\u064A])\s+([\u0621-\u064A])\s+([\u0621-\u064A])/g, '$1$2$3');
   
-  // Step 6: Separate glued Arabic words
+  // Step 6: SEPARATE GLUED ARABIC WORDS - Enhanced with new patterns
   sanitized = separateGluedArabicWords(sanitized);
+  
+  // Step 6.5: Additional fused word patterns for common cases
+  // Pattern: ة (ta marbuta) + word → add space (إقامةجيرة → إقامة جيرة)
+  sanitized = sanitized.replace(/(ة)([\u0621-\u064A]{3,})/g, '$1 $2');
+  // Pattern: ء (hamza) + word (not article) → add space (إجراءحدودي → إجراء حدودي)
+  sanitized = sanitized.replace(/(ء)([^ال][\u0621-\u064A]{3,})/g, '$1 $2');
+  // Pattern: ر (ra) + long word → add space (آخرداخل → آخر داخل)
+  sanitized = sanitized.replace(/([\u0621-\u064A]ر)([\u0621-\u064A]{4,})/g, '$1 $2');
+  // Pattern: ق (qaf) + long word → add space
+  sanitized = sanitized.replace(/([\u0621-\u064A]ق)([\u0621-\u064A]{4,})/g, '$1 $2');
   
   // Step 7: Clean orphan diacritics at word boundaries
   sanitized = sanitized.replace(/\s+[\u064B-\u0652\u0670]+\s+/g, ' ');

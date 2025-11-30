@@ -67,8 +67,9 @@ RÈGLES STRICTES:
 3. Ne corrige PAS l'orthographe, la grammaire, ou toute autre chose
 4. Préserve la ponctuation et les nombres tels quels
 5. Réponds UNIQUEMENT avec le texte corrigé, sans explication
-6. Recolle TOUJOURS les signes diacritiques (Chadda ّ, Fatha َ, Damma ُ, etc.) à leur lettre - PAS D'ESPACE
+6. Recolle TOUJOURS les signes diacritiques (Chadda ّ, Fatha َ, Damma ُ, Kasra ِ, etc.) à leur lettre - PAS D'ESPACE AVANT NI APRÈS
 7. Normalise les variantes de "Hé" (ﮫ ﮪ ﮬ ﮭ) vers la forme standard (ه) en fin de mot
+8. Sépare les mots collés: ajoute des espaces entre différents mots qui se touchent (ةجيرة → ة جيرة, ءحدودي → ء حدودي)
 
 EXEMPLES:
 Entrée: "القضاءالإداريلسنة2007"
@@ -114,7 +115,31 @@ Entrée: "ّاﻹﻋﻼن اﻟﻌﺎﻟﻤﻲﻟﺤﻘﻮق"
 Sortie: "الإعلان العالمي لحقوق"
 
 Entrée: "ﻋﻦ ﻃﺮﯾﻖ ﺗﻨﻘﯿﺢ ا لفصل"
-Sortie: "عن طريق تنقيح الفصل"`
+Sortie: "عن طريق تنقيح الفصل"
+
+Entrée: "حر ّية التنقّل"
+Sortie: "حرّية التنقّل"
+
+Entrée: "إقامةجيرة"
+Sortie: "إقامة جيرة"
+
+Entrée: "إجراءحدودي"
+Sortie: "إجراء حدودي"
+
+Entrée: "آخرداخل نفس"
+Sortie: "آخر داخل نفس"
+
+Entrée: "لكل ّفرد"
+Sortie: "لكلّ فرد"
+
+Entrée: "والإداري ّ"
+Sortie: "والإداري"
+
+Entrée: "لحقوقالإنسان"
+Sortie: "لحقوق الإنسان"
+
+Entrée: "حر ّ ّية"
+Sortie: "حرّية"`
           },
           {
             role: 'user',
