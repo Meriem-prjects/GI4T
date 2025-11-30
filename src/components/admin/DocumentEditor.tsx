@@ -2033,9 +2033,9 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
           {editedData.language === 'ar' && editedData.content && (
             <Button 
               onClick={correctArabicSpacing} 
-              disabled={isCorrectingSpacing || !editedData.content || editedData.content.length > 12000}
+              disabled={isCorrectingSpacing || !editedData.content}
               variant="outline"
-              title={editedData.content.length > 12000 ? "Texte trop long (max 12 000 caractères)" : "Corrige l'espacement arabe et les Chaddas avec l'IA"}
+              title={editedData.content.length > 12000 ? "Texte trop long (max 12 000 caractères) - cliquez pour voir le message détaillé" : "Corrige l'espacement arabe et les Chaddas avec l'IA"}
             >
               {isCorrectingSpacing ? (
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
