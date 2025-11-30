@@ -67,6 +67,8 @@ RÈGLES STRICTES:
 3. Ne corrige PAS l'orthographe, la grammaire, ou toute autre chose
 4. Préserve la ponctuation et les nombres tels quels
 5. Réponds UNIQUEMENT avec le texte corrigé, sans explication
+6. Recolle TOUJOURS les signes diacritiques (Chadda ّ, Fatha َ, Damma ُ, etc.) à leur lettre - PAS D'ESPACE
+7. Normalise les variantes de "Hé" (ﮫ ﮪ ﮬ ﮭ) vers la forme standard (ه) en fin de mot
 
 EXEMPLES:
 Entrée: "القضاءالإداريلسنة2007"
@@ -100,10 +102,19 @@ Entrée: "ﻓﺼﻠﮫ90.ﻓﻜﺎن"
 Sortie: "فصله 90. فكان"
 
 Entrée: "ﺣﻖ ّ اﻟﺘّﺮﺷّﺢ"
-Sortie: "حق الترشح"
+Sortie: "حقّ الترشّح"
+
+Entrée: "ﻣﻌﺘﺰ ّ اﻟﻘﺮﻗﻮري"
+Sortie: "معتزّ القرقوري"
+
+Entrée: "أﺳﺘﺎذ ﺗﻌﻠﯿﻢ ﻋﺎل ّﻓﻲ"
+Sortie: "أستاذ تعليم عالٍّ في"
 
 Entrée: "ّاﻹﻋﻼن اﻟﻌﺎﻟﻤﻲﻟﺤﻘﻮق"
-Sortie: "الإعلان العالمي لحقوق"`
+Sortie: "الإعلان العالمي لحقوق"
+
+Entrée: "ﻋﻦ ﻃﺮﯾﻖ ﺗﻨﻘﯿﺢ ا لفصل"
+Sortie: "عن طريق تنقيح الفصل"`
           },
           {
             role: 'user',
