@@ -81,7 +81,13 @@ const presentationFormsMap: Record<number, string> = {
   0xFE93: 'ة', 0xFE94: 'ة',
   // Lam-Alef ligatures
   0xFEF5: 'لا', 0xFEF6: 'لا', 0xFEF7: 'لأ', 0xFEF8: 'لأ',
-  0xFEF9: 'لإ', 0xFEFA: 'لإ', 0xFEFB: 'لآ', 0xFEFC: 'لآ'
+  0xFEF9: 'لإ', 0xFEFA: 'لإ', 0xFEFB: 'لآ', 0xFEFC: 'لآ',
+  // Heh Goal/Doachashmee forms (U+FBAA-U+FBAD) - terminal Heh variations
+  0xFBAA: 'ه', 0xFBAB: 'ه', 0xFBAC: 'ه', 0xFBAD: 'ه',
+  // Yeh Barree forms (U+FBAE-U+FBAF)
+  0xFBAE: 'ي', 0xFBAF: 'ي',
+  // Alef Maksura variations
+  0xFBE8: 'ى', 0xFBE9: 'ى'
 };
 
 /**
@@ -91,7 +97,8 @@ function convertPresentationForms(text: string): string {
   let result = '';
   for (const char of text) {
     const code = char.charCodeAt(0);
-    if (code >= 0xFE70 && code <= 0xFEFF) {
+    // Extended range: FB50-FDFF (Arabic Presentation Forms-A) + FE70-FEFF (Forms-B)
+    if ((code >= 0xFB50 && code <= 0xFDFF) || (code >= 0xFE70 && code <= 0xFEFF)) {
       result += presentationFormsMap[code] || char;
     } else {
       result += char;
@@ -123,12 +130,14 @@ export const sanitizeArabicText = (text: string | null | undefined): string => {
     .replace(/[\u200B-\u200F]/g, '')
     .replace(/\u0640/g, '');
   
-  // Step 3: Remap non-standard characters
+  // Step 3: Remap non-standard characters including Heh Goal variants
   const charMap: Record<string, string> = {
     '\u06A9': '\u0643', '\u06AF': '\u0643', // Persian Kaf → Arabic Kaf
     '\u06CC': '\u064A', '\u06D2': '\u064A', // Persian Yeh → Arabic Yeh
     '\u06C1': '\u0647', '\u06BE': '\u0647', // Alternate Heh → Arabic Heh
     '\uFEEB': '\u0647', '\uFEEC': '\u0647', // Heh presentation forms
+    '\uFBAA': '\u0647', '\uFBAB': '\u0647', // Heh Goal isolated/final (ﮫ)
+    '\uFBAC': '\u0647', '\uFBAD': '\u0647', // Heh Goal initial/medial
   };
   
   for (const [from, to] of Object.entries(charMap)) {
@@ -137,6 +146,17 @@ export const sanitizeArabicText = (text: string | null | undefined): string => {
   
   // Step 4: Reorder diacritics
   sanitized = sanitized.replace(/([\u064B-\u0650\u0652])(\u0651)/g, '$2$1');
+  
+  // Step 4.5: FIX CHADDA (Shadda ّ U+0651) SPACING ISSUES
+  // Pattern 1: Letter + space(s) + Chadda → Letter + Chadda (no space)
+  sanitized = sanitized.replace(/([\u0621-\u064A\u0647])\s+([\u0651])/g, '$1$2');
+  // Pattern 2: Chadda + space(s) → remove trailing space
+  sanitized = sanitized.replace(/([\u0651])\s+/g, '$1');
+  // Pattern 3: Orphaned Chadda at start of line/word → remove
+  sanitized = sanitized.replace(/^\s*\u0651\s*/gm, '');
+  sanitized = sanitized.replace(/\s\u0651\s/g, ' ');
+  // Pattern 4: Multiple Chaddas → single Chadda
+  sanitized = sanitized.replace(/\u0651{2,}/g, '\u0651');
   
   // Step 5: DEGLUE PASS - Fix broken intra-word spaces
   // Join broken "ا ل" back to "ال"
