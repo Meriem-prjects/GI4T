@@ -185,6 +185,15 @@ export const sanitizeArabicText = (text: string | null | undefined): string => {
   // Fix RTL parentheses: )text( → (text)
   sanitized = sanitized.replace(/\)([^()]+)\(/g, '($1)');
   
+  // Pattern G: Words glued with "في" (e.g., شخصفيالتّنقّل → شخص في التّنقّل)
+  sanitized = sanitized.replace(/([\u0621-\u064A]{3,})(في)([\u0621-\u064A]{3,})/g, '$1 $2 $3');
+  
+  // Pattern H: Missing space before opening quotation mark (e.g., بأنّها"الحق → بأنّها "الحق)
+  sanitized = sanitized.replace(/([\u0621-\u064A\u064B-\u0652])(["«])([\u0621-\u064A])/g, '$1 $2$3');
+  
+  // Pattern I: Words ending with ّها or ّه followed immediately by another word
+  sanitized = sanitized.replace(/([\u0651][هھ]ا?)([\u0621-\u064A]{3,})/g, '$1 $2');
+  
   // Step 5: DEGLUE PASS - Fix broken intra-word spaces
   // Join broken "ا ل" back to "ال"
   sanitized = sanitized.replace(/ا\s+ل/g, 'ال');

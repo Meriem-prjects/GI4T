@@ -441,30 +441,34 @@ serve(async (req) => {
              extractionSuccess = false;
            }
            
-           // Create page contents from extracted text (sanitize each page)
-           pageContents = (readerData.texts || []).map((text: string, index: number) => {
-             let pageContent = language === 'ar' ? sanitizeArabicText(text.trim()) : text.trim();
-             
-             // Apply AI correction to each page for Arabic texts
-             if (language === 'ar' && pageContent.length > 0 && pageContent.length <= 12000) {
-               try {
-                 supabaseAdmin.functions.invoke('arabic-spacing-fixer', {
-                   body: { text: pageContent }
-                 }).then(({ data }) => {
+           // Create page contents from extracted text (sanitize each page with proper async/await)
+           pageContents = await Promise.all(
+             (readerData.texts || []).map(async (text: string, index: number) => {
+               let pageContent = language === 'ar' ? sanitizeArabicText(text.trim()) : text.trim();
+               
+               // Apply AI correction to each page for Arabic texts
+               if (language === 'ar' && pageContent.length > 0 && pageContent.length <= 12000) {
+                 try {
+                   const { data } = await supabaseAdmin.functions.invoke('arabic-spacing-fixer', {
+                     body: { text: pageContent }
+                   });
                    if (data?.success && data.correctedText) {
                      pageContent = data.correctedText;
+                     console.log(`✓ Page ${index + 1} AI-corrected`);
                    }
-                 }).catch(() => {});
-               } catch {}
-             }
-             
-             return {
-               pageNumber: index + 1,
-               content: pageContent,
-               confidence: 1.0,
-               language: language
-             };
-           });
+                 } catch (err) {
+                   console.warn(`Page ${index + 1} AI correction failed:`, err);
+                 }
+               }
+               
+               return {
+                 pageNumber: index + 1,
+                 content: pageContent,
+                 confidence: 1.0,
+                 language: language
+               };
+             })
+           );
           
           processedPages = readerData.numPages || 1;
           
