@@ -152,11 +152,13 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
   const [translatingPages, setTranslatingPages] = useState<Set<number>>(new Set());
   const [workflowStep, setWorkflowStep] = useState<string | null>(null);
   const [completedWorkflowSteps, setCompletedWorkflowSteps] = useState<string[]>([]);
+  const hasShownSpacingWarning = useRef(false);
 
   useEffect(() => {
     setEditedData(documentData);
     setTranslatedContent(documentData.translated_content || '');
     setHasChanges(false);
+    hasShownSpacingWarning.current = false;
     // Set default tab based on document language - force refresh
     const docLang = documentData.language || 'fr';
     setCurrentLanguage(docLang === 'ar' ? 'ar' : 'fr');
@@ -172,6 +174,26 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
     
     // Note: We no longer normalize Arabic fields on load to preserve original spacing and syntax
     // Normalization will only happen during save to ensure data consistency in database
+  }, [documentData]);
+
+  // Auto-detect Arabic spacing issues
+  useEffect(() => {
+    if (editedData.language === 'ar' && editedData.content && !hasShownSpacingWarning.current) {
+      const hasSeparatedDiacritics = /[\u0621-\u064A]\s+[\u064B-\u0652]/.test(editedData.content);
+      const hasGluedWords = /[\u0621-\u064A]{8,}/.test(editedData.content);
+      
+      if (hasSeparatedDiacritics || hasGluedWords) {
+        hasShownSpacingWarning.current = true;
+        toast({
+          title: "⚠️ Problèmes d'espacement détectés",
+          description: "Cliquez sur '✨ Corriger AR' pour améliorer le texte arabe",
+          duration: 8000,
+        });
+      }
+    }
+  }, [editedData.content, editedData.language, toast]);
+
+  useEffect(() => {
     
     loadCategories();
     loadDocumentTypes();
