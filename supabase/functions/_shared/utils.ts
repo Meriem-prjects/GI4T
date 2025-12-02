@@ -167,32 +167,41 @@ export const sanitizeArabicText = (text: string | null | undefined): string => {
   
   // Pattern A: Letter + space(s) + Chadda + Letter
   sanitized = sanitized.replace(new RegExp(`([\\u0621-\\u064A\\u0647])${SPACE_CLASS}+(\\u0651)([\\u0621-\\u064A\\u0647])`, 'g'), '$1$2$3');
+  // === PRIORITY OCR-SPECIFIC CHADDA PATTERNS (must be first) ===
+  
+  // OCR Pattern 1: "الحق ّ النّقابي" → "الحقّ النّقابي" (word + space(s) + Chadda + space(s) + word)
+  // Attach Chadda to preceding word, keep space before next word
+  sanitized = sanitized.replace(/([\u0621-\u064A]+)\s+(\u0651)\s+([\u0621-\u064A]+)/g, '$1$2 $3');
+  
+  // OCR Pattern 2: "حر ّية" → "حرّية" (letter + space(s) + Chadda + letter, no space after)
+  sanitized = sanitized.replace(/([\u0621-\u064A])\s+(\u0651)([\u0621-\u064A])/g, '$1$2$3');
+  
+  // OCR Pattern 3: Fallback - Chadda with space before it, attach to previous letter
+  sanitized = sanitized.replace(/([\u0621-\u064A])\s+(\u0651)/g, '$1$2');
+  
+  // === GENERAL CHADDA PATTERNS ===
+  
   // Pattern B: Letter + space(s) + Chadda at end → attach to letter
   sanitized = sanitized.replace(new RegExp(`([\\u0621-\\u064A\\u0647])${SPACE_CLASS}+(\\u0651)(\\s|$)`, 'g'), '$1$2$3');
   // Pattern C: Orphan Chadda at start → remove
   sanitized = sanitized.replace(/^(\s*)\u0651\s*/gm, '$1');
   sanitized = sanitized.replace(/(\s)\u0651(\s)/g, '$1');
-  // Pattern D: Multiple spaces around Chadda
-  sanitized = sanitized.replace(/\s+(\u0651)\s+/g, '$1');
   // Pattern E: Letter + any space + Chadda (no following letter) → Letter + Chadda
   sanitized = sanitized.replace(new RegExp(`([\\u0621-\\u064A\\u0647])${SPACE_CLASS}+(\\u0651)`, 'g'), '$1$2');
   // Pattern F: Multiple Chaddas → single Chadda
   sanitized = sanitized.replace(/\u0651{2,}/g, '\u0651');
   
-  // === NEW OCR-SPECIFIC PATTERNS (Option A Enhancement) ===
+  // === ADDITIONAL OCR-SPECIFIC PATTERNS ===
   
-  // OCR Pattern 1: "لكل ّفرد" → "لكلّ فرد" (word + space + Chadda + word → attach Chadda to first word, keep space)
-  sanitized = sanitized.replace(/([\u0621-\u064A]+)\s+(\u0651)([\u0621-\u064A]+)/g, '$1$2 $3');
-  
-  // OCR Pattern 2: Final Heh variants normalization (additional pass for OCR-specific forms)
+  // OCR Pattern 4: Final Heh variants normalization
   const finalHehVariants = /[\uFBAA-\uFBAD\uFEE9-\uFEEC](?=\s|$)/g;
   sanitized = sanitized.replace(finalHehVariants, 'ه');
   
-  // OCR Pattern 3: Numbers glued to words - additional pass (في10ديسمبر → في 10 ديسمبر)
+  // OCR Pattern 5: Numbers glued to words (في10ديسمبر → في 10 ديسمبر)
   sanitized = sanitized.replace(/([\u0621-\u064A])(\d)/g, '$1 $2');
   sanitized = sanitized.replace(/(\d)([\u0621-\u064A])/g, '$1 $2');
   
-  // OCR Pattern 4: Orphan Chadda at word start (additional cleanup)
+  // OCR Pattern 6: Orphan Chadda at word start (cleanup any remaining cases)
   sanitized = sanitized.replace(/(\s)\u0651([\u0621-\u064A])/g, '$1$2');
   
   // Special case: عال ّ → عالٍ (defective noun pattern in Arabic)
