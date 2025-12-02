@@ -1203,55 +1203,10 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
 
         setHasChanges(true);
         
-        // Collect Arabic data BEFORE the timeout to pass directly to correctArabicSpacing
-        // This avoids React closure issues where the function would read stale state
-        const arabicDataForCorrection: Partial<DocumentData> = {
-          language: editedData.language,
-          title_ar: analysis.translatedTitle ? normalizeArabicForDisplay(analysis.translatedTitle) : editedData.title_ar,
-          subtitle_ar: analysis.translatedSubtitle ? normalizeArabicForDisplay(analysis.translatedSubtitle) : editedData.subtitle_ar,
-          summary_ar: analysis.translatedSummary ? normalizeArabicForDisplay(analysis.translatedSummary) : editedData.summary_ar,
-          author_ar: analysis.metadataTranslated?.author ? normalizeArabicForDisplay(analysis.metadataTranslated.author) : editedData.author_ar,
-          court_ar: analysis.metadataTranslated?.court ? normalizeArabicForDisplay(analysis.metadataTranslated.court) : editedData.court_ar,
-          plaintiff_ar: analysis.metadataTranslated?.plaintiff ? normalizeArabicForDisplay(analysis.metadataTranslated.plaintiff) : editedData.plaintiff_ar,
-          defendant_ar: analysis.metadataTranslated?.defendant ? normalizeArabicForDisplay(analysis.metadataTranslated.defendant) : editedData.defendant_ar,
-          court_level_ar: analysis.metadataTranslated?.court_level ? normalizeArabicForDisplay(analysis.metadataTranslated.court_level) : editedData.court_level_ar,
-          bibliography_ar: analysis.metadataTranslated?.bibliography ? normalizeArabicForDisplay(analysis.metadataTranslated.bibliography) : editedData.bibliography_ar,
-          legal_references_ar: analysis.metadataTranslated?.legal_references || editedData.legal_references_ar,
-          keywords_ar: (() => {
-            const existing = (editedData.keywords_ar || []).map(k => normalizeArabicForDisplay(k.trim())).filter(k => k && /[\u0600-\u06FF]/.test(k));
-            const rawNewKeys = parseKeywordsArray(analysis.translatedKeywords || []);
-            const newKeys = rawNewKeys.map(k => normalizeArabicForDisplay(k.trim())).filter(k => k && /[\u0600-\u06FF]/.test(k));
-            const combined = [...existing, ...newKeys];
-            const seen = new Set();
-            return combined.filter(k => {
-              const normalized = k.toLowerCase().trim().replace(/\s+/g, ' ');
-              if (seen.has(normalized)) return false;
-              seen.add(normalized);
-              return true;
-            });
-          })(),
-        };
-        
-        console.log('🔧 Arabic data collected for correction:', {
-          title_ar: arabicDataForCorrection.title_ar?.substring(0, 50),
-          summary_ar: arabicDataForCorrection.summary_ar?.substring(0, 50),
-          keywords_ar: arabicDataForCorrection.keywords_ar?.slice(0, 3),
-        });
-        
         toast({
           title: "Analyse IA terminée (mode rapide)",
-          description: `Métadonnées extraites. Correction arabe automatique en cours...`,
+          description: `Métadonnées extraites et classifications automatiques appliquées. Pour une traduction intégrale du contenu complet, utilisez l'analyse complète.`,
         });
-        
-        // Auto-correct Arabic fields after AI analysis - pass data directly to avoid closure issues
-        setTimeout(async () => {
-          console.log('🔧 Running automatic Arabic correction with direct data...');
-          await correctArabicSpacing(true, arabicDataForCorrection);
-          toast({
-            title: "✅ Correction arabe terminée",
-            description: "Tous les champs arabes ont été corrigés automatiquement.",
-          });
-        }, 100);
       } else {
         throw new Error(data.error || 'Analyse échouée');
       }
@@ -1818,160 +1773,136 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
     }
   };
 
-  const correctArabicSpacing = async (silent: boolean = false, dataOverride?: Partial<DocumentData>) => {
-    // Use dataOverride if provided (to avoid React closure issues), otherwise use state
-    const dataToCorrect = dataOverride ? { ...editedData, ...dataOverride } : editedData;
-    
-    // Allow correction for Arabic documents OR documents with Arabic fields (after AI analysis)
-    const hasArabicFields = dataToCorrect.title_ar?.trim() || 
-                           dataToCorrect.subtitle_ar?.trim() || 
-                           dataToCorrect.summary_ar?.trim() ||
-                           dataToCorrect.keywords_ar?.length;
-    
-    console.log('🔧 correctArabicSpacing called with:', {
-      silent,
-      hasDataOverride: !!dataOverride,
-      hasArabicFields,
-      title_ar: dataToCorrect.title_ar?.substring(0, 50),
-      summary_ar: dataToCorrect.summary_ar?.substring(0, 50),
-    });
-    
-    if (dataToCorrect.language !== 'ar' && !hasArabicFields) {
-      if (!silent) {
-        toast({
-          title: "Erreur",
-          description: "Le document doit contenir des champs arabes",
-          variant: "destructive"
-        });
-      }
+  const correctArabicSpacing = async () => {
+    if (editedData.language !== 'ar') {
+      toast({
+        title: "Erreur",
+        description: "Le document doit être en arabe",
+        variant: "destructive"
+      });
       return;
     }
 
     setIsCorrectingSpacing(true);
     
-    // List ALL Arabic text fields to correct - use dataToCorrect instead of editedData
-    const textFieldsToCorrect: Record<string, string | undefined> = {
-      title_ar: dataToCorrect.title_ar,
-      subtitle_ar: dataToCorrect.subtitle_ar,
-      summary_ar: dataToCorrect.summary_ar,
-      bibliography_ar: dataToCorrect.bibliography_ar,
-      author_ar: dataToCorrect.author_ar,
-      court_ar: dataToCorrect.court_ar,
-      plaintiff_ar: dataToCorrect.plaintiff_ar,
-      defendant_ar: dataToCorrect.defendant_ar,
-      court_level_ar: dataToCorrect.court_level_ar,
-    };
+    // Count fields to correct
+    const fieldsToCorrect = [
+      editedData.title_ar?.trim() ? 'title_ar' : null,
+      editedData.subtitle_ar?.trim() ? 'subtitle_ar' : null,
+      editedData.summary_ar?.trim() ? 'summary_ar' : null,
+      editedData.bibliography_ar?.trim() ? 'bibliography_ar' : null,
+      editedData.content?.trim() ? 'content' : null,
+    ].filter(Boolean);
     
-    // Count non-empty fields
-    const nonEmptyFields = Object.entries(textFieldsToCorrect).filter(([_, v]) => v?.trim()).length;
-    const keywordsToCorrect = dataToCorrect.keywords_ar || [];
-    const hasKeywords = keywordsToCorrect.length > 0;
-    const hasContent = dataToCorrect.language === 'ar' && dataToCorrect.content?.trim();
-    const totalFields = nonEmptyFields + (hasKeywords ? 1 : 0) + (hasContent ? 1 : 0);
-    
-    console.log('🔧 Fields to correct:', { nonEmptyFields, hasKeywords, hasContent, totalFields });
-    
-    if (totalFields === 0) {
-      setIsCorrectingSpacing(false);
-      return;
-    }
-    
+    const totalFields = fieldsToCorrect.length;
     let currentField = 0;
+    
     setCorrectionProgress({ current: 0, total: totalFields });
 
     try {
       const correctedFields: Record<string, string | null> = {};
 
-      // 1. Correct all text metadata fields in parallel
-      const metadataPromises = Object.entries(textFieldsToCorrect)
-        .filter(([_, value]) => value?.trim())
-        .map(async ([fieldName, value]) => {
-          const corrected = await correctSingleArabicField(value!);
-          correctedFields[fieldName] = corrected;
-          currentField++;
-          setCorrectionProgress({ current: currentField, total: totalFields });
-        });
-
-      await Promise.all(metadataPromises);
-
-      // 2. Correct Arabic keywords one by one
-      let correctedKeywords: string[] = [];
-      if (keywordsToCorrect.length > 0) {
-        const keywordPromises = keywordsToCorrect.map(keyword => 
-          correctSingleArabicField(keyword)
+      // Correct metadata fields in parallel
+      const metadataPromises: Promise<void>[] = [];
+      
+      if (editedData.title_ar?.trim()) {
+        metadataPromises.push(
+          correctSingleArabicField(editedData.title_ar).then(result => {
+            correctedFields.title_ar = result;
+            currentField++;
+            setCorrectionProgress({ current: currentField, total: totalFields });
+          })
         );
-        const results = await Promise.all(keywordPromises);
-        correctedKeywords = results.filter((k): k is string => k !== null && k.trim() !== '');
-        currentField++;
-        setCorrectionProgress({ current: currentField, total: totalFields });
+      }
+      
+      if (editedData.subtitle_ar?.trim()) {
+        metadataPromises.push(
+          correctSingleArabicField(editedData.subtitle_ar).then(result => {
+            correctedFields.subtitle_ar = result;
+            currentField++;
+            setCorrectionProgress({ current: currentField, total: totalFields });
+          })
+        );
+      }
+      
+      if (editedData.summary_ar?.trim()) {
+        metadataPromises.push(
+          correctSingleArabicField(editedData.summary_ar).then(result => {
+            correctedFields.summary_ar = result;
+            currentField++;
+            setCorrectionProgress({ current: currentField, total: totalFields });
+          })
+        );
+      }
+      
+      if (editedData.bibliography_ar?.trim()) {
+        metadataPromises.push(
+          correctSingleArabicField(editedData.bibliography_ar).then(result => {
+            correctedFields.bibliography_ar = result;
+            currentField++;
+            setCorrectionProgress({ current: currentField, total: totalFields });
+          })
+        );
       }
 
-      // 3. Correct content (if Arabic document)
-      const contentToCorrect = dataToCorrect.content;
-      if (dataToCorrect.language === 'ar' && contentToCorrect?.trim()) {
-        if (contentToCorrect.length <= 12000) {
+      // Wait for all metadata corrections
+      await Promise.all(metadataPromises);
+
+      // Correct content
+      if (editedData.content?.trim()) {
+        if (editedData.content.length <= 12000) {
           // Short content: direct correction
-          const correctedContent = await correctSingleArabicField(contentToCorrect);
+          const correctedContent = await correctSingleArabicField(editedData.content);
           correctedFields.content = correctedContent;
           currentField++;
           setCorrectionProgress({ current: currentField, total: totalFields });
-        } else if (dataToCorrect.page_contents && dataToCorrect.page_contents.length > 0) {
+        } else if (editedData.page_contents && editedData.page_contents.length > 0) {
           // Long content with pages: page-by-page correction
           setIsCorrectingSpacing(false); // Will be set by correctArabicSpacingPageByPage
           
-          // Apply metadata and keyword corrections first
-          setEditedData(prev => ({
-            ...prev,
-            ...correctedFields,
-            keywords_ar: correctedKeywords.length > 0 ? correctedKeywords : prev.keywords_ar
-          }));
+          // Apply metadata corrections first
+          if (Object.keys(correctedFields).length > 0) {
+            setEditedData(prev => ({
+              ...prev,
+              ...correctedFields
+            }));
+          }
           
           await correctArabicSpacingPageByPage();
           
-          if (!silent) {
-            toast({
-              title: "✅ Correction réussie",
-              description: `Métadonnées, mots-clés et contenu (page par page) corrigés`,
-            });
-          }
+          toast({
+            title: "✅ Correction réussie",
+            description: `Métadonnées et contenu (page par page) corrigés`,
+          });
           return;
         } else {
           // Long content without pages
-          if (!silent) {
-            toast({
-              title: "⚠️ Contenu trop long",
-              description: "Le contenu dépasse 12 000 caractères sans pages. Seules les métadonnées ont été corrigées.",
-            });
-          }
+          toast({
+            title: "⚠️ Contenu trop long",
+            description: "Le contenu dépasse 12 000 caractères sans pages. Seules les métadonnées ont été corrigées.",
+          });
         }
       }
 
-      // 4. Apply all corrections
+      // Apply all corrections
       setEditedData(prev => ({
         ...prev,
-        ...correctedFields,
-        keywords_ar: correctedKeywords.length > 0 ? correctedKeywords : prev.keywords_ar
+        ...correctedFields
       }));
 
-      const correctedCount = Object.keys(correctedFields).filter(k => correctedFields[k]).length + 
-                             (correctedKeywords.length > 0 ? 1 : 0);
-      
-      if (!silent) {
-        toast({
-          title: "✅ Correction réussie",
-          description: `${correctedCount} champ(s) corrigé(s) avec l'IA`,
-        });
-      }
+      const correctedCount = Object.keys(correctedFields).filter(k => correctedFields[k]).length;
+      toast({
+        title: "✅ Correction réussie",
+        description: `${correctedCount} champ(s) corrigé(s): ${Object.keys(correctedFields).join(', ')}`,
+      });
 
     } catch (error: any) {
       console.error('Arabic spacing correction error:', error);
-      if (!silent) {
-        toast({
-          title: "Erreur de correction",
-          description: error.message || "Impossible de corriger l'espacement",
-          variant: "destructive"
-        });
-      }
+      toast({
+        title: "Erreur de correction",
+        description: error.message || "Impossible de corriger l'espacement",
+        variant: "destructive"
+      });
     } finally {
       setIsCorrectingSpacing(false);
       setCorrectionProgress({ current: 0, total: 0 });
@@ -2284,7 +2215,7 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
           {/* Button to correct Arabic spacing with AI */}
           {editedData.language === 'ar' && editedData.content && (
             <Button 
-              onClick={() => correctArabicSpacing(false)} 
+              onClick={correctArabicSpacing} 
               disabled={isCorrectingSpacing || !editedData.content}
               variant="outline"
               title={editedData.content.length > 12000 
