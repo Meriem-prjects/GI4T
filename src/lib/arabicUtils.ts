@@ -281,15 +281,8 @@ export const sanitizeArabicTextFrontend = (text: string | null | undefined): str
   sanitized = sanitized.replace(/([\u0621-\u064A])\s+([\u0621-\u064A])\s+([\u0621-\u064A])\s+([\u0621-\u064A])/g, '$1$2$3$4');
   sanitized = sanitized.replace(/([\u0621-\u064A])\s+([\u0621-\u064A])\s+([\u0621-\u064A])/g, '$1$2$3');
   
-  // Step 6: SEPARATE GLUED ARABIC WORDS
-  sanitized = separateGluedArabicWordsFrontend(sanitized);
-  
-  // Step 6.5: Additional fused word patterns
-  sanitized = sanitized.replace(/(ة)([\u0621-\u064A]{3,})/g, '$1 $2');
-  sanitized = sanitized.replace(/(ء)([^ال][\u0621-\u064A]{3,})/g, '$1 $2');
-  sanitized = sanitized.replace(/([\u0621-\u064A]ر)([\u0621-\u064A]{4,})/g, '$1 $2');
-  sanitized = sanitized.replace(/([\u0621-\u064A]ق)([\u0621-\u064A]{4,})/g, '$1 $2');
-  
+  // NOTE: Step 6 (separateGluedArabicWordsFrontend) removed - it was breaking correctly formatted Arabic text
+  // The backend OCR uses separation for raw OCR output, but frontend should NOT re-apply it on clean text
   // Step 7: Clean orphan diacritics at word boundaries
   sanitized = sanitized.replace(/\s+[\u064B-\u0652\u0670]+\s+/g, ' ');
   
