@@ -179,6 +179,22 @@ export const sanitizeArabicText = (text: string | null | undefined): string => {
   // Pattern F: Multiple Chaddas → single Chadda
   sanitized = sanitized.replace(/\u0651{2,}/g, '\u0651');
   
+  // === NEW OCR-SPECIFIC PATTERNS (Option A Enhancement) ===
+  
+  // OCR Pattern 1: "لكل ّفرد" → "لكلّ فرد" (word + space + Chadda + word → attach Chadda to first word, keep space)
+  sanitized = sanitized.replace(/([\u0621-\u064A]+)\s+(\u0651)([\u0621-\u064A]+)/g, '$1$2 $3');
+  
+  // OCR Pattern 2: Final Heh variants normalization (additional pass for OCR-specific forms)
+  const finalHehVariants = /[\uFBAA-\uFBAD\uFEE9-\uFEEC](?=\s|$)/g;
+  sanitized = sanitized.replace(finalHehVariants, 'ه');
+  
+  // OCR Pattern 3: Numbers glued to words - additional pass (في10ديسمبر → في 10 ديسمبر)
+  sanitized = sanitized.replace(/([\u0621-\u064A])(\d)/g, '$1 $2');
+  sanitized = sanitized.replace(/(\d)([\u0621-\u064A])/g, '$1 $2');
+  
+  // OCR Pattern 4: Orphan Chadda at word start (additional cleanup)
+  sanitized = sanitized.replace(/(\s)\u0651([\u0621-\u064A])/g, '$1$2');
+  
   // Special case: عال ّ → عالٍ (defective noun pattern in Arabic)
   sanitized = sanitized.replace(/عال[\s]*ّ/g, 'عالٍ');
   
