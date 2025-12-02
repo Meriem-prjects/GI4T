@@ -178,12 +178,6 @@ export const sanitizeArabicText = (text: string | null | undefined): string => {
     sanitized = sanitized.replace(new RegExp(from, 'g'), to);
   }
   
-  // Step 3.5: FORCE NORMALIZE ALL HEH VARIANTS - Single pass regex
-  // This catches ANY remaining Heh-like characters that charMap or NFKC might have missed
-  // Critical for Ae (U+06D5) which NEVER connects visually
-  const ALL_HEH_VARIANTS = /[\uFEE9\uFEEA\uFEEB\uFEEC\u06D5\u06C0\u06C1\u06C2\u06BE\uFBAA\uFBAB\uFBAC\uFBAD\uFBA4\uFBA5\uFBA6\uFBA7\uFBA8\uFBA9]/g;
-  sanitized = sanitized.replace(ALL_HEH_VARIANTS, '\u0647');
-  
   // Step 4: Reorder diacritics
   sanitized = sanitized.replace(/([\u064B-\u0650\u0652])(\u0651)/g, '$2$1');
   
