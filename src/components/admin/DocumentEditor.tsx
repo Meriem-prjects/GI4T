@@ -1247,7 +1247,7 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
           subtitle_ar: editedData.subtitle_ar?.trim() ? normalizeArabicForDisplay(editedData.subtitle_ar.trim()) : null,
           summary: editedData.summary?.trim() || null,
           summary_ar: editedData.summary_ar?.trim() ? normalizeArabicForDisplay(editedData.summary_ar.trim()) : null,
-          content: editedData.content || '', // No longer apply normalizeArabicText to preserve correct Arabic spacing
+          content: editedData.language === 'ar' && editedData.content ? normalizeArabicText(editedData.content) : editedData.content || '',
           translated_content: translatedContent?.trim() || null,
           keywords: Array.isArray(editedData.keywords) ? editedData.keywords.filter(k => k && k.trim()) : [],
           keywords_ar: Array.isArray(editedData.keywords_ar) ? editedData.keywords_ar.filter(k => k && k.trim()).map(k => normalizeArabicForDisplay(k)) : [],
@@ -1619,7 +1619,7 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
         ...editedData,
         title_ar: editedData.title_ar ? normalizeArabicForDisplay(editedData.title_ar) : editedData.title_ar,
         subtitle_ar: editedData.subtitle_ar ? normalizeArabicForDisplay(editedData.subtitle_ar) : editedData.subtitle_ar,
-        content: editedData.content, // No longer apply normalizeArabicText to preserve correct Arabic spacing
+        content: editedData.language === 'ar' && editedData.content ? normalizeArabicText(editedData.content) : editedData.content,
         textual_metadata: editedData.language === 'ar' && editedData.textual_metadata ? normalizeArabicForDisplay(editedData.textual_metadata) : editedData.textual_metadata,
         summary_ar: editedData.summary_ar ? normalizeArabicForDisplay(editedData.summary_ar) : editedData.summary_ar,
         keywords_ar: editedData.keywords_ar?.map(k => normalizeArabicForDisplay(k)),

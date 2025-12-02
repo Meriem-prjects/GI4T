@@ -168,13 +168,11 @@ export const normalizeArabicText = (text: string): string => {
   normalized = normalized.replace(/([\u0621-\u064A])\s+([\u0621-\u064A])\s+([\u0621-\u064A])\s+([\u0621-\u064A])/g, '$1$2$3$4');
   normalized = normalized.replace(/([\u0621-\u064A])\s+([\u0621-\u064A])\s+([\u0621-\u064A])/g, '$1$2$3');
   
-  // Step 6: DISABLED - separateGluedArabicWords was breaking correctly formed words
-  // The function was adding unwanted spaces inside words like "تعليم عالي" → "تع ليم ع ا لي"
-  // Text is now preserved as-is from the editor since OCR + heuristics already handle it correctly
-  // const hasStructure = normalized.length > 80 || /[\n،:؛.!?]/.test(normalized);
-  // if (hasStructure) {
-  //   normalized = separateGluedArabicWords(normalized);
-  // }
+  // Step 6: Separate glued Arabic words ONLY for long text or text with structure
+  const hasStructure = normalized.length > 80 || /[\n،:؛.!?]/.test(normalized);
+  if (hasStructure) {
+    normalized = separateGluedArabicWords(normalized);
+  }
   
   // Step 7: Clean orphan diacritics at word boundaries
   normalized = normalized.replace(/\s+[\u064B-\u0652\u0670]+\s+/g, ' ');
