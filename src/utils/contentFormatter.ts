@@ -7,9 +7,15 @@ import { normalizeArabicText, isArabicText } from '@/lib/arabicUtils';
 export const renderFormattedContent = (content: string): string => {
   if (!content) return '';
   
+  // Apply Arabic normalization if content contains Arabic text
+  // This fixes spacing issues like "ا لحقّ" -> "الحقّ"
+  let processedContent = content;
+  if (isArabicText(content)) {
+    processedContent = normalizeArabicText(content);
+  }
+  
   // Split content into lines to process line-by-line
-  // Note: Content is already normalized by the editor, so we don't normalize again
-  const lines = content.split('\n');
+  const lines = processedContent.split('\n');
   
   const processedLines = lines.map(line => {
     // Process headings (must be at start of line)
