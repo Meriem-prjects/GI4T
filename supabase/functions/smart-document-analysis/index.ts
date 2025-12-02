@@ -59,6 +59,39 @@ function extractContentWithBibliography(content: string, isAnalysis: boolean, li
   return content.slice(0, limit);
 }
 
+// Helper function to call arabic-spacing-fixer for AI-powered Arabic correction
+async function correctArabicFieldWithAI(text: string | null | undefined): Promise<string> {
+  if (!text || text.trim() === '') return '';
+  
+  // Only call AI for texts under the limit (12000 chars)
+  if (text.length > 12000) {
+    console.log(`⚠️ Text too long for AI correction (${text.length} chars), using heuristic`);
+    return sanitizeArabicText(text);
+  }
+  
+  try {
+    const response = await fetch(`${supabaseUrl}/functions/v1/arabic-spacing-fixer`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${supabaseKey}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ text })
+    });
+    
+    if (response.ok) {
+      const data = await response.json();
+      return data.correctedText || sanitizeArabicText(text);
+    }
+    console.warn('Arabic spacing fixer returned non-OK status:', response.status);
+  } catch (error) {
+    console.error('Arabic correction API error:', error);
+  }
+  
+  // Fallback to heuristic if AI fails
+  return sanitizeArabicText(text);
+}
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
@@ -555,41 +588,62 @@ ${contentForAI}${contentTruncated ? '\n\n[Note: Contenu tronqué pour analyse ra
     console.log('Analysis completed successfully');
     console.log('Suggestion matching results:', suggestionIds);
 
-    // Sanitize Arabic text in analysis results if language is Arabic
+    // Apply AI-powered Arabic correction to key metadata fields
+    console.log('🔤 Applying AI-powered Arabic correction to metadata...');
+    
+    // Correct Arabic fields when source is Arabic
     if (currentLanguage === 'ar' || analysisResult.language === 'ar') {
-      analysisResult.title = sanitizeArabicText(analysisResult.title);
-      analysisResult.subtitle = analysisResult.subtitle ? sanitizeArabicText(analysisResult.subtitle) : analysisResult.subtitle;
-      analysisResult.summary = sanitizeArabicText(analysisResult.summary);
+      // Use AI for key fields (title, subtitle, summary, bibliography)
+      const [correctedTitle, correctedSubtitle, correctedSummary, correctedBiblio, correctedAuthor] = await Promise.all([
+        correctArabicFieldWithAI(analysisResult.title),
+        analysisResult.subtitle ? correctArabicFieldWithAI(analysisResult.subtitle) : Promise.resolve(''),
+        correctArabicFieldWithAI(analysisResult.summary),
+        analysisResult.metadata?.bibliography ? correctArabicFieldWithAI(analysisResult.metadata.bibliography) : Promise.resolve(''),
+        analysisResult.metadata?.author ? correctArabicFieldWithAI(analysisResult.metadata.author) : Promise.resolve('')
+      ]);
+      
+      analysisResult.title = correctedTitle;
+      if (analysisResult.subtitle) analysisResult.subtitle = correctedSubtitle;
+      analysisResult.summary = correctedSummary;
+      if (analysisResult.metadata?.bibliography) analysisResult.metadata.bibliography = correctedBiblio;
+      if (analysisResult.metadata?.author) analysisResult.metadata.author = correctedAuthor;
+      
+      // Use heuristic for content and keywords (too long for AI)
       analysisResult.content = sanitizeArabicText(analysisResult.content);
       if (analysisResult.existingKeywords) {
         analysisResult.existingKeywords = analysisResult.existingKeywords.map((k: string) => sanitizeArabicText(k));
       }
       if (analysisResult.metadata) {
         for (const key of Object.keys(analysisResult.metadata)) {
-          if (typeof analysisResult.metadata[key] === 'string') {
+          if (typeof analysisResult.metadata[key] === 'string' && key !== 'bibliography' && key !== 'author') {
             analysisResult.metadata[key] = sanitizeArabicText(analysisResult.metadata[key]);
           }
         }
       }
     }
 
-    // Sanitize translated Arabic fields when target language is Arabic
+    // Correct translated Arabic fields when target language is Arabic
     if (targetLanguage === 'arabe') {
-      if (analysisResult.translatedTitle) {
-        analysisResult.translatedTitle = sanitizeArabicText(analysisResult.translatedTitle);
-      }
-      if (analysisResult.translatedSubtitle) {
-        analysisResult.translatedSubtitle = sanitizeArabicText(analysisResult.translatedSubtitle);
-      }
-      if (analysisResult.translatedSummary) {
-        analysisResult.translatedSummary = sanitizeArabicText(analysisResult.translatedSummary);
-      }
+      // Use AI for key translated fields
+      const [correctedTranslatedTitle, correctedTranslatedSubtitle, correctedTranslatedSummary, correctedTranslatedBiblio] = await Promise.all([
+        analysisResult.translatedTitle ? correctArabicFieldWithAI(analysisResult.translatedTitle) : Promise.resolve(''),
+        analysisResult.translatedSubtitle ? correctArabicFieldWithAI(analysisResult.translatedSubtitle) : Promise.resolve(''),
+        analysisResult.translatedSummary ? correctArabicFieldWithAI(analysisResult.translatedSummary) : Promise.resolve(''),
+        analysisResult.metadataTranslated?.bibliography ? correctArabicFieldWithAI(analysisResult.metadataTranslated.bibliography) : Promise.resolve('')
+      ]);
+      
+      if (analysisResult.translatedTitle) analysisResult.translatedTitle = correctedTranslatedTitle;
+      if (analysisResult.translatedSubtitle) analysisResult.translatedSubtitle = correctedTranslatedSubtitle;
+      if (analysisResult.translatedSummary) analysisResult.translatedSummary = correctedTranslatedSummary;
+      if (analysisResult.metadataTranslated?.bibliography) analysisResult.metadataTranslated.bibliography = correctedTranslatedBiblio;
+      
+      // Use heuristic for keywords and other fields
       if (analysisResult.translatedKeywords) {
         analysisResult.translatedKeywords = analysisResult.translatedKeywords.map((k: string) => sanitizeArabicText(k));
       }
       if (analysisResult.metadataTranslated) {
         for (const key of Object.keys(analysisResult.metadataTranslated)) {
-          if (typeof analysisResult.metadataTranslated[key] === 'string') {
+          if (typeof analysisResult.metadataTranslated[key] === 'string' && key !== 'bibliography') {
             analysisResult.metadataTranslated[key] = sanitizeArabicText(analysisResult.metadataTranslated[key]);
           }
         }
@@ -601,6 +655,8 @@ ${contentForAI}${contentTruncated ? '\n\n[Note: Contenu tronqué pour analyse ra
         analysisResult.translatedContent = sanitizeArabicText(analysisResult.translatedContent);
       }
     }
+    
+    console.log('✅ AI-powered Arabic correction completed');
 
     return new Response(JSON.stringify({
       success: true,
