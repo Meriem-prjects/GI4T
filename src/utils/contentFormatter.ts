@@ -1,5 +1,5 @@
 // Utility functions for formatting and stripping content
-import { normalizeArabicText, isArabicText } from '@/lib/arabicUtils';
+import { normalizeArabicForDisplay, isArabicText } from '@/lib/arabicUtils';
 
 /**
  * Converts simple text formatting markers to HTML for display
@@ -11,7 +11,7 @@ export const renderFormattedContent = (content: string): string => {
   // This fixes spacing issues like "ا لحقّ" -> "الحقّ"
   let processedContent = content;
   if (isArabicText(content)) {
-    processedContent = normalizeArabicText(content);
+    processedContent = normalizeArabicForDisplay(content);
   }
   
   // Split content into lines to process line-by-line
