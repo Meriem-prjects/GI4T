@@ -1242,15 +1242,15 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
         // Prepare and validate data - Apply normalization to Arabic fields during save
         const updateData = {
           title: editedData.title?.trim() || '',
-          title_ar: editedData.title_ar?.trim() ? normalizeArabicForDisplay(editedData.title_ar.trim()) : null,
+          title_ar: editedData.title_ar?.trim() ? sanitizeArabicTextFrontend(editedData.title_ar.trim()) : null,
           subtitle: editedData.subtitle?.trim() || null,
-          subtitle_ar: editedData.subtitle_ar?.trim() ? normalizeArabicForDisplay(editedData.subtitle_ar.trim()) : null,
+          subtitle_ar: editedData.subtitle_ar?.trim() ? sanitizeArabicTextFrontend(editedData.subtitle_ar.trim()) : null,
           summary: editedData.summary?.trim() || null,
-          summary_ar: editedData.summary_ar?.trim() ? normalizeArabicForDisplay(editedData.summary_ar.trim()) : null,
+          summary_ar: editedData.summary_ar?.trim() ? sanitizeArabicTextFrontend(editedData.summary_ar.trim()) : null,
           content: editedData.language === 'ar' && editedData.content ? sanitizeArabicTextFrontend(editedData.content) : editedData.content || '',
           translated_content: translatedContent?.trim() || null,
           keywords: Array.isArray(editedData.keywords) ? editedData.keywords.filter(k => k && k.trim()) : [],
-          keywords_ar: Array.isArray(editedData.keywords_ar) ? editedData.keywords_ar.filter(k => k && k.trim()).map(k => normalizeArabicForDisplay(k)) : [],
+          keywords_ar: Array.isArray(editedData.keywords_ar) ? editedData.keywords_ar.filter(k => k && k.trim()).map(k => sanitizeArabicTextFrontend(k)) : [],
           document_type_id: editedData.document_type_id || null,
           language: editedData.language || 'fr',
           status: 'draft' // Save as draft
@@ -1263,25 +1263,25 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
         const fullUpdateData = {
           ...updateData,
           author: editedData.author?.trim() || null,
-          author_ar: editedData.author_ar?.trim() ? normalizeArabicForDisplay(editedData.author_ar.trim()) : null,
+          author_ar: editedData.author_ar?.trim() ? sanitizeArabicTextFrontend(editedData.author_ar.trim()) : null,
           court: editedData.court?.trim() || null,
-          court_ar: editedData.court_ar?.trim() ? normalizeArabicForDisplay(editedData.court_ar.trim()) : null,
+          court_ar: editedData.court_ar?.trim() ? sanitizeArabicTextFrontend(editedData.court_ar.trim()) : null,
           court_category_type: editedData.court_category_type?.trim() || null,
-          court_category_type_ar: editedData.court_category_type_ar?.trim() ? normalizeArabicForDisplay(editedData.court_category_type_ar.trim()) : null,
+          court_category_type_ar: editedData.court_category_type_ar?.trim() ? sanitizeArabicTextFrontend(editedData.court_category_type_ar.trim()) : null,
           court_level: editedData.court_level?.trim() || null,
-          court_level_ar: editedData.court_level_ar?.trim() ? normalizeArabicForDisplay(editedData.court_level_ar.trim()) : null,
+          court_level_ar: editedData.court_level_ar?.trim() ? sanitizeArabicTextFrontend(editedData.court_level_ar.trim()) : null,
           case_number: editedData.case_number?.trim() || null,
           year: editedData.year || null,
           plaintiff: editedData.plaintiff?.trim() || null,
-          plaintiff_ar: editedData.plaintiff_ar?.trim() ? normalizeArabicForDisplay(editedData.plaintiff_ar.trim()) : null,
+          plaintiff_ar: editedData.plaintiff_ar?.trim() ? sanitizeArabicTextFrontend(editedData.plaintiff_ar.trim()) : null,
           defendant: editedData.defendant?.trim() || null,
-          defendant_ar: editedData.defendant_ar?.trim() ? normalizeArabicForDisplay(editedData.defendant_ar.trim()) : null,
+          defendant_ar: editedData.defendant_ar?.trim() ? sanitizeArabicTextFrontend(editedData.defendant_ar.trim()) : null,
           validation_date: editedData.validation_date || null,
           legal_references: Array.isArray(editedData.legal_references) ? editedData.legal_references.filter(r => r && r.trim()) : null,
-          legal_references_ar: Array.isArray(editedData.legal_references_ar) ? editedData.legal_references_ar.filter(r => r && r.trim()).map(r => normalizeArabicForDisplay(r)) : null,
+          legal_references_ar: Array.isArray(editedData.legal_references_ar) ? editedData.legal_references_ar.filter(r => r && r.trim()).map(r => sanitizeArabicTextFrontend(r)) : null,
           bibliography: editedData.bibliography?.trim() || null,
-          bibliography_ar: editedData.bibliography_ar?.trim() ? normalizeArabicForDisplay(editedData.bibliography_ar.trim()) : null,
-          textual_metadata: editedData.language === 'ar' && editedData.textual_metadata ? normalizeArabicForDisplay(editedData.textual_metadata) : editedData.textual_metadata || null,
+          bibliography_ar: editedData.bibliography_ar?.trim() ? sanitizeArabicTextFrontend(editedData.bibliography_ar.trim()) : null,
+          textual_metadata: editedData.language === 'ar' && editedData.textual_metadata ? sanitizeArabicTextFrontend(editedData.textual_metadata) : editedData.textual_metadata || null,
         };
 
         const { error } = await supabase
@@ -1614,21 +1614,21 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
 
     setIsCleaningArabic(true);
     try {
-      // Normalize all Arabic fields - use display normalization for short fields, full for content
+      // Normalize all Arabic fields using sanitizeArabicTextFrontend for proper joining
       const cleaned = {
         ...editedData,
-        title_ar: editedData.title_ar ? normalizeArabicForDisplay(editedData.title_ar) : editedData.title_ar,
-        subtitle_ar: editedData.subtitle_ar ? normalizeArabicForDisplay(editedData.subtitle_ar) : editedData.subtitle_ar,
+        title_ar: editedData.title_ar ? sanitizeArabicTextFrontend(editedData.title_ar) : editedData.title_ar,
+        subtitle_ar: editedData.subtitle_ar ? sanitizeArabicTextFrontend(editedData.subtitle_ar) : editedData.subtitle_ar,
         content: editedData.language === 'ar' && editedData.content ? sanitizeArabicTextFrontend(editedData.content) : editedData.content,
-        textual_metadata: editedData.language === 'ar' && editedData.textual_metadata ? normalizeArabicForDisplay(editedData.textual_metadata) : editedData.textual_metadata,
-        summary_ar: editedData.summary_ar ? normalizeArabicForDisplay(editedData.summary_ar) : editedData.summary_ar,
-        keywords_ar: editedData.keywords_ar?.map(k => normalizeArabicForDisplay(k)),
-        author_ar: editedData.author_ar ? normalizeArabicForDisplay(editedData.author_ar) : editedData.author_ar,
-        court_ar: editedData.court_ar ? normalizeArabicForDisplay(editedData.court_ar) : editedData.court_ar,
-        plaintiff_ar: editedData.plaintiff_ar ? normalizeArabicForDisplay(editedData.plaintiff_ar) : editedData.plaintiff_ar,
-        defendant_ar: editedData.defendant_ar ? normalizeArabicForDisplay(editedData.defendant_ar) : editedData.defendant_ar,
-        court_level_ar: editedData.court_level_ar ? normalizeArabicForDisplay(editedData.court_level_ar) : editedData.court_level_ar,
-        court_category_type_ar: editedData.court_category_type_ar ? normalizeArabicForDisplay(editedData.court_category_type_ar) : editedData.court_category_type_ar,
+        textual_metadata: editedData.language === 'ar' && editedData.textual_metadata ? sanitizeArabicTextFrontend(editedData.textual_metadata) : editedData.textual_metadata,
+        summary_ar: editedData.summary_ar ? sanitizeArabicTextFrontend(editedData.summary_ar) : editedData.summary_ar,
+        keywords_ar: editedData.keywords_ar?.map(k => sanitizeArabicTextFrontend(k)),
+        author_ar: editedData.author_ar ? sanitizeArabicTextFrontend(editedData.author_ar) : editedData.author_ar,
+        court_ar: editedData.court_ar ? sanitizeArabicTextFrontend(editedData.court_ar) : editedData.court_ar,
+        plaintiff_ar: editedData.plaintiff_ar ? sanitizeArabicTextFrontend(editedData.plaintiff_ar) : editedData.plaintiff_ar,
+        defendant_ar: editedData.defendant_ar ? sanitizeArabicTextFrontend(editedData.defendant_ar) : editedData.defendant_ar,
+        court_level_ar: editedData.court_level_ar ? sanitizeArabicTextFrontend(editedData.court_level_ar) : editedData.court_level_ar,
+        court_category_type_ar: editedData.court_category_type_ar ? sanitizeArabicTextFrontend(editedData.court_category_type_ar) : editedData.court_category_type_ar,
       };
 
       // Save to database
