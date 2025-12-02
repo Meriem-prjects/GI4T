@@ -192,36 +192,6 @@ async function ocrImage(imageData: string, pageNumber: number, googleVisionApiKe
     // Sanitize Arabic text if detected
     let sanitizedContent = detectedLanguage === 'ar' ? sanitizeArabicText(extractedText) : extractedText;
 
-    // Apply AI Arabic spacing correction per page for better quality
-    if (detectedLanguage === 'ar' && sanitizedContent.length > 50 && sanitizedContent.length < 4000) {
-      console.log(`🔧 Applying AI Arabic spacing correction to page ${pageNumber}...`);
-      try {
-        const fixerResponse = await fetch(
-          'https://qpkybrcjcoxhkifnbxei.supabase.co/functions/v1/arabic-spacing-fixer',
-          {
-            method: 'POST',
-            headers: {
-              'Authorization': `Bearer ${Deno.env.get('SUPABASE_ANON_KEY')}`,
-              'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({ text: sanitizedContent })
-          }
-        );
-        
-        if (fixerResponse.ok) {
-          const fixerResult = await fixerResponse.json();
-          if (fixerResult.success && fixerResult.correctedText) {
-            sanitizedContent = fixerResult.correctedText;
-            console.log(`✅ AI correction applied to page ${pageNumber} (method: ${fixerResult.method})`);
-          }
-        } else {
-          console.warn(`AI correction failed for page ${pageNumber}: ${fixerResponse.status}`);
-        }
-      } catch (e) {
-        console.warn(`AI correction error for page ${pageNumber}, continuing with sanitized text:`, e);
-      }
-    }
-
     console.log(`✅ Page ${pageNumber} extracted: ${sanitizedContent.length} chars, language: ${detectedLanguage}, confidence: ${confidence}`);
 
     return {
@@ -500,38 +470,6 @@ async function processPdfWithOCR(pdfBuffer: ArrayBuffer, googleVisionApiKey: str
       .join('\n\n');
 
     console.log(`Batch OCR completed: ${totalProcessed}/${conversionResult.images.length} pages processed, ${fullText.length} chars`);
-    
-    // Apply AI Arabic spacing correction if text is in Arabic and within size limits
-    if (dominantLanguage === 'ar' && fullText.length > 100 && fullText.length < 12000) {
-      console.log('🔧 Applying AI Arabic spacing correction...');
-      try {
-        const fixerResponse = await fetch(
-          'https://qpkybrcjcoxhkifnbxei.supabase.co/functions/v1/arabic-spacing-fixer',
-          {
-            method: 'POST',
-            headers: {
-              'Authorization': `Bearer ${Deno.env.get('SUPABASE_ANON_KEY')}`,
-              'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({ text: fullText })
-          }
-        );
-        
-        if (fixerResponse.ok) {
-          const fixerResult = await fixerResponse.json();
-          if (fixerResult.success && fixerResult.correctedText) {
-            fullText = fixerResult.correctedText;
-            console.log(`✅ AI Arabic correction applied (method: ${fixerResult.method})`);
-          } else {
-            console.warn('AI Arabic correction returned no result');
-          }
-        } else {
-          console.warn(`AI Arabic correction failed with status: ${fixerResponse.status}`);
-        }
-      } catch (e) {
-        console.warn('AI Arabic correction error (continuing with sanitized text):', e);
-      }
-    }
     
     // Final progress update and document update
     const finalStatus = isFullyCompleted ? 'completed' : 'processing';
