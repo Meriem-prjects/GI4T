@@ -135,6 +135,25 @@ export const sanitizeArabicText = (text: string | null | undefined): string => {
     .replace(/[\u200B-\u200F]/g, '')
     .replace(/\u0640/g, '');
   
+  // Step 2.5: FIX DISCONNECTED HEH AT WORD END
+  // Only apply when Heh is followed by space, punctuation, or end of string
+  // This prevents affecting words like "فقيه" where Heh is naturally connected
+  
+  // Pattern: letter + space/invisible + ه + (space or end or punctuation)
+  // "صياغت ه" → "صياغته"
+  const HEH_WORD_END = '([\\u0621-\\u064A])[\\s\\u200B-\\u200F\\u2060]+(ه)(?=\\s|$|[.،؛:؟!])';
+  sanitized = sanitized.replace(new RegExp(HEH_WORD_END, 'g'), '$1$2');
+  
+  // Also handle Heh with diacritics at word end
+  // "صياغت هُ" → "صياغتهُ"
+  const HEH_DIACRITIC_END = '([\\u0621-\\u064A])[\\s\\u200B-\\u200F\\u2060]+(ه[\\u064B-\\u0652]?)(?=\\s|$|[.،؛:؟!])';
+  sanitized = sanitized.replace(new RegExp(HEH_DIACRITIC_END, 'g'), '$1$2');
+  
+  // Handle Heh with pronoun suffix (ها، هم، هن، هما)
+  // "كلمت ها" → "كلمتها"
+  const HEH_PRONOUN = '([\\u0621-\\u064A])[\\s\\u200B-\\u200F\\u2060]+(ه[اموين])(?=\\s|$|[.،؛:؟!])';
+  sanitized = sanitized.replace(new RegExp(HEH_PRONOUN, 'g'), '$1$2');
+  
   // Step 3: Remap non-standard characters including ALL Heh variants
   const charMap: Record<string, string> = {
     '\u06A9': '\u0643', '\u06AF': '\u0643', // Persian Kaf → Arabic Kaf
