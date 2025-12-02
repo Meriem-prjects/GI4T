@@ -1750,66 +1750,157 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
     }
   };
 
+  // Helper function to correct a single Arabic field
+  const correctSingleArabicField = async (text: string): Promise<string | null> => {
+    if (!text || text.trim() === '') return null;
+    
+    try {
+      const { data, error } = await supabase.functions.invoke('arabic-spacing-fixer', {
+        body: { text }
+      });
+      
+      if (error) throw error;
+      return data?.correctedText || text;
+    } catch (error) {
+      console.error('Field correction error:', error);
+      return text; // Return original on error
+    }
+  };
+
   const correctArabicSpacing = async () => {
-    if (!editedData.content || editedData.language !== 'ar') {
+    if (editedData.language !== 'ar') {
       toast({
         title: "Erreur",
-        description: "Le document doit être en arabe et avoir du contenu",
+        description: "Le document doit être en arabe",
         variant: "destructive"
       });
       return;
     }
 
-    // Si le texte est court, correction directe
-    if (editedData.content.length <= 12000) {
-      setIsCorrectingSpacing(true);
-      try {
-        console.log('Calling AI spacing correction for content...');
-        
-        const { data, error } = await supabase.functions.invoke('arabic-spacing-fixer', {
-          body: { text: editedData.content }
-        });
+    setIsCorrectingSpacing(true);
+    
+    // Count fields to correct
+    const fieldsToCorrect = [
+      editedData.title_ar?.trim() ? 'title_ar' : null,
+      editedData.subtitle_ar?.trim() ? 'subtitle_ar' : null,
+      editedData.summary_ar?.trim() ? 'summary_ar' : null,
+      editedData.bibliography_ar?.trim() ? 'bibliography_ar' : null,
+      editedData.content?.trim() ? 'content' : null,
+    ].filter(Boolean);
+    
+    const totalFields = fieldsToCorrect.length;
+    let currentField = 0;
+    
+    setCorrectionProgress({ current: 0, total: totalFields });
 
-        if (error) throw error;
+    try {
+      const correctedFields: Record<string, string | null> = {};
 
-        if (data?.success && data.correctedText) {
-          setEditedData(prev => ({
-            ...prev,
-            content: data.correctedText
-          }));
+      // Correct metadata fields in parallel
+      const metadataPromises: Promise<void>[] = [];
+      
+      if (editedData.title_ar?.trim()) {
+        metadataPromises.push(
+          correctSingleArabicField(editedData.title_ar).then(result => {
+            correctedFields.title_ar = result;
+            currentField++;
+            setCorrectionProgress({ current: currentField, total: totalFields });
+          })
+        );
+      }
+      
+      if (editedData.subtitle_ar?.trim()) {
+        metadataPromises.push(
+          correctSingleArabicField(editedData.subtitle_ar).then(result => {
+            correctedFields.subtitle_ar = result;
+            currentField++;
+            setCorrectionProgress({ current: currentField, total: totalFields });
+          })
+        );
+      }
+      
+      if (editedData.summary_ar?.trim()) {
+        metadataPromises.push(
+          correctSingleArabicField(editedData.summary_ar).then(result => {
+            correctedFields.summary_ar = result;
+            currentField++;
+            setCorrectionProgress({ current: currentField, total: totalFields });
+          })
+        );
+      }
+      
+      if (editedData.bibliography_ar?.trim()) {
+        metadataPromises.push(
+          correctSingleArabicField(editedData.bibliography_ar).then(result => {
+            correctedFields.bibliography_ar = result;
+            currentField++;
+            setCorrectionProgress({ current: currentField, total: totalFields });
+          })
+        );
+      }
+
+      // Wait for all metadata corrections
+      await Promise.all(metadataPromises);
+
+      // Correct content
+      if (editedData.content?.trim()) {
+        if (editedData.content.length <= 12000) {
+          // Short content: direct correction
+          const correctedContent = await correctSingleArabicField(editedData.content);
+          correctedFields.content = correctedContent;
+          currentField++;
+          setCorrectionProgress({ current: currentField, total: totalFields });
+        } else if (editedData.page_contents && editedData.page_contents.length > 0) {
+          // Long content with pages: page-by-page correction
+          setIsCorrectingSpacing(false); // Will be set by correctArabicSpacingPageByPage
+          
+          // Apply metadata corrections first
+          if (Object.keys(correctedFields).length > 0) {
+            setEditedData(prev => ({
+              ...prev,
+              ...correctedFields
+            }));
+          }
+          
+          await correctArabicSpacingPageByPage();
           
           toast({
-            title: "Correction réussie",
-            description: `Espacement corrigé (méthode: ${data.method || 'AI'})`,
+            title: "✅ Correction réussie",
+            description: `Métadonnées et contenu (page par page) corrigés`,
           });
+          return;
         } else {
-          throw new Error('Pas de texte corrigé retourné');
+          // Long content without pages
+          toast({
+            title: "⚠️ Contenu trop long",
+            description: "Le contenu dépasse 12 000 caractères sans pages. Seules les métadonnées ont été corrigées.",
+          });
         }
-      } catch (error: any) {
-        console.error('Arabic spacing correction error:', error);
-        toast({
-          title: "Erreur de correction",
-          description: error.message || "Impossible de corriger l'espacement",
-          variant: "destructive"
-        });
-      } finally {
-        setIsCorrectingSpacing(false);
       }
-      return;
-    }
 
-    // Texte long : utiliser la correction page par page si disponible
-    if (editedData.page_contents && editedData.page_contents.length > 0) {
-      await correctArabicSpacingPageByPage();
-      return;
-    }
+      // Apply all corrections
+      setEditedData(prev => ({
+        ...prev,
+        ...correctedFields
+      }));
 
-    // Texte long sans pages : afficher un message explicatif
-    toast({
-      title: "Texte trop long",
-      description: "Ce document dépasse 12 000 caractères et n'a pas de pages individuelles. Utilisez 'Nettoyer AR' pour les corrections heuristiques.",
-      variant: "destructive"
-    });
+      const correctedCount = Object.keys(correctedFields).filter(k => correctedFields[k]).length;
+      toast({
+        title: "✅ Correction réussie",
+        description: `${correctedCount} champ(s) corrigé(s): ${Object.keys(correctedFields).join(', ')}`,
+      });
+
+    } catch (error: any) {
+      console.error('Arabic spacing correction error:', error);
+      toast({
+        title: "Erreur de correction",
+        description: error.message || "Impossible de corriger l'espacement",
+        variant: "destructive"
+      });
+    } finally {
+      setIsCorrectingSpacing(false);
+      setCorrectionProgress({ current: 0, total: 0 });
+    }
   };
 
   return (
