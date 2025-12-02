@@ -1080,8 +1080,11 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
               });
             })()
           }));
-          // Store translated content separately
-          setTranslatedContent(analysis.translatedContent || '');
+          // Store translated content separately ONLY if no consolidated translation exists
+          // This prevents AI analysis from overwriting the full consolidated translated content with just a summary
+          if (!translatedContent || translatedContent.trim().length < 500) {
+            setTranslatedContent(analysis.translatedContent || '');
+          }
           // Switch to French tab to show translated content
           setCurrentLanguage('fr');
         } else {
@@ -1160,8 +1163,11 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
               });
             })()
           }));
-          // Store translated content separately
-          setTranslatedContent(analysis.translatedContent || '');
+          // Store translated content separately ONLY if no consolidated translation exists
+          // This prevents AI analysis from overwriting the full consolidated translated content with just a summary
+          if (!translatedContent || translatedContent.trim().length < 500) {
+            setTranslatedContent(analysis.translatedContent || '');
+          }
           // Switch to Arabic tab to show translated content
           setCurrentLanguage('ar');
         }
