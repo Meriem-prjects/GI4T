@@ -381,6 +381,29 @@ export const sanitizeArabicTextLight = (text: string | null | undefined): string
 };
 
 /**
+ * RAW Arabic text sanitization - 100% faithful to PDF
+ * Only removes invisible control characters and normalizes whitespace
+ * NO character conversion, NO normalization, NO pattern fixes
+ * Use this for display to preserve exact PDF appearance
+ */
+export const sanitizeArabicTextRaw = (text: string | null | undefined): string => {
+  if (!text) return '';
+  
+  // ONLY remove truly invisible control characters that don't affect rendering
+  let sanitized = text
+    .replace(/[\u200B\u2060\uFEFF]/g, '') // Zero-width chars only
+    .replace(/[\u0000-\u001F\u007F]/g, ''); // ASCII control chars
+  
+  // Normalize multiple spaces to single space (but preserve line breaks)
+  sanitized = sanitized.replace(/[^\S\n\r]+/g, ' ');
+  
+  // Trim lines but preserve structure
+  sanitized = sanitized.split('\n').map(line => line.trim()).join('\n');
+  
+  return sanitized.trim();
+};
+
+/**
  * Separates glued Arabic words using linguistic patterns
  * Detects transitions between Arabic words and common patterns
  * Combined range: U+0600-U+06FF (Arabic) + U+FE70-U+FEFF (Presentation Forms)

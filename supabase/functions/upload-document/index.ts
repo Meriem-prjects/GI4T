@@ -1,7 +1,7 @@
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.57.4';
-import { sanitizeArabicText, sanitizeArabicTextLight } from "../_shared/utils.ts";
+import { sanitizeArabicTextRaw } from "../_shared/utils.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -408,25 +408,8 @@ serve(async (req) => {
           // Always use direct extraction - no more OCR fallback
           console.log('Using PDF direct extraction result');
           
-          // Sanitize Arabic text if detected
-          let sanitizedExtractedText = language === 'ar' ? sanitizeArabicTextLight(extractedText) : extractedText;
-          
-          // Apply AI spacing correction for Arabic texts <= 12k chars
-          if (language === 'ar' && sanitizedExtractedText.length > 0 && sanitizedExtractedText.length <= 12000) {
-            try {
-              console.log('Applying AI spacing correction for Arabic text...');
-              const { data: spacingData, error: spacingError } = await supabaseAdmin.functions.invoke('arabic-spacing-fixer', {
-                body: { text: sanitizedExtractedText }
-              });
-              
-              if (!spacingError && spacingData?.success && spacingData.correctedText) {
-                sanitizedExtractedText = spacingData.correctedText;
-                console.log(`AI spacing correction applied (method: ${spacingData.method})`);
-              }
-            } catch (spacingErr) {
-              console.warn('AI spacing correction failed, using heuristic result:', spacingErr);
-            }
-          }
+          // Use RAW sanitization for 100% PDF fidelity - no transformations
+          let sanitizedExtractedText = sanitizeArabicTextRaw(extractedText);
           
            fileContent = sanitizedExtractedText.length > 0 ? sanitizedExtractedText : 'Document PDF sans texte extractible';
            extractionSuccess = true;
@@ -441,34 +424,16 @@ serve(async (req) => {
              extractionSuccess = false;
            }
            
-           // Create page contents from extracted text (sanitize each page with proper async/await)
-           pageContents = await Promise.all(
-             (readerData.texts || []).map(async (text: string, index: number) => {
-               let pageContent = language === 'ar' ? sanitizeArabicTextLight(text.trim()) : text.trim();
-               
-               // Apply AI correction to each page for Arabic texts
-               if (language === 'ar' && pageContent.length > 0 && pageContent.length <= 12000) {
-                 try {
-                   const { data } = await supabaseAdmin.functions.invoke('arabic-spacing-fixer', {
-                     body: { text: pageContent }
-                   });
-                   if (data?.success && data.correctedText) {
-                     pageContent = data.correctedText;
-                     console.log(`✓ Page ${index + 1} AI-corrected`);
-                   }
-                 } catch (err) {
-                   console.warn(`Page ${index + 1} AI correction failed:`, err);
-                 }
-               }
-               
+           // Create page contents from extracted text - RAW for 100% fidelity
+           pageContents = (readerData.texts || []).map((text: string, index: number) => {
+               const pageContent = sanitizeArabicTextRaw(text.trim());
                return {
                  pageNumber: index + 1,
                  content: pageContent,
                  confidence: 1.0,
                  language: language
                };
-             })
-           );
+             });
           
           processedPages = readerData.numPages || 1;
           
