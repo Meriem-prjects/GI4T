@@ -304,6 +304,83 @@ export const sanitizeArabicText = (text: string | null | undefined): string => {
 };
 
 /**
+ * Light version of Arabic text sanitization - preserves original appearance
+ * - Converts presentation forms to base characters (necessary for consistency)
+ * - NFKC normalization (necessary for Unicode)
+ * - Fixes Chadda spacing (essential)
+ * - Fixes disconnected Heh at word end (essential)
+ * - NO aggressive word separation (preserves PDF appearance)
+ * - Only minimal deglue: "ا ل" → "ال"
+ */
+export const sanitizeArabicTextLight = (text: string | null | undefined): string => {
+  if (!text) return '';
+  
+  // Step 0: Normalize ALL Unicode whitespace to standard space
+  let sanitized = text.replace(/[\u00A0\u2000-\u200A\u202F\u205F\u3000\u200B-\u200F]/g, ' ');
+  
+  // Step 1: Convert Arabic Presentation Forms BEFORE NFKC
+  sanitized = convertPresentationForms(sanitized);
+  
+  // Step 2: NFKC normalization
+  sanitized = sanitized.normalize('NFKC');
+  
+  // Step 3: Strip control characters and tatweel
+  sanitized = sanitized
+    .replace(/[\u200B-\u200F]/g, '')
+    .replace(/\u0640/g, '');
+  
+  // Step 4: Fix disconnected Heh at word end (essential for readability)
+  const HEH_WORD_END = '([\\u0621-\\u064A])[\\s\\u200B-\\u200F\\u2060]+(ه)(?=\\s|$|[.،؛:؟!])';
+  sanitized = sanitized.replace(new RegExp(HEH_WORD_END, 'g'), '$1$2');
+  
+  const HEH_DIACRITIC_END = '([\\u0621-\\u064A])[\\s\\u200B-\\u200F\\u2060]+(ه[\\u064B-\\u0652]?)(?=\\s|$|[.،؛:؟!])';
+  sanitized = sanitized.replace(new RegExp(HEH_DIACRITIC_END, 'g'), '$1$2');
+  
+  const HEH_PRONOUN = '([\\u0621-\\u064A])[\\s\\u200B-\\u200F\\u2060]+(ه[اموين])(?=\\s|$|[.،؛:؟!])';
+  sanitized = sanitized.replace(new RegExp(HEH_PRONOUN, 'g'), '$1$2');
+  
+  // Step 5: Remap non-standard characters including Heh variants
+  const charMap: Record<string, string> = {
+    '\u06A9': '\u0643', '\u06AF': '\u0643',
+    '\u06CC': '\u064A', '\u06D2': '\u064A',
+    '\u06C0': '\u0647', '\u06C1': '\u0647', '\u06C2': '\u0647',
+    '\u06D5': '\u0647', '\u06BE': '\u0647',
+    '\uFEE9': '\u0647', '\uFEEA': '\u0647', '\uFEEB': '\u0647', '\uFEEC': '\u0647',
+    '\uFBAA': '\u0647', '\uFBAB': '\u0647', '\uFBAC': '\u0647', '\uFBAD': '\u0647',
+  };
+  
+  for (const [from, to] of Object.entries(charMap)) {
+    sanitized = sanitized.replace(new RegExp(from, 'g'), to);
+  }
+  
+  // Step 6: Reorder diacritics (Shadda before vowel marks)
+  sanitized = sanitized.replace(/([\u064B-\u0650\u0652])(\u0651)/g, '$2$1');
+  
+  // Step 7: Fix Chadda spacing issues (essential)
+  const SPACE_CLASS = '[\\s\\u00A0\\u2000-\\u200A\\u202F\\u205F\\u3000]';
+  sanitized = sanitized.replace(new RegExp(`([\\u0621-\\u064A\\u0647])${SPACE_CLASS}+(\\u0651)([\\u0621-\\u064A\\u0647])`, 'g'), '$1$2$3');
+  sanitized = sanitized.replace(/([\u0621-\u064A]+)\s+(\u0651)\s+([\u0621-\u064A]+)/g, '$1$2 $3');
+  sanitized = sanitized.replace(/([\u0621-\u064A])\s+(\u0651)([\u0621-\u064A])/g, '$1$2$3');
+  sanitized = sanitized.replace(/([\u0621-\u064A])\s+(\u0651)/g, '$1$2');
+  sanitized = sanitized.replace(new RegExp(`([\\u0621-\\u064A\\u0647])${SPACE_CLASS}+(\\u0651)(\\s|$)`, 'g'), '$1$2$3');
+  sanitized = sanitized.replace(/^(\s*)\u0651\s*/gm, '$1');
+  sanitized = sanitized.replace(/(\s)\u0651(\s)/g, '$1');
+  sanitized = sanitized.replace(new RegExp(`([\\u0621-\\u064A\\u0647])${SPACE_CLASS}+(\\u0651)`, 'g'), '$1$2');
+  sanitized = sanitized.replace(/\u0651{2,}/g, '\u0651');
+  
+  // Step 8: MINIMAL deglue - only fix broken "ا ل" → "ال"
+  sanitized = sanitized.replace(/ا\s+ل/g, 'ال');
+  
+  // Step 9: Remove spaces between letter and diacritics
+  sanitized = sanitized.replace(/([\u0621-\u064A])\s+([\u064B-\u0652\u0670])/g, '$1$2');
+  
+  // Step 10: Final cleanup - compact multiple spaces
+  sanitized = sanitized.replace(/\s+/g, ' ').trim();
+  
+  return sanitized;
+};
+
+/**
  * Separates glued Arabic words using linguistic patterns
  * Detects transitions between Arabic words and common patterns
  * Combined range: U+0600-U+06FF (Arabic) + U+FE70-U+FEFF (Presentation Forms)

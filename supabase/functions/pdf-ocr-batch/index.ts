@@ -1,7 +1,7 @@
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.57.4';
-import { sanitizeArabicText } from "../_shared/utils.ts";
+import { sanitizeArabicTextLight } from "../_shared/utils.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -190,7 +190,7 @@ async function ocrImage(imageData: string, pageNumber: number, googleVisionApiKe
       : 0.95; // Default high confidence for Google Vision
 
     // Sanitize Arabic text if detected
-    let sanitizedContent = detectedLanguage === 'ar' ? sanitizeArabicText(extractedText) : extractedText;
+    let sanitizedContent = detectedLanguage === 'ar' ? sanitizeArabicTextLight(extractedText) : extractedText;
 
     console.log(`✅ Page ${pageNumber} extracted: ${sanitizedContent.length} chars, language: ${detectedLanguage}, confidence: ${confidence}`);
 

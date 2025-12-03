@@ -1,7 +1,7 @@
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.57.4';
-import { sanitizeArabicText } from "../_shared/utils.ts";
+import { sanitizeArabicText, sanitizeArabicTextLight } from "../_shared/utils.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -409,7 +409,7 @@ serve(async (req) => {
           console.log('Using PDF direct extraction result');
           
           // Sanitize Arabic text if detected
-          let sanitizedExtractedText = language === 'ar' ? sanitizeArabicText(extractedText) : extractedText;
+          let sanitizedExtractedText = language === 'ar' ? sanitizeArabicTextLight(extractedText) : extractedText;
           
           // Apply AI spacing correction for Arabic texts <= 12k chars
           if (language === 'ar' && sanitizedExtractedText.length > 0 && sanitizedExtractedText.length <= 12000) {
@@ -444,7 +444,7 @@ serve(async (req) => {
            // Create page contents from extracted text (sanitize each page with proper async/await)
            pageContents = await Promise.all(
              (readerData.texts || []).map(async (text: string, index: number) => {
-               let pageContent = language === 'ar' ? sanitizeArabicText(text.trim()) : text.trim();
+               let pageContent = language === 'ar' ? sanitizeArabicTextLight(text.trim()) : text.trim();
                
                // Apply AI correction to each page for Arabic texts
                if (language === 'ar' && pageContent.length > 0 && pageContent.length <= 12000) {
