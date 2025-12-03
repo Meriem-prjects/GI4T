@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import SimpleTextEditor from './SimpleTextEditor';
+import CKEditorWrapper from './CKEditorWrapper';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
@@ -3330,30 +3330,26 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
                   />
                 </div>
               ) : (
-                <SimpleTextEditor
+                <CKEditorWrapper
                   content={getCurrentContent()}
                   onChange={(newContent) => {
                     if (currentLanguage === editedData.language) {
-                      // Editing primary language content - apply Arabic correction if needed
-                      const processedContent = currentLanguage === 'ar' ? handleArabicInput(newContent) : newContent;
                       setEditedData(prev => ({
                         ...prev,
-                        content: processedContent,
-                        fullContent: processedContent
+                        content: newContent,
+                        fullContent: newContent
                       }));
                     } else {
-                      // Editing translated content
-                      const processedContent = currentLanguage === 'ar' ? handleArabicInput(newContent) : newContent;
-                      setTranslatedContent(processedContent);
+                      setTranslatedContent(newContent);
                       setHasChanges(true);
                     }
                   }}
+                  language={currentLanguage as 'fr' | 'ar'}
                   placeholder={currentLanguage === editedData.language ? 
-                    "Contenu du document... Utilisez # pour les titres, **gras**, *italique*" : 
-                    "Contenu traduit... Utilisez # pour les titres, **gras**, *italique*"
+                    "Contenu du document..." : 
+                    "Contenu traduit..."
                   }
                   className="min-h-[600px]"
-                  dir={currentLanguage === 'ar' ? 'rtl' : 'ltr'}
                 />
               )}
             </Card>

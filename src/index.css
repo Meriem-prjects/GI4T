@@ -349,3 +349,58 @@ All colors MUST be HSL.
   box-shadow: 0 1px 5px rgba(0,0,0,0.2);
   font-size: 12px;
 }
+
+/* CKEditor 5 - RTL Support */
+.ckeditor-wrapper {
+  @apply border rounded-lg overflow-hidden;
+}
+
+.ckeditor-wrapper .ck-editor__editable {
+  min-height: 400px;
+  @apply bg-background text-foreground;
+}
+
+.ckeditor-wrapper .ck.ck-editor__main > .ck-editor__editable {
+  @apply bg-background;
+}
+
+.ckeditor-wrapper .ck.ck-toolbar {
+  @apply bg-muted border-b border-border;
+}
+
+.ckeditor-wrapper .ck.ck-button {
+  @apply text-foreground;
+}
+
+/* RTL Mode for Arabic */
+.ckeditor-rtl .ck-content {
+  direction: rtl;
+  text-align: right;
+  font-family: 'Noto Sans Arabic', 'Arabic Typesetting', Tahoma, sans-serif;
+}
+
+.ckeditor-rtl .ck-content p,
+.ckeditor-rtl .ck-content h1,
+.ckeditor-rtl .ck-content h2,
+.ckeditor-rtl .ck-content h3,
+.ckeditor-rtl .ck-content li {
+  direction: rtl;
+  text-align: right;
+}
+
+/* LTR Mode for French */
+.ckeditor-ltr .ck-content {
+  direction: ltr;
+  text-align: left;
+}
+
+/* Bi-directional support within content */
+.ck-content [lang="ar"] {
+  direction: rtl;
+  text-align: right;
+}
+
+.ck-content [lang="fr"] {
+  direction: ltr;
+  text-align: left;
+}
