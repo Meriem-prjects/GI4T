@@ -1079,7 +1079,9 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
                 seen.add(normalized);
                 return true;
               });
-            })()
+            })(),
+            // Textual metadata in Arabic (source language)
+            textual_metadata: analysis.textualMetadata || prev.textual_metadata
           }));
           // Store translated content separately ONLY if no consolidated translation exists
           // This prevents AI analysis from overwriting the full consolidated translated content with just a summary
@@ -1161,7 +1163,9 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
                 seen.add(normalized);
                 return true;
               });
-            })()
+            })(),
+            // Textual metadata in French (source language)
+            textual_metadata: analysis.textualMetadata || prev.textual_metadata
           }));
           // Store translated content separately ONLY if no consolidated translation exists
           // This prevents AI analysis from overwriting the full consolidated translated content with just a summary
