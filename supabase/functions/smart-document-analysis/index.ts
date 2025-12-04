@@ -292,7 +292,12 @@ LANGUE CIBLE POUR LES TRADUCTIONS: ${targetLanguage}
 
 FICHE D'ANALYSE - CHAMPS SPÉCIFIQUES À EXTRAIRE:
 1. TITRE: Extrais le thème principal/titre de l'analyse depuis les métadonnées ou le contenu
-2. AUTEUR: Nom de l'auteur de l'analyse (OBLIGATOIRE - privilégier "مرصد الحقوق الأساسية" si présent)
+2. SOUS-TITRE: Extrais un sous-titre THÉMATIQUE qui complète le titre principal.
+   ⚠️ NE PAS utiliser le titre académique, la fonction ou l'affiliation de l'auteur comme sous-titre.
+   ✅ Exemples corrects: "دراسة مقارنة", "تحليل نقدي للقرار", "قراءة في الاجتهاد القضائي", "Étude comparative"
+   ❌ Exemples INCORRECTS: "أستاذة تعليم عال في القانون العام", "Professeur de droit public"
+   Si aucun sous-titre thématique n'est trouvé, laisse le champ VIDE.
+3. AUTEUR: Nom de l'auteur de l'analyse (OBLIGATOIRE - privilégier "مرصد الحقوق الأساسية" si présent)
 3. DATE DE VALIDATION: Date de validation du document (si présente)
 4. RÉFÉRENCES LÉGALES: Liste des textes juridiques, lois, articles cités (Constitution, codes, conventions internationales, etc.)
 5. BIBLIOGRAPHIE: Sources et références bibliographiques citées à la fin du document
@@ -317,7 +322,7 @@ ${mode === 'quick'
 Réponds uniquement en JSON valide avec cette structure exacte :
 {
   "title": "titre principal de l'analyse",
-  "subtitle": "sous-titre contextuel (optionnel)", 
+  "subtitle": "sous-titre THÉMATIQUE uniquement (PAS le titre/fonction de l'auteur) - laisser vide si absent", 
   "translatedTitle": "traduction complète du titre en ${targetLanguage}",
   "translatedSubtitle": "traduction complète du sous-titre en ${targetLanguage}",
   "summary": "résumé de l'analyse en ${sourceLanguage}",
