@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import CKEditorWrapper from './CKEditorWrapper';
+import CKEditorMini from './CKEditorMini';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
@@ -1085,8 +1086,7 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
           if (!translatedContent || translatedContent.trim().length < 500) {
             setTranslatedContent(analysis.translatedContent || '');
           }
-          // Switch to French tab to show translated content
-          setCurrentLanguage('fr');
+          // Keep user on their current language tab - don't auto-switch
         } else {
           // French is primary - analysis result goes to French fields, translation to Arabic
           setEditedData(prev => ({
@@ -1168,8 +1168,7 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
           if (!translatedContent || translatedContent.trim().length < 500) {
             setTranslatedContent(analysis.translatedContent || '');
           }
-          // Switch to Arabic tab to show translated content
-          setCurrentLanguage('ar');
+          // Keep user on their current language tab - don't auto-switch
         }
 
         // Update court type selection if suggested (for both languages)
@@ -2768,11 +2767,12 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
 
                           <div>
                             <Label className="text-xs font-medium">Bibliographie</Label>
-                            <Textarea
-                              value={editedData.bibliography || ''}
-                              onChange={(e) => setEditedData(prev => ({ ...prev, bibliography: e.target.value }))}
+                            <CKEditorMini
+                              content={editedData.bibliography || ''}
+                              onChange={(value) => setEditedData(prev => ({ ...prev, bibliography: value }))}
+                              language="fr"
                               placeholder="Liste des sources et références bibliographiques..."
-                              className="mt-1 min-h-[100px]"
+                              className="mt-1"
                             />
                           </div>
                         </div>
@@ -3079,15 +3079,12 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
 
                           <div>
                             <Label className="text-xs font-medium">قائمة المراجع</Label>
-                            <Textarea
-                              value={editedData.bibliography_ar || ''}
-                              onChange={(e) => {
-                                const cleaned = handleArabicInput(e.target.value);
-                                setEditedData(prev => ({ ...prev, bibliography_ar: cleaned }));
-                              }}
+                            <CKEditorMini
+                              content={editedData.bibliography_ar || ''}
+                              onChange={(value) => setEditedData(prev => ({ ...prev, bibliography_ar: value }))}
+                              language="ar"
                               placeholder="قائمة المصادر والمراجع..."
-                              dir="rtl"
-                              className="mt-1 min-h-[100px]"
+                              className="mt-1"
                             />
                           </div>
                         </div>
@@ -3139,20 +3136,17 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
                       <span className="text-xs text-muted-foreground ml-2">(ذكاء اصطناعي)</span>
                     )}
                   </Label>
-                   <Textarea
-                    value={currentLanguage === 'ar' ? (editedData.summary_ar || '') : (editedData.summary || '')}
-                    onChange={(e) => {
-                      const value = currentLanguage === 'ar' ? handleArabicInput(e.target.value) : e.target.value;
+                   <CKEditorMini
+                    content={currentLanguage === 'ar' ? (editedData.summary_ar || '') : (editedData.summary || '')}
+                    onChange={(value) => {
                       setEditedData(prev => ({
                         ...prev,
                         [currentLanguage === 'ar' ? 'summary_ar' : 'summary']: value
                       }));
                     }}
+                    language={currentLanguage as 'fr' | 'ar'}
                     placeholder={currentLanguage === 'ar' ? 'ملخص الوثيقة' : 'Résumé du document'}
-                    rows={4}
-                    dir={currentLanguage === 'ar' ? 'rtl' : 'ltr'}
-                    className="resize-none w-full leading-relaxed"
-                    required={editedData.language === currentLanguage}
+                    className="w-full"
                   />
                 </div>
               </Card>
