@@ -33,6 +33,7 @@ const CKEditorMini = ({
   }, []);
 
   const editorConfig = {
+    licenseKey: 'GPL',
     plugins: [Essentials, Bold, Italic, Paragraph],
     toolbar: ['bold', 'italic'],
     language: {
