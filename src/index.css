@@ -404,3 +404,30 @@ All colors MUST be HSL.
   direction: ltr;
   text-align: left;
 }
+
+/* CKEditor Mini - for summary and bibliography fields */
+.ckeditor-mini .ck-editor__editable {
+  min-height: 100px;
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+.ckeditor-mini .ck.ck-toolbar {
+  border-radius: 6px 6px 0 0;
+}
+
+.ckeditor-mini .ck.ck-editor__main > .ck-editor__editable {
+  border-radius: 0 0 6px 6px;
+}
+
+.ckeditor-mini.ckeditor-rtl .ck-content {
+  direction: rtl;
+  text-align: right;
+  font-family: 'Noto Sans Arabic', 'Arabic Typesetting', Tahoma, sans-serif;
+  line-height: 1.8;
+}
+
+.ckeditor-mini.ckeditor-ltr .ck-content {
+  direction: ltr;
+  text-align: left;
+}
