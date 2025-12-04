@@ -309,6 +309,11 @@ FICHE D'ANALYSE - CHAMPS SPÉCIFIQUES À EXTRAIRE:
    La bibliographie se trouve généralement à la FIN du document.
 6. RÉSUMÉ: Génère un résumé synthétique du contenu de l'analyse
 7. MOTS-CLÉS: Extrais ou génère des mots-clés pertinents pour l'analyse
+8. MÉTADONNÉES TEXTUELLES FORMATÉES:
+   - Pour "textualMetadata", génère un résumé FORMATÉ dans la langue SOURCE (${sourceLanguage}) avec les labels appropriés:
+     * Si arabe: العنوان: [titre]\nالعنوان الفرعي: [sous-titre]\nالمؤلف: [auteur]\nتاريخ المصادقة: [date]\nالمراجع القانونية: [références]\nالببليوغرافيا: [bibliographie]
+     * Si français: TITRE: [titre]\nSOUS-TITRE: [sous-titre]\nAUTEUR: [auteur]\nDATE DE VALIDATION: [date]\nRÉFÉRENCES LÉGALES: [références]\nBIBLIOGRAPHIE: [bibliographie]
+   - Pour "textualMetadataTranslated", génère le même formatage dans la langue CIBLE (${targetLanguage})
 
 ⚠️ IMPORTANT: Pour une FICHE D'ANALYSE, ne cherche PAS d'informations sur tribunal, numéro d'affaire, demandeur, défendeur, etc.
 
@@ -341,7 +346,8 @@ Réponds uniquement en JSON valide avec cette structure exacte :
     "legal_references": ["traduction référence 1", "traduction référence 2"],
     "bibliography": "traduction complète de la bibliographie en ${targetLanguage}"
   },
-  "textualMetadataTranslated": "TRADUCTION COMPLÈTE EN ${targetLanguage} DES MÉTADONNÉES TEXTUELLES",
+  "textualMetadata": "MÉTADONNÉES FORMATÉES en ${sourceLanguage} (العنوان:... ou TITRE:...)",
+  "textualMetadataTranslated": "MÉTADONNÉES FORMATÉES en ${targetLanguage}",
   "translatedContent": "${mode === 'quick' ? 'EXTRAIT TRADUIT (200-300 mots)' : 'TRADUCTION COMPLÈTE'}",
   "language": "${sourceLanguage}",
   "suggestions": {
