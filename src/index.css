@@ -178,6 +178,7 @@ All colors MUST be HSL.
   font-variant-ligatures: contextual;
   font-variant-numeric: lining-nums;
   line-height: 1.8;
+  unicode-bidi: isolate;
 }
 
 .font-almarai {
@@ -386,6 +387,7 @@ All colors MUST be HSL.
 .ckeditor-rtl .ck-content li {
   direction: rtl;
   text-align: right;
+  unicode-bidi: isolate;
 }
 
 /* LTR Mode for French */
@@ -425,6 +427,7 @@ All colors MUST be HSL.
   text-align: right;
   font-family: 'Noto Sans Arabic', 'Arabic Typesetting', Tahoma, sans-serif;
   line-height: 1.8;
+  unicode-bidi: isolate;
 }
 
 .ckeditor-mini.ckeditor-ltr .ck-content {

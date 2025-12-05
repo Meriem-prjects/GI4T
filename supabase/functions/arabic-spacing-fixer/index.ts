@@ -1,6 +1,6 @@
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { sanitizeArabicText } from "../_shared/utils.ts";
+import { sanitizeArabicText, fixArabicParentheses } from "../_shared/utils.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -189,7 +189,10 @@ Sortie: "(كلّية العلوم بتونس)"`
     }
 
     const data = await response.json();
-    const correctedText = data.choices[0].message.content.trim();
+    let correctedText = data.choices[0].message.content.trim();
+    
+    // Post-process: Apply BiDi fix for parentheses
+    correctedText = fixArabicParentheses(correctedText);
 
     console.log(`Correction completed. Original: ${text.length} chars, AI result: ${correctedText.length} chars`);
 
