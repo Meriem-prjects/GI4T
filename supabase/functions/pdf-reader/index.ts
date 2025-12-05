@@ -1,10 +1,149 @@
 // Import unpdf for serverless PDF text extraction
-import { extractText, getDocumentProxy } from "https://esm.sh/unpdf@0.11.0";
+import { getDocumentProxy } from "https://esm.sh/unpdf@0.11.0";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
+
+// Extract text with layout preservation using text item positions
+async function extractTextWithLayout(pdf: any): Promise<string[]> {
+  const texts: string[] = [];
+  
+  for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
+    try {
+      const page = await pdf.getPage(pageNum);
+      const textContent = await page.getTextContent();
+      
+      if (!textContent || !textContent.items || textContent.items.length === 0) {
+        texts.push('');
+        continue;
+      }
+      
+      let pageText = '';
+      let lastY = -1;
+      let lastX = -1;
+      const heights: number[] = [];
+      
+      // Calculate average height to detect titles
+      for (const item of textContent.items) {
+        if (item.height && item.height > 0) {
+          heights.push(item.height);
+        }
+      }
+      const avgHeight = heights.length > 0 
+        ? heights.reduce((a: number, b: number) => a + b, 0) / heights.length 
+        : 12;
+      
+      // Sort items by Y position (top to bottom) then X position (left to right for LTR, right to left for RTL)
+      const sortedItems = [...textContent.items].sort((a: any, b: any) => {
+        const yA = a.transform?.[5] || 0;
+        const yB = b.transform?.[5] || 0;
+        // Sort by Y descending (top of page has higher Y value in PDF coordinates)
+        if (Math.abs(yA - yB) > avgHeight * 0.3) {
+          return yB - yA;
+        }
+        // Same line - sort by X
+        const xA = a.transform?.[4] || 0;
+        const xB = b.transform?.[4] || 0;
+        return xA - xB;
+      });
+      
+      let currentLineY = -1;
+      let isNewParagraph = false;
+      let lineTexts: string[] = [];
+      
+      for (const item of sortedItems) {
+        const y = item.transform?.[5] || 0;
+        const x = item.transform?.[4] || 0;
+        const height = item.height || avgHeight;
+        const str = item.str || '';
+        
+        if (!str.trim() && !str.includes(' ')) continue;
+        
+        if (currentLineY === -1) {
+          currentLineY = y;
+        }
+        
+        const yDiff = Math.abs(currentLineY - y);
+        
+        // Check if this is a new line
+        if (yDiff > avgHeight * 0.4) {
+          // Flush current line
+          if (lineTexts.length > 0) {
+            const lineText = lineTexts.join(' ').trim();
+            if (lineText) {
+              // Check if previous line was a title (larger font)
+              if (isNewParagraph && pageText.length > 0) {
+                pageText += '\n\n';
+              } else if (pageText.length > 0) {
+                pageText += '\n';
+              }
+              pageText += lineText;
+            }
+          }
+          
+          // Check if this is a new paragraph (larger vertical gap)
+          isNewParagraph = yDiff > avgHeight * 1.8;
+          
+          // Reset for new line
+          lineTexts = [];
+          currentLineY = y;
+          lastX = -1;
+        }
+        
+        // Check if this text item is a title (significantly larger font)
+        const isTitle = height > avgHeight * 1.35;
+        
+        // Add spacing between words on same line if needed
+        if (lastX !== -1 && lineTexts.length > 0) {
+          const xGap = Math.abs(x - lastX);
+          // If there's a significant gap, it might be intentional spacing
+          if (xGap > avgHeight * 2) {
+            lineTexts.push('   '); // Add extra spacing
+          }
+        }
+        
+        // Add title marker if detected
+        if (isTitle && lineTexts.length === 0 && str.trim()) {
+          lineTexts.push('## ');
+        }
+        
+        lineTexts.push(str);
+        lastX = x + (item.width || str.length * avgHeight * 0.5);
+      }
+      
+      // Flush remaining line
+      if (lineTexts.length > 0) {
+        const lineText = lineTexts.join(' ').trim();
+        if (lineText) {
+          if (isNewParagraph && pageText.length > 0) {
+            pageText += '\n\n';
+          } else if (pageText.length > 0) {
+            pageText += '\n';
+          }
+          pageText += lineText;
+        }
+      }
+      
+      // Clean up the text
+      pageText = pageText
+        .replace(/## \s+/g, '## ') // Clean title markers
+        .replace(/\n{3,}/g, '\n\n') // Max 2 newlines
+        .replace(/  +/g, ' ') // Normalize spaces
+        .trim();
+      
+      texts.push(pageText);
+      console.log(`Page ${pageNum}: extracted ${pageText.length} chars with layout`);
+      
+    } catch (pageError) {
+      console.error(`Error extracting page ${pageNum}:`, pageError);
+      texts.push('');
+    }
+  }
+  
+  return texts;
+}
 
 Deno.serve(async (req) => {
   console.log('PDF reader function called');
@@ -51,52 +190,29 @@ Deno.serve(async (req) => {
       throw new Error(`Impossible de charger le PDF: ${loadError instanceof Error ? loadError.message : String(loadError)}`);
     }
 
-    // Extract text from all pages with comprehensive error handling
-    let extractionResult;
-    let texts = [];
-    let totalPages = 0;
+    // Extract text with layout preservation
+    let texts: string[] = [];
+    let totalPages = pdf.numPages || 0;
 
     try {
-      extractionResult = await extractText(pdf, { mergePages: false });
+      console.log('Extracting text with layout preservation...');
+      texts = await extractTextWithLayout(pdf);
       
-      // Validate extraction result structure
-      if (extractionResult && typeof extractionResult === 'object') {
-        totalPages = extractionResult.totalPages || pdf.numPages || 0;
-        
-        // Handle the actual format returned by unpdf
-        if (extractionResult.text && Array.isArray(extractionResult.text)) {
-          texts = extractionResult.text.map(pageText => String(pageText || ''));
-        } else if ((extractionResult as any).pages && Array.isArray((extractionResult as any).pages)) {
-          texts = (extractionResult as any).pages.map((page: any) => 
-            (page && typeof page === 'object' && page.text) ? page.text : String(page || '')
-          );
-        } else if (extractionResult.text && typeof extractionResult.text === 'string') {
-          // If we got a single text string, treat it as page 1
-          texts = [extractionResult.text];
-          totalPages = 1;
-        } else {
-          console.warn('Unexpected extraction result format:', extractionResult);
-          texts = [];
-        }
-      } else {
-        console.warn('extractText returned invalid result:', extractionResult);
-        texts = [];
+      // Validate extraction
+      if (texts.length === 0 && totalPages > 0) {
+        texts = Array(totalPages).fill('');
       }
-
+      
     } catch (extractError) {
-      console.error('Text extraction failed:', extractError);
+      console.error('Text extraction with layout failed:', extractError);
       
-      // Fallback: try to get basic document info and create empty pages
-      totalPages = pdf.numPages || 0;
+      // Fallback: create empty pages
       texts = Array(totalPages).fill('');
-      
-      console.log(`Fallback: Created ${totalPages} empty text pages for PDF structure`);
+      console.log(`Fallback: Created ${totalPages} empty text pages`);
     }
 
-    // Ensure we have consistent data
-    if (texts.length === 0 && totalPages > 0) {
-      texts = Array(totalPages).fill('');
-    } else if (totalPages === 0 && texts.length > 0) {
+    // Ensure consistent data
+    if (totalPages === 0 && texts.length > 0) {
       totalPages = texts.length;
     }
 
@@ -108,7 +224,8 @@ Deno.serve(async (req) => {
       success: true,
       numPages: totalPages,
       texts,
-      totalCharacters
+      totalCharacters,
+      layoutPreserved: true
     };
 
     return new Response(JSON.stringify(result), {
@@ -122,7 +239,8 @@ Deno.serve(async (req) => {
       success: false,
       error: error instanceof Error ? error.message : String(error),
       numPages: 0,
-      texts: []
+      texts: [],
+      layoutPreserved: false
     };
 
     return new Response(JSON.stringify(errorResult), {
