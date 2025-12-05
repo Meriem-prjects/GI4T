@@ -110,6 +110,54 @@ function convertPresentationForms(text: string): string {
 }
 
 /**
+ * Fixes bidirectional issues with parentheses in Arabic text
+ * Uses Unicode control characters (RLM, FSI, PDI) to ensure correct RTL rendering
+ * Prevents the BiDi algorithm from reordering words around neutral parentheses
+ */
+export const fixArabicParentheses = (text: string): string => {
+  if (!text) return text;
+  
+  const RLM = '\u200F';  // Right-to-Left Mark
+  const FSI = '\u2068';  // First Strong Isolate
+  const PDI = '\u2069';  // Pop Directional Isolate
+  
+  let result = text;
+  
+  // First: Remove any existing RLM/FSI/PDI to prevent double-wrapping
+  result = result.replace(/[\u200F\u2068\u2069]/g, '');
+  
+  // Fix reversed parentheses in RTL context: )text( → (text)
+  result = result.replace(/\)([^()]+)\(/g, '($1)');
+  
+  // Wrap Arabic text in parentheses with isolates to prevent BiDi reordering
+  // Match: (Arabic text) - uses FSI/PDI to isolate the content
+  result = result.replace(
+    /\(([^()]*[\u0600-\u06FF\uFE70-\uFEFF][^()]*)\)/g,
+    `${RLM}(${FSI}$1${PDI})${RLM}`
+  );
+  
+  // Also handle square brackets containing Arabic
+  result = result.replace(
+    /\[([^\[\]]*[\u0600-\u06FF\uFE70-\uFEFF][^\[\]]*)\]/g,
+    `${RLM}[${FSI}$1${PDI}]${RLM}`
+  );
+  
+  // Handle guillemets (French quotes) containing Arabic
+  result = result.replace(
+    /«([^«»]*[\u0600-\u06FF\uFE70-\uFEFF][^«»]*)»/g,
+    `${RLM}«${FSI}$1${PDI}»${RLM}`
+  );
+  
+  // Handle curly braces containing Arabic
+  result = result.replace(
+    /\{([^{}]*[\u0600-\u06FF\uFE70-\uFEFF][^{}]*)\}/g,
+    `${RLM}{${FSI}$1${PDI}}${RLM}`
+  );
+  
+  return result;
+};
+
+/**
  * Sanitizes Arabic text using NFKC normalization plus cleanup
  * - Converts presentation forms to base characters
  * - Strips control characters (ZWJ, ZWNJ, LRM, RLM, tatweel)
@@ -299,6 +347,9 @@ export const sanitizeArabicText = (text: string | null | undefined): string => {
   
   // Step 8: Final cleanup - compact multiple spaces
   sanitized = sanitized.replace(/\s+/g, ' ').trim();
+  
+  // Step 9: Fix BiDi issues with parentheses
+  sanitized = fixArabicParentheses(sanitized);
   
   return sanitized;
 };
