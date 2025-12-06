@@ -1,10 +1,133 @@
 // Import unpdf for serverless PDF text extraction
-import { extractText, getDocumentProxy } from "https://esm.sh/unpdf@0.11.0";
+import { getDocumentProxy } from "https://esm.sh/unpdf@0.11.0";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
+
+interface TextItem {
+  str: string;
+  transform?: number[];
+  height?: number;
+  width?: number;
+  dir?: string;
+}
+
+interface TextContent {
+  items: TextItem[];
+}
+
+/**
+ * Reconstructs text structure from PDF text content items
+ * Analyzes Y positions and font sizes to detect headings, paragraphs, and line breaks
+ */
+function reconstructTextStructure(textContent: TextContent): string {
+  const items = textContent.items.filter((item: TextItem) => item.str && item.str.trim());
+  
+  if (items.length === 0) return '';
+  
+  // Calculate average height (font size) for detecting titles
+  const heights = items.map((item: TextItem) => item.height || 10).filter(h => h > 0);
+  const avgHeight = heights.length > 0 
+    ? heights.reduce((sum: number, h: number) => sum + h, 0) / heights.length 
+    : 10;
+  
+  let result = '';
+  let lastY: number | null = null;
+  let currentLine = '';
+  
+  for (let i = 0; i < items.length; i++) {
+    const item = items[i];
+    const currentY = item.transform ? item.transform[5] : 0;
+    const currentHeight = item.height || 10;
+    const text = item.str;
+    
+    if (lastY !== null) {
+      const deltaY = Math.abs(lastY - currentY);
+      
+      // Large gap = new paragraph (> 1.8x average font height)
+      if (deltaY > avgHeight * 1.8) {
+        // Flush current line
+        if (currentLine.trim()) {
+          result += currentLine.trim() + '\n\n';
+          currentLine = '';
+        }
+      }
+      // Small gap = new line (> 0.4x average font height)
+      else if (deltaY > avgHeight * 0.4) {
+        // Flush current line
+        if (currentLine.trim()) {
+          result += currentLine.trim() + '\n';
+          currentLine = '';
+        }
+      }
+    }
+    
+    // Detect potential heading (font size > 1.35x average and short text)
+    const isHeading = currentHeight > avgHeight * 1.35 && text.trim().length < 100 && text.trim().length > 2;
+    
+    if (isHeading && currentLine.trim() === '') {
+      // Start a new heading
+      currentLine = `## ${text}`;
+    } else if (isHeading && currentLine.startsWith('## ')) {
+      // Continue heading on same line
+      currentLine += ' ' + text;
+    } else {
+      // Regular text - add to current line
+      if (currentLine && !currentLine.endsWith(' ') && !text.startsWith(' ')) {
+        currentLine += ' ';
+      }
+      currentLine += text;
+    }
+    
+    lastY = currentY;
+  }
+  
+  // Flush remaining content
+  if (currentLine.trim()) {
+    result += currentLine.trim();
+  }
+  
+  return result.trim();
+}
+
+/**
+ * Converts structured text (with ## markers and \n) to HTML for CKEditor
+ */
+function convertStructuredTextToHTML(text: string): string {
+  if (!text) return '';
+  
+  let html = text;
+  
+  // Convert heading markers to HTML
+  // ## Heading -> <h2>Heading</h2>
+  html = html.replace(/^## (.+)$/gm, '<h2>$1</h2>');
+  // # Heading -> <h1>Heading</h1>
+  html = html.replace(/^# (.+)$/gm, '<h1>$1</h1>');
+  
+  // Split by paragraph breaks (double newlines)
+  const blocks = html.split(/\n\n+/);
+  
+  html = blocks
+    .map(block => {
+      const trimmed = block.trim();
+      if (!trimmed) return '';
+      
+      // Don't wrap headings in <p>
+      if (trimmed.startsWith('<h1>') || trimmed.startsWith('<h2>')) {
+        return trimmed;
+      }
+      
+      // Wrap regular text in paragraphs, convert single newlines to <br/>
+      const withBreaks = trimmed.replace(/\n/g, '<br/>');
+      return `<p>${withBreaks}</p>`;
+    })
+    .filter(block => block)
+    .join('\n');
+  
+  return html;
+}
 
 Deno.serve(async (req) => {
   console.log('PDF reader function called');
@@ -51,53 +174,30 @@ Deno.serve(async (req) => {
       throw new Error(`Impossible de charger le PDF: ${loadError instanceof Error ? loadError.message : String(loadError)}`);
     }
 
-    // Extract text from all pages with comprehensive error handling
-    let extractionResult;
-    let texts = [];
-    let totalPages = 0;
+    // Extract text from all pages using getTextContent() for position analysis
+    const texts: string[] = [];
+    const htmlTexts: string[] = [];
+    const totalPages = pdf.numPages || 0;
 
-    try {
-      extractionResult = await extractText(pdf, { mergePages: false });
-      
-      // Validate extraction result structure
-      if (extractionResult && typeof extractionResult === 'object') {
-        totalPages = extractionResult.totalPages || pdf.numPages || 0;
+    for (let pageNum = 1; pageNum <= totalPages; pageNum++) {
+      try {
+        const page = await pdf.getPage(pageNum);
+        const textContent = await page.getTextContent();
         
-        // Handle the actual format returned by unpdf
-        if (extractionResult.text && Array.isArray(extractionResult.text)) {
-          texts = extractionResult.text.map(pageText => String(pageText || ''));
-        } else if ((extractionResult as any).pages && Array.isArray((extractionResult as any).pages)) {
-          texts = (extractionResult as any).pages.map((page: any) => 
-            (page && typeof page === 'object' && page.text) ? page.text : String(page || '')
-          );
-        } else if (extractionResult.text && typeof extractionResult.text === 'string') {
-          // If we got a single text string, treat it as page 1
-          texts = [extractionResult.text];
-          totalPages = 1;
-        } else {
-          console.warn('Unexpected extraction result format:', extractionResult);
-          texts = [];
-        }
-      } else {
-        console.warn('extractText returned invalid result:', extractionResult);
-        texts = [];
+        // Reconstruct structured text with layout analysis
+        const structuredText = reconstructTextStructure(textContent as TextContent);
+        texts.push(structuredText);
+        
+        // Convert to HTML for CKEditor
+        const htmlContent = convertStructuredTextToHTML(structuredText);
+        htmlTexts.push(htmlContent);
+        
+        console.log(`Page ${pageNum}: ${structuredText.length} chars extracted, ${htmlContent.length} chars HTML`);
+      } catch (pageError) {
+        console.error(`Error extracting page ${pageNum}:`, pageError);
+        texts.push('');
+        htmlTexts.push('');
       }
-
-    } catch (extractError) {
-      console.error('Text extraction failed:', extractError);
-      
-      // Fallback: try to get basic document info and create empty pages
-      totalPages = pdf.numPages || 0;
-      texts = Array(totalPages).fill('');
-      
-      console.log(`Fallback: Created ${totalPages} empty text pages for PDF structure`);
-    }
-
-    // Ensure we have consistent data
-    if (texts.length === 0 && totalPages > 0) {
-      texts = Array(totalPages).fill('');
-    } else if (totalPages === 0 && texts.length > 0) {
-      totalPages = texts.length;
     }
 
     const totalCharacters = texts.reduce((sum: number, page: string) => sum + (page || '').length, 0);
@@ -107,7 +207,8 @@ Deno.serve(async (req) => {
     const result = {
       success: true,
       numPages: totalPages,
-      texts,
+      texts,           // Structured text with ## markers and \n
+      htmlTexts,       // HTML formatted for CKEditor
       totalCharacters
     };
 
@@ -122,7 +223,8 @@ Deno.serve(async (req) => {
       success: false,
       error: error instanceof Error ? error.message : String(error),
       numPages: 0,
-      texts: []
+      texts: [],
+      htmlTexts: []
     };
 
     return new Response(JSON.stringify(errorResult), {

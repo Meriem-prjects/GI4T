@@ -399,52 +399,57 @@ serve(async (req) => {
         });
         
         if (!readerError && readerData?.success) {
-          // Use pdf-reader results regardless of text quantity
+          // Use pdf-reader results - prefer HTML if available, otherwise use structured text
+          const extractedHtml = (readerData.htmlTexts || []).join('\n').trim();
           const extractedText = (readerData.texts || []).join('\n\n').trim();
           const avgCharsPerPage = extractedText.length / (readerData.numPages || 1);
           
-          console.log(`PDF text extraction result: ${readerData.numPages} pages, ${extractedText.length} chars, avg ${Math.round(avgCharsPerPage)} chars/page`);
+          console.log(`PDF text extraction result: ${readerData.numPages} pages, ${extractedText.length} chars text, ${extractedHtml.length} chars HTML, avg ${Math.round(avgCharsPerPage)} chars/page`);
           
           // Always use direct extraction - no more OCR fallback
-          console.log('Using PDF direct extraction result');
+          console.log('Using PDF direct extraction result with structure preservation');
           
           // Use RAW sanitization for 100% PDF fidelity - no transformations
           let sanitizedExtractedText = sanitizeArabicTextRaw(extractedText);
           
-           fileContent = sanitizedExtractedText.length > 0 ? sanitizedExtractedText : 'Document PDF sans texte extractible';
-           extractionSuccess = true;
-           totalPagesVar = readerData.numPages || 1;
-           shouldUsePDFReader = true;
+          // Store HTML content for CKEditor (preserves structure like headings and paragraphs)
+          const htmlContent = extractedHtml || sanitizedExtractedText;
+          
+          fileContent = htmlContent.length > 0 ? htmlContent : 'Document PDF sans texte extractible';
+          extractionSuccess = true;
+          totalPagesVar = readerData.numPages || 1;
+          shouldUsePDFReader = true;
            
-           // Check Arabic text quality - force OCR if badly encoded
-           if (language === 'ar' && sanitizedExtractedText.length > 0 && hasArabicSpacingIssues(sanitizedExtractedText)) {
-             console.log('⚠️ Arabic text quality issues detected - forcing Google Vision OCR');
-             shouldUsePDFReader = false;
-             fileContent = 'Document PDF avec texte mal encodé - OCR requis';
-             extractionSuccess = false;
-           }
+          // Check Arabic text quality - force OCR if badly encoded
+          if (language === 'ar' && sanitizedExtractedText.length > 0 && hasArabicSpacingIssues(sanitizedExtractedText)) {
+            console.log('⚠️ Arabic text quality issues detected - forcing Google Vision OCR');
+            shouldUsePDFReader = false;
+            fileContent = 'Document PDF avec texte mal encodé - OCR requis';
+            extractionSuccess = false;
+          }
            
-           // Create page contents from extracted text - RAW for 100% fidelity
-           pageContents = (readerData.texts || []).map((text: string, index: number) => {
-               const pageContent = sanitizeArabicTextRaw(text.trim());
-               return {
-                 pageNumber: index + 1,
-                 content: pageContent,
-                 confidence: 1.0,
-                 language: language
-               };
-             });
+          // Create page contents from extracted text - use HTML if available
+          pageContents = (readerData.texts || []).map((text: string, index: number) => {
+            const pageHtml = readerData.htmlTexts?.[index] || '';
+            const pageContent = pageHtml || sanitizeArabicTextRaw(text.trim());
+            return {
+              pageNumber: index + 1,
+              content: pageContent,
+              confidence: 1.0,
+              language: language
+            };
+          });
           
           processedPages = readerData.numPages || 1;
           
-            // Enhanced analysis data with extracted content
+          // Enhanced analysis data with extracted content
           analysisData.title = file.name.replace(/\.[^/.]+$/, "");
           analysisData.summary = extractedText.length > 0 
             ? `Document PDF traité: ${extractedText.substring(0, 200)}...`
             : 'Document PDF traité sans texte extractible';
           analysisData.language = language; // Use the provided language
           
-          console.log('PDF direct extraction completed successfully');
+          console.log('PDF direct extraction completed successfully with structure preservation');
         } else {
           // PDF reading failed completely - save file but mark as unprocessed
           console.log('PDF text extraction failed completely, saving file without content');
