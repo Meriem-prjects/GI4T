@@ -1190,7 +1190,7 @@ const translations: Record<'fr' | 'ar', Record<TranslationKey, string>> = {
     // Workflow IA Timeline
     workflowGuide: 'سير عمل المعالجة بالذكاء الاصطناعي',
     aiAnalysisStep: 'التحليل بالذكاء الاصطناعي',
-    aiAnalysisStepDesc: 'استخراج وترجمة البيانات الوصفية (العنوان، الملخص، الكلمات المفتاحية...) + مقتطف قصير من المحتوى (~300 كلمة)',
+    aiAnalysisStepDesc: 'استخراج وترجمة البيانات الوصفية (العنوان، الملخص، الكلمات المفاتيح...) + مقتطف قصير من المحتوى (~300 كلمة)',
     translatePagesStep: 'ترجمة صفحة بصفحة',
     translatePagesStepDesc: 'ترجمة المحتوى الكامل لكل صفحة بشكل فردي',
     consolidateStep: 'دمج',

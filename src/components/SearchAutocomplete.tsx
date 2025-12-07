@@ -200,7 +200,7 @@ export const SearchAutocomplete = ({
   const typeLabels = {
     category: language === 'ar' ? 'فئات' : 'Catégories',
     court: language === 'ar' ? 'المحاكم' : 'Tribunaux',
-    keyword: language === 'ar' ? 'الكلمات المفتاحية' : 'Mots-clés',
+    keyword: language === 'ar' ? 'الكلمات المفاتيح' : 'Mots-clés',
     jurisdiction: language === 'ar' ? 'الاختصاص' : 'Juridictions',
   };
 
