@@ -20,10 +20,11 @@ interface TextContent {
 
 /**
  * Reconstructs text structure from PDF text content items
- * Analyzes Y positions and font sizes to detect headings, paragraphs, and line breaks
+ * Analyzes X/Y positions, font sizes, and text direction to preserve original layout
  */
 function reconstructTextStructure(textContent: TextContent): string {
-  const items = textContent.items.filter((item: TextItem) => item.str && item.str.trim());
+  // Keep all items, including those with only spaces (important for spacing)
+  const items = textContent.items.filter((item: TextItem) => item.str);
   
   if (items.length === 0) return '';
   
@@ -33,34 +34,72 @@ function reconstructTextStructure(textContent: TextContent): string {
     ? heights.reduce((sum: number, h: number) => sum + h, 0) / heights.length 
     : 10;
   
+  // Calculate average character width for space detection
+  const charWidths: number[] = [];
+  for (const item of items) {
+    if (item.width && item.str.length > 0) {
+      charWidths.push(item.width / item.str.length);
+    }
+  }
+  const avgCharWidth = charWidths.length > 0
+    ? charWidths.reduce((sum, w) => sum + w, 0) / charWidths.length
+    : 5;
+  
   let result = '';
   let lastY: number | null = null;
+  let lastX: number | null = null;
+  let lastWidth: number = 0;
+  let lastDir: string | null = null;
   let currentLine = '';
   
   for (let i = 0; i < items.length; i++) {
     const item = items[i];
+    const currentX = item.transform ? item.transform[4] : 0;
     const currentY = item.transform ? item.transform[5] : 0;
     const currentHeight = item.height || 10;
+    const currentWidth = item.width || 0;
     const text = item.str;
+    const isRTL = item.dir === 'rtl';
     
     if (lastY !== null) {
       const deltaY = Math.abs(lastY - currentY);
       
       // Large gap = new paragraph (> 1.8x average font height)
       if (deltaY > avgHeight * 1.8) {
-        // Flush current line
         if (currentLine.trim()) {
           result += currentLine.trim() + '\n\n';
           currentLine = '';
         }
+        lastX = null;
+        lastWidth = 0;
       }
       // Small gap = new line (> 0.4x average font height)
       else if (deltaY > avgHeight * 0.4) {
-        // Flush current line
         if (currentLine.trim()) {
           result += currentLine.trim() + '\n';
           currentLine = '';
         }
+        lastX = null;
+        lastWidth = 0;
+      }
+      // Same line - check horizontal spacing
+      else if (lastX !== null) {
+        // Calculate gap between end of last item and start of current
+        let gap: number;
+        if (isRTL || lastDir === 'rtl') {
+          // For RTL, items are ordered right-to-left
+          gap = lastX - (currentX + currentWidth);
+        } else {
+          // For LTR, items are ordered left-to-right
+          gap = currentX - (lastX + lastWidth);
+        }
+        
+        // Only add space if there's a significant gap (> 0.3x avg char width)
+        // This preserves original spacing without adding unwanted spaces
+        if (gap > avgCharWidth * 0.3) {
+          currentLine += ' ';
+        }
+        // No space added if gap is small - text fragments are concatenated directly
       }
     }
     
@@ -68,20 +107,17 @@ function reconstructTextStructure(textContent: TextContent): string {
     const isHeading = currentHeight > avgHeight * 1.35 && text.trim().length < 100 && text.trim().length > 2;
     
     if (isHeading && currentLine.trim() === '') {
-      // Start a new heading
       currentLine = `## ${text}`;
     } else if (isHeading && currentLine.startsWith('## ')) {
-      // Continue heading on same line
-      currentLine += ' ' + text;
+      currentLine += text; // No automatic space for headings either
     } else {
-      // Regular text - add to current line
-      if (currentLine && !currentLine.endsWith(' ') && !text.startsWith(' ')) {
-        currentLine += ' ';
-      }
-      currentLine += text;
+      currentLine += text; // Direct concatenation - no automatic space
     }
     
+    lastX = currentX;
     lastY = currentY;
+    lastWidth = currentWidth;
+    lastDir = item.dir || null;
   }
   
   // Flush remaining content
