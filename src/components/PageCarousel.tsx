@@ -12,7 +12,7 @@ const PageCarousel: React.FC<PageCarouselProps> = ({ content, language }) => {
   const isRTL = language === 'ar';
   
   // Parse pages from content with page-break markers
-  const pages = React.useMemo(() => {
+  const individualPages = React.useMemo(() => {
     // Try to split by page-break divs
     const pageBreakRegex = /<div[^>]*class="[^"]*page-break[^"]*"[^>]*data-page="(\d+)"[^>]*>([\s\S]*?)<\/div>(?=<div[^>]*class="[^"]*page-break|$)/gi;
     const matches = [...content.matchAll(pageBreakRegex)];
@@ -38,6 +38,19 @@ const PageCarousel: React.FC<PageCarouselProps> = ({ content, language }) => {
     // No page breaks found, return full content as single page
     return [{ pageNumber: 1, content }];
   }, [content]);
+
+  // Group pages by 2 for optimized space
+  const pages = React.useMemo(() => {
+    const grouped: Array<{ pageNumbers: number[]; pages: typeof individualPages }> = [];
+    for (let i = 0; i < individualPages.length; i += 2) {
+      const pair = individualPages.slice(i, i + 2);
+      grouped.push({
+        pageNumbers: pair.map(p => p.pageNumber),
+        pages: pair
+      });
+    }
+    return grouped;
+  }, [individualPages]);
 
   const [emblaRef, emblaApi] = useEmblaCarousel({ 
     loop: false,
@@ -71,14 +84,27 @@ const PageCarousel: React.FC<PageCarouselProps> = ({ content, language }) => {
     };
   }, [emblaApi, onSelect]);
 
-  // If only one page, render without carousel
+  // If only one slide (1-2 pages), render without carousel
   if (pages.length === 1) {
     return (
-      <div 
-        className={`document-content space-y-6 ${isRTL ? 'text-right' : ''}`}
-        dir={isRTL ? 'rtl' : 'ltr'}
-        dangerouslySetInnerHTML={{ __html: pages[0].content }}
-      />
+      <div className="space-y-6">
+        {pages[0].pages.map((page) => (
+          <div 
+            key={page.pageNumber}
+            className={`document-content space-y-4 ${isRTL ? 'text-right' : ''}`}
+            dir={isRTL ? 'rtl' : 'ltr'}
+          >
+            {pages[0].pages.length > 1 && (
+              <div className={`page-number-badge mb-4 pb-3 border-b border-border/50 ${isRTL ? 'text-right' : 'text-left'}`}>
+                <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+                  {isRTL ? `صفحة ${page.pageNumber}` : `Page ${page.pageNumber}`}
+                </span>
+              </div>
+            )}
+            <div dangerouslySetInnerHTML={{ __html: page.content }} />
+          </div>
+        ))}
+      </div>
     );
   }
 
@@ -99,8 +125,8 @@ const PageCarousel: React.FC<PageCarouselProps> = ({ content, language }) => {
         
         <span className="text-sm font-medium text-muted-foreground">
           {isRTL 
-            ? `صفحة ${currentIndex + 1} من ${pages.length}`
-            : `Page ${currentIndex + 1} / ${pages.length}`
+            ? `${pages[currentIndex]?.pageNumbers.join('-')} من ${individualPages.length} صفحات`
+            : `Pages ${pages[currentIndex]?.pageNumbers.join('-')} / ${individualPages.length}`
           }
         </span>
         
@@ -119,27 +145,32 @@ const PageCarousel: React.FC<PageCarouselProps> = ({ content, language }) => {
       {/* Carousel viewport */}
       <div className="page-carousel-viewport overflow-hidden" ref={emblaRef}>
         <div className={`page-carousel-container flex ${isRTL ? 'flex-row-reverse' : ''}`}>
-          {pages.map((page, index) => (
+          {pages.map((slideGroup, slideIndex) => (
             <div 
-              key={page.pageNumber} 
+              key={slideIndex} 
               className="page-carousel-slide flex-shrink-0 w-full px-2"
             >
               <div 
                 className={`page-frame border-2 border-border rounded-lg p-6 md:p-8 bg-card shadow-sm min-h-[400px] ${isRTL ? 'text-right' : ''}`}
                 dir={isRTL ? 'rtl' : 'ltr'}
               >
-                {/* Page number indicator */}
-                <div className={`page-number-badge mb-4 pb-3 border-b border-border/50 ${isRTL ? 'text-right' : 'text-left'}`}>
-                  <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
-                    {isRTL ? `صفحة ${page.pageNumber}` : `Page ${page.pageNumber}`}
-                  </span>
-                </div>
-                
-                {/* Page content */}
-                <div 
-                  className="document-content space-y-4"
-                  dangerouslySetInnerHTML={{ __html: page.content }}
-                />
+                {/* Render both pages in this slide */}
+                {slideGroup.pages.map((page, pageIdx) => (
+                  <div key={page.pageNumber} className={pageIdx > 0 ? 'mt-8 pt-6 border-t-2 border-dashed border-border/50' : ''}>
+                    {/* Page number indicator */}
+                    <div className={`page-number-badge mb-4 pb-3 border-b border-border/50 ${isRTL ? 'text-right' : 'text-left'}`}>
+                      <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+                        {isRTL ? `صفحة ${page.pageNumber}` : `Page ${page.pageNumber}`}
+                      </span>
+                    </div>
+                    
+                    {/* Page content */}
+                    <div 
+                      className="document-content space-y-4"
+                      dangerouslySetInnerHTML={{ __html: page.content }}
+                    />
+                  </div>
+                ))}
               </div>
             </div>
           ))}
