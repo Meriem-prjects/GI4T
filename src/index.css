@@ -438,23 +438,31 @@ All colors MUST be HSL.
 /* Page Separator Styles (Editor) */
 .page-separator {
   text-align: center;
-  margin: 2rem 0;
   padding: 0.75rem 1rem;
-  border-top: 2px dashed hsl(var(--border));
   border-bottom: 2px dashed hsl(var(--border));
   color: hsl(var(--muted-foreground));
   font-size: 0.875rem;
-  background: hsl(var(--muted) / 0.3);
-  font-weight: 500;
+  background: linear-gradient(180deg, hsl(var(--primary) / 0.08) 0%, hsl(var(--muted) / 0.3) 100%);
+  font-weight: 600;
+  letter-spacing: 0.05em;
 }
 
 .page-break {
   border: 1px solid hsl(var(--border));
   border-radius: 0.5rem;
-  padding: 1.5rem;
   margin-bottom: 1.5rem;
   background: hsl(var(--background));
-  box-shadow: 0 1px 3px hsl(var(--foreground) / 0.05);
+  box-shadow: 0 2px 8px hsl(var(--foreground) / 0.06);
+  overflow: hidden;
+}
+
+.page-break .ckeditor-wrapper {
+  border: none;
+  border-radius: 0;
+}
+
+.page-break .ck-editor__editable {
+  min-height: 200px !important;
 }
 
 /* Page Carousel Styles (Frontend) */
