@@ -430,12 +430,11 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
     if (!editedData.page_contents || !editedData.id) return;
     
     // Collect all page translations in order
-    const translations = editedData.page_contents
+    const sortedPages = editedData.page_contents
       .sort((a, b) => a.pageNumber - b.pageNumber)
-      .map(page => page.translated_content || '')
-      .filter(content => content.trim() !== '');
+      .filter(page => page.translated_content && page.translated_content.trim() !== '');
     
-    if (translations.length === 0) {
+    if (sortedPages.length === 0) {
       toast({
         title: "⚠️ Aucune traduction",
         description: "Aucune page traduite à consolider.",
@@ -444,8 +443,15 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
       return;
     }
     
-    // Join all translations
-    const consolidatedContent = translations.join('\n\n');
+    // Join all translations with page separators for visual structure
+    const consolidatedContent = sortedPages
+      .map((page, index) => 
+        `<div class="page-break" data-page="${page.pageNumber}">
+          <div class="page-separator">— صفحة ${page.pageNumber} / Page ${page.pageNumber} —</div>
+          ${page.translated_content}
+        </div>`
+      )
+      .join('\n');
     
     // Update local state
     setTranslatedContent(consolidatedContent);
@@ -470,7 +476,7 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
     } else {
       toast({
         title: "✅ Traduction consolidée !",
-        description: `Les ${translations.length} pages traduites ont été consolidées dans l'onglet Contenu.`,
+        description: `Les ${sortedPages.length} pages traduites ont été consolidées dans l'onglet Contenu.`,
       });
     }
   };
