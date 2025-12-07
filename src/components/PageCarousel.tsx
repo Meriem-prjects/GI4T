@@ -36,9 +36,17 @@ const PageCarousel: React.FC<PageCarouselProps> = ({ content, language }) => {
         // Extract content between this page-break start and next (or end)
         let pageContent = content.slice(startIndex, endIndex);
         
-        // Remove closing div(s) at the end and page-separator
-        pageContent = pageContent.replace(/<\/div>\s*$/, '').trim();
-        pageContent = pageContent.replace(/<div[^>]*class="[^"]*page-separator[^"]*"[^>]*>[\s\S]*?<\/div>/gi, '').trim();
+        // Remove only the closing div of the page-break container, not all divs
+        // Count how many closing divs at the end - we only need to remove one
+        pageContent = pageContent.replace(/\s*<\/div>\s*$/, '').trim();
+        
+        // Remove page-separator div at the beginning
+        pageContent = pageContent.replace(/^\s*<div[^>]*class="[^"]*page-separator[^"]*"[^>]*>[\s\S]*?<\/div>\s*/gi, '').trim();
+        
+        // Debug log
+        if (pageContent.length === 0) {
+          console.log(`PageCarousel: Page ${pageNumber} has empty content. Raw slice length: ${content.slice(startIndex, endIndex).length}`);
+        }
         
         pages.push({ pageNumber, content: pageContent });
       }
