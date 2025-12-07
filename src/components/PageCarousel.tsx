@@ -211,7 +211,7 @@ const PageCarousel: React.FC<PageCarouselProps> = ({ content, language }) => {
       </div>
 
       {/* Pagination dots */}
-      <div className="page-carousel-dots flex justify-center gap-2 mt-6">
+      <div className={`page-carousel-dots flex justify-center gap-2 mt-6 ${isRTL ? 'flex-row-reverse' : ''}`}>
         {pages.map((_, index) => (
           <button
             key={index}
