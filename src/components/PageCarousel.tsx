@@ -146,16 +146,16 @@ const PageCarousel: React.FC<PageCarouselProps> = ({ content, language }) => {
   return (
     <div className="page-carousel-container">
       {/* Header with navigation */}
-      <div className={`page-carousel-header flex items-center justify-between mb-4 p-3 bg-muted/50 rounded-lg ${isRTL ? 'flex-row-reverse' : ''}`}>
+      <div className="page-carousel-header flex items-center justify-between mb-4 p-3 bg-muted/50 rounded-lg">
         <Button 
           variant="outline" 
           size="sm" 
-          onClick={scrollPrev}
-          disabled={!canScrollPrev}
+          onClick={isRTL ? scrollNext : scrollPrev}
+          disabled={isRTL ? !canScrollNext : !canScrollPrev}
           className={isRTL ? 'flex-row-reverse' : ''}
         >
-          {isRTL ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
-          <span className="mx-2">{isRTL ? 'السابق' : 'Précédent'}</span>
+          <ChevronLeft className="h-4 w-4" />
+          <span className="mx-2">{isRTL ? 'التالي' : 'Précédent'}</span>
         </Button>
         
         <span className="text-sm font-medium text-muted-foreground">
@@ -168,18 +168,18 @@ const PageCarousel: React.FC<PageCarouselProps> = ({ content, language }) => {
         <Button 
           variant="outline" 
           size="sm" 
-          onClick={scrollNext}
-          disabled={!canScrollNext}
+          onClick={isRTL ? scrollPrev : scrollNext}
+          disabled={isRTL ? !canScrollPrev : !canScrollNext}
           className={isRTL ? 'flex-row-reverse' : ''}
         >
-          <span className="mx-2">{isRTL ? 'التالي' : 'Suivant'}</span>
-          {isRTL ? <ChevronLeft className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
+          <span className="mx-2">{isRTL ? 'السابق' : 'Suivant'}</span>
+          <ChevronRight className="h-4 w-4" />
         </Button>
       </div>
 
       {/* Carousel viewport */}
-      <div className="page-carousel-viewport overflow-hidden" ref={emblaRef}>
-        <div className={`page-carousel-container flex ${isRTL ? 'flex-row-reverse' : ''}`}>
+      <div className="page-carousel-viewport overflow-hidden" ref={emblaRef} dir={isRTL ? 'rtl' : 'ltr'}>
+        <div className="page-carousel-container flex">
           {pages.map((slideGroup, slideIndex) => (
             <div 
               key={slideIndex} 
@@ -213,7 +213,7 @@ const PageCarousel: React.FC<PageCarouselProps> = ({ content, language }) => {
       </div>
 
       {/* Pagination dots */}
-      <div className={`page-carousel-dots flex justify-center gap-2 mt-6 ${isRTL ? 'flex-row-reverse' : ''}`}>
+      <div className="page-carousel-dots flex justify-center gap-2 mt-6">
         {pages.map((_, index) => (
           <button
             key={index}
