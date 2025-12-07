@@ -154,7 +154,7 @@ const PageCarousel: React.FC<PageCarouselProps> = ({ content, language }) => {
           disabled={isRTL ? !canScrollNext : !canScrollPrev}
         >
           <ChevronLeft className="h-4 w-4" />
-          <span className="mx-2">{isRTL ? 'السابق' : 'Précédent'}</span>
+          <span className="mx-2">{isRTL ? 'التالي' : 'Précédent'}</span>
         </Button>
         
         <span className="text-sm font-medium text-muted-foreground">
@@ -170,7 +170,7 @@ const PageCarousel: React.FC<PageCarouselProps> = ({ content, language }) => {
           onClick={isRTL ? scrollPrev : scrollNext}
           disabled={isRTL ? !canScrollPrev : !canScrollNext}
         >
-          <span className="mx-2">{isRTL ? 'التالي' : 'Suivant'}</span>
+          <span className="mx-2">{isRTL ? 'السابق' : 'Suivant'}</span>
           <ChevronRight className="h-4 w-4" />
         </Button>
       </div>
