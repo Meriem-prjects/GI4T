@@ -13,15 +13,37 @@ const PageCarousel: React.FC<PageCarouselProps> = ({ content, language }) => {
   
   // Parse pages from content with page-break markers
   const individualPages = React.useMemo(() => {
-    // Try to split by page-break divs
-    const pageBreakRegex = /<div[^>]*class="[^"]*page-break[^"]*"[^>]*data-page="(\d+)"[^>]*>([\s\S]*?)<\/div>(?=<div[^>]*class="[^"]*page-break|$)/gi;
-    const matches = [...content.matchAll(pageBreakRegex)];
+    // Parse page-break divs by finding them and extracting content between them
+    const pageBreakPattern = /<div[^>]*class="[^"]*page-break[^"]*"[^>]*data-page="(\d+)"[^>]*>/gi;
+    const matches = [...content.matchAll(pageBreakPattern)];
     
     if (matches.length > 0) {
-      return matches.map((match, index) => ({
-        pageNumber: parseInt(match[1]) || index + 1,
-        content: match[2].replace(/<div[^>]*class="[^"]*page-separator[^"]*"[^>]*>[\s\S]*?<\/div>/gi, '').trim()
-      }));
+      const pages: Array<{ pageNumber: number; content: string }> = [];
+      
+      for (let i = 0; i < matches.length; i++) {
+        const match = matches[i];
+        const pageNumber = parseInt(match[1]) || i + 1;
+        const startIndex = match.index! + match[0].length;
+        
+        // Find end: either next page-break or end of content
+        let endIndex: number;
+        if (i + 1 < matches.length) {
+          endIndex = matches[i + 1].index!;
+        } else {
+          endIndex = content.length;
+        }
+        
+        // Extract content between this page-break start and next (or end)
+        let pageContent = content.slice(startIndex, endIndex);
+        
+        // Remove closing div(s) at the end and page-separator
+        pageContent = pageContent.replace(/<\/div>\s*$/, '').trim();
+        pageContent = pageContent.replace(/<div[^>]*class="[^"]*page-separator[^"]*"[^>]*>[\s\S]*?<\/div>/gi, '').trim();
+        
+        pages.push({ pageNumber, content: pageContent });
+      }
+      
+      return pages;
     }
     
     // Fallback: try splitting by page-separator divs
