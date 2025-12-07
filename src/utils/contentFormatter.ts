@@ -7,22 +7,47 @@ import { normalizeArabicText, isArabicText } from '@/lib/arabicUtils';
 export const renderFormattedContent = (content: string): string => {
   if (!content) return '';
   
-  // Check if content contains page-break divs - if so, preserve them and process content inside
+  // Check if content contains page-break divs - use index-based extraction for nested div support
   if (content.includes('class="page-break"') || content.includes("class='page-break'")) {
-    // Process each page-break section separately
-    return content.replace(
-      /(<div[^>]*class="[^"]*page-break[^"]*"[^>]*>)([\s\S]*?)(<\/div>)(?=\s*<div[^>]*class="[^"]*page-break|$)/gi,
-      (match, openTag, innerContent, closeTag) => {
-        // Check for page-separator inside
+    const pageBreakPattern = /<div[^>]*class="[^"]*page-break[^"]*"[^>]*>/gi;
+    const matches = [...content.matchAll(pageBreakPattern)];
+    
+    if (matches.length > 0) {
+      let result = '';
+      
+      for (let i = 0; i < matches.length; i++) {
+        const match = matches[i];
+        const openTag = match[0];
+        const startIndex = match.index! + openTag.length;
+        
+        // Find end: either next page-break start or end of content
+        let endIndex: number;
+        if (i + 1 < matches.length) {
+          endIndex = matches[i + 1].index!;
+        } else {
+          endIndex = content.length;
+        }
+        
+        // Extract content between this page-break and the next
+        let innerContent = content.slice(startIndex, endIndex);
+        
+        // Remove only the closing </div> at the very end (for this page-break container)
+        innerContent = innerContent.replace(/\s*<\/div>\s*$/, '');
+        
+        // Check for page-separator at the beginning
         const separatorMatch = innerContent.match(/^(\s*<div[^>]*class="[^"]*page-separator[^"]*"[^>]*>[\s\S]*?<\/div>)([\s\S]*)$/i);
+        
         if (separatorMatch) {
           const separator = separatorMatch[1];
           const pageContent = separatorMatch[2];
-          return `${openTag}${separator}${processTextContent(pageContent)}${closeTag}`;
+          result += `${openTag}${separator}${processTextContent(pageContent)}</div>`;
+        } else {
+          result += `${openTag}${processTextContent(innerContent)}</div>`;
         }
-        return `${openTag}${processTextContent(innerContent)}${closeTag}`;
       }
-    );
+      
+      return result;
+    }
   }
   
   return processTextContent(content);
