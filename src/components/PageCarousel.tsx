@@ -150,8 +150,8 @@ const PageCarousel: React.FC<PageCarouselProps> = ({ content, language }) => {
         <Button 
           variant="outline" 
           size="sm" 
-          onClick={scrollPrev}
-          disabled={!canScrollPrev}
+          onClick={isRTL ? scrollNext : scrollPrev}
+          disabled={isRTL ? !canScrollNext : !canScrollPrev}
         >
           <ChevronLeft className="h-4 w-4" />
           <span className="mx-2">{isRTL ? 'السابق' : 'Précédent'}</span>
@@ -167,8 +167,8 @@ const PageCarousel: React.FC<PageCarouselProps> = ({ content, language }) => {
         <Button 
           variant="outline" 
           size="sm" 
-          onClick={scrollNext}
-          disabled={!canScrollNext}
+          onClick={isRTL ? scrollPrev : scrollNext}
+          disabled={isRTL ? !canScrollPrev : !canScrollNext}
         >
           <span className="mx-2">{isRTL ? 'التالي' : 'Suivant'}</span>
           <ChevronRight className="h-4 w-4" />
@@ -211,7 +211,7 @@ const PageCarousel: React.FC<PageCarouselProps> = ({ content, language }) => {
       </div>
 
       {/* Pagination dots */}
-      <div className={`page-carousel-dots flex justify-center gap-2 mt-6 ${isRTL ? 'flex-row-reverse' : ''}`}>
+      <div className="page-carousel-dots flex justify-center gap-2 mt-6">
         {pages.map((_, index) => (
           <button
             key={index}
