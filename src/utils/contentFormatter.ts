@@ -7,11 +7,40 @@ import { normalizeArabicText, isArabicText } from '@/lib/arabicUtils';
 export const renderFormattedContent = (content: string): string => {
   if (!content) return '';
   
+  // Check if content contains page-break divs - if so, preserve them and process content inside
+  if (content.includes('class="page-break"') || content.includes("class='page-break'")) {
+    // Process each page-break section separately
+    return content.replace(
+      /(<div[^>]*class="[^"]*page-break[^"]*"[^>]*>)([\s\S]*?)(<\/div>)(?=\s*<div[^>]*class="[^"]*page-break|$)/gi,
+      (match, openTag, innerContent, closeTag) => {
+        // Check for page-separator inside
+        const separatorMatch = innerContent.match(/^(\s*<div[^>]*class="[^"]*page-separator[^"]*"[^>]*>[\s\S]*?<\/div>)([\s\S]*)$/i);
+        if (separatorMatch) {
+          const separator = separatorMatch[1];
+          const pageContent = separatorMatch[2];
+          return `${openTag}${separator}${processTextContent(pageContent)}${closeTag}`;
+        }
+        return `${openTag}${processTextContent(innerContent)}${closeTag}`;
+      }
+    );
+  }
+  
+  return processTextContent(content);
+};
+
+// Helper function to process text content with markdown-like formatting
+const processTextContent = (content: string): string => {
+  if (!content) return '';
+  
   // Split content into lines to process line-by-line
-  // Note: Content is already normalized by the editor, so we don't normalize again
   const lines = content.split('\n');
   
   const processedLines = lines.map(line => {
+    // Skip HTML tags (divs, etc.)
+    if (line.trim().startsWith('<div') || line.trim().startsWith('</div')) {
+      return line;
+    }
+    
     // Process headings (must be at start of line)
     if (line.match(/^###\s+(.+)/)) {
       return line.replace(/^###\s+(.+)/, '<h3>$1</h3>');
@@ -26,15 +55,14 @@ export const renderFormattedContent = (content: string): string => {
     // Process inline formatting (bold and italic)
     let processedLine = line;
     
-    // Bold: **text** - simple approach, process bold first
+    // Bold: **text**
     processedLine = processedLine.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
     
-    // Italic: *text* - simple approach, but avoid already processed bold text
-    // Split by <strong> tags to avoid processing inside them
+    // Italic: *text*
     const parts = processedLine.split(/(<strong>.*?<\/strong>)/);
     processedLine = parts.map(part => {
       if (part.startsWith('<strong>')) {
-        return part; // Don't process inside strong tags
+        return part;
       }
       return part.replace(/\*(.+?)\*/g, '<em>$1</em>');
     }).join('');
