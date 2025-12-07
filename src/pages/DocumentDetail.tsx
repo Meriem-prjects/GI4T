@@ -898,7 +898,7 @@ const DocumentDetail = () => {
           {/* Keywords */}
           {currentKeywords?.length > 0 && (
             <div className={`mt-12 pt-6 border-t ${language === 'ar' ? 'text-right' : ''}`}>
-              <h3 className="text-lg font-semibold mb-4">{language === 'ar' ? 'الكلمات المفتاحية' : 'Mots-clés'}</h3>
+              <h3 className="text-lg font-semibold mb-4">{language === 'ar' ? 'الكلمات المفاتيح' : 'Mots-clés'}</h3>
               <div className={`flex flex-wrap gap-2 ${language === 'ar' ? 'justify-end' : ''}`}>
                 {currentKeywords.map((keyword) => (
                   <Badge key={keyword} variant="outline">
