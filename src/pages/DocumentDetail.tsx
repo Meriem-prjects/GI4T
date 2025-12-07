@@ -918,65 +918,79 @@ const DocumentDetail = () => {
           </div>
         </div>
 
-        {/* Sidebar - French (right side) */}
+        {/* Sidebar */}
         <div className="lg:col-span-1">
           <div className="sticky top-6 space-y-6">
             {/* Documents à consulter */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-lg flex items-center gap-2">
+            <Card className={isRTL ? 'text-right' : ''}>
+              <CardHeader className={isRTL ? 'flex-row-reverse' : ''}>
+                <CardTitle className={`text-lg flex items-center gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
                   <BookOpen className="w-5 h-5" />
-                  Documents à consulter
+                  {language === 'ar' ? 'وثائق للاطلاع' : 'Documents à consulter'}
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-3">
                 {relatedDocuments.slice(0, 3).map((doc) => (
                   <div key={doc.id} className="border-b pb-3 last:border-b-0">
                     <Link 
-                      to={doc.categories ? createDocumentPath(doc.categories.name, doc.title) : '#'}
+                      to={doc.categories ? createDocumentPath(
+                        language === 'ar' ? (doc.categories.name_ar || doc.categories.name) : doc.categories.name, 
+                        language === 'ar' ? (doc.title_ar || doc.title) : doc.title
+                      ) : '#'}
                       className="block hover:text-primary transition-colors"
                     >
                       <h4 className="font-medium text-sm mb-1 line-clamp-2">
-                        {doc.title}
+                        {language === 'ar' ? (doc.title_ar || doc.title) : doc.title}
                       </h4>
                       <p className="text-xs text-muted-foreground">
-                        {doc.document_type} • {formatDate(doc.created_at)}
+                        {doc.document_type} • {language === 'ar' 
+                          ? new Date(doc.created_at).toLocaleDateString('ar-TN', { year: 'numeric', month: 'long', day: 'numeric' })
+                          : formatDate(doc.created_at)}
                       </p>
                     </Link>
                   </div>
                 ))}
                 {relatedDocuments.length === 0 && (
-                  <p className="text-sm text-muted-foreground">Aucun document connexe</p>
+                  <p className="text-sm text-muted-foreground">
+                    {language === 'ar' ? 'لا توجد وثائق ذات صلة' : 'Aucun document connexe'}
+                  </p>
                 )}
               </CardContent>
             </Card>
 
             {/* Suggestions */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-lg flex items-center gap-2">
+            <Card className={isRTL ? 'text-right' : ''}>
+              <CardHeader className={isRTL ? 'flex-row-reverse' : ''}>
+                <CardTitle className={`text-lg flex items-center gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
                   <FileText className="w-5 h-5" />
-                  Suggestions
+                  {language === 'ar' ? 'اقتراحات' : 'Suggestions'}
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-3">
                 {suggestedDocuments.slice(0, 3).map((doc) => (
                   <div key={doc.id} className="border-b pb-3 last:border-b-0">
                     <Link 
-                      to={doc.categories ? createDocumentPath(doc.categories.name, doc.title) : '#'}
+                      to={doc.categories ? createDocumentPath(
+                        language === 'ar' ? (doc.categories.name_ar || doc.categories.name) : doc.categories.name, 
+                        language === 'ar' ? (doc.title_ar || doc.title) : doc.title
+                      ) : '#'}
                       className="block hover:text-primary transition-colors"
                     >
                       <h4 className="font-medium text-sm mb-1 line-clamp-2">
-                        {doc.title}
+                        {language === 'ar' ? (doc.title_ar || doc.title) : doc.title}
                       </h4>
                       <p className="text-xs text-muted-foreground">
-                        {doc.document_type} • {formatDate(doc.created_at)}
+                        {doc.document_type} • {language === 'ar' 
+                          ? new Date(doc.created_at).toLocaleDateString('ar-TN', { year: 'numeric', month: 'long', day: 'numeric' })
+                          : formatDate(doc.created_at)}
                       </p>
                     </Link>
                   </div>
                 ))}
                 {suggestedDocuments.length === 0 && (
-                  <p className="text-sm text-muted-foreground">Aucune suggestion</p>
+                  <p className="text-sm text-muted-foreground">
+                    {language === 'ar' ? 'لا توجد اقتراحات' : 'Aucune suggestion'}
+                  </p>
                 )}
               </CardContent>
             </Card>
