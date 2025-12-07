@@ -17,6 +17,15 @@ import { useDocumentView } from "@/hooks/useDocumentView";
 import { useLanguage } from "@/contexts/LanguageContext";
 import PageCarousel, { hasPageBreaks } from "@/components/PageCarousel";
 
+interface PageContent {
+  pageNumber: number;
+  content: string;
+  translated_content?: string;
+}
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type JsonPageContents = any;
+
 interface Document {
   id: string;
   title: string;
@@ -63,6 +72,7 @@ interface Document {
   defendant_ar?: string;
   bibliography?: string;
   bibliography_ar?: string;
+  page_contents?: JsonPageContents;
 }
 
 interface Category {
@@ -384,7 +394,46 @@ const DocumentDetail = () => {
     }
   }
 
-  const formattedContent = renderFormattedContent(displayContent);
+  // Build paginated content from page_contents if available and has multiple pages
+  const buildPaginatedContent = (): string => {
+    const rawPageContents = document.page_contents;
+    
+    // Validate and parse page_contents from JSON
+    if (!rawPageContents || !Array.isArray(rawPageContents) || rawPageContents.length <= 1) {
+      return displayContent;
+    }
+    
+    const pageContents = rawPageContents as PageContent[];
+    
+    // Sort pages by page number
+    const sortedPages = [...pageContents].sort((a, b) => (a.pageNumber || 0) - (b.pageNumber || 0));
+    
+    return sortedPages.map(page => {
+      // Choose appropriate content based on language preference
+      let pageContent: string;
+      if (prefersArabic) {
+        if (showOriginal) {
+          pageContent = page.content || '';
+        } else {
+          pageContent = document.language === 'ar' ? (page.content || '') : (page.translated_content || page.content || '');
+        }
+      } else {
+        if (showOriginal) {
+          pageContent = page.content || '';
+        } else {
+          pageContent = document.language === 'fr' ? (page.content || '') : (page.translated_content || page.content || '');
+        }
+      }
+      
+      return `<div class="page-break" data-page="${page.pageNumber}">
+        <div class="page-separator">— صفحة ${page.pageNumber} / Page ${page.pageNumber} —</div>
+        ${pageContent}
+      </div>`;
+    }).join('\n');
+  };
+
+  const paginatedContent = buildPaginatedContent();
+  const formattedContent = renderFormattedContent(paginatedContent);
   const isShowingTranslated = !!document.translated_content && displayContent === document.translated_content;
   
   // Use Arabic fields based on interface language
