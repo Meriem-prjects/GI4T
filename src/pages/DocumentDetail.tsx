@@ -15,6 +15,7 @@ import { ArticleStatistics } from "@/components/ArticleStatistics";
 import { CommentSection } from "@/components/CommentSection";
 import { useDocumentView } from "@/hooks/useDocumentView";
 import { useLanguage } from "@/contexts/LanguageContext";
+import PageCarousel, { hasPageBreaks } from "@/components/PageCarousel";
 
 interface Document {
   id: string;
@@ -816,11 +817,18 @@ const DocumentDetail = () => {
           {/* Document Content */}
           <div className={`max-w-none ${language === 'ar' ? 'dir-rtl' : ''}`}>
             {formattedContent ? (
-              <div 
-                className={`document-content space-y-6 ${language === 'ar' ? 'text-right' : ''}`}
-                dir={language === 'ar' ? 'rtl' : 'ltr'}
-                dangerouslySetInnerHTML={{ __html: formattedContent }}
-              />
+              hasPageBreaks(formattedContent) ? (
+                <PageCarousel 
+                  content={formattedContent} 
+                  language={language as 'fr' | 'ar'} 
+                />
+              ) : (
+                <div 
+                  className={`document-content space-y-6 ${language === 'ar' ? 'text-right' : ''}`}
+                  dir={language === 'ar' ? 'rtl' : 'ltr'}
+                  dangerouslySetInnerHTML={{ __html: formattedContent }}
+                />
+              )
             ) : (
               <div className="text-center py-12">
                 <FileText className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
