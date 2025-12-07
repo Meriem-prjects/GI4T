@@ -3333,6 +3333,42 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
                     dangerouslySetInnerHTML={{ __html: renderFormattedContent(getCurrentContent()) }}
                   />
                 </div>
+              ) : editedData.page_contents && editedData.page_contents.length > 1 ? (
+                /* Affichage structuré page par page */
+                <div className="space-y-0">
+                  {editedData.page_contents
+                    .sort((a, b) => a.pageNumber - b.pageNumber)
+                    .map((page) => (
+                      <div key={page.pageNumber} className="page-break">
+                        <div className="page-separator">
+                          — صفحة {page.pageNumber} / Page {page.pageNumber} —
+                        </div>
+                        <CKEditorWrapper
+                          content={currentLanguage === editedData.language ? page.content : (page.translated_content || '')}
+                          onChange={(newContent) => {
+                            setEditedData(prev => ({
+                              ...prev,
+                              page_contents: prev.page_contents?.map(p =>
+                                p.pageNumber === page.pageNumber
+                                  ? { 
+                                      ...p, 
+                                      ...(currentLanguage === editedData.language 
+                                        ? { content: newContent }
+                                        : { translated_content: newContent }
+                                      )
+                                    }
+                                  : p
+                              )
+                            }));
+                            setHasChanges(true);
+                          }}
+                          language={currentLanguage as 'fr' | 'ar'}
+                          placeholder={`Contenu de la page ${page.pageNumber}...`}
+                          className="min-h-[200px]"
+                        />
+                      </div>
+                    ))}
+                </div>
               ) : (
                 <CKEditorWrapper
                   content={getCurrentContent()}
