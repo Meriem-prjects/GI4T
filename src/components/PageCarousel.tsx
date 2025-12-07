@@ -13,17 +13,25 @@ const PageCarousel: React.FC<PageCarouselProps> = ({ content, language }) => {
   
   // Parse pages from content with page-break markers
   const individualPages = React.useMemo(() => {
-    // Parse page-break divs by finding them and extracting content between them
-    const pageBreakPattern = /<div[^>]*class="[^"]*page-break[^"]*"[^>]*data-page="(\d+)"[^>]*>/gi;
+    // Use a more flexible pattern that matches page-break divs regardless of attribute order
+    // First, find all opening div tags with class="page-break"
+    const pageBreakPattern = /<div[^>]*class="[^"]*page-break[^"]*"[^>]*>/gi;
     const matches = [...content.matchAll(pageBreakPattern)];
+    
+    console.log('PageCarousel: Found', matches.length, 'page-break divs');
     
     if (matches.length > 0) {
       const pages: Array<{ pageNumber: number; content: string }> = [];
       
       for (let i = 0; i < matches.length; i++) {
         const match = matches[i];
-        const pageNumber = parseInt(match[1]) || i + 1;
-        const startIndex = match.index! + match[0].length;
+        const fullTag = match[0];
+        
+        // Extract page number from the tag (data-page attribute can be anywhere in the tag)
+        const pageNumMatch = fullTag.match(/data-page="(\d+)"/i);
+        const pageNumber = pageNumMatch ? parseInt(pageNumMatch[1]) : i + 1;
+        
+        const startIndex = match.index! + fullTag.length;
         
         // Find end: either next page-break or end of content
         let endIndex: number;
@@ -36,17 +44,14 @@ const PageCarousel: React.FC<PageCarouselProps> = ({ content, language }) => {
         // Extract content between this page-break start and next (or end)
         let pageContent = content.slice(startIndex, endIndex);
         
-        // Remove only the closing div of the page-break container, not all divs
-        // Count how many closing divs at the end - we only need to remove one
+        // Remove the closing div at the end
         pageContent = pageContent.replace(/\s*<\/div>\s*$/, '').trim();
         
         // Remove page-separator div at the beginning
         pageContent = pageContent.replace(/^\s*<div[^>]*class="[^"]*page-separator[^"]*"[^>]*>[\s\S]*?<\/div>\s*/gi, '').trim();
         
         // Debug log
-        if (pageContent.length === 0) {
-          console.log(`PageCarousel: Page ${pageNumber} has empty content. Raw slice length: ${content.slice(startIndex, endIndex).length}`);
-        }
+        console.log(`PageCarousel: Page ${pageNumber} - content length: ${pageContent.length}`);
         
         pages.push({ pageNumber, content: pageContent });
       }
