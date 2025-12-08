@@ -290,8 +290,8 @@ const AnalysesJuridiques = () => {
             </CarouselContent>
             {filteredCategories.length > 3 && (
               <>
-                <CarouselPrevious className={`hidden md:flex ${isRTL ? '-right-12' : '-left-12'}`} />
-                <CarouselNext className={`hidden md:flex ${isRTL ? '-left-12' : '-right-12'}`} />
+                <CarouselPrevious className="hidden md:flex -left-12" />
+                <CarouselNext className="hidden md:flex -right-12" />
               </>
             )}
           </Carousel>
