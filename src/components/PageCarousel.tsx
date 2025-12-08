@@ -210,8 +210,11 @@ const PageCarousel: React.FC<PageCarouselProps> = ({ content, language }) => {
         </div>
       </div>
 
-      {/* Pagination dots */}
-      <div className={`page-carousel-dots flex justify-center gap-2 mt-6 ${isRTL ? 'flex-row-reverse' : ''}`}>
+      {/* Pagination dots - RTL: first page dot on right */}
+      <div 
+        className="page-carousel-dots flex justify-center gap-2 mt-6"
+        dir={isRTL ? 'rtl' : 'ltr'}
+      >
         {pages.map((_, index) => (
           <button
             key={index}
@@ -221,7 +224,7 @@ const PageCarousel: React.FC<PageCarouselProps> = ({ content, language }) => {
                 ? 'bg-primary scale-125' 
                 : 'bg-muted-foreground/30 hover:bg-muted-foreground/50'
             }`}
-            aria-label={`Go to page ${index + 1}`}
+            aria-label={isRTL ? `الذهاب إلى الصفحة ${index + 1}` : `Go to page ${index + 1}`}
           />
         ))}
       </div>
