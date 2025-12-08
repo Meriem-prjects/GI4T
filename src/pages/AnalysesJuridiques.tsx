@@ -247,7 +247,7 @@ const AnalysesJuridiques = () => {
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
           </div>
         ) : (
-          <Carousel opts={{ align: "start", slidesToScroll: 3 }} className="w-full">
+          <Carousel opts={{ align: "start", slidesToScroll: 3, direction: isRTL ? 'rtl' : 'ltr' }} className="w-full">
             <CarouselContent className="-ml-2 md:-ml-4">
               {filteredCategories.map((category) => {
                 const Icon = getIconForCategory(category.name);
