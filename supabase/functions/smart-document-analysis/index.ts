@@ -519,22 +519,100 @@ ${contentForAI}${contentTruncated ? '\n\n[Note: Contenu tronqué pour analyse ra
       throw new Error('Failed to parse AI response as JSON');
     }
 
-    // Validate that translated fields are actually in target language
+    // Helper functions to check language content
+    const containsArabic = (text: string | null | undefined): boolean => {
+      if (!text) return false;
+      return /[\u0600-\u06FF]/.test(text);
+    };
+    
+    const containsFrench = (text: string | null | undefined): boolean => {
+      if (!text) return false;
+      return /[a-zA-ZÀ-ÿ]/.test(text);
+    };
+    
+    const isMainlyArabic = (text: string | null | undefined): boolean => {
+      if (!text) return false;
+      const arabicMatches = (text.match(/[\u0600-\u06FF]/g) || []).length;
+      const latinMatches = (text.match(/[a-zA-ZÀ-ÿ]/g) || []).length;
+      return arabicMatches > latinMatches;
+    };
+    
+    // Validate and fix language assignments - the AI sometimes swaps languages
+    console.log('🔍 Validating language assignments...');
+    console.log('Source language:', sourceLanguage, 'Target language:', targetLanguage);
+    console.log('title contains Arabic:', containsArabic(analysisResult.title), 'mainly Arabic:', isMainlyArabic(analysisResult.title));
+    console.log('translatedTitle contains Arabic:', containsArabic(analysisResult.translatedTitle), 'mainly Arabic:', isMainlyArabic(analysisResult.translatedTitle));
+    console.log('summary contains Arabic:', containsArabic(analysisResult.summary), 'mainly Arabic:', isMainlyArabic(analysisResult.summary));
+    console.log('translatedSummary contains Arabic:', containsArabic(analysisResult.translatedSummary), 'mainly Arabic:', isMainlyArabic(analysisResult.translatedSummary));
+    
     if (targetLanguage === 'arabe') {
-      // Check if translatedTitle contains Arabic characters
-      if (analysisResult.translatedTitle && !/[\u0600-\u06FF]/.test(analysisResult.translatedTitle)) {
-        console.warn('translatedTitle does not contain Arabic characters, using fallback');
-        analysisResult.translatedTitle = analysisResult.title || '';
+      // Source is French, target is Arabic
+      // title/summary should be French, translatedTitle/translatedSummary should be Arabic
+      
+      // Check if languages are swapped (title is Arabic when it should be French)
+      if (isMainlyArabic(analysisResult.title) && !isMainlyArabic(analysisResult.translatedTitle)) {
+        console.warn('⚠️ Languages appear swapped (FR source, AR target) - swapping fields');
+        const tempTitle = analysisResult.title;
+        const tempSubtitle = analysisResult.subtitle;
+        const tempSummary = analysisResult.summary;
+        
+        analysisResult.title = analysisResult.translatedTitle;
+        analysisResult.subtitle = analysisResult.translatedSubtitle;
+        analysisResult.summary = analysisResult.translatedSummary;
+        
+        analysisResult.translatedTitle = tempTitle;
+        analysisResult.translatedSubtitle = tempSubtitle;
+        analysisResult.translatedSummary = tempSummary;
       }
-      if (analysisResult.translatedSubtitle && !/[\u0600-\u06FF]/.test(analysisResult.translatedSubtitle)) {
-        console.warn('translatedSubtitle does not contain Arabic characters, using fallback');
-        analysisResult.translatedSubtitle = analysisResult.subtitle || '';
+      
+      // Final validation - translatedTitle should contain Arabic
+      if (analysisResult.translatedTitle && !containsArabic(analysisResult.translatedTitle)) {
+        console.warn('translatedTitle does not contain Arabic characters after validation');
       }
-      if (analysisResult.translatedSummary && !/[\u0600-\u06FF]/.test(analysisResult.translatedSummary)) {
-        console.warn('translatedSummary does not contain Arabic characters, using fallback');
-        analysisResult.translatedSummary = analysisResult.summary || '';
+    } else if (targetLanguage === 'français') {
+      // Source is Arabic, target is French
+      // title/summary should be Arabic, translatedTitle/translatedSummary should be French
+      
+      // Check if languages are swapped (title is French when it should be Arabic)
+      if (!isMainlyArabic(analysisResult.title) && isMainlyArabic(analysisResult.translatedTitle)) {
+        console.warn('⚠️ Languages appear swapped (AR source, FR target) - swapping fields');
+        const tempTitle = analysisResult.title;
+        const tempSubtitle = analysisResult.subtitle;
+        const tempSummary = analysisResult.summary;
+        
+        analysisResult.title = analysisResult.translatedTitle;
+        analysisResult.subtitle = analysisResult.translatedSubtitle;
+        analysisResult.summary = analysisResult.translatedSummary;
+        
+        analysisResult.translatedTitle = tempTitle;
+        analysisResult.translatedSubtitle = tempSubtitle;
+        analysisResult.translatedSummary = tempSummary;
+        
+        // Also swap metadata if needed
+        if (analysisResult.metadata && analysisResult.metadataTranslated) {
+          const tempMetadata = { ...analysisResult.metadata };
+          analysisResult.metadata = { ...analysisResult.metadataTranslated };
+          analysisResult.metadataTranslated = tempMetadata;
+        }
+        
+        // Swap keywords too
+        if (analysisResult.existingKeywords && analysisResult.translatedKeywords) {
+          const tempKeywords = analysisResult.existingKeywords;
+          analysisResult.existingKeywords = analysisResult.translatedKeywords;
+          analysisResult.translatedKeywords = tempKeywords;
+        }
+      }
+      
+      // Final validation - title should contain Arabic, translatedTitle should contain French
+      if (analysisResult.title && !containsArabic(analysisResult.title)) {
+        console.warn('title does not contain Arabic characters for Arabic source document');
+      }
+      if (analysisResult.translatedTitle && !containsFrench(analysisResult.translatedTitle)) {
+        console.warn('translatedTitle does not contain French characters for French target');
       }
     }
+    
+    console.log('✅ Language validation complete');
 
     // Inject exhaustive translation if available
     if (translatedContentFull) {
@@ -543,13 +621,15 @@ ${contentForAI}${contentTruncated ? '\n\n[Note: Contenu tronqué pour analyse ra
     }
 
     // Validate and parse keywords if they come as a single string
+    // existingKeywords is always in SOURCE language (Arabic if isPrimaryArabic)
+    // translatedKeywords is always in TARGET language (French if isPrimaryArabic)
     if (analysisResult.existingKeywords) {
       analysisResult.existingKeywords = parseKeywordsArray(analysisResult.existingKeywords)
-        .map(k => targetLanguage === 'arabe' ? sanitizeArabicText(k) : k);
+        .map(k => isPrimaryArabic ? sanitizeArabicText(k) : k);
     }
     if (analysisResult.translatedKeywords) {
       analysisResult.translatedKeywords = parseKeywordsArray(analysisResult.translatedKeywords)
-        .map(k => targetLanguage === 'arabe' ? k : sanitizeArabicText(k));
+        .map(k => !isPrimaryArabic ? sanitizeArabicText(k) : k);
     }
     if (analysisResult.suggestedKeywords) {
       analysisResult.suggestedKeywords = parseKeywordsArray(analysisResult.suggestedKeywords);
