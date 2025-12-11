@@ -122,6 +122,11 @@ All colors MUST be HSL.
   }
 
   /* Styles pour le contenu des documents */
+  .document-content {
+    max-width: 100%;
+    width: 100%;
+  }
+  
   .document-content h1 {
     @apply text-2xl font-bold text-foreground border-b pb-2 mb-4 mt-6;
   }
@@ -136,6 +141,7 @@ All colors MUST be HSL.
   
   .document-content p {
     @apply text-foreground leading-relaxed mb-4;
+    max-width: 100%;
   }
   
   .document-content strong {
@@ -358,11 +364,20 @@ All colors MUST be HSL.
 
 .ckeditor-wrapper .ck-editor__editable {
   min-height: 400px;
+  max-width: 100%;
+  width: 100%;
+  padding: 1.5rem 2rem;
   @apply bg-background text-foreground;
 }
 
 .ckeditor-wrapper .ck.ck-editor__main > .ck-editor__editable {
   @apply bg-background;
+  max-width: 100%;
+}
+
+.ckeditor-wrapper .ck-content {
+  max-width: 100%;
+  width: 100%;
 }
 
 .ckeditor-wrapper .ck.ck-toolbar {

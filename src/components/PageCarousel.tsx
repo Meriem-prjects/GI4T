@@ -181,10 +181,10 @@ const PageCarousel: React.FC<PageCarouselProps> = ({ content, language }) => {
           {pages.map((slideGroup, slideIndex) => (
             <div 
               key={slideIndex} 
-              className="page-carousel-slide flex-shrink-0 w-full px-2"
+              className="page-carousel-slide flex-shrink-0 w-full px-1"
             >
               <div 
-                className={`page-frame border-2 border-border rounded-lg p-6 md:p-8 bg-card shadow-sm min-h-[400px] ${isRTL ? 'text-right' : ''}`}
+                className={`page-frame border border-border rounded-lg p-4 md:p-5 bg-card shadow-sm min-h-[400px] ${isRTL ? 'text-right' : ''}`}
                 dir={isRTL ? 'rtl' : 'ltr'}
               >
                 {/* Render both pages in this slide */}
