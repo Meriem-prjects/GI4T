@@ -804,7 +804,7 @@ const DocumentDetail = () => {
              </div>
 
             {/* Article Statistics */}
-            <div className="max-w-4xl mx-auto my-8">
+            <div className="w-full my-8">
               <ArticleStatistics 
                 documentId={document.id} 
                 contentLength={document.content?.length || 0}
@@ -864,7 +864,7 @@ const DocumentDetail = () => {
 
 
           {/* Document Content */}
-          <div className={`max-w-none ${language === 'ar' ? 'dir-rtl' : ''}`}>
+          <div className={`w-full ${language === 'ar' ? 'dir-rtl' : ''}`}>
             {formattedContent ? (
               hasPageBreaks(formattedContent) ? (
                 <PageCarousel 
@@ -873,7 +873,7 @@ const DocumentDetail = () => {
                 />
               ) : (
                 <div 
-                  className={`document-content space-y-6 ${language === 'ar' ? 'text-right' : ''}`}
+                  className={`document-content space-y-6 w-full ${language === 'ar' ? 'text-right' : ''}`}
                   dir={language === 'ar' ? 'rtl' : 'ltr'}
                   dangerouslySetInnerHTML={{ __html: formattedContent }}
                 />
