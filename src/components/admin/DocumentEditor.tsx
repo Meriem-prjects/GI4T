@@ -9,7 +9,7 @@ import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Save, Eye, EyeOff, X, AlertTriangle, FileText, ChevronLeft, ChevronRight, BookOpen, Brain, Loader2, CheckCircle, XCircle, Search, RefreshCw } from 'lucide-react';
+import { Save, Eye, EyeOff, X, AlertTriangle, FileText, ChevronLeft, ChevronRight, BookOpen, Brain, Loader2, CheckCircle, XCircle, Search } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { useCourtTypes } from '@/hooks/useCourtTypes';
@@ -154,7 +154,6 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
   const [translatingPages, setTranslatingPages] = useState<Set<number>>(new Set());
   const [workflowStep, setWorkflowStep] = useState<string | null>(null);
   const [completedWorkflowSteps, setCompletedWorkflowSteps] = useState<string[]>([]);
-  const [isReextractingContent, setIsReextractingContent] = useState(false);
   const hasShownSpacingWarning = useRef(false);
 
   useEffect(() => {
@@ -812,101 +811,6 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
       }
     } catch (error) {
       console.error('Document types loading error:', error);
-    }
-  };
-
-  // Re-extract content from PDF with new formatting rules
-  const reextractContent = async () => {
-    if (!editedData.file_url) {
-      toast({
-        title: "Erreur",
-        description: "Aucun fichier PDF associé à ce document.",
-        variant: "destructive"
-      });
-      return;
-    }
-
-    setIsReextractingContent(true);
-
-    try {
-      console.log('Re-extracting content from PDF:', editedData.file_url);
-
-      // Get the PDF file from storage
-      const { data: fileData, error: downloadError } = await supabase.storage
-        .from('documents')
-        .download(editedData.file_url.replace('documents/', ''));
-
-      if (downloadError) {
-        throw downloadError;
-      }
-
-      // Send to pdf-reader function
-      const response = await supabase.functions.invoke('pdf-reader', {
-        body: fileData,
-      });
-
-      if (response.error) {
-        throw response.error;
-      }
-
-      const result = response.data;
-
-      if (!result.success) {
-        throw new Error(result.error || 'Échec de la réextraction');
-      }
-
-      // Combine all HTML texts as page contents
-      const htmlTexts = result.htmlTexts || [];
-      const combinedHtml = htmlTexts.join('\n\n');
-
-      // Update local state with new content
-      setEditedData(prev => ({
-        ...prev,
-        content: combinedHtml,
-        page_contents: htmlTexts.map((html: string, index: number) => ({
-          pageNumber: index + 1,
-          content: html,
-          confidence: 1.0
-        })),
-        total_pages: result.numPages,
-        processed_pages: result.numPages
-      }));
-
-      // Update database
-      if (editedData.id) {
-        const pageContents = htmlTexts.map((html: string, index: number) => ({
-          pageNumber: index + 1,
-          content: html,
-          confidence: 1.0
-        }));
-
-        await supabase
-          .from('documents')
-          .update({
-            content: combinedHtml,
-            page_contents: pageContents,
-            total_pages: result.numPages,
-            processed_pages: result.numPages
-          })
-          .eq('id', editedData.id);
-      }
-
-      setHasChanges(true);
-
-      toast({
-        title: "✅ Contenu réextrait",
-        description: `${result.numPages} pages réextraites avec le nouveau formatage (titres et labels en gras).`,
-      });
-
-    } catch (error: any) {
-      console.error('Error re-extracting content:', error);
-      toast({
-        title: "Erreur de réextraction",
-        description: error?.message || "Impossible de réextraire le contenu du PDF.",
-        variant: "destructive"
-      });
-    } finally {
-      setIsReextractingContent(false);
     }
   };
 
@@ -2302,22 +2206,6 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
             )}
           </Button>
           
-          {/* Button to re-extract content from PDF with new formatting */}
-          {editedData.file_url && (
-            <Button
-              variant="outline"
-              onClick={reextractContent}
-              disabled={isReextractingContent}
-              title="Réextraire le contenu du PDF avec le nouveau formatage (titres et labels en gras)"
-            >
-              {isReextractingContent ? (
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              ) : (
-                <RefreshCw className="mr-2 h-4 w-4" />
-              )}
-              {isReextractingContent ? 'Réextraction...' : '🔄 Réextraire'}
-            </Button>
-          )}
           
           <Button 
             onClick={runAIAnalysis} 

@@ -158,44 +158,6 @@ function reconstructTextStructure(textContent: TextContent): string {
 }
 
 /**
- * Common Arabic section titles that should be formatted as headings
- * These are standalone words/phrases that don't end with colon
- */
-const arabicSectionTitles = [
-  'المقدمة',
-  'الخاتمة',
-  'التعليق',
-  'الملخص',
-  'المراجع',
-  'الفهرس',
-  'التمهيد',
-  'خلاصة',
-  'الخلاصة',
-  'تمهيد',
-  'مقدمة',
-  'خاتمة',
-  'توصيات',
-  'التوصيات',
-  'نتائج',
-  'النتائج'
-];
-
-/**
- * Common French section titles that should be formatted as headings
- */
-const frenchSectionTitles = [
-  'Introduction',
-  'Conclusion',
-  'Commentaire',
-  'Résumé',
-  'Références',
-  'Sommaire',
-  'Préambule',
-  'Recommandations',
-  'Résultats'
-];
-
-/**
  * Detects and bolds Arabic/French labels that end with colon
  * Common patterns in legal documents
  */
@@ -254,20 +216,6 @@ function detectAndBoldLabels(text: string): string {
   
   let result = text;
   
-  // Detect standalone section titles (Arabic) - convert to ## heading markers
-  for (const title of arabicSectionTitles) {
-    // Match standalone title on its own line (with optional whitespace)
-    const regex = new RegExp(`^(\\s*)(${title})(\\s*)$`, 'gm');
-    result = result.replace(regex, '$1## $2$3');
-  }
-  
-  // Detect standalone section titles (French) - convert to ## heading markers
-  for (const title of frenchSectionTitles) {
-    const escapedTitle = title.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-    const regex = new RegExp(`^(\\s*)(${escapedTitle})(\\s*)$`, 'gim');
-    result = result.replace(regex, '$1## $2$3');
-  }
-  
   // Bold Arabic labels with colon
   for (const label of arabicLabels) {
     // Match label followed by colon (with optional space before colon)
@@ -285,8 +233,8 @@ function detectAndBoldLabels(text: string): string {
   // Also detect short lines (< 60 chars) ending with colon as potential subtitles
   // This catches labels not in our predefined list
   result = result.replace(/^(.{3,60})\s*:\s*$/gm, (match, content) => {
-    // Skip if already contains <strong> or ## heading marker
-    if (content.includes('<strong>') || content.includes('##')) return match;
+    // Skip if already contains <strong>
+    if (content.includes('<strong>')) return match;
     return `<strong>${content.trim()} :</strong>`;
   });
   
