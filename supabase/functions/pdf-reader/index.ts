@@ -19,6 +19,35 @@ interface TextContent {
 }
 
 /**
+ * Removes page numbers typically found at top or bottom of PDF pages
+ * Detects isolated numbers at start or end of text
+ */
+function removePageNumbers(text: string, pageNumber: number): string {
+  // Remove standalone page number at the very start (with optional whitespace)
+  let cleaned = text.replace(new RegExp(`^\\s*${pageNumber}\\s*$`, 'm'), '');
+  
+  // Also remove if it's on the first line alone
+  cleaned = cleaned.replace(new RegExp(`^\\s*${pageNumber}\\s*\\n`, ''), '');
+  
+  // Remove standalone page number at the very end
+  cleaned = cleaned.replace(new RegExp(`\\n\\s*${pageNumber}\\s*$`), '');
+  
+  // Remove generic page number patterns like "- 1 -", "[ 1 ]", "page 1", "صفحة 1"
+  cleaned = cleaned.replace(/^\s*[-–—]\s*\d+\s*[-–—]\s*$/gm, '');
+  cleaned = cleaned.replace(/^\s*\[\s*\d+\s*\]\s*$/gm, '');
+  cleaned = cleaned.replace(/^\s*page\s+\d+\s*$/gim, '');
+  cleaned = cleaned.replace(/^\s*صفحة\s+\d+\s*$/gm, '');
+  
+  // Remove any standalone single or double digit number on its own line (common page number format)
+  cleaned = cleaned.replace(/^\s*\d{1,3}\s*$/gm, '');
+  
+  // Clean up multiple empty lines that may result from removal
+  cleaned = cleaned.replace(/\n{3,}/g, '\n\n');
+  
+  return cleaned.trim();
+}
+
+/**
  * Reconstructs text structure from PDF text content items
  * Analyzes X/Y positions, font sizes, and text direction to preserve original layout
  */
@@ -221,7 +250,11 @@ Deno.serve(async (req) => {
         const textContent = await page.getTextContent();
         
         // Reconstruct structured text with layout analysis
-        const structuredText = reconstructTextStructure(textContent as TextContent);
+        let structuredText = reconstructTextStructure(textContent as TextContent);
+        
+        // Remove page numbers from extracted text
+        structuredText = removePageNumbers(structuredText, pageNum);
+        
         texts.push(structuredText);
         
         // Convert to HTML for CKEditor
