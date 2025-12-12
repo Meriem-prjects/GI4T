@@ -158,12 +158,99 @@ function reconstructTextStructure(textContent: TextContent): string {
 }
 
 /**
+ * Detects and bolds Arabic/French labels that end with colon
+ * Common patterns in legal documents
+ */
+function detectAndBoldLabels(text: string): string {
+  // Common Arabic legal labels to bold
+  const arabicLabels = [
+    'المشكل القانوني',
+    'الحلّ المقدّم',
+    'الحل المقدّم',
+    'الكلمات المفاتيح',
+    'المحكمة',
+    'القرار',
+    'التاريخ',
+    'الأطراف',
+    'المدعي',
+    'المدعى عليه',
+    'الوقائع',
+    'الحيثيات',
+    'المنطوق',
+    'رقم القضية',
+    'تاريخ القرار',
+    'النص القانوني',
+    'المرجع',
+    'الملخص',
+    'التعليق',
+    'الفصل',
+    'المادة',
+    'البند'
+  ];
+  
+  // Common French legal labels to bold
+  const frenchLabels = [
+    'Problème juridique',
+    'Solution proposée',
+    'Mots-clés',
+    'Mots clés',
+    'Tribunal',
+    'Décision',
+    'Date',
+    'Parties',
+    'Demandeur',
+    'Défendeur',
+    'Faits',
+    'Motifs',
+    'Dispositif',
+    'Numéro d\'affaire',
+    'Date de décision',
+    'Texte juridique',
+    'Référence',
+    'Résumé',
+    'Commentaire',
+    'Article',
+    'Chapitre',
+    'Section'
+  ];
+  
+  let result = text;
+  
+  // Bold Arabic labels with colon
+  for (const label of arabicLabels) {
+    // Match label followed by colon (with optional space before colon)
+    const regex = new RegExp(`(${label}\\s*:)`, 'g');
+    result = result.replace(regex, '<strong>$1</strong>');
+  }
+  
+  // Bold French labels with colon (case insensitive)
+  for (const label of frenchLabels) {
+    const escapedLabel = label.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    const regex = new RegExp(`(${escapedLabel}\\s*:)`, 'gi');
+    result = result.replace(regex, '<strong>$1</strong>');
+  }
+  
+  // Also detect short lines (< 60 chars) ending with colon as potential subtitles
+  // This catches labels not in our predefined list
+  result = result.replace(/^(.{3,60})\s*:\s*$/gm, (match, content) => {
+    // Skip if already contains <strong>
+    if (content.includes('<strong>')) return match;
+    return `<strong>${content.trim()} :</strong>`;
+  });
+  
+  return result;
+}
+
+/**
  * Converts structured text (with ## markers and \n) to HTML for CKEditor
  */
 function convertStructuredTextToHTML(text: string): string {
   if (!text) return '';
   
   let html = text;
+  
+  // Apply label detection and bolding first
+  html = detectAndBoldLabels(html);
   
   // Convert heading markers to HTML
   // ## Heading -> <h2>Heading</h2>
