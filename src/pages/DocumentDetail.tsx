@@ -426,7 +426,6 @@ const DocumentDetail = () => {
       }
       
       return `<div class="page-break" data-page="${page.pageNumber}">
-        <div class="page-separator">— صفحة ${page.pageNumber} / Page ${page.pageNumber} —</div>
         ${pageContent}
       </div>`;
     }).join('\n');

@@ -443,11 +443,10 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
       return;
     }
     
-    // Join all translations with page separators for visual structure
+    // Join all translations with page structure (without page number display)
     const consolidatedContent = sortedPages
       .map((page, index) => 
         `<div class="page-break" data-page="${page.pageNumber}">
-          <div class="page-separator">— صفحة ${page.pageNumber} / Page ${page.pageNumber} —</div>
           ${page.translated_content}
         </div>`
       )
@@ -3340,9 +3339,6 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
                     .sort((a, b) => a.pageNumber - b.pageNumber)
                     .map((page) => (
                       <div key={page.pageNumber} className="page-break">
-                        <div className="page-separator">
-                          — صفحة {page.pageNumber} / Page {page.pageNumber} —
-                        </div>
                         <CKEditorWrapper
                           content={currentLanguage === editedData.language ? page.content : (page.translated_content || '')}
                           onChange={(newContent) => {
