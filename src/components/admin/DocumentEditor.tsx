@@ -2171,23 +2171,6 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
             </Button>
           )}
           
-          <Button
-            variant="outline"
-            onClick={() => setCurrentView(currentView === 'pdf' ? 'editor' : 'pdf')}
-            disabled={!editedData.file_url}
-          >
-            {currentView === 'pdf' ? (
-              <>
-                <Eye className="mr-2 h-4 w-4" />
-                Éditeur
-              </>
-            ) : (
-              <>
-                <FileText className="mr-2 h-4 w-4" />
-                PDF
-              </>
-            )}
-          </Button>
           
           <Button
             variant="outline"
@@ -2220,28 +2203,6 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
             {isAnalyzing ? 'Analyse...' : '🤖 Analyse IA'}
           </Button>
 
-          {/* Button to correct Arabic spacing with AI */}
-          {editedData.language === 'ar' && editedData.content && (
-            <Button 
-              onClick={correctArabicSpacing} 
-              disabled={isCorrectingSpacing || !editedData.content}
-              variant="outline"
-              title={editedData.content.length > 12000 
-                ? `Texte long (${editedData.content.length.toLocaleString()} car.) - correction page par page` 
-                : "Corrige l'espacement arabe et les Chaddas avec l'IA"}
-            >
-              {isCorrectingSpacing ? (
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              ) : (
-                <Brain className="mr-2 h-4 w-4" />
-              )}
-              {isCorrectingSpacing 
-                ? (correctionProgress.total > 0 
-                    ? `${correctionProgress.current}/${correctionProgress.total}` 
-                    : 'Correction...')
-                : '✨ Corriger AR'}
-            </Button>
-          )}
 
           
           {isFromValidation ? (
