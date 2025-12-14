@@ -572,11 +572,23 @@ ${contentForAI}${contentTruncated ? '\n\n[Note: Contenu tronqué pour analyse ra
       }
     } else if (targetLanguage === 'français') {
       // Source is Arabic, target is French
-      // title/summary should be Arabic, translatedTitle/translatedSummary should be French
+      // For Arabic source documents:
+      // - title/summary/metadata MUST contain Arabic (source language)
+      // - translatedTitle/translatedSummary/metadataTranslated MUST contain French (target language)
       
-      // Check if languages are swapped (title is French when it should be Arabic)
-      if (!isMainlyArabic(analysisResult.title) && isMainlyArabic(analysisResult.translatedTitle)) {
-        console.warn('⚠️ Languages appear swapped (AR source, FR target) - swapping fields');
+      console.log('🔍 Checking Arabic source document field assignment...');
+      
+      // More robust check: if title is NOT mainly Arabic OR translatedTitle is mainly Arabic, swap
+      const titleShouldBeSwapped = analysisResult.title && analysisResult.translatedTitle && 
+        (!isMainlyArabic(analysisResult.title) || isMainlyArabic(analysisResult.translatedTitle));
+      
+      const summaryShouldBeSwapped = analysisResult.summary && analysisResult.translatedSummary &&
+        (!isMainlyArabic(analysisResult.summary) || isMainlyArabic(analysisResult.translatedSummary));
+      
+      if (titleShouldBeSwapped || summaryShouldBeSwapped) {
+        console.warn('⚠️ Languages appear incorrectly assigned for Arabic source - swapping fields');
+        
+        // Swap title fields
         const tempTitle = analysisResult.title;
         const tempSubtitle = analysisResult.subtitle;
         const tempSummary = analysisResult.summary;
@@ -602,14 +614,23 @@ ${contentForAI}${contentTruncated ? '\n\n[Note: Contenu tronqué pour analyse ra
           analysisResult.existingKeywords = analysisResult.translatedKeywords;
           analysisResult.translatedKeywords = tempKeywords;
         }
+        
+        console.log('✅ Fields swapped - title now:', isMainlyArabic(analysisResult.title) ? 'Arabic' : 'French');
+        console.log('✅ translatedTitle now:', isMainlyArabic(analysisResult.translatedTitle) ? 'Arabic' : 'French');
       }
       
-      // Final validation - title should contain Arabic, translatedTitle should contain French
+      // Final validation with warnings
       if (analysisResult.title && !containsArabic(analysisResult.title)) {
-        console.warn('title does not contain Arabic characters for Arabic source document');
+        console.warn('⚠️ title does not contain Arabic characters for Arabic source document');
       }
       if (analysisResult.translatedTitle && !containsFrench(analysisResult.translatedTitle)) {
-        console.warn('translatedTitle does not contain French characters for French target');
+        console.warn('⚠️ translatedTitle does not contain French characters for French target');
+      }
+      if (analysisResult.summary && !containsArabic(analysisResult.summary)) {
+        console.warn('⚠️ summary does not contain Arabic characters for Arabic source document');
+      }
+      if (analysisResult.translatedSummary && !containsFrench(analysisResult.translatedSummary)) {
+        console.warn('⚠️ translatedSummary does not contain French characters for French target');
       }
     }
     

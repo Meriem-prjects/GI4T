@@ -405,10 +405,22 @@ All colors MUST be HSL.
   unicode-bidi: isolate;
 }
 
-/* LTR Mode for French */
+/* LTR Mode for French - Reinforced with !important to override any inherited RTL */
 .ckeditor-ltr .ck-content {
-  direction: ltr;
-  text-align: left;
+  direction: ltr !important;
+  text-align: left !important;
+}
+
+.ckeditor-ltr .ck-content p,
+.ckeditor-ltr .ck-content h1,
+.ckeditor-ltr .ck-content h2,
+.ckeditor-ltr .ck-content h3,
+.ckeditor-ltr .ck-content li,
+.ckeditor-ltr .ck-content div,
+.ckeditor-ltr .ck-content span {
+  direction: ltr !important;
+  text-align: left !important;
+  unicode-bidi: normal !important;
 }
 
 /* Bi-directional support within content */
@@ -418,8 +430,8 @@ All colors MUST be HSL.
 }
 
 .ck-content [lang="fr"] {
-  direction: ltr;
-  text-align: left;
+  direction: ltr !important;
+  text-align: left !important;
 }
 
 /* CKEditor Mini - for summary and bibliography fields */
@@ -446,8 +458,15 @@ All colors MUST be HSL.
 }
 
 .ckeditor-mini.ckeditor-ltr .ck-content {
-  direction: ltr;
-  text-align: left;
+  direction: ltr !important;
+  text-align: left !important;
+}
+
+.ckeditor-mini.ckeditor-ltr .ck-content p,
+.ckeditor-mini.ckeditor-ltr .ck-content span,
+.ckeditor-mini.ckeditor-ltr .ck-content div {
+  direction: ltr !important;
+  text-align: left !important;
 }
 
 /* Page Separator Styles (Editor) */
