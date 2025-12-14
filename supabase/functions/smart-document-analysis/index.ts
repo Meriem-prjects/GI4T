@@ -262,11 +262,12 @@ ${translatedContent}
     }
 
     // Use intelligent extraction that includes the end of document (for bibliography)
+    // Reduced from 18000 to 12000 to leave more room for AI response tokens
     const contentForAI = mode === 'quick' 
-      ? extractContentWithBibliography(fullContentForAnalysis, isAnalysisDocument, 18000)
+      ? extractContentWithBibliography(fullContentForAnalysis, isAnalysisDocument, 12000)
       : fullContentForAnalysis;
     
-    const contentTruncated = mode === 'quick' && fullContentForAnalysis.length > 18000;
+    const contentTruncated = mode === 'quick' && fullContentForAnalysis.length > 12000;
     
     if (contentTruncated) {
       console.log(`⚡ Quick mode: analyzing ${contentForAI.length} characters (with bibliography) of ${fullContentForAnalysis.length} total`);
@@ -486,7 +487,7 @@ ${contentForAI}${contentTruncated ? '\n\n[Note: Contenu tronqué pour analyse ra
         ],
         response_format: { type: "json_object" },
         temperature: 0.3,
-        max_tokens: mode === 'quick' ? 3500 : 8000, // Increased token limits to avoid truncation
+        max_tokens: mode === 'quick' ? 6000 : 12000, // Increased token limits to avoid truncation
       }),
     });
 
