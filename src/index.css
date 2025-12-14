@@ -469,6 +469,27 @@ All colors MUST be HSL.
   text-align: left !important;
 }
 
+/* Arabic styling for inputs, textareas, and badges */
+input[dir="rtl"],
+textarea[dir="rtl"],
+input.arabic-text,
+textarea.arabic-text,
+.badge-arabic,
+[data-arabic="true"] {
+  font-family: 'Almarai', 'Noto Sans Arabic', 'Amiri', sans-serif !important;
+  font-feature-settings: "liga" 1, "calt" 1, "ccmp" 1, "locl" 1 !important;
+  text-rendering: optimizeLegibility !important;
+  font-variant-ligatures: contextual !important;
+}
+
+/* Ensure arabic-text class applies correct font everywhere */
+.arabic-text {
+  font-family: 'Almarai', 'Noto Sans Arabic', 'Amiri', sans-serif !important;
+  font-feature-settings: "liga" 1, "calt" 1, "ccmp" 1, "locl" 1 !important;
+  text-rendering: optimizeLegibility !important;
+  font-variant-ligatures: contextual !important;
+}
+
 /* Page Separator Styles (Editor) */
 .page-separator {
   text-align: center;

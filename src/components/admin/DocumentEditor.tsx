@@ -2766,7 +2766,7 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
                         }}
                         placeholder="عنوان الوثيقة"
                         dir="rtl"
-                        className="mt-1"
+                        className="mt-1 arabic-text font-arabic"
                         required={editedData.language === 'ar'}
                       />
                     </div>
@@ -2784,7 +2784,7 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
                         }}
                         placeholder="العنوان الفرعي للوثيقة (اختياري)"
                         dir="rtl"
-                        className="mt-1"
+                        className="mt-1 arabic-text font-arabic"
                       />
                     </div>
 
@@ -2835,7 +2835,7 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
                               }}
                               placeholder="اسم المؤلف"
                               dir="rtl"
-                              className="mt-1 h-8"
+                              className="mt-1 h-8 arabic-text font-arabic"
                             />
                           </div>
 
@@ -2995,7 +2995,8 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
                                   <Badge 
                                     key={index} 
                                     variant="secondary"
-                                    className="flex items-center gap-1 px-2 py-1"
+                                    className="flex items-center gap-1 px-2 py-1 arabic-text font-arabic"
+                                    dir="rtl"
                                   >
                                     {ref}
                                     <X 
@@ -3164,9 +3165,14 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
                       {currentLanguage === 'ar' ? 'إضافة' : 'Ajouter'}
                     </Button>
                   </div>
-                  <div className="flex flex-wrap gap-2 max-h-24 overflow-y-auto">
+                  <div className={`flex flex-wrap gap-2 max-h-24 overflow-y-auto ${currentLanguage === 'ar' ? 'flex-row-reverse' : ''}`} dir={currentLanguage === 'ar' ? 'rtl' : 'ltr'}>
                     {(currentLanguage === 'ar' ? editedData.keywords_ar : editedData.keywords)?.map((keyword, index) => (
-                      <Badge key={index} variant="secondary" className="flex items-center gap-1">
+                      <Badge 
+                        key={index} 
+                        variant="secondary" 
+                        className={`flex items-center gap-1 ${currentLanguage === 'ar' ? 'arabic-text font-arabic' : ''}`}
+                        dir={currentLanguage === 'ar' ? 'rtl' : 'ltr'}
+                      >
                         {normalizeArabicForDisplay(keyword)}
                         <X
                           className="h-3 w-3 cursor-pointer hover:text-destructive transition-colors"
