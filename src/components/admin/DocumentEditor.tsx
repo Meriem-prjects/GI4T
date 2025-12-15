@@ -960,63 +960,16 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
         const analysis = (data as any).analysis;
         const isPrimaryArabic = editedData.language === 'ar';
         
-        // Detect actual language of returned data
-        const titleIsArabic = analysis.title && /[\u0600-\u06FF]/.test(analysis.title);
-        const translatedTitleIsArabic = analysis.translatedTitle && /[\u0600-\u06FF]/.test(analysis.translatedTitle);
-        const summaryIsArabic = analysis.summary && /[\u0600-\u06FF]/.test(analysis.summary);
-        
-        // Critical Debug: Log the language state at the moment of processing
-        console.log('🔍 AI Analysis Language Mapping:', {
-          documentLanguage: editedData.language,
+        // Debug: Log analysis result to verify content
+        console.log('🔍 AI Analysis Result:', {
           isPrimaryArabic,
-          titleContent: analysis.title?.substring(0, 50),
-          titleIsArabic,
-          translatedTitleContent: analysis.translatedTitle?.substring(0, 50),
-          translatedTitleIsArabic,
-          summaryIsArabic,
-          willMapTo: isPrimaryArabic ? 'title→title_ar, translatedTitle→title' : 'title→title, translatedTitle→title_ar'
+          titleLanguage: analysis.title ? ((/[\u0600-\u06FF]/.test(analysis.title)) ? 'AR' : 'FR') : 'N/A',
+          translatedTitleLanguage: analysis.translatedTitle ? ((/[\u0600-\u06FF]/.test(analysis.translatedTitle)) ? 'AR' : 'FR') : 'N/A',
+          existingKeywordsType: Array.isArray(analysis.existingKeywords) ? 'array' : typeof analysis.existingKeywords,
+          existingKeywordsCount: Array.isArray(analysis.existingKeywords) ? analysis.existingKeywords.length : 0,
+          existingKeywordsFirstItem: Array.isArray(analysis.existingKeywords) && analysis.existingKeywords[0],
+          translatedKeywordsType: Array.isArray(analysis.translatedKeywords) ? 'array' : typeof analysis.translatedKeywords,
         });
-        
-        // IMPORTANT: Verify that backend assigned languages correctly
-        // For Arabic primary docs: title should be Arabic, translatedTitle should be French
-        // If backend returned wrong assignment, we need to swap
-        let effectiveAnalysis = { ...analysis };
-        
-        if (isPrimaryArabic) {
-          // Check if title is NOT Arabic but translatedTitle IS Arabic - means backend swapped incorrectly
-          if (!titleIsArabic && translatedTitleIsArabic) {
-            console.warn('⚠️ Backend returned swapped languages for Arabic document - correcting...');
-            effectiveAnalysis = {
-              ...analysis,
-              title: analysis.translatedTitle,
-              translatedTitle: analysis.title,
-              subtitle: analysis.translatedSubtitle,
-              translatedSubtitle: analysis.subtitle,
-              summary: analysis.translatedSummary,
-              translatedSummary: analysis.summary,
-              existingKeywords: analysis.translatedKeywords,
-              translatedKeywords: analysis.existingKeywords,
-            };
-            console.log('✅ Languages corrected - title is now Arabic:', /[\u0600-\u06FF]/.test(effectiveAnalysis.title));
-          }
-        } else {
-          // French primary: title should be French, translatedTitle should be Arabic
-          if (titleIsArabic && !translatedTitleIsArabic) {
-            console.warn('⚠️ Backend returned swapped languages for French document - correcting...');
-            effectiveAnalysis = {
-              ...analysis,
-              title: analysis.translatedTitle,
-              translatedTitle: analysis.title,
-              subtitle: analysis.translatedSubtitle,
-              translatedSubtitle: analysis.subtitle,
-              summary: analysis.translatedSummary,
-              translatedSummary: analysis.summary,
-              existingKeywords: analysis.translatedKeywords,
-              translatedKeywords: analysis.existingKeywords,
-            };
-            console.log('✅ Languages corrected - title is now French');
-          }
-        }
 
         // Verify that translations are in the correct language
         const verifyTranslationLanguage = (text: string, expectedLanguage: 'ar' | 'fr'): boolean => {
@@ -1029,37 +982,44 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
           }
         };
 
-        // Use the corrected analysis for the rest of processing
-        const finalAnalysis = effectiveAnalysis;
+        // Log warnings if translations are in wrong language
+        if (!isPrimaryArabic) {
+          if (!verifyTranslationLanguage(analysis.translatedTitle, 'ar')) {
+            console.warn('translatedTitle is not in Arabic:', analysis.translatedTitle);
+            toast({
+              title: "Avertissement",
+              description: "Le titre traduit en arabe semble incorrect",
+              variant: "default"
+            });
+          }
+          if (!verifyTranslationLanguage(analysis.translatedSubtitle, 'ar')) {
+            console.warn('translatedSubtitle is not in Arabic:', analysis.translatedSubtitle);
+          }
+          if (!verifyTranslationLanguage(analysis.translatedSummary, 'ar')) {
+            console.warn('translatedSummary is not in Arabic:', analysis.translatedSummary);
+          }
+        }
         
         // DON'T change the original content - keep it intact
         // Only update metadata fields
         
         // Store the translated textual metadata from AI analysis
-        setTranslatedTextualMetadata(finalAnalysis.textualMetadataTranslated || '');
+        setTranslatedTextualMetadata(analysis.textualMetadataTranslated || '');
         
         // Apply suggested dropdown selections from AI analysis
         const suggestionIds = data.suggestionIds || {};
         
         // Assign fields based on document's primary language
         if (isPrimaryArabic) {
-          // Arabic is primary - analysis result (Arabic) goes to Arabic fields, translation (French) to French fields
-          console.log('📝 Mapping for Arabic primary document:', {
-            'title (should be AR)': finalAnalysis.title?.substring(0, 30),
-            'translatedTitle (should be FR)': finalAnalysis.translatedTitle?.substring(0, 30),
-            'mapping': 'title→title_ar, translatedTitle→title'
-          });
-          
+          // Arabic is primary - analysis result goes to Arabic fields, translation to French
           setEditedData(prev => ({
             ...prev,
-            // Arabic source → Arabic fields (_ar)
-            title_ar: finalAnalysis.title ? normalizeArabicForDisplay(finalAnalysis.title) : prev.title_ar,
-            subtitle_ar: finalAnalysis.subtitle ? normalizeArabicForDisplay(finalAnalysis.subtitle) : prev.subtitle_ar,
-            summary_ar: finalAnalysis.summary ? normalizeArabicForDisplay(finalAnalysis.summary) : prev.summary_ar,
-            // French translation → French fields (base)
-            title: finalAnalysis.translatedTitle || prev.title,
-            subtitle: finalAnalysis.translatedSubtitle || prev.subtitle,
-            summary: finalAnalysis.translatedSummary || prev.summary,
+            title_ar: analysis.title ? normalizeArabicForDisplay(analysis.title) : prev.title_ar,
+            subtitle_ar: analysis.subtitle ? normalizeArabicForDisplay(analysis.subtitle) : prev.subtitle_ar,
+            title: analysis.translatedTitle || prev.title,
+            subtitle: analysis.translatedSubtitle || prev.subtitle,
+            summary_ar: analysis.summary ? normalizeArabicForDisplay(analysis.summary) : prev.summary_ar,
+            summary: analysis.translatedSummary || prev.summary,
             // Keep original content unchanged
             // Apply AI suggestions for dropdown fields, but preserve analysis document type
             document_type_id: (() => {
@@ -1076,32 +1036,32 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
               return isCurrentAnalysis ? prev.document_type_id : (suggestionIds.documentTypeId || prev.document_type_id);
             })(),
             // Metadata in Arabic (primary language)
-            author_ar: finalAnalysis.metadata?.author ? normalizeArabicForDisplay(finalAnalysis.metadata.author) : prev.author_ar,
-            court_ar: finalAnalysis.metadata?.court ? normalizeArabicForDisplay(finalAnalysis.metadata.court) : prev.court_ar,
-            case_number: finalAnalysis.metadata?.case_number || prev.case_number,
-            plaintiff_ar: finalAnalysis.metadata?.plaintiff ? normalizeArabicForDisplay(finalAnalysis.metadata.plaintiff) : prev.plaintiff_ar,
-            defendant_ar: finalAnalysis.metadata?.defendant ? normalizeArabicForDisplay(finalAnalysis.metadata.defendant) : prev.defendant_ar,
-            year: finalAnalysis.metadata?.year || prev.year,
-            court_level_ar: finalAnalysis.metadata?.court_level ? normalizeArabicForDisplay(finalAnalysis.metadata.court_level) : prev.court_level_ar,
+            author_ar: analysis.metadata?.author ? normalizeArabicForDisplay(analysis.metadata.author) : prev.author_ar,
+            court_ar: analysis.metadata?.court ? normalizeArabicForDisplay(analysis.metadata.court) : prev.court_ar,
+            case_number: analysis.metadata?.case_number || prev.case_number,
+            plaintiff_ar: analysis.metadata?.plaintiff ? normalizeArabicForDisplay(analysis.metadata.plaintiff) : prev.plaintiff_ar,
+            defendant_ar: analysis.metadata?.defendant ? normalizeArabicForDisplay(analysis.metadata.defendant) : prev.defendant_ar,
+            year: analysis.metadata?.year || prev.year,
+            court_level_ar: analysis.metadata?.court_level ? normalizeArabicForDisplay(analysis.metadata.court_level) : prev.court_level_ar,
             // Translated metadata in French
-            author: finalAnalysis.metadataTranslated?.author || prev.author,
-            court: finalAnalysis.metadataTranslated?.court || prev.court,
-            plaintiff: finalAnalysis.metadataTranslated?.plaintiff || prev.plaintiff,
-            defendant: finalAnalysis.metadataTranslated?.defendant || prev.defendant,
-            court_level: finalAnalysis.metadataTranslated?.court_level || prev.court_level,
+            author: analysis.metadataTranslated?.author || prev.author,
+            court: analysis.metadataTranslated?.court || prev.court,
+            plaintiff: analysis.metadataTranslated?.plaintiff || prev.plaintiff,
+            defendant: analysis.metadataTranslated?.defendant || prev.defendant,
+            court_level: analysis.metadataTranslated?.court_level || prev.court_level,
             // Analysis-specific fields (Arabic primary)
-            validation_date: finalAnalysis.metadata?.validation_date || prev.validation_date,
-            legal_references_ar: finalAnalysis.metadata?.legal_references || prev.legal_references_ar,
-            bibliography_ar: finalAnalysis.metadata?.bibliography 
-              ? normalizeArabicForDisplay(finalAnalysis.metadata.bibliography) 
+            validation_date: analysis.metadata?.validation_date || prev.validation_date,
+            legal_references_ar: analysis.metadata?.legal_references || prev.legal_references_ar,
+            bibliography_ar: analysis.metadata?.bibliography 
+              ? normalizeArabicForDisplay(analysis.metadata.bibliography) 
               : prev.bibliography_ar,
             // Traductions en français
-            legal_references: finalAnalysis.metadataTranslated?.legal_references || prev.legal_references,
-            bibliography: finalAnalysis.metadataTranslated?.bibliography || prev.bibliography,
-            // Arabic keywords → keywords_ar, French keywords → keywords
+            legal_references: analysis.metadataTranslated?.legal_references || prev.legal_references,
+            bibliography: analysis.metadataTranslated?.bibliography || prev.bibliography,
+            // Keep original Arabic content, don't replace it
             keywords_ar: (() => {
               const existing = (prev.keywords_ar || []).map(k => normalizeArabicForDisplay(k.trim())).filter(k => k && /[\u0600-\u06FF]/.test(k));
-              const rawNewKeys = parseKeywordsArray(finalAnalysis.existingKeywords || []);
+              const rawNewKeys = parseKeywordsArray(analysis.existingKeywords || []);
               const newKeys = rawNewKeys.map(k => normalizeArabicForDisplay(k.trim())).filter(k => k && /[\u0600-\u06FF]/.test(k));
               const combined = [...existing, ...newKeys];
               const seen = new Set();
@@ -1114,7 +1074,7 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
             })(),
             keywords: (() => {
               const existing = (prev.keywords || []).map(k => k.trim()).filter(k => k && !/[\u0600-\u06FF]/.test(k));
-              const rawNewKeys = parseKeywordsArray(finalAnalysis.translatedKeywords || []);
+              const rawNewKeys = parseKeywordsArray(analysis.translatedKeywords || []);
               const newKeys = rawNewKeys.filter(k => k && !/[\u0600-\u06FF]/.test(k));
               const combined = [...existing, ...newKeys];
               const seen = new Set();
@@ -1126,32 +1086,24 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
               });
             })(),
             // Textual metadata in Arabic (source language)
-            textual_metadata: finalAnalysis.textualMetadata || prev.textual_metadata
+            textual_metadata: analysis.textualMetadata || prev.textual_metadata
           }));
           // Store translated content separately ONLY if no consolidated translation exists
           // This prevents AI analysis from overwriting the full consolidated translated content with just a summary
           if (!translatedContent || translatedContent.trim().length < 500) {
-            setTranslatedContent(finalAnalysis.translatedContent || '');
+            setTranslatedContent(analysis.translatedContent || '');
           }
           // Keep user on their current language tab - don't auto-switch
         } else {
-          // French is primary - analysis result (French) goes to French fields, translation (Arabic) to Arabic fields
-          console.log('📝 Mapping for French primary document:', {
-            'title (should be FR)': finalAnalysis.title?.substring(0, 30),
-            'translatedTitle (should be AR)': finalAnalysis.translatedTitle?.substring(0, 30),
-            'mapping': 'title→title, translatedTitle→title_ar'
-          });
-          
+          // French is primary - analysis result goes to French fields, translation to Arabic
           setEditedData(prev => ({
             ...prev,
-            // French source → French fields (base)
-            title: finalAnalysis.title || prev.title,
-            subtitle: finalAnalysis.subtitle || prev.subtitle,
-            summary: finalAnalysis.summary || prev.summary,
-            // Arabic translation → Arabic fields (_ar)
-            title_ar: finalAnalysis.translatedTitle ? normalizeArabicForDisplay(finalAnalysis.translatedTitle) : prev.title_ar,
-            subtitle_ar: finalAnalysis.translatedSubtitle ? normalizeArabicForDisplay(finalAnalysis.translatedSubtitle) : prev.subtitle_ar,
-            summary_ar: finalAnalysis.translatedSummary ? normalizeArabicForDisplay(finalAnalysis.translatedSummary) : prev.summary_ar,
+            title: analysis.title || prev.title,
+            subtitle: analysis.subtitle || prev.subtitle,
+            title_ar: analysis.translatedTitle ? normalizeArabicForDisplay(analysis.translatedTitle) : prev.title_ar,
+            subtitle_ar: analysis.translatedSubtitle ? normalizeArabicForDisplay(analysis.translatedSubtitle) : prev.subtitle_ar,
+            summary: analysis.summary || prev.summary,
+            summary_ar: analysis.translatedSummary ? normalizeArabicForDisplay(analysis.translatedSummary) : prev.summary_ar,
             // Keep original content unchanged
             // Apply AI suggestions for dropdown fields, but preserve analysis document type
             document_type_id: (() => {
@@ -1168,32 +1120,32 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
               return isCurrentAnalysis ? prev.document_type_id : (suggestionIds.documentTypeId || prev.document_type_id);
             })(),
             // Metadata in French (primary language)
-            author: finalAnalysis.metadata?.author || prev.author,
-            court: finalAnalysis.metadata?.court || prev.court,
-            case_number: finalAnalysis.metadata?.case_number || prev.case_number,
-            plaintiff: finalAnalysis.metadata?.plaintiff || prev.plaintiff,
-            defendant: finalAnalysis.metadata?.defendant || prev.defendant,
-            year: finalAnalysis.metadata?.year || prev.year,
-            court_level: finalAnalysis.metadata?.court_level || prev.court_level,
+            author: analysis.metadata?.author || prev.author,
+            court: analysis.metadata?.court || prev.court,
+            case_number: analysis.metadata?.case_number || prev.case_number,
+            plaintiff: analysis.metadata?.plaintiff || prev.plaintiff,
+            defendant: analysis.metadata?.defendant || prev.defendant,
+            year: analysis.metadata?.year || prev.year,
+            court_level: analysis.metadata?.court_level || prev.court_level,
             // Translated metadata in Arabic
-            author_ar: finalAnalysis.metadataTranslated?.author ? normalizeArabicForDisplay(finalAnalysis.metadataTranslated.author) : prev.author_ar,
-            court_ar: finalAnalysis.metadataTranslated?.court ? normalizeArabicForDisplay(finalAnalysis.metadataTranslated.court) : prev.court_ar,
-            plaintiff_ar: finalAnalysis.metadataTranslated?.plaintiff ? normalizeArabicForDisplay(finalAnalysis.metadataTranslated.plaintiff) : prev.plaintiff_ar,
-            defendant_ar: finalAnalysis.metadataTranslated?.defendant ? normalizeArabicForDisplay(finalAnalysis.metadataTranslated.defendant) : prev.defendant_ar,
-            court_level_ar: finalAnalysis.metadataTranslated?.court_level ? normalizeArabicForDisplay(finalAnalysis.metadataTranslated.court_level) : prev.court_level_ar,
+            author_ar: analysis.metadataTranslated?.author ? normalizeArabicForDisplay(analysis.metadataTranslated.author) : prev.author_ar,
+            court_ar: analysis.metadataTranslated?.court ? normalizeArabicForDisplay(analysis.metadataTranslated.court) : prev.court_ar,
+            plaintiff_ar: analysis.metadataTranslated?.plaintiff ? normalizeArabicForDisplay(analysis.metadataTranslated.plaintiff) : prev.plaintiff_ar,
+            defendant_ar: analysis.metadataTranslated?.defendant ? normalizeArabicForDisplay(analysis.metadataTranslated.defendant) : prev.defendant_ar,
+            court_level_ar: analysis.metadataTranslated?.court_level ? normalizeArabicForDisplay(analysis.metadataTranslated.court_level) : prev.court_level_ar,
             // Analysis-specific fields (French primary)
-            validation_date: finalAnalysis.metadata?.validation_date || prev.validation_date,
-            legal_references: finalAnalysis.metadata?.legal_references || prev.legal_references,
-            bibliography: finalAnalysis.metadata?.bibliography || prev.bibliography,
+            validation_date: analysis.metadata?.validation_date || prev.validation_date,
+            legal_references: analysis.metadata?.legal_references || prev.legal_references,
+            bibliography: analysis.metadata?.bibliography || prev.bibliography,
             // Traductions en arabe
-            legal_references_ar: finalAnalysis.metadataTranslated?.legal_references || prev.legal_references_ar,
-            bibliography_ar: finalAnalysis.metadataTranslated?.bibliography 
-              ? normalizeArabicForDisplay(finalAnalysis.metadataTranslated.bibliography)
+            legal_references_ar: analysis.metadataTranslated?.legal_references || prev.legal_references_ar,
+            bibliography_ar: analysis.metadataTranslated?.bibliography 
+              ? normalizeArabicForDisplay(analysis.metadataTranslated.bibliography)
               : prev.bibliography_ar,
-            // French keywords → keywords, Arabic keywords → keywords_ar
+            // Keep original French content, don't replace it
             keywords: (() => {
               const existing = (prev.keywords || []).map(k => k.trim()).filter(k => k && !/[\u0600-\u06FF]/.test(k));
-              const rawNewKeys = parseKeywordsArray(finalAnalysis.existingKeywords || []);
+              const rawNewKeys = parseKeywordsArray(analysis.existingKeywords || []);
               const newKeys = rawNewKeys.filter(k => k && !/[\u0600-\u06FF]/.test(k));
               const combined = [...existing, ...newKeys];
               const seen = new Set();
@@ -1206,7 +1158,7 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
             })(),
             keywords_ar: (() => {
               const existing = (prev.keywords_ar || []).map(k => normalizeArabicForDisplay(k.trim())).filter(k => k && /[\u0600-\u06FF]/.test(k));
-              const rawNewKeys = parseKeywordsArray(finalAnalysis.translatedKeywords || []);
+              const rawNewKeys = parseKeywordsArray(analysis.translatedKeywords || []);
               const newKeys = rawNewKeys.map(k => normalizeArabicForDisplay(k.trim())).filter(k => k && /[\u0600-\u06FF]/.test(k));
               const combined = [...existing, ...newKeys];
               const seen = new Set();
@@ -1218,12 +1170,12 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
               });
             })(),
             // Textual metadata in French (source language)
-            textual_metadata: finalAnalysis.textualMetadata || prev.textual_metadata
+            textual_metadata: analysis.textualMetadata || prev.textual_metadata
           }));
           // Store translated content separately ONLY if no consolidated translation exists
           // This prevents AI analysis from overwriting the full consolidated translated content with just a summary
           if (!translatedContent || translatedContent.trim().length < 500) {
-            setTranslatedContent(finalAnalysis.translatedContent || '');
+            setTranslatedContent(analysis.translatedContent || '');
           }
           // Keep user on their current language tab - don't auto-switch
         }
@@ -2814,7 +2766,7 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
                         }}
                         placeholder="عنوان الوثيقة"
                         dir="rtl"
-                        className="mt-1 arabic-text font-arabic"
+                        className="mt-1"
                         required={editedData.language === 'ar'}
                       />
                     </div>
@@ -2832,7 +2784,7 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
                         }}
                         placeholder="العنوان الفرعي للوثيقة (اختياري)"
                         dir="rtl"
-                        className="mt-1 arabic-text font-arabic"
+                        className="mt-1"
                       />
                     </div>
 
@@ -2883,7 +2835,7 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
                               }}
                               placeholder="اسم المؤلف"
                               dir="rtl"
-                              className="mt-1 h-8 arabic-text font-arabic"
+                              className="mt-1 h-8"
                             />
                           </div>
 
@@ -3043,8 +2995,7 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
                                   <Badge 
                                     key={index} 
                                     variant="secondary"
-                                    className="flex items-center gap-1 px-2 py-1 arabic-text font-arabic"
-                                    dir="rtl"
+                                    className="flex items-center gap-1 px-2 py-1"
                                   >
                                     {ref}
                                     <X 
@@ -3213,14 +3164,9 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
                       {currentLanguage === 'ar' ? 'إضافة' : 'Ajouter'}
                     </Button>
                   </div>
-                  <div className={`flex flex-wrap gap-2 max-h-24 overflow-y-auto ${currentLanguage === 'ar' ? 'flex-row-reverse' : ''}`} dir={currentLanguage === 'ar' ? 'rtl' : 'ltr'}>
+                  <div className="flex flex-wrap gap-2 max-h-24 overflow-y-auto">
                     {(currentLanguage === 'ar' ? editedData.keywords_ar : editedData.keywords)?.map((keyword, index) => (
-                      <Badge 
-                        key={index} 
-                        variant="secondary" 
-                        className={`flex items-center gap-1 ${currentLanguage === 'ar' ? 'arabic-text font-arabic' : ''}`}
-                        dir={currentLanguage === 'ar' ? 'rtl' : 'ltr'}
-                      >
+                      <Badge key={index} variant="secondary" className="flex items-center gap-1">
                         {normalizeArabicForDisplay(keyword)}
                         <X
                           className="h-3 w-3 cursor-pointer hover:text-destructive transition-colors"

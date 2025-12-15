@@ -405,22 +405,10 @@ All colors MUST be HSL.
   unicode-bidi: isolate;
 }
 
-/* LTR Mode for French - Reinforced with !important to override any inherited RTL */
+/* LTR Mode for French */
 .ckeditor-ltr .ck-content {
-  direction: ltr !important;
-  text-align: left !important;
-}
-
-.ckeditor-ltr .ck-content p,
-.ckeditor-ltr .ck-content h1,
-.ckeditor-ltr .ck-content h2,
-.ckeditor-ltr .ck-content h3,
-.ckeditor-ltr .ck-content li,
-.ckeditor-ltr .ck-content div,
-.ckeditor-ltr .ck-content span {
-  direction: ltr !important;
-  text-align: left !important;
-  unicode-bidi: normal !important;
+  direction: ltr;
+  text-align: left;
 }
 
 /* Bi-directional support within content */
@@ -430,8 +418,8 @@ All colors MUST be HSL.
 }
 
 .ck-content [lang="fr"] {
-  direction: ltr !important;
-  text-align: left !important;
+  direction: ltr;
+  text-align: left;
 }
 
 /* CKEditor Mini - for summary and bibliography fields */
@@ -458,36 +446,8 @@ All colors MUST be HSL.
 }
 
 .ckeditor-mini.ckeditor-ltr .ck-content {
-  direction: ltr !important;
-  text-align: left !important;
-}
-
-.ckeditor-mini.ckeditor-ltr .ck-content p,
-.ckeditor-mini.ckeditor-ltr .ck-content span,
-.ckeditor-mini.ckeditor-ltr .ck-content div {
-  direction: ltr !important;
-  text-align: left !important;
-}
-
-/* Arabic styling for inputs, textareas, and badges */
-input[dir="rtl"],
-textarea[dir="rtl"],
-input.arabic-text,
-textarea.arabic-text,
-.badge-arabic,
-[data-arabic="true"] {
-  font-family: 'Almarai', 'Noto Sans Arabic', 'Amiri', sans-serif !important;
-  font-feature-settings: "liga" 1, "calt" 1, "ccmp" 1, "locl" 1 !important;
-  text-rendering: optimizeLegibility !important;
-  font-variant-ligatures: contextual !important;
-}
-
-/* Ensure arabic-text class applies correct font everywhere */
-.arabic-text {
-  font-family: 'Almarai', 'Noto Sans Arabic', 'Amiri', sans-serif !important;
-  font-feature-settings: "liga" 1, "calt" 1, "ccmp" 1, "locl" 1 !important;
-  text-rendering: optimizeLegibility !important;
-  font-variant-ligatures: contextual !important;
+  direction: ltr;
+  text-align: left;
 }
 
 /* Page Separator Styles (Editor) */

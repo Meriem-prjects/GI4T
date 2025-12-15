@@ -550,10 +550,9 @@ const DocumentDetail = () => {
             )}
 
             {currentSummary && (
-              <div 
-                className={`text-lg text-muted-foreground mb-8 max-w-4xl mx-auto ${language === 'ar' ? 'dir-rtl arabic-text font-arabic' : ''}`}
-                dangerouslySetInnerHTML={{ __html: currentSummary }}
-              />
+              <p className={`text-lg text-muted-foreground mb-8 max-w-4xl mx-auto ${language === 'ar' ? 'dir-rtl' : ''}`}>
+                {currentSummary}
+              </p>
             )}
 
             {/* Metadata */}
@@ -623,10 +622,9 @@ const DocumentDetail = () => {
                         <BookOpen className="w-4 h-4" />
                         {language === 'ar' ? 'المراجع / الببليوغرافيا' : 'Références / Bibliographie'}
                       </h4>
-                      <div 
-                        className={`text-sm leading-relaxed whitespace-pre-wrap ${language === 'ar' ? 'text-right arabic-text font-arabic' : ''}`}
-                        dangerouslySetInnerHTML={{ __html: currentBibliography }}
-                      />
+                      <div className={`text-sm leading-relaxed whitespace-pre-wrap ${language === 'ar' ? 'text-right' : ''}`}>
+                        {currentBibliography}
+                      </div>
                     </div>
                   )}
                 </>
