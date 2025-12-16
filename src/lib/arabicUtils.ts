@@ -103,6 +103,30 @@ function convertPresentationForms(text: string): string {
 }
 
 /**
+ * Lightweight sanitization for display - converts Presentation Forms to base Arabic
+ * Essential for proper letter connection (e.g., ﮫ U+FBAB → ه U+0647)
+ * Used when loading documents from database into the editor
+ */
+export const sanitizeArabicForDisplayFrontend = (text: string | null | undefined): string => {
+  if (!text) return '';
+  
+  // Step 1: Convert Presentation Forms-B to base Arabic (ESSENTIAL for letter connection)
+  let sanitized = convertPresentationForms(text);
+  
+  // Step 2: Remove ZWNJ (U+200C) which prevents letter connection
+  // Also remove other invisible characters that break rendering
+  sanitized = sanitized.replace(/[\u200B\u200C\u2060\uFEFF]/g, '');
+  
+  // Step 3: Remove ASCII control characters
+  sanitized = sanitized.replace(/[\u0000-\u001F\u007F]/g, '');
+  
+  // Step 4: Normalize multiple spaces (preserve newlines and HTML structure)
+  sanitized = sanitized.replace(/[^\S\n\r]+/g, ' ');
+  
+  return sanitized;
+};
+
+/**
  * Separates glued Arabic words using linguistic patterns (for sanitizeArabicTextFrontend)
  */
 const separateGluedArabicWordsFrontend = (text: string): string => {
