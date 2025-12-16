@@ -433,8 +433,8 @@ export const sanitizeArabicTextLight = (text: string | null | undefined): string
 
 /**
  * RAW Arabic text sanitization - 100% faithful to PDF
- * Only removes invisible control characters and normalizes whitespace
- * NO character conversion, NO normalization, NO pattern fixes
+ * Only removes invisible control characters, normalizes whitespace,
+ * and converts Heh variants to standard Arabic Heh for proper display
  * Use this for display to preserve exact PDF appearance
  */
 export const sanitizeArabicTextRaw = (text: string | null | undefined): string => {
@@ -444,6 +444,25 @@ export const sanitizeArabicTextRaw = (text: string | null | undefined): string =
   let sanitized = text
     .replace(/[\u200B\u2060\uFEFF]/g, '') // Zero-width chars only
     .replace(/[\u0000-\u001F\u007F]/g, ''); // ASCII control chars
+  
+  // Convert ONLY Heh (ه) variants from Presentation Forms-B to standard Arabic Heh
+  // This fixes disconnected/open Heh at end of words (e.g., "فقه" displays correctly)
+  const hehVariants: Record<string, string> = {
+    '\uFEE9': '\u0647', // ﻩ isolated → ه
+    '\uFEEA': '\u0647', // ﻪ final → ه
+    '\uFEEB': '\u0647', // ﻫ initial → ه
+    '\uFEEC': '\u0647', // ﻬ medial → ه
+    '\uFBAA': '\u0647', '\uFBAB': '\u0647', 
+    '\uFBAC': '\u0647', '\uFBAD': '\u0647',
+    '\u06C0': '\u0647', // Heh with Yeh above → ه
+    '\u06C1': '\u0647', // Heh goal → ه
+    '\u06D5': '\u0647', // Ae → ه
+    '\u06BE': '\u0647', // Heh Doachashmee → ه
+  };
+  
+  for (const [from, to] of Object.entries(hehVariants)) {
+    sanitized = sanitized.replace(new RegExp(from, 'g'), to);
+  }
   
   // Normalize multiple spaces to single space (but preserve line breaks)
   sanitized = sanitized.replace(/[^\S\n\r]+/g, ' ');
