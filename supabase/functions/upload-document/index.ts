@@ -413,7 +413,8 @@ serve(async (req) => {
           let sanitizedExtractedText = sanitizeArabicTextRaw(extractedText);
           
           // Store HTML content for CKEditor (preserves structure like headings and paragraphs)
-          const htmlContent = extractedHtml || sanitizedExtractedText;
+          // Apply sanitizeArabicTextRaw to fix Heh (ه) variants in HTML content
+          const htmlContent = sanitizeArabicTextRaw(extractedHtml) || sanitizedExtractedText;
           
           fileContent = htmlContent.length > 0 ? htmlContent : 'Document PDF sans texte extractible';
           extractionSuccess = true;
@@ -429,9 +430,10 @@ serve(async (req) => {
           }
            
           // Create page contents from extracted text - use HTML if available
+          // Apply sanitizeArabicTextRaw to fix Heh (ه) variants in page HTML content
           pageContents = (readerData.texts || []).map((text: string, index: number) => {
             const pageHtml = readerData.htmlTexts?.[index] || '';
-            const pageContent = pageHtml || sanitizeArabicTextRaw(text.trim());
+            const pageContent = sanitizeArabicTextRaw(pageHtml) || sanitizeArabicTextRaw(text.trim());
             return {
               pageNumber: index + 1,
               content: pageContent,
