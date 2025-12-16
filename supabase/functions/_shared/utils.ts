@@ -7,44 +7,6 @@ export const ensureString = (value: string | undefined | null, fallback = ''): s
   return value ?? fallback;
 };
 
-/**
- * MINIMAL function to fix ONLY Arabic Heh (ه) variants
- * Does NOT change anything else - preserves all other characters exactly as extracted
- */
-export const fixArabicHehOnly = (text: string | null | undefined): string => {
-  if (!text) return '';
-  
-  // ONLY fix Heh variants - nothing else
-  const hehMap: Record<string, string> = {
-    // Presentation Forms-B for Heh (ه)
-    '\uFEE9': '\u0647', // Heh isolated
-    '\uFEEA': '\u0647', // Heh final (open form) - THIS IS THE MAIN ONE
-    '\uFEEB': '\u0647', // Heh initial
-    '\uFEEC': '\u0647', // Heh medial
-    // Extended Heh variants
-    '\uFBAA': '\u0647', // Heh Doachashmee isolated
-    '\uFBAB': '\u0647', // Heh Doachashmee final
-    '\uFBAC': '\u0647', // Heh Doachashmee initial
-    '\uFBAD': '\u0647', // Heh Doachashmee medial
-    '\uFBA4': '\u0647', '\uFBA5': '\u0647', 
-    '\uFBA6': '\u0647', '\uFBA7': '\u0647',
-    '\uFBA8': '\u0647', '\uFBA9': '\u0647',
-    // Non-standard Heh characters
-    '\u06C0': '\u0647', // Heh with Yeh above
-    '\u06C1': '\u0647', // Heh Goal
-    '\u06C2': '\u0647', // Heh Goal with Hamza
-    '\u06D5': '\u0647', // Ae (Kurdish Heh)
-    '\u06BE': '\u0647', // Heh Doachashmee
-  };
-  
-  let result = text;
-  for (const [from, to] of Object.entries(hehMap)) {
-    result = result.replace(new RegExp(from, 'g'), to);
-  }
-  
-  return result;
-};
-
 // Arabic Presentation Forms-B (U+FE70-U+FEFF) to base character mapping
 const presentationFormsMap: Record<number, string> = {
   // Alef variations
