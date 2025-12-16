@@ -469,9 +469,9 @@ export const sanitizeArabicForDisplay = (text: string | null | undefined): strin
   // This is ESSENTIAL for proper letter connection in the browser
   let sanitized = convertPresentationForms(text);
   
-  // Step 2: Remove truly invisible control characters
+  // Step 2: Remove truly invisible control characters including ZWNJ
   sanitized = sanitized
-    .replace(/[\u200B\u2060\uFEFF]/g, '') // Zero-width chars
+    .replace(/[\u200B\u200C\u2060\uFEFF]/g, '') // Zero-width chars + ZWNJ (U+200C) to allow letter connection
     .replace(/[\u0000-\u001F\u007F]/g, ''); // ASCII control chars
   
   // Step 3: Normalize multiple spaces to single space (preserve line breaks)
