@@ -455,6 +455,35 @@ export const sanitizeArabicTextRaw = (text: string | null | undefined): string =
 };
 
 /**
+ * Arabic text sanitization for DISPLAY - converts Presentation Forms to base characters
+ * This ensures Arabic letters connect properly when rendered by the browser
+ * - Converts Presentation Forms-B (U+FE70-U+FEFF) to base Arabic (U+0600-U+06FF)
+ * - Removes invisible control characters
+ * - Normalizes whitespace
+ * - Does NOT apply aggressive transformations (preserves PDF structure)
+ */
+export const sanitizeArabicForDisplay = (text: string | null | undefined): string => {
+  if (!text) return '';
+  
+  // Step 1: Convert Presentation Forms-B to base Arabic characters
+  // This is ESSENTIAL for proper letter connection in the browser
+  let sanitized = convertPresentationForms(text);
+  
+  // Step 2: Remove truly invisible control characters
+  sanitized = sanitized
+    .replace(/[\u200B\u2060\uFEFF]/g, '') // Zero-width chars
+    .replace(/[\u0000-\u001F\u007F]/g, ''); // ASCII control chars
+  
+  // Step 3: Normalize multiple spaces to single space (preserve line breaks)
+  sanitized = sanitized.replace(/[^\S\n\r]+/g, ' ');
+  
+  // Step 4: Trim lines but preserve structure
+  sanitized = sanitized.split('\n').map(line => line.trim()).join('\n');
+  
+  return sanitized.trim();
+};
+
+/**
  * Separates glued Arabic words using linguistic patterns
  * Detects transitions between Arabic words and common patterns
  * Combined range: U+0600-U+06FF (Arabic) + U+FE70-U+FEFF (Presentation Forms)
