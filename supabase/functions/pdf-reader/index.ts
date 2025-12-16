@@ -1,5 +1,6 @@
 // Import unpdf for serverless PDF text extraction
 import { getDocumentProxy } from "https://esm.sh/unpdf@0.11.0";
+import { sanitizeArabicTextLight } from '../_shared/utils.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -341,6 +342,9 @@ Deno.serve(async (req) => {
         
         // Remove page numbers from extracted text
         structuredText = removePageNumbers(structuredText, pageNum);
+        
+        // Apply Arabic text sanitization to fix disconnected Heh and presentation forms
+        structuredText = sanitizeArabicTextLight(structuredText);
         
         texts.push(structuredText);
         
