@@ -1,5 +1,4 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.57.4';
-import { sanitizeArabicForDisplay } from '../_shared/utils.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -44,8 +43,8 @@ function separateContent(text: string): { textualMetadata: string; content: stri
       console.log(`  → Content: ${content.length} chars`);
       
       return {
-        textualMetadata: sanitizeArabicForDisplay(textualMetadata),
-        content: sanitizeArabicForDisplay(content)
+        textualMetadata,
+        content
       };
     }
   }
@@ -76,8 +75,8 @@ function separateContent(text: string): { textualMetadata: string; content: stri
       console.log(`  → Content: ${content.length} chars`);
       
       return {
-        textualMetadata: sanitizeArabicForDisplay(textualMetadata),
-        content: sanitizeArabicForDisplay(content)
+        textualMetadata,
+        content
       };
     }
   }
@@ -98,17 +97,17 @@ function separateContent(text: string): { textualMetadata: string; content: stri
       console.log(`  → Content: ${content.length} chars`);
       
       return {
-        textualMetadata: sanitizeArabicForDisplay(textualMetadata),
-        content: sanitizeArabicForDisplay(content)
+        textualMetadata,
+        content
       };
     }
   }
   
-  // If no keyword found, keep original text as content but still sanitize
+  // If no keyword found, keep original text as content
   console.log('⚠ Re-processing: No separation keyword found, keeping full text as content');
   return {
     textualMetadata: '',
-    content: sanitizeArabicForDisplay(text)
+    content: text
   };
 }
 
