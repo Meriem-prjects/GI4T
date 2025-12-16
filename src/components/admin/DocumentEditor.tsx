@@ -19,7 +19,7 @@ import { MultiCategorySelector } from './MultiCategorySelector';
 import { useDocumentCategories, useUpdateDocumentCategories } from '@/hooks/useDocumentCategories';
 import PDFViewer from './PDFViewer';
 import { renderFormattedContent, formatContent } from '@/utils/contentFormatter';
-import { sanitizeArabicTextFrontend, normalizeArabicForDisplay, handleArabicInput } from '@/lib/arabicUtils';
+import { sanitizeArabicTextFrontend, normalizeArabicForDisplay, handleArabicInput, fixHehVariants } from '@/lib/arabicUtils';
 import { useTranslation } from '@/hooks/useTranslation';
 import ProgressTracker from './ProgressTracker';
 import { WorkflowTimeline } from './WorkflowTimeline';
