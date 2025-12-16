@@ -1,7 +1,7 @@
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.57.4';
-import { sanitizeArabicTextRaw } from "../_shared/utils.ts";
+import { sanitizeArabicForDisplay } from "../_shared/utils.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -410,7 +410,7 @@ serve(async (req) => {
           console.log('Using PDF direct extraction result with structure preservation');
           
           // Use RAW sanitization for 100% PDF fidelity - no transformations
-          let sanitizedExtractedText = sanitizeArabicTextRaw(extractedText);
+          let sanitizedExtractedText = sanitizeArabicForDisplay(extractedText);
           
           // Store HTML content for CKEditor (preserves structure like headings and paragraphs)
           const htmlContent = extractedHtml || sanitizedExtractedText;
@@ -431,7 +431,7 @@ serve(async (req) => {
           // Create page contents from extracted text - use HTML if available
           pageContents = (readerData.texts || []).map((text: string, index: number) => {
             const pageHtml = readerData.htmlTexts?.[index] || '';
-            const pageContent = pageHtml || sanitizeArabicTextRaw(text.trim());
+            const pageContent = pageHtml || sanitizeArabicForDisplay(text.trim());
             return {
               pageNumber: index + 1,
               content: pageContent,
