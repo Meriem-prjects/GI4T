@@ -7,6 +7,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import BatchDocumentUploader from '@/components/admin/BatchDocumentUploader';
 import DocumentEditor from '@/components/admin/DocumentEditor';
+import { sanitizeArabicForDisplayFrontend } from '@/lib/arabicUtils';
 
 interface DocumentData {
   id?: string;
@@ -108,9 +109,10 @@ const AdminEditor = () => {
       }
 
       // Map document data to DocumentData format
+      // Apply sanitization to content fields to convert Presentation Forms to base Arabic
       const mappedDocument: DocumentData = {
         id: document.id,
-        content: document.content,
+        content: sanitizeArabicForDisplayFrontend(document.content),
         title: document.title,
         title_ar: document.title_ar || '',
         subtitle: document.subtitle || '',
@@ -125,9 +127,9 @@ const AdminEditor = () => {
         document_type_id: document.document_type_id,
         file_url: document.file_url,
         pdf_url: document.pdf_url,
-        fullContent: document.content,
+        fullContent: sanitizeArabicForDisplayFrontend(document.content),
         translated_content: document.translated_content || '',
-        textual_metadata: document.textual_metadata || '',
+        textual_metadata: sanitizeArabicForDisplayFrontend(document.textual_metadata || ''),
         author: document.author || '',
         author_ar: document.author_ar || '',
         court: document.court || '',
@@ -148,7 +150,10 @@ const AdminEditor = () => {
         legal_references_ar: document.legal_references_ar || [],
         bibliography: document.bibliography || '',
         bibliography_ar: document.bibliography_ar || '',
-        page_contents: (document.page_contents as any[]) || [],
+        page_contents: (document.page_contents as any[] || []).map(page => ({
+          ...page,
+          content: sanitizeArabicForDisplayFrontend(page.content)
+        })),
         total_pages: document.total_pages || 0,
         processed_pages: document.processed_pages || 0,
       };
