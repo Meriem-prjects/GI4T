@@ -1,16 +1,19 @@
 // Utility functions for formatting and stripping content
-import { normalizeArabicText, isArabicText } from '@/lib/arabicUtils';
+import { normalizeArabicText, isArabicText, fixHehVariants } from '@/lib/arabicUtils';
 
 /**
  * Converts simple text formatting markers to HTML for display
+ * Also fixes Arabic Heh (ه) variants for proper display
  */
 export const renderFormattedContent = (content: string): string => {
   if (!content) return '';
   
+  // First, fix Heh variants in the entire content
+  let processedContent = fixHehVariants(content);
   // Check if content contains page-break divs - use index-based extraction for nested div support
-  if (content.includes('class="page-break"') || content.includes("class='page-break'")) {
+  if (processedContent.includes('class="page-break"') || processedContent.includes("class='page-break'")) {
     const pageBreakPattern = /<div[^>]*class="[^"]*page-break[^"]*"[^>]*>/gi;
-    const matches = [...content.matchAll(pageBreakPattern)];
+    const matches = [...processedContent.matchAll(pageBreakPattern)];
     
     if (matches.length > 0) {
       let result = '';
@@ -25,11 +28,11 @@ export const renderFormattedContent = (content: string): string => {
         if (i + 1 < matches.length) {
           endIndex = matches[i + 1].index!;
         } else {
-          endIndex = content.length;
+          endIndex = processedContent.length;
         }
         
         // Extract content between this page-break and the next
-        let innerContent = content.slice(startIndex, endIndex);
+        let innerContent = processedContent.slice(startIndex, endIndex);
         
         // Remove only the closing </div> at the very end (for this page-break container)
         innerContent = innerContent.replace(/\s*<\/div>\s*$/, '');
@@ -50,7 +53,7 @@ export const renderFormattedContent = (content: string): string => {
     }
   }
   
-  return processTextContent(content);
+  return processTextContent(processedContent);
 };
 
 // Helper function to process text content with markdown-like formatting

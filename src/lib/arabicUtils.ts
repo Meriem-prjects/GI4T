@@ -371,11 +371,22 @@ export const normalizeArabicForDisplay = (text: string): string => {
     // Persian/Urdu Yeh → Arabic Yeh
     '\u06CC': '\u064A',  // ی → ي
     '\u06D2': '\u064A',  // ے → ي
-    // Alternate Heh forms → Arabic Heh
-    '\u06C1': '\u0647',  // ہ → ه
-    '\u06BE': '\u0647',  // ھ → ه
-    '\uFEEB': '\u0647',  // ﻫ → ه (presentation form)
-    '\uFEEC': '\u0647',  // ﻬ → ه (presentation form)
+    // ALL Heh (ه) variants → Standard Arabic Heh (U+0647)
+    // Presentation Forms-B
+    '\uFEE9': '\u0647',  // ﻩ isolated → ه
+    '\uFEEA': '\u0647',  // ﻪ final → ه
+    '\uFEEB': '\u0647',  // ﻫ initial → ه
+    '\uFEEC': '\u0647',  // ﻬ medial → ه
+    // Heh Doachashmee forms
+    '\uFBAA': '\u0647',  // isolated → ه
+    '\uFBAB': '\u0647',  // final → ه
+    '\uFBAC': '\u0647',  // initial → ه
+    '\uFBAD': '\u0647',  // medial → ه
+    // Other Heh variants
+    '\u06C0': '\u0647',  // Heh with Yeh above → ه
+    '\u06C1': '\u0647',  // ہ Heh goal → ه
+    '\u06D5': '\u0647',  // Ae → ه
+    '\u06BE': '\u0647',  // ھ Heh Doachashmee → ه
     // NOTE: Alif variants are NOT mapped here to preserve them
   };
   
@@ -622,6 +633,39 @@ export const handleArabicInput = (value: string): string => {
   corrected = corrected.replace(/([\u0621-\u064Aء-ي])ال([ب-ي])/g, '$1 ال$2');
   
   return corrected;
+};
+
+/**
+ * Fix Heh (ه) variants - converts all presentation forms to standard Arabic Heh
+ * This ensures the "ه" character displays properly connected/closed
+ * ONLY modifies Heh variants, does NOT touch any other characters
+ */
+export const fixHehVariants = (text: string | null | undefined): string => {
+  if (!text) return '';
+  
+  let fixed = text;
+  
+  // Convert ALL Heh presentation forms to standard Arabic Heh (U+0647)
+  const hehVariants: Record<string, string> = {
+    '\uFEE9': '\u0647', // ﻩ isolated → ه
+    '\uFEEA': '\u0647', // ﻪ final → ه
+    '\uFEEB': '\u0647', // ﻫ initial → ه
+    '\uFEEC': '\u0647', // ﻬ medial → ه
+    '\uFBAA': '\u0647', // Heh Doachashmee isolated → ه
+    '\uFBAB': '\u0647', // Heh Doachashmee final → ه
+    '\uFBAC': '\u0647', // Heh Doachashmee initial → ه
+    '\uFBAD': '\u0647', // Heh Doachashmee medial → ه
+    '\u06C0': '\u0647', // Heh with Yeh above → ه
+    '\u06C1': '\u0647', // Heh goal → ه
+    '\u06D5': '\u0647', // Ae → ه
+    '\u06BE': '\u0647', // Heh Doachashmee → ه
+  };
+  
+  for (const [from, to] of Object.entries(hehVariants)) {
+    fixed = fixed.replace(new RegExp(from, 'g'), to);
+  }
+  
+  return fixed;
 };
 
 /**
