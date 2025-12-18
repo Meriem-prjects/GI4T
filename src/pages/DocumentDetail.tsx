@@ -10,7 +10,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Separator } from "@/components/ui/separator";
 import { createSlug, createCategorySlug, createDocumentPath } from "@/lib/urlUtils";
 import { renderFormattedContent } from "@/utils/contentFormatter";
-import { normalizeArabicText } from "@/lib/arabicUtils";
+import { normalizeArabicForDisplay } from "@/lib/arabicUtils";
 import { ArticleStatistics } from "@/components/ArticleStatistics";
 import { CommentSection } from "@/components/CommentSection";
 import { useDocumentView } from "@/hooks/useDocumentView";
@@ -571,7 +571,9 @@ const DocumentDetail = () => {
                 className={`text-lg text-muted-foreground mb-8 max-w-4xl mx-auto ${language === 'ar' ? 'dir-rtl arabic-text font-arabic' : ''}`}
                 dir={language === 'ar' ? 'rtl' : 'ltr'}
                 dangerouslySetInnerHTML={{ 
-                  __html: currentSummary.replace(/<\/?p>/gi, '').trim() 
+                  __html: language === 'ar' 
+                    ? normalizeArabicForDisplay(currentSummary.replace(/<\/?p>/gi, '').trim())
+                    : currentSummary.replace(/<\/?p>/gi, '').trim() 
                 }}
               />
             )}
@@ -646,7 +648,9 @@ const DocumentDetail = () => {
                       <div 
                         className={`text-sm leading-relaxed whitespace-pre-wrap ${language === 'ar' ? 'text-right arabic-text font-arabic' : ''}`}
                         dangerouslySetInnerHTML={{ 
-                          __html: currentBibliography.replace(/<\/?p>/gi, '').trim() 
+                          __html: language === 'ar'
+                            ? normalizeArabicForDisplay(currentBibliography.replace(/<\/?p>/gi, '').trim())
+                            : currentBibliography.replace(/<\/?p>/gi, '').trim() 
                         }}
                       />
                     </div>
@@ -931,8 +935,8 @@ const DocumentDetail = () => {
               <h3 className="text-lg font-semibold mb-4">{language === 'ar' ? 'الكلمات المفاتيح' : 'Mots-clés'}</h3>
               <div className={`flex flex-wrap gap-2 ${language === 'ar' ? 'justify-end' : ''}`}>
                 {currentKeywords.map((keyword) => (
-                  <Badge key={keyword} variant="outline">
-                    {keyword}
+                  <Badge key={keyword} variant="outline" className={language === 'ar' ? 'arabic-text font-arabic' : ''}>
+                    {language === 'ar' ? normalizeArabicForDisplay(keyword) : keyword}
                   </Badge>
                 ))}
               </div>
