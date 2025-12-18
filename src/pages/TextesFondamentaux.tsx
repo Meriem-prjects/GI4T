@@ -33,6 +33,7 @@ interface Document {
   pdf_url: string;
   page_count: number;
   keywords: string[];
+  keywords_ar: string[];
   document_type: string;
   year: number;
 }
@@ -258,18 +259,33 @@ const TextesFondamentaux = () => {
                           <CardTitle className={`text-xl mb-2 ${isRTL ? 'text-right' : ''}`}>
                             {isRTL ? document.title_ar || document.title : document.title}
                           </CardTitle>
-                          {document.summary && <CardDescription className={`text-base mb-3 line-clamp-2 ${isRTL ? 'text-right' : ''}`}>
-                              {isRTL ? document.summary_ar || document.summary : document.summary}
-                            </CardDescription>}
+                          {(isRTL ? document.summary_ar || document.summary : document.summary) && (
+                            <div 
+                              className={`text-base mb-3 line-clamp-2 text-muted-foreground ${isRTL ? 'text-right arabic-text font-arabic' : ''}`}
+                              dir={isRTL ? 'rtl' : 'ltr'}
+                              dangerouslySetInnerHTML={{ 
+                                __html: (isRTL ? document.summary_ar || document.summary : document.summary)?.replace(/<\/?p>/gi, '').trim() || ''
+                              }}
+                            />
+                          )}
                           <div className={`flex items-center gap-4 text-sm text-muted-foreground mb-3 ${isRTL ? 'flex-row-reverse' : ''}`}>
                             <span>{t('publishedOn')} {formatDate(document.created_at)}</span>
                             {document.page_count && <span>• {document.page_count} {t(document.page_count > 1 ? 'pages' : 'page')}</span>}
                           </div>
-                          {document.keywords && document.keywords.length > 0 && <div className={`flex flex-wrap gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
-                              {document.keywords.slice(0, 5).map(keyword => <Badge key={keyword} variant="outline" className="text-xs">
-                                  {keyword}
-                                </Badge>)}
-                            </div>}
+                          {(() => {
+                            const currentKeywords = isRTL 
+                              ? (document.keywords_ar?.length > 0 ? document.keywords_ar : document.keywords)
+                              : document.keywords;
+                            return currentKeywords && currentKeywords.length > 0 && (
+                              <div className={`flex flex-wrap gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
+                                {currentKeywords.slice(0, 5).map((keyword, index) => (
+                                  <Badge key={`${keyword}-${index}`} variant="outline" className={`text-xs ${isRTL ? 'arabic-text font-arabic' : ''}`}>
+                                    {keyword}
+                                  </Badge>
+                                ))}
+                              </div>
+                            );
+                          })()}
                         </div>
                         <div className={`flex flex-col gap-2 ${isRTL ? 'mr-4' : 'ml-4'}`}>
                           {document.file_url && <Button size="sm" asChild>
