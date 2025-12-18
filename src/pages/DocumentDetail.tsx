@@ -624,9 +624,12 @@ const DocumentDetail = () => {
                         <BookOpen className="w-4 h-4" />
                         {language === 'ar' ? 'المراجع / الببليوغرافيا' : 'Références / Bibliographie'}
                       </h4>
-                      <div className={`text-sm leading-relaxed whitespace-pre-wrap ${language === 'ar' ? 'text-right' : ''}`}>
-                        {currentBibliography}
-                      </div>
+                      <div 
+                        className={`text-sm leading-relaxed whitespace-pre-wrap ${language === 'ar' ? 'text-right arabic-text font-arabic' : ''}`}
+                        dangerouslySetInnerHTML={{ 
+                          __html: currentBibliography.replace(/<\/?p>/gi, '').trim() 
+                        }}
+                      />
                     </div>
                   )}
                 </>
