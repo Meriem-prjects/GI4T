@@ -188,9 +188,13 @@ const AnalysesOpinions = () => {
                           
                           <CardTitle className="text-xl mb-3">{title}</CardTitle>
                           {summary && (
-                            <CardDescription className="text-base mb-4">
-                              {summary.length > 200 ? `${summary.substring(0, 200)}...` : summary}
-                            </CardDescription>
+                            <div 
+                              className={`text-base mb-4 text-muted-foreground line-clamp-2 ${isRTL ? 'arabic-text font-arabic' : ''}`}
+                              dir={isRTL ? 'rtl' : 'ltr'}
+                              dangerouslySetInnerHTML={{ 
+                                __html: summary.replace(/<\/?p>/gi, '').trim()
+                              }}
+                            />
                           )}
                           
                           {keywords && keywords.length > 0 && (
