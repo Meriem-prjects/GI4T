@@ -252,9 +252,9 @@ const SearchResults = () => {
       {/* Search Bar */}
       <div ref={searchBarRef} className="max-w-4xl mx-auto mb-6">
         <div className="relative">
-          <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-muted-foreground" size={20} />
+          <Search className={`absolute ${isRTL ? 'right-4' : 'left-4'} top-1/2 transform -translate-y-1/2 text-muted-foreground`} size={20} />
           <Input
-            placeholder={useAI ? "Recherche intelligente avec IA... Posez votre question en langage naturel" : "Rechercher des documents..."}
+            placeholder={useAI ? t('aiSearchPlaceholder') : t('searchDocumentsPlaceholder')}
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             onKeyDown={(e) => {
@@ -262,13 +262,13 @@ const SearchResults = () => {
                 setCurrentPage(1);
               }
             }}
-            className="pl-12 pr-32 py-4 text-base bg-background rounded-lg border"
+            className={`${isRTL ? 'pr-12 pl-32' : 'pl-12 pr-32'} py-4 text-base bg-background rounded-lg border`}
           />
           <Button 
-            className="absolute right-2 top-1/2 transform -translate-y-1/2 px-6"
+            className={`absolute ${isRTL ? 'left-2' : 'right-2'} top-1/2 transform -translate-y-1/2 px-6`}
             onClick={() => setCurrentPage(1)}
           >
-            Rechercher
+            {t('search')}
           </Button>
         </div>
         
@@ -276,7 +276,7 @@ const SearchResults = () => {
         <div className="flex items-center justify-center gap-3 mt-4">
           <Label htmlFor="ai-search" className="flex items-center gap-2 cursor-pointer">
             <Sparkles className={`h-4 w-4 ${useAI ? 'text-primary' : 'text-muted-foreground'}`} />
-            <span className="text-sm font-medium">Recherche intelligente IA</span>
+            <span className="text-sm font-medium">{t('intelligentSearchAI')}</span>
           </Label>
           <Switch
             id="ai-search"
@@ -291,8 +291,7 @@ const SearchResults = () => {
         {useAI && (
           <div className="mt-3 p-3 bg-primary/5 rounded-lg border border-primary/20">
             <p className="text-sm text-muted-foreground text-center">
-              💡 <strong>Mode IA activé :</strong> Posez vos questions en langage naturel. 
-              L'IA comprendra le contexte et trouvera les documents pertinents même sans mots-clés exacts.
+              💡 <strong>{t('aiModeActivated')} :</strong> {t('aiModeDescription')}
             </p>
           </div>
         )}
@@ -320,7 +319,7 @@ const SearchResults = () => {
             <CardHeader className="pb-4">
               <CardTitle className="text-lg flex items-center gap-2">
                 <Filter className="w-5 h-5" />
-                Filtres Avancés
+                {t('advancedFilters')}
               </CardTitle>
               <Button 
                 variant="outline" 
@@ -328,18 +327,18 @@ const SearchResults = () => {
                 className="text-primary hover:bg-primary hover:text-primary-foreground"
                 onClick={resetFilters}
               >
-                Réinitialiser
+                {t('reset')}
               </Button>
             </CardHeader>
             <CardContent className="space-y-6">
               {/* Sticky Search Bar */}
               {showStickySearch && (
                 <div className="pb-4 border-b">
-                  <Label className="text-sm font-medium mb-2 block">Recherche</Label>
+                  <Label className="text-sm font-medium mb-2 block">{t('search')}</Label>
                   <div className="relative">
-                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground" size={16} />
+                    <Search className={`absolute ${isRTL ? 'right-3' : 'left-3'} top-1/2 transform -translate-y-1/2 text-muted-foreground`} size={16} />
                     <Input
-                      placeholder="Rechercher..."
+                      placeholder={t('searchDocumentsPlaceholder')}
                       value={searchQuery}
                       onChange={(e) => setSearchQuery(e.target.value)}
                       onKeyDown={(e) => {
@@ -347,7 +346,7 @@ const SearchResults = () => {
                           setCurrentPage(1);
                         }
                       }}
-                      className="pl-9 text-sm"
+                      className={`${isRTL ? 'pr-9' : 'pl-9'} text-sm`}
                     />
                   </div>
                   <div className="flex items-center gap-2 mt-2">
@@ -370,7 +369,7 @@ const SearchResults = () => {
               {/* Tribunal */}
               <Collapsible open={courtTypeOpen} onOpenChange={setCourtTypeOpen}>
                 <CollapsibleTrigger className="flex items-center justify-between w-full hover:bg-muted/50 p-2 rounded-md transition-colors">
-                  <Label className="text-sm font-medium cursor-pointer">Type de Tribunal</Label>
+                  <Label className="text-sm font-medium cursor-pointer">{t('courtType')}</Label>
                   {courtTypeOpen ? (
                     <ChevronUp className="h-4 w-4 text-muted-foreground" />
                   ) : (
@@ -382,16 +381,16 @@ const SearchResults = () => {
                     setSelectedCourtType(value);
                     setCurrentPage(1);
                   }}>
-                    <div className="space-y-3 max-h-48 overflow-y-auto scrollbar-thin">
-                      <div className="flex items-center space-x-2">
+                    <div className={`space-y-3 max-h-48 overflow-y-auto scrollbar-thin ${isRTL ? 'space-x-reverse' : ''}`}>
+                      <div className={`flex items-center ${isRTL ? 'space-x-reverse space-x-2' : 'space-x-2'}`}>
                         <RadioGroupItem value="all" id="court-all" />
-                        <Label htmlFor="court-all" className="text-sm cursor-pointer">Tous les tribunaux</Label>
+                        <Label htmlFor="court-all" className="text-sm cursor-pointer">{t('allCourts')}</Label>
                       </div>
                       {courtTypes.map((court) => (
-                        <div key={court.id} className="flex items-center space-x-2">
+                        <div key={court.id} className={`flex items-center ${isRTL ? 'space-x-reverse space-x-2' : 'space-x-2'}`}>
                           <RadioGroupItem value={court.name} id={`court-${court.id}`} />
                           <Label htmlFor={`court-${court.id}`} className="text-sm cursor-pointer">
-                            {court.name}
+                            {language === 'ar' ? court.name_ar || court.name : court.name}
                           </Label>
                         </div>
                       ))}
@@ -402,7 +401,7 @@ const SearchResults = () => {
 
               {/* Période */}
               <div>
-                <Label className="text-sm font-medium mb-2 block">Période</Label>
+                <Label className="text-sm font-medium mb-2 block">{t('period')}</Label>
                 <div className="flex gap-2">
                   <Select 
                     value={yearFrom} 
@@ -412,7 +411,7 @@ const SearchResults = () => {
                     }}
                   >
                     <SelectTrigger className="text-sm">
-                      <SelectValue placeholder="De" />
+                      <SelectValue placeholder={t('from')} />
                     </SelectTrigger>
                     <SelectContent>
                       {Array.from(
@@ -433,7 +432,7 @@ const SearchResults = () => {
                     }}
                   >
                     <SelectTrigger className="text-sm">
-                      <SelectValue placeholder="À" />
+                      <SelectValue placeholder={t('to')} />
                     </SelectTrigger>
                     <SelectContent>
                       {Array.from(
@@ -452,7 +451,7 @@ const SearchResults = () => {
               {/* Droits Fondamentaux */}
               <Collapsible open={categoriesOpen} onOpenChange={setCategoriesOpen}>
                 <CollapsibleTrigger className="flex items-center justify-between w-full hover:bg-muted/50 p-2 rounded-md transition-colors">
-                  <Label className="text-sm font-medium cursor-pointer">Droits Fondamentaux</Label>
+                  <Label className="text-sm font-medium cursor-pointer">{t('fundamentalRights')}</Label>
                   {categoriesOpen ? (
                     <ChevronUp className="h-4 w-4 text-muted-foreground" />
                   ) : (
@@ -460,16 +459,16 @@ const SearchResults = () => {
                   )}
                 </CollapsibleTrigger>
                 <CollapsibleContent className="mt-3">
-                  <div className="space-y-3 max-h-48 overflow-y-auto scrollbar-thin">
+                  <div className={`space-y-3 max-h-48 overflow-y-auto scrollbar-thin ${isRTL ? 'space-x-reverse' : ''}`}>
                     {categories.map((category) => (
-                      <div key={category.id} className="flex items-center space-x-2">
+                      <div key={category.id} className={`flex items-center ${isRTL ? 'space-x-reverse space-x-2' : 'space-x-2'}`}>
                         <Checkbox 
                           id={category.id}
                           checked={selectedCategories.includes(category.id)}
                           onCheckedChange={() => toggleCategory(category.id)}
                         />
                         <Label htmlFor={category.id} className="text-sm cursor-pointer">
-                          {category.name}
+                          {language === 'ar' ? category.name_ar || category.name : category.name}
                         </Label>
                       </div>
                     ))}
@@ -480,7 +479,7 @@ const SearchResults = () => {
               {/* Niveau de Juridiction */}
               <Collapsible open={jurisdictionOpen} onOpenChange={setJurisdictionOpen}>
                 <CollapsibleTrigger className="flex items-center justify-between w-full hover:bg-muted/50 p-2 rounded-md transition-colors">
-                  <Label className="text-sm font-medium cursor-pointer">Niveau de Juridiction</Label>
+                  <Label className="text-sm font-medium cursor-pointer">{t('jurisdictionLevel')}</Label>
                   {jurisdictionOpen ? (
                     <ChevronUp className="h-4 w-4 text-muted-foreground" />
                   ) : (
@@ -492,16 +491,16 @@ const SearchResults = () => {
                     setSelectedJurisdictionLevel(value);
                     setCurrentPage(1);
                   }}>
-                    <div className="space-y-3 max-h-48 overflow-y-auto scrollbar-thin">
-                      <div className="flex items-center space-x-2">
+                    <div className={`space-y-3 max-h-48 overflow-y-auto scrollbar-thin ${isRTL ? 'space-x-reverse' : ''}`}>
+                      <div className={`flex items-center ${isRTL ? 'space-x-reverse space-x-2' : 'space-x-2'}`}>
                         <RadioGroupItem value="all" id="jurisdiction-all" />
-                        <Label htmlFor="jurisdiction-all" className="text-sm cursor-pointer">Tous les niveaux</Label>
+                        <Label htmlFor="jurisdiction-all" className="text-sm cursor-pointer">{t('allLevels')}</Label>
                       </div>
                       {jurisdictionLevels.map((level) => (
-                        <div key={level.id} className="flex items-center space-x-2">
+                        <div key={level.id} className={`flex items-center ${isRTL ? 'space-x-reverse space-x-2' : 'space-x-2'}`}>
                           <RadioGroupItem value={level.id} id={`jurisdiction-${level.id}`} />
                           <Label htmlFor={`jurisdiction-${level.id}`} className="text-sm cursor-pointer">
-                            {level.name}
+                            {language === 'ar' ? level.name_ar || level.name : level.name}
                           </Label>
                         </div>
                       ))}
@@ -512,20 +511,20 @@ const SearchResults = () => {
 
               {/* Type de Document */}
               <div>
-                <Label className="text-sm font-medium mb-3 block">Type de Document</Label>
+                <Label className="text-sm font-medium mb-3 block">{t('documentType')}</Label>
                 <RadioGroup value={selectedDocumentType} onValueChange={(value) => {
                   setSelectedDocumentType(value);
                   setCurrentPage(1);
                 }}>
-                  <div className="flex items-center space-x-2">
+                  <div className={`flex items-center ${isRTL ? 'space-x-reverse space-x-2' : 'space-x-2'}`}>
                     <RadioGroupItem value="all" id="doc-all" />
-                    <Label htmlFor="doc-all" className="text-sm cursor-pointer">Tous</Label>
+                    <Label htmlFor="doc-all" className="text-sm cursor-pointer">{t('all')}</Label>
                   </div>
                   {documentTypes.map((type) => (
-                    <div key={type.id} className="flex items-center space-x-2">
+                    <div key={type.id} className={`flex items-center ${isRTL ? 'space-x-reverse space-x-2' : 'space-x-2'}`}>
                       <RadioGroupItem value={type.id} id={`doc-${type.id}`} />
                       <Label htmlFor={`doc-${type.id}`} className="text-sm cursor-pointer">
-                        {type.name}
+                        {language === 'ar' ? type.name_ar || type.name : type.name}
                       </Label>
                     </div>
                   ))}
@@ -544,7 +543,7 @@ const SearchResults = () => {
                 <div className="flex items-center gap-2">
                   <Loader2 className="w-4 h-4 animate-spin" />
                   <span className="text-sm text-muted-foreground">
-                    {useAI ? "Analyse IA en cours..." : "Recherche en cours..."}
+                    {useAI ? t('aiSearchInProgress') : t('searchInProgress')}
                   </span>
                 </div>
               ) : (
@@ -597,8 +596,8 @@ const SearchResults = () => {
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="recent">Plus récentes</SelectItem>
-                <SelectItem value="relevance">Pertinence</SelectItem>
+                <SelectItem value="recent">{t('recent')}</SelectItem>
+                <SelectItem value="relevance">{t('relevance')}</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -622,7 +621,7 @@ const SearchResults = () => {
                         {/* Ligne 1: Tribunal et année */}
                         <div className="flex items-start justify-between gap-2">
                           <span className="text-sm text-muted-foreground">
-                            {result.court || "Tribunal non spécifié"} {result.court_level && `• ${result.court_level}`}
+                            {result.court || t('tribunalNotSpecified')} {result.court_level && `• ${result.court_level}`}
                           </span>
                           {result.year && (
                             <Badge variant="outline" className="text-xs shrink-0">
@@ -660,13 +659,13 @@ const SearchResults = () => {
                             rel="noopener noreferrer"
                             className="cursor-pointer"
                           >
-                            <CardTitle className="text-lg hover:text-primary line-clamp-2 cursor-pointer">
-                              {result.title}
+                            <CardTitle className={`text-lg hover:text-primary line-clamp-2 cursor-pointer ${language === 'ar' ? 'arabic-text font-arabic' : ''}`}>
+                              {language === 'ar' ? result.title_ar || result.title : result.title}
                             </CardTitle>
                           </Link>
                         ) : (
-                          <CardTitle className="text-lg line-clamp-2">
-                            {result.title}
+                          <CardTitle className={`text-lg line-clamp-2 ${language === 'ar' ? 'arabic-text font-arabic' : ''}`}>
+                            {language === 'ar' ? result.title_ar || result.title : result.title}
                           </CardTitle>
                         )}
                       </CardHeader>
@@ -675,23 +674,23 @@ const SearchResults = () => {
                         <div className="mb-4">
                           <p className={`text-sm text-muted-foreground ${
                             expandedSummaries.has(result.id) ? '' : 'line-clamp-2'
-                          }`}>
-                            {result.summary}
+                          } ${language === 'ar' ? 'arabic-text font-arabic text-right' : ''}`}>
+                            {language === 'ar' ? result.summary_ar || result.summary : result.summary}
                           </p>
-                          {result.summary.length > 150 && (
+                          {(result.summary?.length > 150 || result.summary_ar?.length > 150) && (
                             <Button
                               variant="ghost"
                               size="sm"
                               onClick={() => toggleSummary(result.id)}
-                              className="mt-2 h-auto py-1 px-2 text-xs hover:bg-accent"
+                              className={`mt-2 h-auto py-1 px-2 text-xs hover:bg-accent ${isRTL ? 'flex-row-reverse' : ''}`}
                             >
                               {expandedSummaries.has(result.id) ? (
                                 <>
-                                  Voir moins <ChevronUp className="ml-1 h-3 w-3" />
+                                  {t('seeLess')} <ChevronUp className={`${isRTL ? 'mr-1' : 'ml-1'} h-3 w-3`} />
                                 </>
                               ) : (
                                 <>
-                                  Voir plus <ChevronDown className="ml-1 h-3 w-3" />
+                                  {t('seeMore')} <ChevronDown className={`${isRTL ? 'mr-1' : 'ml-1'} h-3 w-3`} />
                                 </>
                               )}
                             </Button>
@@ -699,7 +698,7 @@ const SearchResults = () => {
                         </div>
                       )}
                       <div>
-                      <div className="flex gap-2 flex-wrap mb-4">
+                      <div className={`flex gap-2 flex-wrap mb-4 ${isRTL ? 'justify-end' : ''}`}>
                         {result.categories.slice(0, 3).map((category) => (
                           <Badge 
                             key={category.id} 
@@ -710,7 +709,7 @@ const SearchResults = () => {
                               color: category.color || undefined
                             }}
                           >
-                            {category.name}
+                            {language === 'ar' ? category.name_ar || category.name : category.name}
                           </Badge>
                         ))}
                         {result.categories.length > 3 && (
@@ -719,7 +718,7 @@ const SearchResults = () => {
                           </Badge>
                         )}
                       </div>
-                      <div className="flex justify-end">
+                      <div className={`flex ${isRTL ? 'justify-start' : 'justify-end'}`}>
                         {result.primaryCategory ? (
                           <Link
                             to={createDocumentPath(result.primaryCategory.name, result.title)}
@@ -727,12 +726,12 @@ const SearchResults = () => {
                             rel="noopener noreferrer"
                           >
                             <Button variant="outline" size="sm" className="hover:bg-primary hover:text-primary-foreground">
-                              Consulter
+                              {t('consult')}
                             </Button>
                           </Link>
                         ) : (
                           <Button variant="outline" size="sm" disabled>
-                            Consulter
+                            {t('consult')}
                           </Button>
                         )}
                       </div>
@@ -746,13 +745,13 @@ const SearchResults = () => {
 
           {/* Pagination */}
           {!searchLoading && searchResults.length > 0 && totalPages > 1 && (
-            <div className="flex justify-center gap-2 flex-wrap">
+            <div className={`flex justify-center gap-2 flex-wrap ${isRTL ? 'flex-row-reverse' : ''}`}>
               <Button 
                 variant="outline"
                 onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
                 disabled={currentPage === 1}
               >
-                Précédent
+                {t('previous')}
               </Button>
               
               {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
@@ -783,7 +782,7 @@ const SearchResults = () => {
                 onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
                 disabled={currentPage === totalPages}
               >
-                Suivant
+                {t('next')}
               </Button>
             </div>
           )}

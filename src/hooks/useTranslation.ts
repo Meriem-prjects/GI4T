@@ -342,6 +342,16 @@ type TranslationKey =
   | 'pages'
   | 'keywords'
   | 'consult'
+  | 'searchDocumentsPlaceholder'
+  | 'aiSearchPlaceholder'
+  | 'allLevels'
+  | 'searchInProgress'
+  | 'aiSearchInProgress'
+  | 'seeMore'
+  | 'seeLess'
+  | 'previous'
+  | 'next'
+  | 'tribunalNotSpecified'
   // Textes Fondamentaux
   | 'fundamentalRightsTexts'
   | 'fundamentalRightsDesc'
@@ -694,6 +704,16 @@ const translations: Record<'fr' | 'ar', Record<TranslationKey, string>> = {
     pages: 'pages',
     keywords: 'Mots-clés',
     consult: 'Consulter',
+    searchDocumentsPlaceholder: 'Rechercher des documents...',
+    aiSearchPlaceholder: 'Recherche intelligente avec IA... Posez votre question en langage naturel',
+    allLevels: 'Tous les niveaux',
+    searchInProgress: 'Recherche en cours...',
+    aiSearchInProgress: 'Analyse IA en cours...',
+    seeMore: 'Voir plus',
+    seeLess: 'Voir moins',
+    previous: 'Précédent',
+    next: 'Suivant',
+    tribunalNotSpecified: 'Tribunal non spécifié',
     // Textes Fondamentaux
     fundamentalRightsTexts: 'Textes de jurisprudence des droits fondamentaux en Tunisie',
     fundamentalRightsDesc: 'Explorez la jurisprudence tunisienne en matière de droits fondamentaux à travers une collection complète de décisions judiciaires, d\'analyses et de textes de référence en Tunisie.',
@@ -1089,8 +1109,18 @@ const translations: Record<'fr' | 'ar', Record<TranslationKey, string>> = {
     publishedOn: 'نُشر في',
     page: 'صفحة',
     pages: 'صفحات',
-    keywords: 'كلمات مفتاحية',
+    keywords: 'الكلمات المفاتيح',
     consult: 'استشر',
+    searchDocumentsPlaceholder: 'ابحث في الوثائق...',
+    aiSearchPlaceholder: 'بحث ذكي بالذكاء الاصطناعي... اطرح سؤالك بلغة طبيعية',
+    allLevels: 'جميع المستويات',
+    searchInProgress: 'جاري البحث...',
+    aiSearchInProgress: 'جاري تحليل الذكاء الاصطناعي...',
+    seeMore: 'عرض المزيد',
+    seeLess: 'عرض أقل',
+    previous: 'السابق',
+    next: 'التالي',
+    tribunalNotSpecified: 'محكمة غير محددة',
     // Textes Fondamentaux
     fundamentalRightsTexts: 'نصوص الفقه القضائي للحقوق الأساسية في تونس',
     fundamentalRightsDesc: 'استكشف الفقه القضائي التونسي في مجال الحقوق الأساسية من خلال مجموعة كاملة من القرارات القضائية والتحليلات والنصوص المرجعية في تونس.',
