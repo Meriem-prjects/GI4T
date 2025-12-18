@@ -567,9 +567,13 @@ const DocumentDetail = () => {
             )}
 
             {currentSummary && (
-              <p className={`text-lg text-muted-foreground mb-8 max-w-4xl mx-auto ${language === 'ar' ? 'dir-rtl' : ''}`}>
-                {currentSummary}
-              </p>
+              <div 
+                className={`text-lg text-muted-foreground mb-8 max-w-4xl mx-auto ${language === 'ar' ? 'dir-rtl arabic-text font-arabic' : ''}`}
+                dir={language === 'ar' ? 'rtl' : 'ltr'}
+                dangerouslySetInnerHTML={{ 
+                  __html: currentSummary.replace(/<\/?p>/gi, '').trim() 
+                }}
+              />
             )}
 
             {/* Metadata */}
