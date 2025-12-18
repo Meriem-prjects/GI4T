@@ -193,7 +193,9 @@ const AnalysesOpinions = () => {
                               className={`text-base mb-4 text-muted-foreground line-clamp-2 ${isRTL ? 'arabic-text font-arabic' : ''}`}
                               dir={isRTL ? 'rtl' : 'ltr'}
                               dangerouslySetInnerHTML={{ 
-                                __html: summary.replace(/<\/?p>/gi, '').trim()
+                                __html: isRTL 
+                                  ? normalizeArabicForDisplay(summary.replace(/<\/?p>/gi, '').trim())
+                                  : summary.replace(/<\/?p>/gi, '').trim()
                               }}
                             />
                           )}

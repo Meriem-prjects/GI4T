@@ -365,13 +365,21 @@ export const sanitizeArabicText = (text: string | null | undefined): string => {
     sanitized = sanitized.replace(/\bال\s+([ب-ي])/g, 'ال$1');
     
     // === PASS: Glued words separation ===
-    // "خلالدراسة" → "خلال دراسة"
-    sanitized = sanitized.replace(/(خلال)(دراسة)/g, '$1 $2');
-    sanitized = sanitized.replace(/(خلال)(ال[\u0621-\u064A]+)/g, '$1 $2');
     
-    // "القوانينوالضوابط" → "القوانين والضوابط"
-    sanitized = sanitized.replace(/([\u0621-\u064A]ين)(و)(ال[\u0621-\u064A]+)/g, '$1 $2$3');
-    sanitized = sanitized.replace(/([\u0621-\u064A]ات)(و)(ال[\u0621-\u064A]+)/g, '$1 $2$3');
+    // "خلالدراسة" → "خلال دراسة" (خلال + any word starting with consonant)
+    sanitized = sanitized.replace(/(خلال)([دذرزسشصضطظعغفقكلمنبتثجحخ][\u0621-\u064A]+)/g, '$1 $2');
+    
+    // "القوانينوالضوابط" → "القوانين والضوابط" (word ending in ين + و + ال)
+    sanitized = sanitized.replace(/([\u0621-\u064A]+ين)(و)(ال[\u0621-\u064A]+)/g, '$1 $2$3');
+    
+    // "الإجراءاتوالقوانين" → "الإجراءات والقوانين" (word ending in ات + و + ال)
+    sanitized = sanitized.replace(/([\u0621-\u064A]+ات)(و)(ال[\u0621-\u064A]+)/g, '$1 $2$3');
+    
+    // "انتخاباتبلدية" → "انتخابات بلدية" (word ending in ات + word starting with consonant)
+    sanitized = sanitized.replace(/([\u0621-\u064A]+ات)([بتثجحخدذرزسشصضطظعغفقكلمنهوي][\u0621-\u064A]+)/g, '$1 $2');
+    
+    // "العلاجالمجاني" → "العلاج المجاني" (any letter followed by ال)
+    sanitized = sanitized.replace(/([\u0621-\u064A])(ال)([ب-ي])/g, '$1 $2$3');
     
     iterations++;
   }

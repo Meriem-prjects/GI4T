@@ -481,16 +481,21 @@ export const normalizeArabicForDisplay = (text: string): string => {
     normalized = normalized.replace(/\bال\s+([ب-ي])/g, 'ال$1');
     
     // === PASS: Glued words separation ===
-    // "خلالدراسة" → "خلال دراسة"
-    normalized = normalized.replace(/(خلال)(دراسة)/g, '$1 $2');
-    normalized = normalized.replace(/(خلال)(ال[\u0621-\u064A]+)/g, '$1 $2');
     
-    // "القوانينوالضوابط" → "القوانين والضوابط"
-    normalized = normalized.replace(/([\u0621-\u064A]ين)(و)(ال[\u0621-\u064A]+)/g, '$1 $2$3');
-    normalized = normalized.replace(/([\u0621-\u064A]ات)(و)(ال[\u0621-\u064A]+)/g, '$1 $2$3');
+    // "خلالدراسة" → "خلال دراسة" (خلال + any word starting with consonant)
+    normalized = normalized.replace(/(خلال)([دذرزسشصضطظعغفقكلمنبتثجحخ][\u0621-\u064A]+)/g, '$1 $2');
     
-    // "العلاجالمجاني" → "العلاج المجاني"
-    normalized = normalized.replace(/([\u0621-\u064Aء-ي])ال([ب-ي])/g, '$1 ال$2');
+    // "القوانينوالضوابط" → "القوانين والضوابط" (word ending in ين + و + ال)
+    normalized = normalized.replace(/([\u0621-\u064A]+ين)(و)(ال[\u0621-\u064A]+)/g, '$1 $2$3');
+    
+    // "الإجراءاتوالقوانين" → "الإجراءات والقوانين" (word ending in ات + و + ال)
+    normalized = normalized.replace(/([\u0621-\u064A]+ات)(و)(ال[\u0621-\u064A]+)/g, '$1 $2$3');
+    
+    // "انتخاباتبلدية" → "انتخابات بلدية" (word ending in ات + word starting with consonant)
+    normalized = normalized.replace(/([\u0621-\u064A]+ات)([بتثجحخدذرزسشصضطظعغفقكلمنهوي][\u0621-\u064A]+)/g, '$1 $2');
+    
+    // "العلاجالمجاني" → "العلاج المجاني" (any letter followed by ال)
+    normalized = normalized.replace(/([\u0621-\u064A])(ال)([ب-ي])/g, '$1 $2$3');
     
     iterations++;
   }
