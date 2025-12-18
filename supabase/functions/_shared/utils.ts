@@ -299,11 +299,12 @@ export const sanitizeArabicText = (text: string | null | undefined): string => {
     
     // === PASS: Fix specific compound words FIRST (before generic patterns) ===
     
-    // "الع المي" or "الع الم" → "العالم" / "العالمي" (capture ALL invisible chars: NBSP, ZWSP, RLM, LRM, etc.)
-    const invisibleChars = '[\\s\\u00A0\\u200B-\\u200F\\u2060\\u202A-\\u202E]+';
-    sanitized = sanitized.replace(new RegExp(`الع${invisibleChars}المي`, 'g'), 'العالمي');
-    sanitized = sanitized.replace(new RegExp(`الع${invisibleChars}الم([ية]?)`, 'g'), 'العالم$1');
-    sanitized = sanitized.replace(new RegExp(`ال[\\s\\u00A0\\u200B-\\u200F\\u2060\\u202A-\\u202E]*ع${invisibleChars}ال[\\s\\u00A0\\u200B-\\u200F\\u2060\\u202A-\\u202E]*([منية])`, 'g'), 'العال$1');
+    // "الع المي" → "العالمي" - Use NON-ARABIC character class to catch ANY separator
+    // This matches "الع" + any non-Arabic chars + "المي" (universal pattern)
+    sanitized = sanitized.replace(/الع[^\u0600-\u06FF]+المي/g, 'العالمي');
+    sanitized = sanitized.replace(/الع[^\u0600-\u06FF]+الم([ية]?)/g, 'العالم$1');
+    // Also handle cases like "ا لع ا لمي" where letters are split
+    sanitized = sanitized.replace(/ال[^\u0600-\u06FF]*ع[^\u0600-\u06FF]+ال[^\u0600-\u06FF]*([منية])/g, 'العال$1');
     
     // "ال مرفق" or "ال عام" → "المرفق" / "العام"
     sanitized = sanitized.replace(/ال\s+مرفق/g, 'المرفق');
