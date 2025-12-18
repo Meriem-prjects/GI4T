@@ -407,6 +407,21 @@ const DocumentDetail = () => {
     
     const pageContents = rawPageContents as PageContent[];
     
+    // Check if we need translation (interface language differs from document language)
+    const needsTranslation = !showOriginal && (
+      (language === 'fr' && document.language === 'ar') ||
+      (language === 'ar' && document.language === 'fr')
+    );
+    
+    // Check if individual pages have translations
+    const hasPageTranslations = pageContents.some(page => page.translated_content);
+    
+    // If we need translation but pages don't have individual translations,
+    // use the global translated_content if available
+    if (needsTranslation && !hasPageTranslations && document.translated_content) {
+      return document.translated_content;
+    }
+    
     // Sort pages by page number
     const sortedPages = [...pageContents].sort((a, b) => (a.pageNumber || 0) - (b.pageNumber || 0));
     
