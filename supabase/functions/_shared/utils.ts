@@ -286,60 +286,95 @@ export const sanitizeArabicText = (text: string | null | undefined): string => {
   // Pattern I: Words ending with ّها or ّه followed immediately by another word
   sanitized = sanitized.replace(/([\u0651][هھ]ا?)([\u0621-\u064A]{3,})/g, '$1 $2');
   
-  // Step 5: DEGLUE PASS - Fix broken intra-word spaces
-  // Join broken "ا ل" back to "ال"
-  sanitized = sanitized.replace(/ا\s+ل/g, 'ال');
+  // Step 5: DEGLUE PASS with MULTIPLE ITERATIONS for complex cases
+  let previousResult = '';
+  let iterations = 0;
+  const maxIterations = 5;
   
-  // Join broken "ع ل" back to "عل" (Ayn + space + Lam)
-  sanitized = sanitized.replace(/ع\s*[\u200B-\u200F\u2060]?\s*ل/g, 'عل');
-  
-  // Join broken "ج ا" back to "جا" (Jim + space + Alif)
-  sanitized = sanitized.replace(/ج\s*[\u200B-\u200F\u2060]?\s*ا/g, 'جا');
-  
-  // Join broken "ب ا" back to "با" (Ba + space + Alif)
-  sanitized = sanitized.replace(/ب\s*[\u200B-\u200F\u2060]?\s*ا/g, 'با');
-  
-  // Join broken "ب ال" to "بال" (Ba + space + definite article)
-  sanitized = sanitized.replace(/ب\s+ال/g, 'بال');
-  
-  // === NEW: Fix multi-letter word splits from OCR ===
-  
-  // Fix "الع المي" → "العالمي" (broken article + word)
-  // Pattern: ال + space + letter sequence + space + another sequence starting with ال
-  sanitized = sanitized.replace(/ال\s*ع\s+ال\s*([مني])/g, 'العال$1');
-  sanitized = sanitized.replace(/ال\s*ع\s*ال\s*مي/g, 'العالمي');
-  
-  // Fix "خلالدراسة" → "خلال دراسة" (glued words)
-  sanitized = sanitized.replace(/(خلال)(دراسة)/g, '$1 $2');
-  sanitized = sanitized.replace(/(خلال)(ال[\u0621-\u064A]+)/g, '$1 $2');
-  
-  // Fix "القوانينوالضوابط" → "القوانين والضوابط"
-  sanitized = sanitized.replace(/([\u0621-\u064A]ين)(و)(ال[\u0621-\u064A]+)/g, '$1 $2$3');
-  sanitized = sanitized.replace(/([\u0621-\u064A]ات)(و)(ال[\u0621-\u064A]+)/g, '$1 $2$3');
-  
-  // Fix "استمر ارية" → "استمرارية" (mid-word splits at common syllables)
-  sanitized = sanitized.replace(/ر\s+ار/g, 'رار');
-  sanitized = sanitized.replace(/م\s+ار/g, 'مار');
-  sanitized = sanitized.replace(/س\s+ت/g, 'ست');
-  sanitized = sanitized.replace(/ن\s+ت/g, 'نت');
-  
-  // Fix "إضرا ب" → "إضراب" (splits before final letters)
-  sanitized = sanitized.replace(/ا\s+ب(?=\s|$|[.،؛:؟!])/g, 'اب');
-  sanitized = sanitized.replace(/ا\s+ت(?=\s|$|[.،؛:؟!])/g, 'ات');
-  sanitized = sanitized.replace(/ا\s+ع(?=\s|$|[.،؛:؟!])/g, 'اع');
-  sanitized = sanitized.replace(/ا\s+ق(?=\s|$|[.،؛:؟!])/g, 'اق');
-  sanitized = sanitized.replace(/ا\s+ن(?=\s|$|[.،؛:؟!])/g, 'ان');
-  sanitized = sanitized.replace(/ا\s+م(?=\s|$|[.،؛:؟!])/g, 'ام');
-  
-  // Fix "اق تراع" → "اقتراع"
-  sanitized = sanitized.replace(/ق\s+ت/g, 'قت');
-  sanitized = sanitized.replace(/ت\s+ر/g, 'تر');
-  
-  // Fix "انتخا بات" → "انتخابات"
-  sanitized = sanitized.replace(/خا\s+ب/g, 'خاب');
-  
-  // Fix "بلدية" patterns: "بل دية" → "بلدية"
-  sanitized = sanitized.replace(/ل\s+د/g, 'لد');
+  while (previousResult !== sanitized && iterations < maxIterations) {
+    previousResult = sanitized;
+    
+    // === PASS: Fix broken definite article "ا ل" → "ال" ===
+    sanitized = sanitized.replace(/ا\s+ل/g, 'ال');
+    
+    // === PASS: Fix specific compound words FIRST (before generic patterns) ===
+    
+    // "الع المي" or "الع الم" → "العالم" / "العالمي"
+    sanitized = sanitized.replace(/الع\s+المي/g, 'العالمي');
+    sanitized = sanitized.replace(/الع\s+الم([ية]?)/g, 'العالم$1');
+    sanitized = sanitized.replace(/ال\s*ع\s+ال\s*([منية])/g, 'العال$1');
+    
+    // "ال مرفق" or "ال عام" → "المرفق" / "العام"
+    sanitized = sanitized.replace(/ال\s+مرفق/g, 'المرفق');
+    sanitized = sanitized.replace(/ال\s+عام/g, 'العام');
+    sanitized = sanitized.replace(/ال\s+إ/g, 'الإ');
+    sanitized = sanitized.replace(/ال\s+ا/g, 'الا');
+    
+    // "استمر ارية" → "استمرارية"
+    sanitized = sanitized.replace(/استمر\s+ارية/g, 'استمرارية');
+    sanitized = sanitized.replace(/استمر\s+ار/g, 'استمرار');
+    
+    // "إضرا ب" → "إضراب"
+    sanitized = sanitized.replace(/إضرا\s+ب/g, 'إضراب');
+    
+    // "نقا بية" → "نقابية"
+    sanitized = sanitized.replace(/نقا\s+ب/g, 'نقاب');
+    
+    // "قانو نية" → "قانونية"
+    sanitized = sanitized.replace(/قانو\s+ن/g, 'قانون');
+    
+    // "اجتما عية" → "اجتماعية"
+    sanitized = sanitized.replace(/اجتما\s+ع/g, 'اجتماع');
+    
+    // "دستو رية" → "دستورية"
+    sanitized = sanitized.replace(/دستو\s+ر/g, 'دستور');
+    
+    // === PASS: Generic letter combination fixes ===
+    
+    // Join broken "ع ل" back to "عل" (Ayn + space + Lam)
+    sanitized = sanitized.replace(/ع\s*[\u200B-\u200F\u2060]?\s*ل/g, 'عل');
+    
+    // Join broken "ج ا" back to "جا" (Jim + space + Alif)
+    sanitized = sanitized.replace(/ج\s*[\u200B-\u200F\u2060]?\s*ا/g, 'جا');
+    
+    // Join broken "ب ا" back to "با" (Ba + space + Alif)
+    sanitized = sanitized.replace(/ب\s*[\u200B-\u200F\u2060]?\s*ا/g, 'با');
+    
+    // Join broken "ب ال" to "بال" (Ba + space + definite article)
+    sanitized = sanitized.replace(/ب\s+ال/g, 'بال');
+    
+    // === PASS: Mid-word splits ===
+    sanitized = sanitized.replace(/ر\s+ار/g, 'رار');
+    sanitized = sanitized.replace(/م\s+ار/g, 'مار');
+    sanitized = sanitized.replace(/س\s+ت/g, 'ست');
+    sanitized = sanitized.replace(/ن\s+ت/g, 'نت');
+    sanitized = sanitized.replace(/ق\s+ت/g, 'قت');
+    sanitized = sanitized.replace(/ت\s+ر/g, 'تر');
+    sanitized = sanitized.replace(/خا\s+ب/g, 'خاب');
+    sanitized = sanitized.replace(/ل\s+د/g, 'لد');
+    
+    // === PASS: Splits before final letters ===
+    sanitized = sanitized.replace(/ا\s+ب(?=\s|$|[.،؛:؟!])/g, 'اب');
+    sanitized = sanitized.replace(/ا\s+ت(?=\s|$|[.،؛:؟!])/g, 'ات');
+    sanitized = sanitized.replace(/ا\s+ع(?=\s|$|[.،؛:؟!])/g, 'اع');
+    sanitized = sanitized.replace(/ا\s+ق(?=\s|$|[.،؛:؟!])/g, 'اق');
+    sanitized = sanitized.replace(/ا\s+ن(?=\s|$|[.،؛:؟!])/g, 'ان');
+    sanitized = sanitized.replace(/ا\s+م(?=\s|$|[.،؛:؟!])/g, 'ام');
+    
+    // === PASS: Generic "ال " + letter → remove space ===
+    sanitized = sanitized.replace(/\bال\s+([ب-ي])/g, 'ال$1');
+    
+    // === PASS: Glued words separation ===
+    // "خلالدراسة" → "خلال دراسة"
+    sanitized = sanitized.replace(/(خلال)(دراسة)/g, '$1 $2');
+    sanitized = sanitized.replace(/(خلال)(ال[\u0621-\u064A]+)/g, '$1 $2');
+    
+    // "القوانينوالضوابط" → "القوانين والضوابط"
+    sanitized = sanitized.replace(/([\u0621-\u064A]ين)(و)(ال[\u0621-\u064A]+)/g, '$1 $2$3');
+    sanitized = sanitized.replace(/([\u0621-\u064A]ات)(و)(ال[\u0621-\u064A]+)/g, '$1 $2$3');
+    
+    iterations++;
+  }
   
   // Remove spaces between letter and diacritics
   sanitized = sanitized.replace(/([\u0621-\u064A])\s+([\u064B-\u0652\u0670])/g, '$1$2');
@@ -358,15 +393,6 @@ export const sanitizeArabicText = (text: string | null | undefined): string => {
   // More generic Hamza patterns
   sanitized = sanitized.replace(/أ\s+([حرنملتك])/g, 'أ$1');
   sanitized = sanitized.replace(/إ\s+([حرنملتك])/g, 'إ$1');
-  
-  // Fix common broken patterns like "ا لع ا رض" -> "العارض"
-  // Pattern: broken definite article at start
-  sanitized = sanitized.replace(/ا\s*ل\s*([\u0621-\u064A])/g, 'ال$1');
-  
-  // Pattern: single spaces within 3-6 letter Arabic words (likely broken words)
-  // Match: Arabic letter, space, 1-5 more (letter + optional space) combos
-  sanitized = sanitized.replace(/([\u0621-\u064A])\s+([\u0621-\u064A])\s+([\u0621-\u064A])\s+([\u0621-\u064A])/g, '$1$2$3$4');
-  sanitized = sanitized.replace(/([\u0621-\u064A])\s+([\u0621-\u064A])\s+([\u0621-\u064A])/g, '$1$2$3');
   
   // Step 6: SEPARATE GLUED ARABIC WORDS - Enhanced with new patterns
   sanitized = separateGluedArabicWords(sanitized);

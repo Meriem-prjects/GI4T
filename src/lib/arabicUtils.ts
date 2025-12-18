@@ -397,77 +397,103 @@ export const normalizeArabicForDisplay = (text: string): string => {
   // Step 4: Reorder diacritics (Shadda \u0651 should come before vowel marks)
   normalized = normalized.replace(/([\u064B-\u0650\u0652])(\u0651)/g, '$2$1');
   
-  // Step 5: Comprehensive spacing fixes for common Arabic patterns
+  // Step 5: Comprehensive spacing fixes with MULTIPLE PASSES
+  // Some patterns create intermediate results that need re-processing
+  let previousResult = '';
+  let iterations = 0;
+  const maxIterations = 5;
   
-  // Fix "ا ل" → "ال" (definite article)
-  normalized = normalized.replace(/ا\s*[\u200B-\u200F\u2060]?\s*ل/g, 'ال');
-  
-  // Fix "ل ل" → "لل" (double lam)
-  normalized = normalized.replace(/ل\s+ل/g, 'لل');
-  
-  // Fix "ع ل" → "عل"
-  normalized = normalized.replace(/ع\s*[\u200B-\u200F\u2060]?\s*ل/g, 'عل');
-  
-  // Fix "ج ا" → "جا"
-  normalized = normalized.replace(/ج\s*[\u200B-\u200F\u2060]?\s*ا/g, 'جا');
-  
-  // Fix "ب ا" → "با" (ba + alif)
-  normalized = normalized.replace(/ب\s*[\u200B-\u200F\u2060]?\s*ا/g, 'با');
-  
-  // Fix "ب ال" → "بال" (preposition + definite article)
-  normalized = normalized.replace(/ب\s+ال/g, 'بال');
-  
-  // === NEW: Fix multi-letter word splits from OCR ===
-  
-  // Fix "الع المي" → "العالمي" (broken article + word)
-  normalized = normalized.replace(/ال\s*ع\s+ال\s*([مني])/g, 'العال$1');
-  normalized = normalized.replace(/ال\s*ع\s*ال\s*مي/g, 'العالمي');
-  
-  // Fix "خلالدراسة" → "خلال دراسة" (glued words)
-  normalized = normalized.replace(/(خلال)(دراسة)/g, '$1 $2');
-  normalized = normalized.replace(/(خلال)(ال[\u0621-\u064A]+)/g, '$1 $2');
-  
-  // Fix "القوانينوالضوابط" → "القوانين والضوابط"
-  normalized = normalized.replace(/([\u0621-\u064A]ين)(و)(ال[\u0621-\u064A]+)/g, '$1 $2$3');
-  normalized = normalized.replace(/([\u0621-\u064A]ات)(و)(ال[\u0621-\u064A]+)/g, '$1 $2$3');
-  
-  // Fix "استمر ارية" → "استمرارية" (mid-word splits at common syllables)
-  normalized = normalized.replace(/ر\s+ار/g, 'رار');
-  normalized = normalized.replace(/م\s+ار/g, 'مار');
-  normalized = normalized.replace(/س\s+ت/g, 'ست');
-  normalized = normalized.replace(/ن\s+ت/g, 'نت');
-  
-  // Fix "إضرا ب" → "إضراب" (splits before final letters)
-  normalized = normalized.replace(/ا\s+ب(?=\s|$|[.،؛:؟!])/g, 'اب');
-  normalized = normalized.replace(/ا\s+ت(?=\s|$|[.،؛:؟!])/g, 'ات');
-  normalized = normalized.replace(/ا\s+ع(?=\s|$|[.،؛:؟!])/g, 'اع');
-  normalized = normalized.replace(/ا\s+ق(?=\s|$|[.،؛:؟!])/g, 'اق');
-  normalized = normalized.replace(/ا\s+ن(?=\s|$|[.،؛:؟!])/g, 'ان');
-  normalized = normalized.replace(/ا\s+م(?=\s|$|[.،؛:؟!])/g, 'ام');
-  
-  // Fix "اق تراع" → "اقتراع"
-  normalized = normalized.replace(/ق\s+ت/g, 'قت');
-  normalized = normalized.replace(/ت\s+ر/g, 'تر');
-  
-  // Fix "انتخا بات" → "انتخابات"
-  normalized = normalized.replace(/خا\s+ب/g, 'خاب');
-  
-  // Fix "بلدية" patterns: "بل دية" → "بلدية"
-  normalized = normalized.replace(/ل\s+د/g, 'لد');
-  
-  // Fix spaces after definite article "ال " before a word
-  normalized = normalized.replace(/\bال\s+([ب-ي])/g, 'ال$1');
-  
-  // Fix broken words - common patterns where space appears in middle of word
-  // Fix "ش ف" → "شف" (common in المستشفى)
-  normalized = normalized.replace(/ش\s+ف/g, 'شف');
-  
-  // Fix "المستش فيات" → "المستشفيات"
-  normalized = normalized.replace(/المستش\s+فيات/g, 'المستشفيات');
-  
-  // Fix missing spaces between words that are glued (look for definite article without space)
-  // "العلاجالمجاني" → "العلاج المجاني"
-  normalized = normalized.replace(/([\u0621-\u064Aء-ي])ال([ب-ي])/g, '$1 ال$2');
+  while (previousResult !== normalized && iterations < maxIterations) {
+    previousResult = normalized;
+    
+    // === PASS: Fix broken definite article "ا ل" → "ال" ===
+    normalized = normalized.replace(/ا\s*[\u200B-\u200F\u2060]?\s*ل/g, 'ال');
+    
+    // === PASS: Fix specific compound words FIRST (before generic patterns) ===
+    
+    // "الع المي" or "الع الم" → "العالم" / "العالمي"
+    normalized = normalized.replace(/الع\s+المي/g, 'العالمي');
+    normalized = normalized.replace(/الع\s+الم([ية]?)/g, 'العالم$1');
+    normalized = normalized.replace(/ال\s*ع\s+ال\s*([منية])/g, 'العال$1');
+    
+    // "ال مرفق" or "ال عام" → "المرفق" / "العام"
+    normalized = normalized.replace(/ال\s+مرفق/g, 'المرفق');
+    normalized = normalized.replace(/ال\s+عام/g, 'العام');
+    normalized = normalized.replace(/ال\s+إ/g, 'الإ');
+    normalized = normalized.replace(/ال\s+ا/g, 'الا');
+    
+    // "استمر ارية" → "استمرارية"
+    normalized = normalized.replace(/استمر\s+ارية/g, 'استمرارية');
+    normalized = normalized.replace(/استمر\s+ار/g, 'استمرار');
+    
+    // "إضرا ب" → "إضراب"
+    normalized = normalized.replace(/إضرا\s+ب/g, 'إضراب');
+    
+    // "نقا بية" → "نقابية"
+    normalized = normalized.replace(/نقا\s+ب/g, 'نقاب');
+    
+    // "قانو نية" → "قانونية"
+    normalized = normalized.replace(/قانو\s+ن/g, 'قانون');
+    
+    // "اجتما عية" → "اجتماعية"
+    normalized = normalized.replace(/اجتما\s+ع/g, 'اجتماع');
+    
+    // "دستو رية" → "دستورية"
+    normalized = normalized.replace(/دستو\s+ر/g, 'دستور');
+    
+    // === PASS: Generic letter combination fixes ===
+    
+    // Fix "ل ل" → "لل" (double lam)
+    normalized = normalized.replace(/ل\s+ل/g, 'لل');
+    
+    // Fix "ع ل" → "عل"
+    normalized = normalized.replace(/ع\s*[\u200B-\u200F\u2060]?\s*ل/g, 'عل');
+    
+    // Fix "ج ا" → "جا"
+    normalized = normalized.replace(/ج\s*[\u200B-\u200F\u2060]?\s*ا/g, 'جا');
+    
+    // Fix "ب ا" → "با" (ba + alif)
+    normalized = normalized.replace(/ب\s*[\u200B-\u200F\u2060]?\s*ا/g, 'با');
+    
+    // Fix "ب ال" → "بال" (preposition + definite article)
+    normalized = normalized.replace(/ب\s+ال/g, 'بال');
+    
+    // === PASS: Mid-word splits ===
+    normalized = normalized.replace(/ر\s+ار/g, 'رار');
+    normalized = normalized.replace(/م\s+ار/g, 'مار');
+    normalized = normalized.replace(/س\s+ت/g, 'ست');
+    normalized = normalized.replace(/ن\s+ت/g, 'نت');
+    normalized = normalized.replace(/ق\s+ت/g, 'قت');
+    normalized = normalized.replace(/ت\s+ر/g, 'تر');
+    normalized = normalized.replace(/خا\s+ب/g, 'خاب');
+    normalized = normalized.replace(/ل\s+د/g, 'لد');
+    normalized = normalized.replace(/ش\s+ف/g, 'شف');
+    
+    // === PASS: Splits before final letters ===
+    normalized = normalized.replace(/ا\s+ب(?=\s|$|[.،؛:؟!])/g, 'اب');
+    normalized = normalized.replace(/ا\s+ت(?=\s|$|[.،؛:؟!])/g, 'ات');
+    normalized = normalized.replace(/ا\s+ع(?=\s|$|[.،؛:؟!])/g, 'اع');
+    normalized = normalized.replace(/ا\s+ق(?=\s|$|[.،؛:؟!])/g, 'اق');
+    normalized = normalized.replace(/ا\s+ن(?=\s|$|[.،؛:؟!])/g, 'ان');
+    normalized = normalized.replace(/ا\s+م(?=\s|$|[.،؛:؟!])/g, 'ام');
+    
+    // === PASS: Generic "ال " + letter → remove space ===
+    normalized = normalized.replace(/\bال\s+([ب-ي])/g, 'ال$1');
+    
+    // === PASS: Glued words separation ===
+    // "خلالدراسة" → "خلال دراسة"
+    normalized = normalized.replace(/(خلال)(دراسة)/g, '$1 $2');
+    normalized = normalized.replace(/(خلال)(ال[\u0621-\u064A]+)/g, '$1 $2');
+    
+    // "القوانينوالضوابط" → "القوانين والضوابط"
+    normalized = normalized.replace(/([\u0621-\u064A]ين)(و)(ال[\u0621-\u064A]+)/g, '$1 $2$3');
+    normalized = normalized.replace(/([\u0621-\u064A]ات)(و)(ال[\u0621-\u064A]+)/g, '$1 $2$3');
+    
+    // "العلاجالمجاني" → "العلاج المجاني"
+    normalized = normalized.replace(/([\u0621-\u064Aء-ي])ال([ب-ي])/g, '$1 ال$2');
+    
+    iterations++;
+  }
   
   // Remove spaces between letter and diacritics
   normalized = normalized.replace(/([\u0621-\u064A])\s+([\u064B-\u0652\u0670])/g, '$1$2');
