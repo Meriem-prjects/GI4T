@@ -411,10 +411,11 @@ export const normalizeArabicForDisplay = (text: string): string => {
     
     // === PASS: Fix specific compound words FIRST (before generic patterns) ===
     
-    // "الع المي" or "الع الم" → "العالم" / "العالمي"
-    normalized = normalized.replace(/الع\s+المي/g, 'العالمي');
-    normalized = normalized.replace(/الع\s+الم([ية]?)/g, 'العالم$1');
-    normalized = normalized.replace(/ال\s*ع\s+ال\s*([منية])/g, 'العال$1');
+    // "الع المي" or "الع الم" → "العالم" / "العالمي" (capture ALL invisible chars: NBSP, ZWSP, RLM, LRM, etc.)
+    const invisibleChars = '[\\s\\u00A0\\u200B-\\u200F\\u2060\\u202A-\\u202E]+';
+    normalized = normalized.replace(new RegExp(`الع${invisibleChars}المي`, 'g'), 'العالمي');
+    normalized = normalized.replace(new RegExp(`الع${invisibleChars}الم([ية]?)`, 'g'), 'العالم$1');
+    normalized = normalized.replace(new RegExp(`ال[\\s\\u00A0\\u200B-\\u200F\\u2060\\u202A-\\u202E]*ع${invisibleChars}ال[\\s\\u00A0\\u200B-\\u200F\\u2060\\u202A-\\u202E]*([منية])`, 'g'), 'العال$1');
     
     // "ال مرفق" or "ال عام" → "المرفق" / "العام"
     normalized = normalized.replace(/ال\s+مرفق/g, 'المرفق');
