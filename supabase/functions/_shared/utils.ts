@@ -299,10 +299,11 @@ export const sanitizeArabicText = (text: string | null | undefined): string => {
     
     // === PASS: Fix specific compound words FIRST (before generic patterns) ===
     
-    // "الع المي" or "الع الم" → "العالم" / "العالمي"
-    sanitized = sanitized.replace(/الع\s+المي/g, 'العالمي');
-    sanitized = sanitized.replace(/الع\s+الم([ية]?)/g, 'العالم$1');
-    sanitized = sanitized.replace(/ال\s*ع\s+ال\s*([منية])/g, 'العال$1');
+    // "الع المي" or "الع الم" → "العالم" / "العالمي" (capture ALL invisible chars: NBSP, ZWSP, RLM, LRM, etc.)
+    const invisibleChars = '[\\s\\u00A0\\u200B-\\u200F\\u2060\\u202A-\\u202E]+';
+    sanitized = sanitized.replace(new RegExp(`الع${invisibleChars}المي`, 'g'), 'العالمي');
+    sanitized = sanitized.replace(new RegExp(`الع${invisibleChars}الم([ية]?)`, 'g'), 'العالم$1');
+    sanitized = sanitized.replace(new RegExp(`ال[\\s\\u00A0\\u200B-\\u200F\\u2060\\u202A-\\u202E]*ع${invisibleChars}ال[\\s\\u00A0\\u200B-\\u200F\\u2060\\u202A-\\u202E]*([منية])`, 'g'), 'العال$1');
     
     // "ال مرفق" or "ال عام" → "المرفق" / "العام"
     sanitized = sanitized.replace(/ال\s+مرفق/g, 'المرفق');
