@@ -699,10 +699,16 @@ ${contentForAI}${contentTruncated ? '\n\n[Note: Contenu tronqué pour analyse ra
       if (analysisResult.metadata?.bibliography) analysisResult.metadata.bibliography = correctedBiblio;
       if (analysisResult.metadata?.author) analysisResult.metadata.author = correctedAuthor;
       
-      // Use heuristic for content and keywords (too long for AI)
+      // Use heuristic for content (too long for AI)
       analysisResult.content = sanitizeArabicText(analysisResult.content);
-      if (analysisResult.existingKeywords) {
-        analysisResult.existingKeywords = analysisResult.existingKeywords.map((k: string) => sanitizeArabicText(k));
+      
+      // Use AI correction for keywords - they are short and benefit from AI
+      if (analysisResult.existingKeywords && analysisResult.existingKeywords.length > 0) {
+        console.log('🔤 Correcting existing keywords with AI...');
+        const correctedKeywords = await Promise.all(
+          analysisResult.existingKeywords.map((k: string) => correctArabicFieldWithAI(k))
+        );
+        analysisResult.existingKeywords = correctedKeywords;
       }
       if (analysisResult.metadata) {
         for (const key of Object.keys(analysisResult.metadata)) {
@@ -728,9 +734,13 @@ ${contentForAI}${contentTruncated ? '\n\n[Note: Contenu tronqué pour analyse ra
       if (analysisResult.translatedSummary) analysisResult.translatedSummary = correctedTranslatedSummary;
       if (analysisResult.metadataTranslated?.bibliography) analysisResult.metadataTranslated.bibliography = correctedTranslatedBiblio;
       
-      // Use heuristic for keywords and other fields
-      if (analysisResult.translatedKeywords) {
-        analysisResult.translatedKeywords = analysisResult.translatedKeywords.map((k: string) => sanitizeArabicText(k));
+      // Use AI correction for translated keywords - they are short and benefit from AI
+      if (analysisResult.translatedKeywords && analysisResult.translatedKeywords.length > 0) {
+        console.log('🔤 Correcting translated keywords with AI...');
+        const correctedTranslatedKeywords = await Promise.all(
+          analysisResult.translatedKeywords.map((k: string) => correctArabicFieldWithAI(k))
+        );
+        analysisResult.translatedKeywords = correctedTranslatedKeywords;
       }
       if (analysisResult.metadataTranslated) {
         for (const key of Object.keys(analysisResult.metadataTranslated)) {
