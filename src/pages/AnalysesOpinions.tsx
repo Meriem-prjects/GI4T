@@ -8,7 +8,7 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import { useTranslation } from "@/hooks/useTranslation";
 import { useAllAnalysesOpinions, useDocumentTypesCounts } from "@/hooks/useDocumentsByType";
 import { format } from "date-fns";
-import { fr } from "date-fns/locale";
+import { fr, ar } from "date-fns/locale";
 import { Skeleton } from "@/components/ui/skeleton";
 
 const AnalysesOpinions = () => {
@@ -175,7 +175,7 @@ const AnalysesOpinions = () => {
                             <div className={`flex items-center gap-4 text-sm text-muted-foreground ${isRTL ? 'flex-row-reverse' : ''}`}>
                               <div className={`flex items-center gap-1 ${isRTL ? 'flex-row-reverse' : ''}`}>
                                 <Calendar className="w-4 h-4" />
-                                {format(new Date(article.created_at), 'dd MMMM yyyy', { locale: fr })}
+                                {format(new Date(article.created_at), 'dd MMMM yyyy', { locale: isRTL ? ar : fr })}
                               </div>
                               {author && (
                                 <div className={`flex items-center gap-1 ${isRTL ? 'flex-row-reverse' : ''}`}>
