@@ -355,6 +355,7 @@ type TranslationKey =
   | 'page'
   | 'noCategoryFound'
   // Analyses & Opinions
+  | 'fundamentalRights'
   | 'analysesOpinions'
   | 'analysesOpinionsDesc'
   | 'contentTypes'
@@ -704,6 +705,7 @@ const translations: Record<'fr' | 'ar', Record<TranslationKey, string>> = {
     noDocumentText: 'Il n\'y a actuellement aucun document publié.',
     noCategoryFound: 'Aucune catégorie trouvée pour',
     // Analyses & Opinions
+    fundamentalRights: 'Droits fondamentaux',
     analysesOpinions: 'Analyses & Opinions',
     analysesOpinionsDesc: 'Analyses approfondies, articles d\'opinion et recommandations d\'experts sur les questions juridiques actuelles en Tunisie.',
     contentTypes: 'Types de contenus',
@@ -1100,6 +1102,7 @@ const translations: Record<'fr' | 'ar', Record<TranslationKey, string>> = {
     noDocumentText: 'لا توجد حالياً أي وثيقة منشورة.',
     noCategoryFound: 'لم يتم العثور على فئة لـ',
     // Analyses & Opinions
+    fundamentalRights: 'الحقوق الأساسية',
     analysesOpinions: 'التحليلات والآراء',
     analysesOpinionsDesc: 'تحليلات معمقة، مقالات رأي وتوصيات خبراء حول القضايا القانونية الحالية في تونس.',
     contentTypes: 'أنواع المحتوى',

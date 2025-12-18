@@ -15,6 +15,7 @@ import { ArticleStatistics } from "@/components/ArticleStatistics";
 import { CommentSection } from "@/components/CommentSection";
 import { useDocumentView } from "@/hooks/useDocumentView";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { useTranslation } from "@/hooks/useTranslation";
 import PageCarousel, { hasPageBreaks } from "@/components/PageCarousel";
 
 interface PageContent {
@@ -103,6 +104,7 @@ const DocumentDetail = () => {
     documentId?: string;
   }>();
   const { isRTL, language } = useLanguage();
+  const { t } = useTranslation();
   const [document, setDocument] = useState<Document | null>(null);
   const [category, setCategory] = useState<Category | null>(null);
   const [suggestedDocuments, setSuggestedDocuments] = useState<SuggestedDocument[]>([]);
@@ -486,13 +488,13 @@ const DocumentDetail = () => {
           <BreadcrumbList className={isRTL ? 'flex-row-reverse' : ''}>
           <BreadcrumbItem>
             <BreadcrumbLink asChild>
-              <Link to="/">Accueil</Link>
+              <Link to="/">{t('home')}</Link>
             </BreadcrumbLink>
           </BreadcrumbItem>
           <BreadcrumbSeparator />
           <BreadcrumbItem>
             <BreadcrumbLink asChild>
-              <Link to="/observatoire">Observatoire</Link>
+              <Link to="/observatoire">{t('observatory')}</Link>
             </BreadcrumbLink>
           </BreadcrumbItem>
           <BreadcrumbSeparator />
@@ -501,7 +503,7 @@ const DocumentDetail = () => {
             <>
               <BreadcrumbItem>
                 <BreadcrumbLink asChild>
-                  <Link to="/observatoire/analyses-opinions">Analyses & Opinions</Link>
+                  <Link to="/observatoire/analyses-opinions">{t('analysesOpinions')}</Link>
                 </BreadcrumbLink>
               </BreadcrumbItem>
               <BreadcrumbSeparator />
@@ -511,7 +513,7 @@ const DocumentDetail = () => {
             <>
               <BreadcrumbItem>
                 <BreadcrumbLink asChild>
-                  <Link to="/observatoire/droits-fondamentaux">Droits fondamentaux</Link>
+                  <Link to="/observatoire/droits-fondamentaux">{t('fundamentalRights')}</Link>
                 </BreadcrumbLink>
               </BreadcrumbItem>
               <BreadcrumbSeparator />
@@ -521,7 +523,7 @@ const DocumentDetail = () => {
             <>
               <BreadcrumbItem>
                 <BreadcrumbLink asChild>
-                  <Link to={`/observatoire/droits-fondamentaux/${createCategorySlug(category.name)}`}>{category.name}</Link>
+                  <Link to={`/observatoire/droits-fondamentaux/${createCategorySlug(category.name)}`}>{isRTL ? (category.name_ar || category.name) : category.name}</Link>
                 </BreadcrumbLink>
               </BreadcrumbItem>
               <BreadcrumbSeparator />
