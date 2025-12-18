@@ -301,7 +301,7 @@ const DocumentDetail = () => {
   }, [categorySlug, documentSlug, documentId]);
 
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('fr-FR', {
+    return new Date(dateString).toLocaleDateString(language === 'ar' ? 'ar-TN' : 'fr-FR', {
       year: 'numeric',
       month: 'long',
       day: 'numeric'
@@ -811,43 +811,47 @@ const DocumentDetail = () => {
             </div>
 
             {/* Action Buttons */}
-            <div className="flex flex-wrap items-center justify-center gap-4 mb-8">
+            <div className={`flex flex-wrap items-center justify-center gap-4 mb-8 ${isRTL ? 'flex-row-reverse' : ''}`}>
               {/* Toggle between original and translated */}
               {document.translated_content && document.translated_content !== document.content && (
                 <Button 
                   variant={showOriginal ? "default" : "outline"}
                   onClick={() => setShowOriginal(!showOriginal)}
+                  className={isRTL ? 'flex-row-reverse' : ''}
                 >
-                  <FileText className="w-4 h-4 mr-2" />
-                  {showOriginal ? "Version traduite" : "Version originale"}
+                  <FileText className={`w-4 h-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />
+                  {showOriginal 
+                    ? (language === 'ar' ? 'النسخة المترجمة' : 'Version traduite')
+                    : (language === 'ar' ? 'النسخة الأصلية' : 'Version originale')
+                  }
                 </Button>
               )}
               
               {document.file_url && (
-                <Button onClick={() => handleDownload(document.file_url, `${document.title}.pdf`)}>
-                  <Download className="w-4 h-4 mr-2" />
-                  Télécharger le document original
+                <Button onClick={() => handleDownload(document.file_url, `${document.title}.pdf`)} className={isRTL ? 'flex-row-reverse' : ''}>
+                  <Download className={`w-4 h-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />
+                  {language === 'ar' ? 'تحميل الوثيقة الأصلية' : 'Télécharger le document original'}
                 </Button>
               )}
               
               {document.pdf_url && (
-                <Button variant="outline" onClick={() => handleDownload(document.pdf_url, `${document.title}_pdf.pdf`)}>
-                  <Download className="w-4 h-4 mr-2" />
-                  Télécharger PDF
+                <Button variant="outline" onClick={() => handleDownload(document.pdf_url, `${document.title}_pdf.pdf`)} className={isRTL ? 'flex-row-reverse' : ''}>
+                  <Download className={`w-4 h-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />
+                  {language === 'ar' ? 'تحميل PDF' : 'Télécharger PDF'}
                 </Button>
               )}
 
-              <Button variant="ghost" onClick={() => window.print()}>
-                <Printer className="w-4 h-4 mr-2" />
-                Imprimer
+              <Button variant="ghost" onClick={() => window.print()} className={isRTL ? 'flex-row-reverse' : ''}>
+                <Printer className={`w-4 h-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />
+                {language === 'ar' ? 'طباعة' : 'Imprimer'}
               </Button>
 
               <Button variant="ghost" onClick={() => navigator.share?.({ 
                 title: currentTitle, 
                 url: window.location.href 
-              }).catch(() => navigator.clipboard.writeText(window.location.href))}>
-                <Share2 className="w-4 h-4 mr-2" />
-                Partager
+              }).catch(() => navigator.clipboard.writeText(window.location.href))} className={isRTL ? 'flex-row-reverse' : ''}>
+                <Share2 className={`w-4 h-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />
+                {language === 'ar' ? 'مشاركة' : 'Partager'}
               </Button>
             </div>
 
@@ -855,7 +859,10 @@ const DocumentDetail = () => {
             {document.translated_content && document.translated_content !== document.content && (
               <div className="text-center mb-6">
                 <Badge variant="secondary" className="bg-blue-100 text-blue-800">
-                  {isShowingTranslated ? "Version traduite par l'IA" : "Version originale"}
+                  {isShowingTranslated 
+                    ? (language === 'ar' ? 'النسخة المترجمة بالذكاء الاصطناعي' : "Version traduite par l'IA")
+                    : (language === 'ar' ? 'النسخة الأصلية' : 'Version originale')
+                  }
                 </Badge>
               </div>
             )}
