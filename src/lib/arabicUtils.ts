@@ -417,6 +417,44 @@ export const normalizeArabicForDisplay = (text: string): string => {
   // Fix "ب ال" → "بال" (preposition + definite article)
   normalized = normalized.replace(/ب\s+ال/g, 'بال');
   
+  // === NEW: Fix multi-letter word splits from OCR ===
+  
+  // Fix "الع المي" → "العالمي" (broken article + word)
+  normalized = normalized.replace(/ال\s*ع\s+ال\s*([مني])/g, 'العال$1');
+  normalized = normalized.replace(/ال\s*ع\s*ال\s*مي/g, 'العالمي');
+  
+  // Fix "خلالدراسة" → "خلال دراسة" (glued words)
+  normalized = normalized.replace(/(خلال)(دراسة)/g, '$1 $2');
+  normalized = normalized.replace(/(خلال)(ال[\u0621-\u064A]+)/g, '$1 $2');
+  
+  // Fix "القوانينوالضوابط" → "القوانين والضوابط"
+  normalized = normalized.replace(/([\u0621-\u064A]ين)(و)(ال[\u0621-\u064A]+)/g, '$1 $2$3');
+  normalized = normalized.replace(/([\u0621-\u064A]ات)(و)(ال[\u0621-\u064A]+)/g, '$1 $2$3');
+  
+  // Fix "استمر ارية" → "استمرارية" (mid-word splits at common syllables)
+  normalized = normalized.replace(/ر\s+ار/g, 'رار');
+  normalized = normalized.replace(/م\s+ار/g, 'مار');
+  normalized = normalized.replace(/س\s+ت/g, 'ست');
+  normalized = normalized.replace(/ن\s+ت/g, 'نت');
+  
+  // Fix "إضرا ب" → "إضراب" (splits before final letters)
+  normalized = normalized.replace(/ا\s+ب(?=\s|$|[.،؛:؟!])/g, 'اب');
+  normalized = normalized.replace(/ا\s+ت(?=\s|$|[.،؛:؟!])/g, 'ات');
+  normalized = normalized.replace(/ا\s+ع(?=\s|$|[.،؛:؟!])/g, 'اع');
+  normalized = normalized.replace(/ا\s+ق(?=\s|$|[.،؛:؟!])/g, 'اق');
+  normalized = normalized.replace(/ا\s+ن(?=\s|$|[.،؛:؟!])/g, 'ان');
+  normalized = normalized.replace(/ا\s+م(?=\s|$|[.،؛:؟!])/g, 'ام');
+  
+  // Fix "اق تراع" → "اقتراع"
+  normalized = normalized.replace(/ق\s+ت/g, 'قت');
+  normalized = normalized.replace(/ت\s+ر/g, 'تر');
+  
+  // Fix "انتخا بات" → "انتخابات"
+  normalized = normalized.replace(/خا\s+ب/g, 'خاب');
+  
+  // Fix "بلدية" patterns: "بل دية" → "بلدية"
+  normalized = normalized.replace(/ل\s+د/g, 'لد');
+  
   // Fix spaces after definite article "ال " before a word
   normalized = normalized.replace(/\bال\s+([ب-ي])/g, 'ال$1');
   

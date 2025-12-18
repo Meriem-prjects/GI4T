@@ -302,6 +302,45 @@ export const sanitizeArabicText = (text: string | null | undefined): string => {
   // Join broken "ب ال" to "بال" (Ba + space + definite article)
   sanitized = sanitized.replace(/ب\s+ال/g, 'بال');
   
+  // === NEW: Fix multi-letter word splits from OCR ===
+  
+  // Fix "الع المي" → "العالمي" (broken article + word)
+  // Pattern: ال + space + letter sequence + space + another sequence starting with ال
+  sanitized = sanitized.replace(/ال\s*ع\s+ال\s*([مني])/g, 'العال$1');
+  sanitized = sanitized.replace(/ال\s*ع\s*ال\s*مي/g, 'العالمي');
+  
+  // Fix "خلالدراسة" → "خلال دراسة" (glued words)
+  sanitized = sanitized.replace(/(خلال)(دراسة)/g, '$1 $2');
+  sanitized = sanitized.replace(/(خلال)(ال[\u0621-\u064A]+)/g, '$1 $2');
+  
+  // Fix "القوانينوالضوابط" → "القوانين والضوابط"
+  sanitized = sanitized.replace(/([\u0621-\u064A]ين)(و)(ال[\u0621-\u064A]+)/g, '$1 $2$3');
+  sanitized = sanitized.replace(/([\u0621-\u064A]ات)(و)(ال[\u0621-\u064A]+)/g, '$1 $2$3');
+  
+  // Fix "استمر ارية" → "استمرارية" (mid-word splits at common syllables)
+  sanitized = sanitized.replace(/ر\s+ار/g, 'رار');
+  sanitized = sanitized.replace(/م\s+ار/g, 'مار');
+  sanitized = sanitized.replace(/س\s+ت/g, 'ست');
+  sanitized = sanitized.replace(/ن\s+ت/g, 'نت');
+  
+  // Fix "إضرا ب" → "إضراب" (splits before final letters)
+  sanitized = sanitized.replace(/ا\s+ب(?=\s|$|[.،؛:؟!])/g, 'اب');
+  sanitized = sanitized.replace(/ا\s+ت(?=\s|$|[.،؛:؟!])/g, 'ات');
+  sanitized = sanitized.replace(/ا\s+ع(?=\s|$|[.،؛:؟!])/g, 'اع');
+  sanitized = sanitized.replace(/ا\s+ق(?=\s|$|[.،؛:؟!])/g, 'اق');
+  sanitized = sanitized.replace(/ا\s+ن(?=\s|$|[.،؛:؟!])/g, 'ان');
+  sanitized = sanitized.replace(/ا\s+م(?=\s|$|[.،؛:؟!])/g, 'ام');
+  
+  // Fix "اق تراع" → "اقتراع"
+  sanitized = sanitized.replace(/ق\s+ت/g, 'قت');
+  sanitized = sanitized.replace(/ت\s+ر/g, 'تر');
+  
+  // Fix "انتخا بات" → "انتخابات"
+  sanitized = sanitized.replace(/خا\s+ب/g, 'خاب');
+  
+  // Fix "بلدية" patterns: "بل دية" → "بلدية"
+  sanitized = sanitized.replace(/ل\s+د/g, 'لد');
+  
   // Remove spaces between letter and diacritics
   sanitized = sanitized.replace(/([\u0621-\u064A])\s+([\u064B-\u0652\u0670])/g, '$1$2');
   

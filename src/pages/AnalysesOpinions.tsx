@@ -10,6 +10,7 @@ import { useAllAnalysesOpinions, useDocumentTypesCounts } from "@/hooks/useDocum
 import { format } from "date-fns";
 import { fr, ar } from "date-fns/locale";
 import { Skeleton } from "@/components/ui/skeleton";
+import { normalizeArabicForDisplay } from "@/lib/arabicUtils";
 
 const AnalysesOpinions = () => {
   const { isRTL, language } = useLanguage();
@@ -200,8 +201,8 @@ const AnalysesOpinions = () => {
                           {keywords && keywords.length > 0 && (
                             <div className={`flex flex-wrap gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
                               {keywords.slice(0, 3).map((tag) => (
-                                <Badge key={tag} variant="secondary" className="text-xs">
-                                  {tag}
+                                <Badge key={tag} variant="secondary" className={`text-xs ${isRTL ? 'arabic-text font-arabic' : ''}`}>
+                                  {isRTL ? normalizeArabicForDisplay(tag) : tag}
                                 </Badge>
                               ))}
                             </div>
