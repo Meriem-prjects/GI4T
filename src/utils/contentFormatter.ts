@@ -1,5 +1,5 @@
 // Utility functions for formatting and stripping content
-import { normalizeArabicText, isArabicText, fixHehVariants } from '@/lib/arabicUtils';
+import { normalizeArabicText, isArabicText, fixHehVariants, normalizeArabicForDisplay } from '@/lib/arabicUtils';
 
 /**
  * Converts simple text formatting markers to HTML for display
@@ -8,8 +8,11 @@ import { normalizeArabicText, isArabicText, fixHehVariants } from '@/lib/arabicU
 export const renderFormattedContent = (content: string): string => {
   if (!content) return '';
   
-  // First, fix Heh variants in the entire content
-  let processedContent = fixHehVariants(content);
+  // First, normalize Arabic text to connect disconnected letters (e.g., "فـقـه" → "فقه")
+  let processedContent = normalizeArabicForDisplay(content);
+  
+  // Then fix Heh variants
+  processedContent = fixHehVariants(processedContent);
   // Check if content contains page-break divs - use index-based extraction for nested div support
   if (processedContent.includes('class="page-break"') || processedContent.includes("class='page-break'")) {
     const pageBreakPattern = /<div[^>]*class="[^"]*page-break[^"]*"[^>]*>/gi;
