@@ -1594,15 +1594,21 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
 
   // Get content to display based on current language
   const getCurrentContent = () => {
-    const isPrimaryArabic = editedData.language === 'ar';
+    let content = '';
     
     if (currentLanguage === editedData.language) {
       // Show original content in primary language
-      return editedData.fullContent || editedData.content;
+      content = editedData.fullContent || editedData.content;
     } else {
       // Show translated content in secondary language - prioritize consolidated page translations
-      return editedData.translated_content || translatedContent || editedData.fullContent || editedData.content;
+      content = editedData.translated_content || translatedContent || editedData.fullContent || editedData.content;
     }
+    
+    // Normalize Arabic text to connect disconnected letters (e.g., "فـقـه" → "فقه")
+    if (currentLanguage === 'ar' && content) {
+      return normalizeArabicForDisplay(content);
+    }
+    return content;
   };
 
 
@@ -3301,7 +3307,9 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
                     .map((page) => (
                       <div key={page.pageNumber} className="page-break">
                         <CKEditorWrapper
-                          content={currentLanguage === editedData.language ? page.content : (page.translated_content || '')}
+                          content={currentLanguage === 'ar' 
+                            ? normalizeArabicForDisplay(currentLanguage === editedData.language ? page.content : (page.translated_content || ''))
+                            : (currentLanguage === editedData.language ? page.content : (page.translated_content || ''))}
                           onChange={(newContent) => {
                             setEditedData(prev => ({
                               ...prev,
