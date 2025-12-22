@@ -476,96 +476,19 @@ export const normalizeArabicForDisplay = (text: string): string => {
     // "دستو رية" → "دستورية"
     normalized = normalized.replace(/دستو\s+ر/g, 'دستور');
     
-    // === PASS: Generic single-letter splits (OCR often breaks words) ===
+    // === SAFE GLUED WORDS SEPARATION (specific cases only) ===
     
-    // Single Arabic letter followed by space and 2+ letters → join them
-    // But EXCLUDE valid short words: في، من، إلى، على، أن، لا، ما، هو، هي، إذ، أو، لم، لن، قد
-    const validShortWords = /^(في|من|إلى|على|أن|لا|ما|هو|هي|إذ|أو|لم|لن|قد|هذا|هذه|ذلك|تلك|كل|بعض|كان|كانت)$/;
+    // "خلالالاعتراف" → "خلال الاعتراف" (خلال + ال)
+    normalized = normalized.replace(/خلالال/g, 'خلال ال');
     
-    // Fix isolated single letter + remaining word (e.g., "ح الة" → "حالة")
-    normalized = normalized.replace(/([أإآاءؤئبتثجحخدذرزسشصضطظعغفقكلمنهوي])\s+([\u0621-\u064A]{2,})/g, (match, p1, p2) => {
-      // Don't join if first letter is a valid preposition/word
-      if (validShortWords.test(p1)) return match;
-      // Don't join if second part starts with ال and first is not a preposition
-      if (p2.startsWith('ال') && !['ب', 'ك', 'ل', 'و', 'ف'].includes(p1)) return match;
-      return p1 + p2;
-    });
+    // "أجلدرس" → "أجل درس"
+    normalized = normalized.replace(/أجلدرس/g, 'أجل درس');
     
-    // Fix 2-letter fragment + remaining (e.g., "مص الح" → "مصالح")
-    normalized = normalized.replace(/([\u0621-\u064A]{2})\s+([\u0621-\u064A]{2,})/g, (match, p1, p2) => {
-      // Keep valid 2-letter words separate
-      if (validShortWords.test(p1)) return match;
-      // Don't join if second part starts with ال
-      if (p2.startsWith('ال')) return match;
-      return p1 + p2;
-    });
+    // "تونسّالحقّ" → "تونسّ الحقّ"
+    normalized = normalized.replace(/تونسّالحقّ/g, 'تونسّ الحقّ');
     
-    // === PASS: Generic letter combination fixes ===
-    
-    // Fix "ل ل" → "لل" (double lam)
-    normalized = normalized.replace(/ل\s+ل/g, 'لل');
-    
-    // Fix "ع ل" → "عل"
-    normalized = normalized.replace(/ع\s*[\u200B-\u200F\u2060]?\s*ل/g, 'عل');
-    
-    // Fix "ج ا" → "جا"
-    normalized = normalized.replace(/ج\s*[\u200B-\u200F\u2060]?\s*ا/g, 'جا');
-    
-    // Fix "ب ا" → "با" (ba + alif)
-    normalized = normalized.replace(/ب\s*[\u200B-\u200F\u2060]?\s*ا/g, 'با');
-    
-    // Fix "ب ال" → "بال" (preposition + definite article)
-    normalized = normalized.replace(/ب\s+ال/g, 'بال');
-    
-    // === PASS: Mid-word splits ===
-    normalized = normalized.replace(/ر\s+ار/g, 'رار');
-    normalized = normalized.replace(/م\s+ار/g, 'مار');
-    normalized = normalized.replace(/س\s+ت/g, 'ست');
-    normalized = normalized.replace(/ن\s+ت/g, 'نت');
-    normalized = normalized.replace(/ق\s+ت/g, 'قت');
-    normalized = normalized.replace(/ت\s+ر/g, 'تر');
-    normalized = normalized.replace(/خا\s+ب/g, 'خاب');
-    normalized = normalized.replace(/ل\s+د/g, 'لد');
-    normalized = normalized.replace(/ش\s+ف/g, 'شف');
-    normalized = normalized.replace(/ا\s+ت\s+ي/g, 'اتي');
-    normalized = normalized.replace(/ا\s+ل\s+ي/g, 'الي');
-    
-    // === PASS: Splits before final letters ===
-    normalized = normalized.replace(/ا\s+ب(?=\s|$|[.،؛:؟!])/g, 'اب');
-    normalized = normalized.replace(/ا\s+ت(?=\s|$|[.،؛:؟!])/g, 'ات');
-    normalized = normalized.replace(/ا\s+ع(?=\s|$|[.،؛:؟!])/g, 'اع');
-    normalized = normalized.replace(/ا\s+ق(?=\s|$|[.،؛:؟!])/g, 'اق');
-    normalized = normalized.replace(/ا\s+ن(?=\s|$|[.،؛:؟!])/g, 'ان');
-    normalized = normalized.replace(/ا\s+م(?=\s|$|[.،؛:؟!])/g, 'ام');
-    
-    // === PASS: Generic "ال " + letter → remove space ===
-    normalized = normalized.replace(/\bال\s+([ب-ي])/g, 'ال$1');
-    
-    // === PASS: Glued words separation ===
-    
-    // "خلالدراسة" → "خلال دراسة" (خلال + any word starting with consonant)
-    normalized = normalized.replace(/(خلال)([دذرزسشصضطظعغفقكلمنبتثجحخ][\u0621-\u064A]+)/g, '$1 $2');
-    
-    // "أجلدرس" → "أجل درس" (أجل glued to next word)
-    normalized = normalized.replace(/(أجل)([دذرزسشصضطظعغفقكلمنبتثجحخ][\u0621-\u064A]+)/g, '$1 $2');
-    
-    // "القوانينوالضوابط" → "القوانين والضوابط" (word ending in ين + و + ال)
-    normalized = normalized.replace(/([\u0621-\u064A]+ين)(و)(ال[\u0621-\u064A]+)/g, '$1 $2$3');
-    
-    // "الإجراءاتوالقوانين" → "الإجراءات والقوانين" (word ending in ات + و + ال)
-    normalized = normalized.replace(/([\u0621-\u064A]+ات)(و)(ال[\u0621-\u064A]+)/g, '$1 $2$3');
-    
-    // "انتخاباتبلدية" → "انتخابات بلدية" (word ending in ات + word starting with consonant)
-    normalized = normalized.replace(/([\u0621-\u064A]+ات)([بتثجحخدذرزسشصضطظعغفقكلمنهوي][\u0621-\u064A]+)/g, '$1 $2');
-    
-    // "العلاجالمجاني" → "العلاج المجاني" (any letter followed by ال)
-    normalized = normalized.replace(/([\u0621-\u064A])(ال)([ب-ي])/g, '$1 $2$3');
-    
-    // Word ending with ة + word starting with consonant (not ال) → add space
-    normalized = normalized.replace(/(ة)([بتثجحخدذرزسشصضطظعغفقكلمنهوي][\u0621-\u064A]{2,})/g, '$1 $2');
-    
-    // Word ending with ي + word starting with consonant (not و or ال) → add space
-    normalized = normalized.replace(/([\u0621-\u064A]{3,}ي)([بتثجحخدذرزسشصضطظعغفقكلمن][\u0621-\u064A]{2,})/g, '$1 $2');
+    // Word ending with shadda + ال → add space before ال
+    normalized = normalized.replace(/(\u0651)(ال[\u0621-\u064A])/g, '$1 $2');
     
     iterations++;
   }
