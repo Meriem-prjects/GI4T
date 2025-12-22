@@ -413,18 +413,19 @@ const DocumentDetail = () => {
     
     const pageContents = rawPageContents as PageContent[];
     
-    // Check if we need translation (interface language differs from document language)
-    const needsTranslation = !showOriginal && (
+    // Déterminer si on veut la version traduite
+    const wantsTranslation = !showOriginal && (
       (language === 'fr' && document.language === 'ar') ||
       (language === 'ar' && document.language === 'fr')
     );
     
-    // Check if individual pages have translations
-    const hasPageTranslations = pageContents.some(page => page.translated_content);
+    // Si on veut la traduction, vérifier si TOUTES les pages ont une traduction non vide
+    const allPagesHaveTranslation = wantsTranslation && 
+      pageContents.every(page => page.translated_content && page.translated_content.trim() !== '');
     
-    // If we need translation but pages don't have individual translations,
-    // use the global translated_content if available
-    if (needsTranslation && !hasPageTranslations && document.translated_content) {
+    // Si on veut la traduction mais les pages n'en ont pas toutes,
+    // utiliser translated_content global si disponible
+    if (wantsTranslation && !allPagesHaveTranslation && document.translated_content) {
       return document.translated_content;
     }
     
@@ -432,20 +433,17 @@ const DocumentDetail = () => {
     const sortedPages = [...pageContents].sort((a, b) => (a.pageNumber || 0) - (b.pageNumber || 0));
     
     return sortedPages.map(page => {
-      // Choose appropriate content based on language preference
       let pageContent: string;
-      if (prefersArabic) {
-        if (showOriginal) {
-          pageContent = page.content || '';
-        } else {
-          pageContent = document.language === 'ar' ? (page.content || '') : (page.translated_content || page.content || '');
-        }
+      
+      if (showOriginal) {
+        // Version originale = toujours page.content
+        pageContent = page.content || '';
+      } else if (wantsTranslation && allPagesHaveTranslation) {
+        // Version traduite avec traductions de pages disponibles
+        pageContent = page.translated_content || '';
       } else {
-        if (showOriginal) {
-          pageContent = page.content || '';
-        } else {
-          pageContent = document.language === 'fr' ? (page.content || '') : (page.translated_content || page.content || '');
-        }
+        // Interface dans la même langue que le document : afficher l'original
+        pageContent = page.content || '';
       }
       
       return `<div class="page-break" data-page="${page.pageNumber}">
