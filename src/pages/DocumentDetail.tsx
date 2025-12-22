@@ -3,7 +3,13 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Breadcrumb, BreadcrumbList, BreadcrumbItem, BreadcrumbLink, BreadcrumbPage, BreadcrumbSeparator } from "@/components/ui/breadcrumb";
-import { FileText, Download, ExternalLink, Share2, Printer, ArrowLeft, Calendar, MapPin, User, Building2, Scale, BookOpen } from "lucide-react";
+import { FileText, Download, ExternalLink, Share2, Printer, ArrowLeft, Calendar, MapPin, User, Building2, Scale, BookOpen, MoreVertical } from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { supabase } from "@/integrations/supabase/client";
 import { useEffect, useState } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -891,18 +897,32 @@ const DocumentDetail = () => {
                 </Button>
               )}
 
-              <Button variant="ghost" onClick={() => window.print()} className={isRTL ? 'flex-row-reverse' : ''}>
-                <Printer className={`w-4 h-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />
-                {language === 'ar' ? 'طباعة' : 'Imprimer'}
-              </Button>
-
-              <Button variant="ghost" onClick={() => navigator.share?.({ 
-                title: currentTitle, 
-                url: window.location.href 
-              }).catch(() => navigator.clipboard.writeText(window.location.href))} className={isRTL ? 'flex-row-reverse' : ''}>
-                <Share2 className={`w-4 h-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />
-                {language === 'ar' ? 'مشاركة' : 'Partager'}
-              </Button>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" size="icon">
+                    <MoreVertical className="w-5 h-5" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align={isRTL ? 'start' : 'end'} className="bg-popover">
+                  <DropdownMenuItem 
+                    onClick={() => window.print()}
+                    className={`cursor-pointer ${isRTL ? 'flex-row-reverse' : ''}`}
+                  >
+                    <Printer className={`w-4 h-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />
+                    {language === 'ar' ? 'طباعة' : 'Imprimer'}
+                  </DropdownMenuItem>
+                  <DropdownMenuItem 
+                    onClick={() => navigator.share?.({ 
+                      title: currentTitle, 
+                      url: window.location.href 
+                    }).catch(() => navigator.clipboard.writeText(window.location.href))}
+                    className={`cursor-pointer ${isRTL ? 'flex-row-reverse' : ''}`}
+                  >
+                    <Share2 className={`w-4 h-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />
+                    {language === 'ar' ? 'مشاركة' : 'Partager'}
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
             </div>
 
             {/* Content Type Indicator */}
