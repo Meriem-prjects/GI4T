@@ -1,7 +1,7 @@
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.57.4';
-import { sanitizeArabicText } from '../_shared/utils.ts';
+import { sanitizeArabicTextRaw } from '../_shared/utils.ts';
 
 const openAIApiKey = Deno.env.get('OPENAI_API_KEY');
 const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
@@ -65,8 +65,8 @@ async function correctArabicFieldWithAI(text: string | null | undefined): Promis
   
   // Only call AI for texts under the limit (12000 chars)
   if (text.length > 12000) {
-    console.log(`⚠️ Text too long for AI correction (${text.length} chars), using heuristic`);
-    return sanitizeArabicText(text);
+    console.log(`⚠️ Text too long for AI correction (${text.length} chars), using minimal sanitization`);
+    return sanitizeArabicTextRaw(text);
   }
   
   try {
@@ -81,15 +81,15 @@ async function correctArabicFieldWithAI(text: string | null | undefined): Promis
     
     if (response.ok) {
       const data = await response.json();
-      return data.correctedText || sanitizeArabicText(text);
+      return data.correctedText || sanitizeArabicTextRaw(text);
     }
     console.warn('Arabic spacing fixer returned non-OK status:', response.status);
   } catch (error) {
     console.error('Arabic correction API error:', error);
   }
   
-  // Fallback to heuristic if AI fails
-  return sanitizeArabicText(text);
+  // Fallback to minimal sanitization if AI fails
+  return sanitizeArabicTextRaw(text);
 }
 
 serve(async (req) => {
