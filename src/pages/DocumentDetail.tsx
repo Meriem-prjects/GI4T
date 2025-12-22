@@ -622,19 +622,30 @@ const DocumentDetail = () => {
                     </div>
 
                     <div className="space-y-3">
-                      {currentAuthor && (
-                        <div className={`flex items-center gap-3 ${language === 'ar' ? 'flex-row-reverse justify-start' : 'justify-center md:justify-start'}`}>
-                          <User className="w-5 h-5 text-muted-foreground" />
-                          {language === 'ar' ? (
-                            <span><span className="font-medium">المؤلف:</span> {currentAuthor}</span>
-                          ) : (
-                            <>
-                              <span className="font-medium">Auteur:</span>
-                              <span>{currentAuthor}</span>
-                            </>
-                          )}
-                        </div>
-                      )}
+                      {currentAuthor && (() => {
+                        const hasComma = currentAuthor.includes(',');
+                        const authorName = hasComma ? currentAuthor.split(',')[0].trim() : currentAuthor;
+                        const authorTitle = hasComma ? currentAuthor.split(',').slice(1).join(',').trim() : null;
+                        
+                        return (
+                          <div className={`flex items-start gap-3 ${language === 'ar' ? 'flex-row-reverse justify-start' : 'justify-center md:justify-start'}`}>
+                            <User className="w-5 h-5 text-muted-foreground mt-0.5" />
+                            <div className={`flex flex-col ${language === 'ar' ? 'items-end' : 'items-start'}`}>
+                              {language === 'ar' ? (
+                                <>
+                                  <span><span className="font-medium">المؤلف:</span> <span className="font-semibold">{authorName}</span></span>
+                                  {authorTitle && <span className="text-sm text-muted-foreground">{authorTitle}</span>}
+                                </>
+                              ) : (
+                                <>
+                                  <span><span className="font-medium">Auteur:</span> <span className="font-semibold">{authorName}</span></span>
+                                  {authorTitle && <span className="text-sm text-muted-foreground">{authorTitle}</span>}
+                                </>
+                              )}
+                            </div>
+                          </div>
+                        );
+                      })()}
                     </div>
                   </div>
 
@@ -696,19 +707,30 @@ const DocumentDetail = () => {
                         </div>
                       )}
 
-                      {currentAuthor && (
-                        <div className={`flex items-center gap-3 ${language === 'ar' ? 'flex-row-reverse justify-start' : 'justify-center md:justify-start'}`}>
-                          <User className="w-5 h-5 text-muted-foreground" />
-                          {language === 'ar' ? (
-                            <span><span className="font-medium">المؤلف:</span> {currentAuthor}</span>
-                          ) : (
-                            <>
-                              <span className="font-medium">Auteur:</span>
-                              <span>{currentAuthor}</span>
-                            </>
-                          )}
-                        </div>
-                      )}
+                      {currentAuthor && (() => {
+                        const hasComma = currentAuthor.includes(',');
+                        const authorName = hasComma ? currentAuthor.split(',')[0].trim() : currentAuthor;
+                        const authorTitle = hasComma ? currentAuthor.split(',').slice(1).join(',').trim() : null;
+                        
+                        return (
+                          <div className={`flex items-start gap-3 ${language === 'ar' ? 'flex-row-reverse justify-start' : 'justify-center md:justify-start'}`}>
+                            <User className="w-5 h-5 text-muted-foreground mt-0.5" />
+                            <div className={`flex flex-col ${language === 'ar' ? 'items-end' : 'items-start'}`}>
+                              {language === 'ar' ? (
+                                <>
+                                  <span><span className="font-medium">المؤلف:</span> <span className="font-semibold">{authorName}</span></span>
+                                  {authorTitle && <span className="text-sm text-muted-foreground">{authorTitle}</span>}
+                                </>
+                              ) : (
+                                <>
+                                  <span><span className="font-medium">Auteur:</span> <span className="font-semibold">{authorName}</span></span>
+                                  {authorTitle && <span className="text-sm text-muted-foreground">{authorTitle}</span>}
+                                </>
+                              )}
+                            </div>
+                          </div>
+                        );
+                      })()}
                     </div>
 
                     <div className="space-y-3">
