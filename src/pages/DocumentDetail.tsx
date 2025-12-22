@@ -633,12 +633,12 @@ const DocumentDetail = () => {
                             <div className={`flex flex-col ${language === 'ar' ? 'items-end' : 'items-start'}`}>
                               {language === 'ar' ? (
                                 <>
-                                  <span><span className="font-medium">المؤلف:</span> <span className="font-semibold">{authorName}</span></span>
+                                  <span><span className="font-medium">المؤلف:</span> <span>{authorName}</span></span>
                                   {authorTitle && <span className="text-sm text-muted-foreground">{authorTitle}</span>}
                                 </>
                               ) : (
                                 <>
-                                  <span><span className="font-medium">Auteur:</span> <span className="font-semibold">{authorName}</span></span>
+                                  <span><span className="font-medium">Auteur:</span> <span>{authorName}</span></span>
                                   {authorTitle && <span className="text-sm text-muted-foreground">{authorTitle}</span>}
                                 </>
                               )}
