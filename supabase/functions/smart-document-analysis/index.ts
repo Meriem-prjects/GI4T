@@ -119,6 +119,7 @@ serve(async (req) => {
     }
 
     const isAnalysisDocument = documentType === 'Analyses juridiques';
+    const isCommentDocument = documentType === 'Commentaires';
 
     // Start exhaustive translation in parallel for long documents
     let translatedContentFull = '';
@@ -245,11 +246,11 @@ serve(async (req) => {
       jurisdictionLevels: jurisdictionLevels.length
     });
 
-    // For analysis documents with translated content, combine both for comprehensive analysis
+    // For analysis and comment documents with translated content, combine both for comprehensive analysis
     let fullContentForAnalysis = content;
     
-    if (isAnalysisDocument && translatedContent && translatedContent.trim() !== '') {
-      // Combine original + translated to ensure AI has access to bibliography at the end
+    if ((isAnalysisDocument || isCommentDocument) && translatedContent && translatedContent.trim() !== '') {
+      // Combine original + translated to ensure AI has access to full content
       fullContentForAnalysis = `
 === CONTENU ORIGINAL (${sourceLanguage}) ===
 ${content}
@@ -257,7 +258,7 @@ ${content}
 === CONTENU TRADUIT (${targetLanguage}) ===
 ${translatedContent}
 `;
-      console.log('📚 Using combined original + translated content for analysis document');
+      console.log('📚 Using combined original + translated content for analysis/comment document');
       console.log('Combined content length:', fullContentForAnalysis.length);
     }
 
@@ -272,7 +273,81 @@ ${translatedContent}
       console.log(`⚡ Quick mode: analyzing ${contentForAI.length} characters (with bibliography) of ${fullContentForAnalysis.length} total`);
     }
     
-    const systemPrompt = isAnalysisDocument 
+    const systemPrompt = isCommentDocument
+      ? `Tu es un expert en analyse de documents juridiques tunisiens. Analyse le contenu suivant (TYPE: COMMENTAIRE D'ARRÊT / BLOG JURIDIQUE) et extrait les informations demandées en JSON.
+
+LANGUE DU DOCUMENT SOURCE: ${sourceLanguage}
+LANGUE CIBLE POUR LES TRADUCTIONS: ${targetLanguage}
+
+⚠️ RÈGLE ABSOLUE SUR LES TRADUCTIONS:
+- Si le document source est en ${sourceLanguage}, les champs "title", "subtitle", "summary", "metadata" doivent être en ${sourceLanguage}
+- Les champs "translatedTitle", "translatedSubtitle", "translatedSummary", "metadataTranslated" doivent être EXCLUSIVEMENT en ${targetLanguage}
+- Si targetLanguage est "arabe", tu DOIS écrire en caractères arabes (Unicode U+0600 à U+06FF)
+- Si targetLanguage est "français", tu DOIS écrire en caractères latins
+
+⚠️ RÈGLE ABSOLUE SUR LES MOTS-CLÉS:
+- "existingKeywords" doit être un tableau de chaînes extraites LITTÉRALEMENT depuis "الكلمات المفاتيح" dans le document
+- "translatedKeywords" doit être un tableau de chaînes traduites en ${targetLanguage}
+- Chaque mot-clé doit être une chaîne séparée dans le tableau
+- Exemple correct: ["mot1", "mot2", "mot3"]
+
+COMMENTAIRE D'ARRÊT - CHAMPS SPÉCIFIQUES À EXTRAIRE:
+1. TITRE: Extrais le thème principal du commentaire (ex: "إضافة معنى جديد للحق في الكرامة", "الخدمة الوطنية والتمييز")
+2. SOUS-TITRE: Extrais un sous-titre descriptif s'il existe (optionnel)
+3. AUTEUR: Nom complet de l'auteur avec son titre/fonction (ex: "مالك الغزواني، رئيس دائرة بمحكمة الاستئناف بتونس")
+4. RÉFÉRENCE DU JUGEMENT COMMENTÉ: Extrais les informations sur le jugement analysé:
+   - Tribunal (ex: "محكمة التعقيب", "المحكمة العسكرية")
+   - Numéro d'affaire (ex: "عدد 21261", "عدد 24523/م")
+   - Date du jugement (ex: "25 نوفمبر 2021")
+5. MOTS-CLÉS: Extrais LITTÉRALEMENT les mots-clés depuis la section "الكلمات المفاتيح" du document
+6. OBSERVATIONS: Synthèse des observations de l'auteur depuis la section "ملاحظات"
+7. DATE DE VALIDATION: Si présente dans le document (optionnel)
+
+⚠️ IMPORTANT: Un COMMENTAIRE n'a PAS de bibliographie, demandeur, défendeur. Ne cherche pas ces informations.
+⚠️ IMPORTANT: Cherche spécifiquement "الكلمات المفاتيح" pour les mots-clés.
+
+Catégories disponibles:
+${categories.map(cat => `- ${cat.name} (${cat.name_ar})`).join('\n')}
+
+${mode === 'quick' 
+  ? `⚠️ MODE RAPIDE: Pour "translatedContent", fournis UNIQUEMENT un court extrait traduit (200-300 mots max) du début du document.` 
+  : `Pour "translatedContent", traduis le contenu complet du document en ${targetLanguage}.`}
+
+Réponds uniquement en JSON valide avec cette structure exacte :
+{
+  "title": "titre principal du commentaire",
+  "subtitle": "sous-titre descriptif si présent (optionnel)", 
+  "translatedTitle": "traduction complète du titre en ${targetLanguage}",
+  "translatedSubtitle": "traduction complète du sous-titre en ${targetLanguage}",
+  "summary": "synthèse des observations de l'auteur en ${sourceLanguage}",
+  "translatedSummary": "traduction complète du résumé en ${targetLanguage}",
+  "existingKeywords": ["mots-clés extraits LITTÉRALEMENT depuis الكلمات المفاتيح"],
+  "suggestedKeywords": [],
+  "translatedKeywords": ["traduction complète des mots-clés en ${targetLanguage}"],
+  "metadata": {
+    "author": "nom complet de l'auteur avec titre/fonction",
+    "judgment_reference": "référence complète du jugement commenté (tribunal, numéro, date)",
+    "court": "tribunal du jugement commenté",
+    "case_number": "numéro d'affaire du jugement",
+    "judgment_date": "date du jugement commenté",
+    "validation_date": "date de validation si présente (format YYYY-MM-DD)"
+  },
+  "metadataTranslated": {
+    "author": "traduction complète de l'auteur en ${targetLanguage}",
+    "judgment_reference": "traduction de la référence du jugement",
+    "court": "traduction du tribunal",
+    "case_number": "traduction du numéro d'affaire"
+  },
+  "textualMetadata": "MÉTADONNÉES FORMATÉES en ${sourceLanguage}",
+  "textualMetadataTranslated": "MÉTADONNÉES FORMATÉES en ${targetLanguage}",
+  "translatedContent": "${mode === 'quick' ? 'EXTRAIT TRADUIT (200-300 mots)' : 'TRADUCTION COMPLÈTE'}",
+  "language": "${sourceLanguage}",
+  "suggestions": {
+    "suggestedCategory": "nom exact de la catégorie la plus appropriée",
+    "suggestedDocumentType": "Commentaires"
+  }
+}`
+      : isAnalysisDocument 
       ? `Tu es un expert en analyse de documents juridiques tunisiens. Analyse le contenu suivant (TYPE: FICHE D'ANALYSE) et extrait les informations demandées en JSON.
 
 LANGUE DU DOCUMENT SOURCE: ${sourceLanguage}

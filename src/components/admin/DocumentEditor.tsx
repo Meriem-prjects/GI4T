@@ -127,6 +127,17 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
            docType?.name_ar === 'التحليلات القانونية';
   }, [editedData.document_type_id, documentTypes]);
   
+  // Detect if document is "Commentaires"
+  const isCommentDocument = React.useMemo(() => {
+    if (!editedData.document_type_id || documentTypes.length === 0) return false;
+    const docType = documentTypes.find(dt => dt.id === editedData.document_type_id);
+    return docType?.name === 'Commentaires' || 
+           docType?.name_ar === 'التعليقات';
+  }, [editedData.document_type_id, documentTypes]);
+  
+  // Check if document supports AI workflow (Analyses or Commentaires)
+  const supportsAIWorkflow = isAnalysisDocument || isCommentDocument;
+  
   // Track if we've already normalized data on load to avoid re-normalizing
   const hasNormalizedOnLoad = React.useRef(false);
   
@@ -1970,7 +1981,8 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
       {/* Workflow IA Guide - Timeline (dynamique selon le type de document) */}
       {(() => {
         const currentDocType = documentTypes.find(dt => dt.id === editedData.document_type_id);
-        const isAnalysisDocument = currentDocType?.name === 'Analyses juridiques';
+        const isAnalysisOrComment = currentDocType?.name === 'Analyses juridiques' || currentDocType?.name === 'Commentaires';
+        const docTypeName = currentDocType?.name || '';
         
         return (
           <Card className="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-950/30 dark:to-indigo-950/30 border-blue-200 dark:border-blue-800" dir="ltr">
@@ -1978,11 +1990,15 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
               <div className="flex items-center gap-2 mb-4">
                 <Brain className="h-5 w-5 text-blue-600 dark:text-blue-400" />
                 <h4 className="font-semibold text-blue-900 dark:text-blue-100">
-                  {isAnalysisDocument ? '📚 Workflow recommandé pour documents d\'analyse' : '🧠 Workflow de traitement IA'}
+                  {isAnalysisOrComment 
+                    ? (docTypeName === 'Commentaires' 
+                        ? '💬 Workflow recommandé pour Commentaires' 
+                        : '📚 Workflow recommandé pour documents d\'analyse')
+                    : '🧠 Workflow de traitement IA'}
                 </h4>
               </div>
               
-              {isAnalysisDocument ? (
+              {isAnalysisOrComment ? (
                 /* Workflow pour documents d'analyse : Traduire → Consolider → Analyse IA */
                 <>
                   <p className="text-xs text-blue-700 dark:text-blue-300 mb-4">
@@ -1999,7 +2015,9 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
                           📖 Traduire toutes les pages
                         </p>
                         <p className="text-xs text-emerald-700 dark:text-emerald-300 leading-relaxed">
-                          Traduit le contenu complet de chaque page (y compris la bibliographie en fin de document)
+                          {docTypeName === 'Commentaires' 
+                            ? 'Traduit le contenu complet de chaque page du commentaire'
+                            : 'Traduit le contenu complet de chaque page (y compris la bibliographie en fin de document)'}
                         </p>
                       </div>
                     </div>
@@ -2039,7 +2057,9 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
                           🤖 Analyse IA
                         </p>
                         <p className="text-xs text-blue-700 dark:text-blue-300 leading-relaxed">
-                          Extrait les métadonnées et la bibliographie du contenu complet traduit
+                          {docTypeName === 'Commentaires' 
+                            ? 'Extrait les métadonnées: titre, auteur, mots-clés, référence du jugement commenté'
+                            : 'Extrait les métadonnées et la bibliographie du contenu complet traduit'}
                         </p>
                       </div>
                     </div>
@@ -2538,8 +2558,8 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
                       </Select>
                     </div>
 
-                    {/* Informations Juridiques / Analyse - Français */}
-                    {!isAnalysisDocument ? (
+                    {/* Informations Juridiques / Analyse / Commentaires - Français */}
+                    {!isAnalysisDocument && !isCommentDocument ? (
                       <div className="mt-4 pt-4 border-t border-border">
                         <h5 className="text-sm font-semibold mb-3 text-muted-foreground">Informations Juridiques</h5>
                         <div className="space-y-3">
@@ -2657,7 +2677,55 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
                           </div>
                         </div>
                       </div>
+                    ) : isCommentDocument ? (
+                      /* Section spécifique pour les Commentaires */
+                      <div className="mt-4 pt-4 border-t border-border">
+                        <h5 className="text-sm font-semibold mb-3 text-muted-foreground">💬 Informations du Commentaire</h5>
+                        <div className="space-y-3">
+                          <div>
+                            <Label className="text-xs font-medium">Auteur <span className="text-red-500">*</span></Label>
+                            <Input
+                              value={editedData.author || ''}
+                              onChange={(e) => setEditedData(prev => ({ ...prev, author: e.target.value }))}
+                              placeholder="Nom de l'auteur avec titre/fonction"
+                              className="mt-1 h-8"
+                              required
+                            />
+                          </div>
+
+                          <div>
+                            <Label className="text-xs font-medium">Tribunal du jugement commenté</Label>
+                            <Input
+                              value={editedData.court || ''}
+                              onChange={(e) => setEditedData(prev => ({ ...prev, court: e.target.value }))}
+                              placeholder="Ex: محكمة التعقيب, المحكمة العسكرية"
+                              className="mt-1 h-8"
+                            />
+                          </div>
+
+                          <div>
+                            <Label className="text-xs font-medium">Numéro d'affaire du jugement</Label>
+                            <Input
+                              value={editedData.case_number || ''}
+                              onChange={(e) => setEditedData(prev => ({ ...prev, case_number: e.target.value }))}
+                              placeholder="Ex: عدد 21261"
+                              className="mt-1 h-8"
+                            />
+                          </div>
+
+                          <div>
+                            <Label className="text-xs font-medium">Date de validation</Label>
+                            <Input
+                              type="date"
+                              value={editedData.validation_date || ''}
+                              onChange={(e) => setEditedData(prev => ({ ...prev, validation_date: e.target.value }))}
+                              className="mt-1 h-8"
+                            />
+                          </div>
+                        </div>
+                      </div>
                     ) : (
+                      /* Section pour Analyses juridiques */
                       <div className="mt-4 pt-4 border-t border-border">
                         <h5 className="text-sm font-semibold mb-3 text-muted-foreground">Informations de l'Analyse</h5>
                         <div className="space-y-3">
@@ -2826,8 +2894,8 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
                       </Select>
                     </div>
 
-                    {/* Informations Juridiques / Analyse - Arabe */}
-                    {!isAnalysisDocument ? (
+                    {/* Informations Juridiques / Analyse / Commentaires - Arabe */}
+                    {!isAnalysisDocument && !isCommentDocument ? (
                       <div className="mt-4 pt-4 border-t border-border">
                         <h5 className="text-sm font-semibold mb-3 text-muted-foreground" dir="rtl">المعلومات القانونية</h5>
                         <div className="space-y-3">
