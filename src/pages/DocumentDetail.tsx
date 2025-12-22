@@ -121,6 +121,16 @@ const DocumentDetail = () => {
   // Track document view
   useDocumentView(document?.id);
 
+  // Réinitialiser showOriginal quand le document ou la langue change
+  // Par défaut : montrer la version traduite si la langue interface ≠ langue document
+  useEffect(() => {
+    if (document) {
+      // showOriginal = false signifie qu'on veut la traduction si disponible
+      // On le remet toujours à false pour privilégier la version traduite
+      setShowOriginal(false);
+    }
+  }, [document?.id, language]);
+
   useEffect(() => {
     const fetchDocument = async () => {
       // Handle direct document ID route (for analyses juridiques, commentaires, blogs)
@@ -882,14 +892,14 @@ const DocumentDetail = () => {
               {/* Toggle between original and translated */}
               {document.translated_content && document.translated_content !== document.content && (
                 <Button 
-                  variant={showOriginal ? "default" : "outline"}
+                  variant={showOriginal ? "outline" : "default"}
                   onClick={() => setShowOriginal(!showOriginal)}
                   className={isRTL ? 'flex-row-reverse' : ''}
                 >
                   <FileText className={`w-4 h-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />
                   {showOriginal 
-                    ? (language === 'ar' ? 'النسخة المترجمة' : 'Version traduite')
-                    : (language === 'ar' ? 'النسخة الأصلية' : 'Version originale')
+                    ? (language === 'ar' ? 'عرض النسخة المترجمة' : 'Afficher la version traduite')
+                    : (language === 'ar' ? 'عرض النسخة الأصلية' : 'Afficher la version originale')
                   }
                 </Button>
               )}
