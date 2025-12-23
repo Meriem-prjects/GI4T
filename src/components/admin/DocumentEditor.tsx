@@ -1368,6 +1368,7 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
         .from('documents')
         .update({ 
           status: 'processed',
+          published: true,
           updated_at: new Date().toISOString()
         })
         .eq('id', editedData.id);
