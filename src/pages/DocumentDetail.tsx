@@ -632,14 +632,14 @@ const DocumentDetail = () => {
                           {language === 'ar' ? (
                             <span>
                               <span className="font-medium whitespace-nowrap">فئة الحق الأساسي:</span>{' '}
-                              <Badge className="font-normal" style={{ backgroundColor: category.color, color: '#ffffff' }}>
+                              <Badge className="font-normal whitespace-nowrap" style={{ backgroundColor: category.color, color: '#ffffff' }}>
                                 {category.name_ar || category.name}
                               </Badge>
                             </span>
                           ) : (
                             <>
                               <span className="font-medium whitespace-nowrap">Catégorie de droit fondamental:</span>
-                              <Badge className="font-normal" style={{ backgroundColor: category.color, color: '#ffffff' }}>
+                              <Badge className="font-normal whitespace-nowrap" style={{ backgroundColor: category.color, color: '#ffffff' }}>
                                 {category.name}
                               </Badge>
                             </>
@@ -719,14 +719,14 @@ const DocumentDetail = () => {
                           {language === 'ar' ? (
                             <span>
                               <span className="font-medium whitespace-nowrap">فئة الحق الأساسي:</span>{' '}
-                              <Badge className="font-normal" style={{ backgroundColor: category.color, color: '#ffffff' }}>
+                              <Badge className="font-normal whitespace-nowrap" style={{ backgroundColor: category.color, color: '#ffffff' }}>
                                 {category.name_ar || category.name}
                               </Badge>
                             </span>
                           ) : (
                             <>
                               <span className="font-medium whitespace-nowrap">Catégorie de droit fondamental:</span>
-                              <Badge className="font-normal" style={{ backgroundColor: category.color, color: '#ffffff' }}>
+                              <Badge className="font-normal whitespace-nowrap" style={{ backgroundColor: category.color, color: '#ffffff' }}>
                                 {category.name}
                               </Badge>
                             </>
