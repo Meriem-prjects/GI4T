@@ -65,6 +65,7 @@ export const useDocumentsByType = (documentTypeName: string) => {
         `)
         .eq('document_type_id', docType.id)
         .eq('published', true)
+        .eq('status', 'processed')
         .order('created_at', { ascending: false })
         .limit(20);
       
