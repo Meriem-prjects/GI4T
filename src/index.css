@@ -509,3 +509,72 @@ All colors MUST be HSL.
 [dir="rtl"] .page-carousel-dots {
   flex-direction: row-reverse;
 }
+
+/* ============================================
+   Auto-formatting styles for document content
+   ============================================ */
+
+/* First paragraph styled as title */
+.auto-title {
+  font-size: 1.5rem;
+  font-weight: 700;
+  line-height: 1.4;
+  color: hsl(var(--foreground));
+  margin-bottom: 1.5rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 2px solid hsl(var(--primary) / 0.2);
+}
+
+/* RTL title */
+[dir="rtl"] .auto-title {
+  text-align: right;
+}
+
+/* Keywords line styling */
+.auto-keywords {
+  background: hsl(var(--primary) / 0.05);
+  padding: 0.75rem 1rem;
+  border-radius: 0.5rem;
+  margin: 1rem 0;
+  border-left: 3px solid hsl(var(--primary));
+}
+
+[dir="rtl"] .auto-keywords {
+  border-left: none;
+  border-right: 3px solid hsl(var(--primary));
+}
+
+.auto-keywords strong {
+  color: hsl(var(--primary));
+  font-weight: 600;
+}
+
+/* Bibliography/References styling */
+.auto-bibliography {
+  background: hsl(var(--muted) / 0.5);
+  padding: 0.75rem 1rem;
+  border-radius: 0.5rem;
+  margin: 1rem 0;
+  font-size: 0.95rem;
+}
+
+.auto-bibliography strong {
+  color: hsl(var(--foreground));
+  font-weight: 600;
+}
+
+/* Author line styling */
+.auto-author {
+  margin: 1rem 0;
+  padding: 0.5rem 0;
+}
+
+.auto-author strong {
+  color: hsl(var(--muted-foreground));
+}
+
+.auto-author em {
+  color: hsl(var(--primary));
+  font-style: normal;
+  font-weight: 500;
+}
