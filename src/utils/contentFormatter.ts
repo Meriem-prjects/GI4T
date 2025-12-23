@@ -18,12 +18,12 @@ export const renderFormattedContent = (content: string): string => {
   processedContent = fixHehVariants(processedContent);
   
   // Check if content already contains HTML structure tags
-  // If so, apply automatic formatting enhancements before returning
+  // If so, return it as-is to avoid double transformation
   const hasHtmlStructure = /<(?:p|div|h[1-6]|br|strong|em|ul|ol|li|span|table|tr|td|th)[^>]*>/i.test(processedContent);
   
   if (hasHtmlStructure && !processedContent.includes('class="page-break"')) {
-    // Content is already HTML formatted, apply automatic styling enhancements
-    return applyAutoFormatting(processedContent);
+    // Content is already HTML formatted, just return after Arabic normalization
+    return processedContent;
   }
   // Check if content contains page-break divs - use index-based extraction for nested div support
   if (processedContent.includes('class="page-break"') || processedContent.includes("class='page-break'")) {
@@ -69,55 +69,6 @@ export const renderFormattedContent = (content: string): string => {
   }
   
   return processTextContent(processedContent);
-};
-
-/**
- * Apply automatic formatting enhancements to HTML content:
- * - First paragraph becomes a styled title
- * - Keywords line gets bold styling
- * - Legal citations get special formatting
- */
-const applyAutoFormatting = (content: string): string => {
-  if (!content) return '';
-  
-  let formattedContent = content;
-  
-  // 1. Style the first paragraph as a title (if it's not already a heading)
-  const firstParagraphMatch = formattedContent.match(/^(\s*)(<p[^>]*>)(.*?)(<\/p>)/i);
-  if (firstParagraphMatch) {
-    const [fullMatch, whitespace, openTag, innerContent, closeTag] = firstParagraphMatch;
-    // Only style as title if it doesn't already have formatting and is substantial
-    if (!/<(strong|h[1-6]|em)/i.test(innerContent) && innerContent.trim().length > 10) {
-      const styledTitle = `${whitespace}<p class="auto-title">${innerContent}</p>`;
-      formattedContent = formattedContent.replace(fullMatch, styledTitle);
-    }
-  }
-  
-  // 2. Style keywords line (Arabic: الكلمات المفاتيح, French: Mots-clés)
-  formattedContent = formattedContent.replace(
-    /(<p[^>]*>)(.*?)(الكلمات المفاتيح|Mots[- ]?clés|Keywords?)(\s*:\s*|\s*–\s*|\s*-\s*)(.*?)(<\/p>)/gi,
-    (match, openTag, before, keyword, separator, keywords, closeTag) => {
-      return `<p class="auto-keywords"><strong>${keyword}${separator}</strong>${keywords}</p>`;
-    }
-  );
-  
-  // 3. Style bibliography/references line
-  formattedContent = formattedContent.replace(
-    /(<p[^>]*>)(.*?)(المراجع|Bibliographie|Références|References)(\s*:\s*|\s*–\s*|\s*-\s*)(.*?)(<\/p>)/gi,
-    (match, openTag, before, label, separator, content, closeTag) => {
-      return `<p class="auto-bibliography"><strong>${label}${separator}</strong>${content}</p>`;
-    }
-  );
-  
-  // 4. Style author line (Arabic: الكاتب/المؤلف, French: Auteur)
-  formattedContent = formattedContent.replace(
-    /(<p[^>]*>)(.*?)(الكاتب|المؤلف|Auteur|Author)(\s*:\s*|\s*–\s*|\s*-\s*)(.*?)(<\/p>)/gi,
-    (match, openTag, before, label, separator, authorName, closeTag) => {
-      return `<p class="auto-author"><strong>${label}${separator}</strong><em>${authorName}</em></p>`;
-    }
-  );
-  
-  return formattedContent;
 };
 
 // Helper function to process text content with markdown-like formatting
