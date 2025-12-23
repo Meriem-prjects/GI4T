@@ -4,6 +4,9 @@ import { normalizeArabicText, isArabicText, fixHehVariants, normalizeArabicForDi
 /**
  * Converts simple text formatting markers to HTML for display
  * Also fixes Arabic Heh (ه) variants for proper display
+ * 
+ * IMPORTANT: If content already contains HTML tags, it returns as-is
+ * (after Arabic normalization) to avoid double transformation
  */
 export const renderFormattedContent = (content: string): string => {
   if (!content) return '';
@@ -13,6 +16,15 @@ export const renderFormattedContent = (content: string): string => {
   
   // Then fix Heh variants
   processedContent = fixHehVariants(processedContent);
+  
+  // Check if content already contains HTML structure tags
+  // If so, return it as-is to avoid double transformation
+  const hasHtmlStructure = /<(?:p|div|h[1-6]|br|strong|em|ul|ol|li|span|table|tr|td|th)[^>]*>/i.test(processedContent);
+  
+  if (hasHtmlStructure && !processedContent.includes('class="page-break"')) {
+    // Content is already HTML formatted, just return after Arabic normalization
+    return processedContent;
+  }
   // Check if content contains page-break divs - use index-based extraction for nested div support
   if (processedContent.includes('class="page-break"') || processedContent.includes("class='page-break'")) {
     const pageBreakPattern = /<div[^>]*class="[^"]*page-break[^"]*"[^>]*>/gi;
