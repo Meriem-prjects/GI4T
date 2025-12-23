@@ -81,46 +81,38 @@ const applyAutoFormatting = (content: string): string => {
   if (!content) return '';
   
   let formattedContent = content;
-  let isFirstParagraphStyled = false;
   
-  // 1. Style the first paragraph as a title (if it's not already a heading or special line)
-  const firstParagraphMatch = formattedContent.match(/^(\s*)(<p[^>]*>)([\s\S]*?)(<\/p>)/i);
+  // 1. Style the first paragraph as a title (if it's not already a heading)
+  const firstParagraphMatch = formattedContent.match(/^(\s*)(<p[^>]*>)(.*?)(<\/p>)/i);
   if (firstParagraphMatch) {
     const [fullMatch, whitespace, openTag, innerContent, closeTag] = firstParagraphMatch;
-    const trimmedContent = innerContent.trim();
-    // Only style as title if it doesn't already have formatting, is substantial, and is not a keyword/reference line
-    const isSpecialLine = /^(الكلمات المفاتيح|Mots[- ]?clés|Keywords?|المراجع|Bibliographie|Références|References|الكاتب|المؤلف|Auteur|Author)/i.test(trimmedContent);
-    if (!/<(strong|h[1-6]|em)/i.test(innerContent) && trimmedContent.length > 10 && !isSpecialLine) {
+    // Only style as title if it doesn't already have formatting and is substantial
+    if (!/<(strong|h[1-6]|em)/i.test(innerContent) && innerContent.trim().length > 10) {
       const styledTitle = `${whitespace}<p class="auto-title">${innerContent}</p>`;
       formattedContent = formattedContent.replace(fullMatch, styledTitle);
-      isFirstParagraphStyled = true;
     }
   }
   
-  // 2. Style keywords line - improved regex for Arabic format "الكلمات المفاتيح : ..."
+  // 2. Style keywords line (Arabic: الكلمات المفاتيح, French: Mots-clés)
   formattedContent = formattedContent.replace(
-    /<p[^>]*>([\s\S]*?)(الكلمات\s*المفاتيح|Mots[- ]?clés|Keywords?)(\s*:\s*|\s*–\s*|\s*-\s*|\s*)([\s\S]*?)<\/p>/gi,
-    (match, before, keyword, separator, keywords) => {
-      // If there's content before the keyword, keep original
-      if (before.trim().length > 0) return match;
+    /(<p[^>]*>)(.*?)(الكلمات المفاتيح|Mots[- ]?clés|Keywords?)(\s*:\s*|\s*–\s*|\s*-\s*)(.*?)(<\/p>)/gi,
+    (match, openTag, before, keyword, separator, keywords, closeTag) => {
       return `<p class="auto-keywords"><strong>${keyword}${separator}</strong>${keywords}</p>`;
     }
   );
   
   // 3. Style bibliography/references line
   formattedContent = formattedContent.replace(
-    /<p[^>]*>([\s\S]*?)(المراجع|Bibliographie|Références|References)(\s*:\s*|\s*–\s*|\s*-\s*|\s*)([\s\S]*?)<\/p>/gi,
-    (match, before, label, separator, refContent) => {
-      if (before.trim().length > 0) return match;
-      return `<p class="auto-bibliography"><strong>${label}${separator}</strong>${refContent}</p>`;
+    /(<p[^>]*>)(.*?)(المراجع|Bibliographie|Références|References)(\s*:\s*|\s*–\s*|\s*-\s*)(.*?)(<\/p>)/gi,
+    (match, openTag, before, label, separator, content, closeTag) => {
+      return `<p class="auto-bibliography"><strong>${label}${separator}</strong>${content}</p>`;
     }
   );
   
   // 4. Style author line (Arabic: الكاتب/المؤلف, French: Auteur)
   formattedContent = formattedContent.replace(
-    /<p[^>]*>([\s\S]*?)(الكاتب|المؤلف|Auteur|Author)(\s*:\s*|\s*–\s*|\s*-\s*|\s*)([\s\S]*?)<\/p>/gi,
-    (match, before, label, separator, authorName) => {
-      if (before.trim().length > 0) return match;
+    /(<p[^>]*>)(.*?)(الكاتب|المؤلف|Auteur|Author)(\s*:\s*|\s*–\s*|\s*-\s*)(.*?)(<\/p>)/gi,
+    (match, openTag, before, label, separator, authorName, closeTag) => {
       return `<p class="auto-author"><strong>${label}${separator}</strong><em>${authorName}</em></p>`;
     }
   );
