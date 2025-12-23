@@ -1033,19 +1033,8 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
             summary: analysis.translatedSummary || prev.summary,
             // Keep original content unchanged
             // Apply AI suggestions for dropdown fields, but preserve analysis document type
-            document_type_id: (() => {
-              const currentDocType = documentTypesRef.current.find(dt => dt.id === prev.document_type_id);
-              const isCurrentAnalysis = currentDocType?.name === 'Analyses juridiques' || 
-                                        currentDocType?.name === 'Fiche d\'analyse';
-              console.log('Document type preservation check (AR):', {
-                prevDocTypeId: prev.document_type_id,
-                documentTypesCount: documentTypesRef.current.length,
-                currentDocTypeName: currentDocType?.name,
-                isCurrentAnalysis,
-                suggestionId: suggestionIds.documentTypeId
-              });
-              return isCurrentAnalysis ? prev.document_type_id : (suggestionIds.documentTypeId || prev.document_type_id);
-            })(),
+            // IMPORTANT: Always preserve user-selected document_type_id - never let AI override it
+            document_type_id: prev.document_type_id,
             // Metadata in Arabic (primary language)
             author_ar: analysis.metadata?.author ? normalizeArabicForDisplay(analysis.metadata.author) : prev.author_ar,
             court_ar: analysis.metadata?.court ? normalizeArabicForDisplay(analysis.metadata.court) : prev.court_ar,
@@ -1117,19 +1106,8 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
             summary_ar: analysis.translatedSummary ? normalizeArabicForDisplay(analysis.translatedSummary) : prev.summary_ar,
             // Keep original content unchanged
             // Apply AI suggestions for dropdown fields, but preserve analysis document type
-            document_type_id: (() => {
-              const currentDocType = documentTypesRef.current.find(dt => dt.id === prev.document_type_id);
-              const isCurrentAnalysis = currentDocType?.name === 'Analyses juridiques' || 
-                                        currentDocType?.name === 'Fiche d\'analyse';
-              console.log('Document type preservation check (FR):', {
-                prevDocTypeId: prev.document_type_id,
-                documentTypesCount: documentTypesRef.current.length,
-                currentDocTypeName: currentDocType?.name,
-                isCurrentAnalysis,
-                suggestionId: suggestionIds.documentTypeId
-              });
-              return isCurrentAnalysis ? prev.document_type_id : (suggestionIds.documentTypeId || prev.document_type_id);
-            })(),
+            // IMPORTANT: Always preserve user-selected document_type_id - never let AI override it
+            document_type_id: prev.document_type_id,
             // Metadata in French (primary language)
             author: analysis.metadata?.author || prev.author,
             court: analysis.metadata?.court || prev.court,
