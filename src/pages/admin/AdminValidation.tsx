@@ -4,11 +4,13 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { CalendarIcon, Edit, FileText, Globe, MoreVertical, Search, CheckCircle, XCircle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { CategoryCombobox } from "@/components/admin/CategoryCombobox";
 import { useNavigate } from "react-router-dom";
+import { useDocumentTypes } from "@/hooks/useDocumentTypes";
 
 interface Document {
   id: string;
@@ -23,6 +25,7 @@ interface Document {
   keywords: string[];
   keywords_ar?: string[];
   category_id?: string;
+  document_type_id?: string;
   published?: boolean;
   document_categories?: Array<{
     category_id: string;
@@ -54,8 +57,10 @@ const AdminValidation = () => {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
+  const [documentTypeFilter, setDocumentTypeFilter] = useState<string>("all");
   const { toast } = useToast();
   const navigate = useNavigate();
+  const { data: documentTypes = [] } = useDocumentTypes();
 
   useEffect(() => {
     loadDocuments();
@@ -181,8 +186,9 @@ const AdminValidation = () => {
       doc.summary_ar?.toLowerCase().includes(searchTerm.toLowerCase());
     
     const matchesCategory = selectedCategory === "all" || doc.category_id === selectedCategory;
+    const matchesDocumentType = documentTypeFilter === "all" || doc.document_type_id === documentTypeFilter;
     
-    return matchesSearch && matchesCategory;
+    return matchesSearch && matchesCategory && matchesDocumentType;
   });
 
   if (loading) {
@@ -233,6 +239,22 @@ const AdminValidation = () => {
             allOptionText="Toutes les catégories"
             allOptionValue="all"
           />
+        </div>
+
+        <div className="w-full sm:w-[220px]">
+          <Select value={documentTypeFilter} onValueChange={setDocumentTypeFilter}>
+            <SelectTrigger>
+              <SelectValue placeholder="Type de document" />
+            </SelectTrigger>
+            <SelectContent position="popper" sideOffset={5} className="bg-background border border-border shadow-lg">
+              <SelectItem value="all">Tous les types</SelectItem>
+              {documentTypes.map((type) => (
+                <SelectItem key={type.id} value={type.id}>
+                  {type.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
       </div>
 
