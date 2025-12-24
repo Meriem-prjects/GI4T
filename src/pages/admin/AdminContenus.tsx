@@ -419,7 +419,7 @@ const AdminContenus = () => {
               <SelectTrigger className="w-64 sm:w-72">
                 <SelectValue placeholder="Catégorie" />
               </SelectTrigger>
-              <SelectContent className="bg-background border border-border shadow-lg z-[100] max-h-80">
+              <SelectContent position="popper" sideOffset={5} className="bg-background border border-border shadow-lg max-h-80">
                 <div className="p-2">
                   <div className="relative mb-2">
                     <Search className="absolute left-2 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
