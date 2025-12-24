@@ -81,6 +81,7 @@ const AdminContenus = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [categoryFilter, setCategoryFilter] = useState('all');
+  const [documentTypeFilter, setDocumentTypeFilter] = useState('all');
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [documentToDelete, setDocumentToDelete] = useState<string | null>(null);
   const [selectedDocuments, setSelectedDocuments] = useState<string[]>([]);
@@ -339,8 +340,9 @@ const AdminContenus = () => {
                          doc.original_filename.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesStatus = statusFilter === 'all' || doc.status === statusFilter;
     const matchesCategory = categoryFilter === 'all' || doc.category_id === categoryFilter;
+    const matchesDocumentType = documentTypeFilter === 'all' || doc.document_type_id === documentTypeFilter;
 
-    return matchesSearch && matchesStatus && matchesCategory;
+    return matchesSearch && matchesStatus && matchesCategory && matchesDocumentType;
   });
 
   if (loading) {
@@ -460,6 +462,19 @@ const AdminContenus = () => {
                         )}
                       </div>
                     </div>
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Select value={documentTypeFilter} onValueChange={setDocumentTypeFilter}>
+              <SelectTrigger className="w-52">
+                <SelectValue placeholder="Type de document" />
+              </SelectTrigger>
+              <SelectContent position="popper" sideOffset={5} className="bg-background border border-border shadow-lg">
+                <SelectItem value="all">Tous les types</SelectItem>
+                {documentTypes.map((type) => (
+                  <SelectItem key={type.id} value={type.id}>
+                    {type.name}
                   </SelectItem>
                 ))}
               </SelectContent>
