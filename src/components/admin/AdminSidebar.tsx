@@ -20,7 +20,10 @@ import {
   MessageSquare,
   BarChart3,
   HelpCircle,
-  LogOut
+  LogOut,
+  Scale,
+  PenTool,
+  FileCheck
 } from "lucide-react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
@@ -55,9 +58,16 @@ const AdminSidebar = ({ type, isCollapsed = false, onToggle }: AdminSidebarProps
   const [carteOpen, setCarteOpen] = useState(
     location.pathname.includes('/carte-interactive') || location.pathname.includes('/adresses-utiles')
   );
+  const [contenuOpen, setContenuOpen] = useState(
+    location.pathname.includes('/contenus') || 
+    location.pathname.includes('/blogs') || 
+    location.pathname.includes('/commentaires-content') || 
+    location.pathname.includes('/analyses-juridiques') || 
+    location.pathname.includes('/fiches-jurisprudence')
+  );
 
-  // Navigation items pour Observatoire
-  const observatoireItems = [
+  // Navigation items pour Observatoire - standalone items
+  const observatoireStandaloneItems = [
     {
       title: "Dashboard",
       icon: LayoutDashboard,
@@ -69,13 +79,26 @@ const AdminSidebar = ({ type, isCollapsed = false, onToggle }: AdminSidebarProps
       icon: Users,
       href: `${basePath}/utilisateurs`,
       description: "Gestion des utilisateurs"
-    },
-    {
-      title: "Contenus",
-      icon: Folder,
-      href: `${basePath}/contenus`,
-      description: "Gestion des documents"
-    },
+    }
+  ];
+
+  // Navigation items pour Observatoire - grouped contenus
+  const observatoireContenuItems = {
+    title: "Contenus",
+    icon: Folder,
+    isOpen: contenuOpen,
+    setIsOpen: setContenuOpen,
+    items: [
+      { title: "Tous les contenus", href: `${basePath}/contenus`, icon: Folder, description: "Vue globale" },
+      { title: "Blogs", href: `${basePath}/blogs`, icon: BookOpen, description: "Articles de blog" },
+      { title: "Commentaires", href: `${basePath}/commentaires-content`, icon: MessageSquare, description: "Commentaires juridiques" },
+      { title: "Analyses juridiques", href: `${basePath}/analyses-juridiques`, icon: PenTool, description: "Analyses et études" },
+      { title: "Fiches jurisprudence", href: `${basePath}/fiches-jurisprudence`, icon: Scale, description: "Fiches de jurisprudence" }
+    ]
+  };
+
+  // Navigation items pour Observatoire - bottom items
+  const observatoireBottomItems = [
     {
       title: "Éditeur",
       icon: FileText,
@@ -84,12 +107,12 @@ const AdminSidebar = ({ type, isCollapsed = false, onToggle }: AdminSidebarProps
     },
     {
       title: "Validation",
-      icon: FileText,
+      icon: FileCheck,
       href: `${basePath}/validation`,
       description: "Validation des contenus"
     },
     {
-      title: "Commentaires",
+      title: "Modération",
       icon: MessageSquare,
       href: `${basePath}/commentaires`,
       description: "Modérer les commentaires"
@@ -200,6 +223,104 @@ const AdminSidebar = ({ type, isCollapsed = false, onToggle }: AdminSidebarProps
         groupHover: "hover:bg-black/10"
       };
 
+  const renderNavItem = (item: { title: string; icon: any; href: string; description: string }) => {
+    const isActive = location.pathname === item.href;
+    
+    return (
+      <Link key={item.href} to={item.href}>
+        <Button
+          variant="ghost"
+          className={cn(
+            "w-full justify-start h-auto p-3 transition-all",
+            themeColors.text,
+            themeColors.hover,
+            isActive && themeColors.active,
+            isCollapsed && "px-2"
+          )}
+        >
+          <item.icon className={cn("w-5 h-5", !isCollapsed && "mr-3")} />
+          {!isCollapsed && (
+            <div className="text-left">
+              <div className="font-medium">{item.title}</div>
+              <div className={cn("text-xs", themeColors.textMuted)}>
+                {item.description}
+              </div>
+            </div>
+          )}
+        </Button>
+      </Link>
+    );
+  };
+
+  const renderCollapsibleGroup = (group: { title: string; icon: any; isOpen: boolean; setIsOpen: (open: boolean) => void; items: { title: string; href: string; icon: any; description: string }[] }) => {
+    const hasActiveItem = group.items.some(item => location.pathname === item.href);
+    
+    return (
+      <Collapsible
+        key={group.title}
+        open={group.isOpen}
+        onOpenChange={group.setIsOpen}
+        className="space-y-1"
+      >
+        <CollapsibleTrigger asChild>
+          <Button
+            variant="ghost"
+            className={cn(
+              "w-full justify-start h-auto p-3 transition-all",
+              themeColors.text,
+              themeColors.groupHover,
+              hasActiveItem && themeColors.active,
+              isCollapsed && "px-2"
+            )}
+          >
+            <group.icon className={cn("w-5 h-5", !isCollapsed && "mr-3")} />
+            {!isCollapsed && (
+              <>
+                <div className="text-left flex-1">
+                  <div className="font-medium">{group.title}</div>
+                </div>
+                <ChevronDown className={cn(
+                  "w-4 h-4 transition-transform",
+                  group.isOpen && "rotate-180"
+                )} />
+              </>
+            )}
+          </Button>
+        </CollapsibleTrigger>
+
+        {!isCollapsed && (
+          <CollapsibleContent className="space-y-1">
+            {group.items.map((item) => {
+              const isActive = location.pathname === item.href;
+              
+              return (
+                <Link key={item.href} to={item.href}>
+                  <Button
+                    variant="ghost"
+                    className={cn(
+                      "w-full justify-start h-auto p-3 pl-11 transition-all",
+                      themeColors.text,
+                      themeColors.hover,
+                      isActive && themeColors.active
+                    )}
+                  >
+                    <item.icon className="w-4 h-4 mr-3" />
+                    <div className="text-left">
+                      <div className="text-sm font-medium">{item.title}</div>
+                      <div className={cn("text-xs", themeColors.textMuted)}>
+                        {item.description}
+                      </div>
+                    </div>
+                  </Button>
+                </Link>
+              );
+            })}
+          </CollapsibleContent>
+        )}
+      </Collapsible>
+    );
+  };
+
   return (
     <aside className={cn(
       "flex flex-col transition-all duration-300 border-r border-slate-200 sticky top-0 h-screen",
@@ -232,135 +353,25 @@ const AdminSidebar = ({ type, isCollapsed = false, onToggle }: AdminSidebarProps
 
       {/* Navigation */}
       <nav className="flex-1 p-2 space-y-1 overflow-y-auto scrollbar-thin scrollbar-track-[hsl(var(--justclic-yellow))] scrollbar-thumb-gray-400 hover:scrollbar-thumb-gray-500">
-        {/* Pour Observatoire: liste simple */}
-        {type === "observatoire" && observatoireItems.map((item) => {
-          const isActive = location.pathname === item.href;
-          
-          return (
-            <Link key={item.href} to={item.href}>
-              <Button
-                variant="ghost"
-                className={cn(
-                  "w-full justify-start h-auto p-3 transition-all",
-                  themeColors.text,
-                  themeColors.hover,
-                  isActive && themeColors.active,
-                  isCollapsed && "px-2"
-                )}
-              >
-                <item.icon className={cn("w-5 h-5", !isCollapsed && "mr-3")} />
-                {!isCollapsed && (
-                  <div className="text-left">
-                    <div className="font-medium">{item.title}</div>
-                    <div className={cn("text-xs", themeColors.textMuted)}>
-                      {item.description}
-                    </div>
-                  </div>
-                )}
-              </Button>
-            </Link>
-          );
-        })}
+        {/* Pour Observatoire */}
+        {type === "observatoire" && (
+          <>
+            {/* Standalone items at top */}
+            {observatoireStandaloneItems.map(renderNavItem)}
+            
+            {/* Contenus collapsible group */}
+            {renderCollapsibleGroup(observatoireContenuItems)}
+            
+            {/* Bottom items */}
+            {observatoireBottomItems.map(renderNavItem)}
+          </>
+        )}
 
         {/* Pour Accès aux Droits: standalone items */}
-        {type === "acces-aux-droits" && accesAuxDroitsStandaloneItems.map((item) => {
-          const isActive = location.pathname === item.href;
-          
-          return (
-            <Link key={item.href} to={item.href}>
-              <Button
-                variant="ghost"
-                className={cn(
-                  "w-full justify-start h-auto p-3 transition-all",
-                  themeColors.text,
-                  themeColors.hover,
-                  isActive && themeColors.active,
-                  isCollapsed && "px-2"
-                )}
-              >
-                <item.icon className={cn("w-5 h-5", !isCollapsed && "mr-3")} />
-                {!isCollapsed && (
-                  <div className="text-left">
-                    <div className="font-medium">{item.title}</div>
-                    <div className={cn("text-xs", themeColors.textMuted)}>
-                      {item.description}
-                    </div>
-                  </div>
-                )}
-              </Button>
-            </Link>
-          );
-        })}
+        {type === "acces-aux-droits" && accesAuxDroitsStandaloneItems.map(renderNavItem)}
 
         {/* Pour Accès aux Droits: grouped items with collapsible */}
-        {type === "acces-aux-droits" && accesAuxDroitsGroupedItems.map((group) => {
-          const hasActiveItem = group.items.some(item => location.pathname === item.href);
-          
-          return (
-            <Collapsible
-              key={group.title}
-              open={group.isOpen}
-              onOpenChange={group.setIsOpen}
-              className="space-y-1"
-            >
-              <CollapsibleTrigger asChild>
-                <Button
-                  variant="ghost"
-                  className={cn(
-                    "w-full justify-start h-auto p-3 transition-all",
-                    themeColors.text,
-                    themeColors.groupHover,
-                    hasActiveItem && themeColors.active,
-                    isCollapsed && "px-2"
-                  )}
-                >
-                  <group.icon className={cn("w-5 h-5", !isCollapsed && "mr-3")} />
-                  {!isCollapsed && (
-                    <>
-                      <div className="text-left flex-1">
-                        <div className="font-medium">{group.title}</div>
-                      </div>
-                      <ChevronDown className={cn(
-                        "w-4 h-4 transition-transform",
-                        group.isOpen && "rotate-180"
-                      )} />
-                    </>
-                  )}
-                </Button>
-              </CollapsibleTrigger>
-
-              {!isCollapsed && (
-                <CollapsibleContent className="space-y-1">
-                  {group.items.map((item) => {
-                    const isActive = location.pathname === item.href;
-                    
-                    return (
-                      <Link key={item.href} to={item.href}>
-                        <Button
-                          variant="ghost"
-                          className={cn(
-                            "w-full justify-start h-auto p-3 pl-11 transition-all",
-                            themeColors.text,
-                            themeColors.hover,
-                            isActive && themeColors.active
-                          )}
-                        >
-                          <item.icon className="w-4 h-4 mr-3" />
-                          <div className="text-left">
-                            <div className="text-sm font-medium">{item.title}</div>
-                            <div className={cn("text-xs", themeColors.textMuted)}>
-                              {item.description}
-                            </div>
-                          </div>
-                        </Button>
-                      </Link>
-                    );
-                  })}
-                </CollapsibleContent>
-              )}
-            </Collapsible>
-          );
-        })}
+        {type === "acces-aux-droits" && accesAuxDroitsGroupedItems.map(renderCollapsibleGroup)}
       </nav>
 
       {/* Footer with logout */}
