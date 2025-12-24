@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { stripFormattedContent } from '@/utils/contentFormatter';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -625,7 +626,7 @@ const AdminContenus = () => {
               {/* Summary */}
               {document.summary && (
                 <p className="text-sm text-muted-foreground line-clamp-3">
-                  {document.summary}
+                  {stripFormattedContent(document.summary)}
                 </p>
               )}
 
