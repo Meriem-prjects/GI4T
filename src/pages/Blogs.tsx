@@ -10,6 +10,7 @@ import { useDocumentsByType } from "@/hooks/useDocumentsByType";
 import { format } from "date-fns";
 import { fr, ar } from "date-fns/locale";
 import { Skeleton } from "@/components/ui/skeleton";
+import { stripFormattedContent } from "@/utils/contentFormatter";
 
 const Blogs = () => {
   const { isRTL, language } = useLanguage();
@@ -107,7 +108,10 @@ const Blogs = () => {
                         <CardTitle className="text-xl mb-3">{title}</CardTitle>
                         {summary && (
                           <CardDescription className="text-base mb-4">
-                            {summary.length > 200 ? `${summary.substring(0, 200)}...` : summary}
+                            {(() => {
+                              const cleanSummary = stripFormattedContent(summary);
+                              return cleanSummary.length > 200 ? `${cleanSummary.substring(0, 200)}...` : cleanSummary;
+                            })()}
                           </CardDescription>
                         )}
                         
