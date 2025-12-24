@@ -492,25 +492,28 @@ const AdminContentByType: React.FC<AdminContentByTypeProps> = ({
                     <DropdownMenuItem asChild>
                       <Link to={`/admin/observatoire/editeur?doc=${document.id}`}>
                         <Edit className="w-4 h-4 mr-2" />
-                        Modifier
+                        Éditer
                       </Link>
                     </DropdownMenuItem>
-                    <DropdownMenuItem asChild>
-                      <Link to={`/observatoire/document/${document.id}`} target="_blank">
-                        <Eye className="w-4 h-4 mr-2" />
-                        Voir
-                      </Link>
-                    </DropdownMenuItem>
+                    {/* Faire valider - uniquement pour les brouillons */}
                     {document.status === 'draft' && (
                       <DropdownMenuItem onClick={() => submitForValidation(document.id)}>
                         <CheckCircle className="w-4 h-4 mr-2" />
-                        Soumettre à validation
+                        Faire valider
                       </DropdownMenuItem>
                     )}
-                    {document.status !== 'draft' && (
+                    {/* Retour à l'édition - pour les documents en validation */}
+                    {document.status === 'pending_validation' && (
                       <DropdownMenuItem onClick={() => updateDocumentStatus(document.id, 'draft')}>
                         <Clock className="w-4 h-4 mr-2" />
-                        Repasser en brouillon
+                        Retour à l'édition
+                      </DropdownMenuItem>
+                    )}
+                    {/* Mettre en brouillon - pour les documents publiés */}
+                    {document.status === 'processed' && (
+                      <DropdownMenuItem onClick={() => updateDocumentStatus(document.id, 'draft')}>
+                        <Clock className="w-4 h-4 mr-2" />
+                        Mettre en brouillon
                       </DropdownMenuItem>
                     )}
                     <DropdownMenuItem
