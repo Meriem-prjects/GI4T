@@ -417,14 +417,32 @@ const DocumentDetail = () => {
     (language === 'fr' && document.language === 'ar') ||
     (language === 'ar' && document.language === 'fr')
   );
+  
+  // DEBUG: Log translation state
+  console.log('DEBUG Translation State:', { 
+    showOriginal, 
+    language, 
+    docLanguage: document.language, 
+    wantsTranslation, 
+    hasTranslatedContent: !!document.translated_content,
+    translatedContentLength: document.translated_content?.length || 0
+  });
 
   // Build paginated content from page_contents if available and has multiple pages
   const buildPaginatedContent = (): string => {
     const rawPageContents = document.page_contents;
     
+    // DEBUG: Log at start of buildPaginatedContent
+    console.log('DEBUG buildPaginatedContent:', { 
+      wantsTranslation, 
+      hasTranslatedContent: !!document.translated_content,
+      rawPageContentsLength: Array.isArray(rawPageContents) ? rawPageContents.length : 0
+    });
+    
     // Si on veut la traduction et qu'on a translated_content global, l'utiliser directement
     // (car les pages individuelles n'ont souvent pas de traductions)
     if (wantsTranslation && document.translated_content) {
+      console.log('DEBUG: Using translated_content, length:', document.translated_content.length);
       return document.translated_content;
     }
     
