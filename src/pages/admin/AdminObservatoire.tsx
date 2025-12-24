@@ -10,6 +10,10 @@ import AdminParametres from "./AdminParametres";
 import AdminUsersManagement from "@/components/admin/AdminUsersManagement";
 import AdminCommentaires from "./AdminCommentaires";
 import AdminStatistiques from "./AdminStatistiques";
+import AdminBlogs from "./AdminBlogs";
+import AdminCommentairesContent from "./AdminCommentairesContent";
+import AdminAnalysesJuridiques from "./AdminAnalysesJuridiques";
+import AdminFichesJurisprudence from "./AdminFichesJurisprudence";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { LogOut, User } from "lucide-react";
@@ -55,6 +59,10 @@ const AdminObservatoire = () => {
             <Route index element={<AdminDashboard type="observatoire" />} />
             <Route path="utilisateurs" element={<AdminUsersManagement />} />
             <Route path="contenus" element={<AdminContenus />} />
+            <Route path="blogs" element={<AdminBlogs />} />
+            <Route path="commentaires-content" element={<AdminCommentairesContent />} />
+            <Route path="analyses-juridiques" element={<AdminAnalysesJuridiques />} />
+            <Route path="fiches-jurisprudence" element={<AdminFichesJurisprudence />} />
             <Route path="editeur" element={<AdminEditor />} />
             <Route path="validation" element={<AdminValidation />} />
             <Route path="commentaires" element={<AdminCommentaires />} />

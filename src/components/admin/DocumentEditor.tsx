@@ -1317,9 +1317,20 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
         description: "Le document a été sauvegardé en tant que brouillon",
       });
       
-      // Navigate to content section after a short delay
+      // Mapping des types de documents vers leurs routes respectives
+      const getRedirectRoute = (documentTypeId: string | undefined) => {
+        const typeRoutes: Record<string, string> = {
+          'dd7b55de-4ece-41de-959e-b3015ea1cb9e': '/admin/observatoire/blogs',
+          'ac21f74d-174e-4f46-b60c-d5f68ad79a8c': '/admin/observatoire/commentaires-content',
+          'e9fc79ba-d10d-4e58-b4d8-a09dd2f0dae1': '/admin/observatoire/analyses-juridiques',
+          'e5f9c4af-6860-4b52-821d-a7e133934686': '/admin/observatoire/fiches-jurisprudence',
+        };
+        return typeRoutes[documentTypeId || ''] || '/admin/observatoire/contenus';
+      };
+      
+      // Navigate to the appropriate content section after a short delay
       setTimeout(() => {
-        window.location.href = '/admin/observatoire/contenus';
+        window.location.href = getRedirectRoute(editedData.document_type_id);
       }, 1500);
     } catch (error) {
       console.error('Save error details:', error);
