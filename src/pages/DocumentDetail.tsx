@@ -431,11 +431,20 @@ const DocumentDetail = () => {
     // showOriginal = true → Version originale complète (traduite page par page si nécessaire)
     
     if (!showOriginal) {
-      // "Version traduite par l'IA" - utiliser translated_content global si disponible
-      if (needsTranslation && document.translated_content) {
-        return document.translated_content;
+      // "Version traduite par l'IA (résumée)" - afficher le RÉSUMÉ court dans la langue de l'interface
+      const summaryToShow = language === 'ar' ? document.summary_ar : document.summary;
+      
+      if (summaryToShow && summaryToShow.trim() !== '') {
+        return summaryToShow;
       }
-      // Pas de traduction nécessaire ou pas disponible, afficher le contenu original
+      
+      // Fallback sur le résumé de l'autre langue s'il n'y a pas de résumé dans la langue actuelle
+      const fallbackSummary = language === 'ar' ? document.summary : document.summary_ar;
+      if (fallbackSummary && fallbackSummary.trim() !== '') {
+        return fallbackSummary;
+      }
+      
+      // Dernier fallback sur le contenu si pas de résumé
       return document.content || '';
     }
     
@@ -482,13 +491,9 @@ const DocumentDetail = () => {
   const paginatedContent = buildPaginatedContent();
   const formattedContent = renderFormattedContent(paginatedContent);
   
-  // Détecter si on affiche la traduction IA (quand showOriginal = false et traduction dispo)
-  const isShowingAITranslation = !showOriginal && needsTranslation && !!document.translated_content;
-  
-  // Détecter si la traduction est incomplète (résumé seulement)
-  const isTranslationIncomplete = needsTranslation && document.translated_content && (
-    document.translated_content.length < (document.content?.length || 0) * 0.5
-  );
+  // Détecter si on affiche le résumé IA (quand showOriginal = false et résumé dispo)
+  const hasSummary = !!(document.summary || document.summary_ar);
+  const isShowingAISummary = !showOriginal && hasSummary;
   
   // Use Arabic fields based on interface language
   const currentTitle = language === 'ar' && document.title_ar ? document.title_ar : document.title;
@@ -900,8 +905,8 @@ const DocumentDetail = () => {
 
             {/* Action Buttons */}
             <div className={`flex flex-wrap items-center justify-center gap-4 mb-8 ${isRTL ? 'flex-row-reverse' : ''}`}>
-              {/* Toggle between AI summary and full original */}
-              {document.translated_content && document.translated_content !== document.content && (
+              {/* Toggle between AI summary and full content */}
+              {hasSummary && (
                 <Button 
                   variant={showOriginal ? "default" : "outline"}
                   onClick={() => setShowOriginal(!showOriginal)}
@@ -909,7 +914,7 @@ const DocumentDetail = () => {
                 >
                   <FileText className={`w-4 h-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />
                   {showOriginal 
-                    ? (language === 'ar' ? 'عرض النسخة المختصرة' : 'Afficher la version IA (résumée)')
+                    ? (language === 'ar' ? 'عرض الملخص' : 'Afficher le résumé')
                     : (language === 'ar' ? 'عرض النسخة الكاملة' : 'Afficher la version complète')
                   }
                 </Button>
@@ -958,36 +963,17 @@ const DocumentDetail = () => {
             </div>
 
             {/* Content Type Indicator */}
-            {document.translated_content && document.translated_content !== document.content && (
+            {hasSummary && (
               <div className="text-center mb-6 space-y-2">
                 <Badge variant="secondary" className="bg-blue-100 text-blue-800">
-                  {isShowingAITranslation 
-                    ? (language === 'ar' ? 'النسخة المترجمة بالذكاء الاصطناعي (مختصرة)' : "Version traduite par l'IA (résumée)")
+                  {isShowingAISummary 
+                    ? (language === 'ar' ? 'الملخص' : "Résumé")
                     : (language === 'ar' ? 'النسخة الكاملة' : 'Version complète')
                   }
                 </Badge>
-                {isTranslationIncomplete && isShowingAITranslation && (
-                  <p className="text-sm text-muted-foreground">
-                    {language === 'ar' 
-                      ? 'ملاحظة: هذه ترجمة ملخصة. الترجمة الكاملة للمقال غير متوفرة حاليًا.'
-                      : "Note : Ceci est une traduction résumée. La traduction complète de l'article n'est pas encore disponible."
-                    }
-                  </p>
-                )}
               </div>
             )}
             
-            {/* Message when translation is needed but not available */}
-            {needsTranslation && !document.translated_content && (
-              <div className="text-center mb-6 p-4 bg-amber-50 border border-amber-200 rounded-lg">
-                <p className="text-sm text-amber-800">
-                  {language === 'ar' 
-                    ? 'ملاحظة: هذا المقال متوفر فقط بلغته الأصلية (الفرنسية). الترجمة العربية غير متوفرة حاليًا.'
-                    : "Note : Cet article est disponible uniquement dans sa langue originale (arabe). La traduction française n'est pas encore disponible."
-                  }
-                </p>
-              </div>
-            )}
           </div>
 
 
