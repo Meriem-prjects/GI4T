@@ -298,7 +298,7 @@ const AdminSidebar = ({ type, isCollapsed = false, onToggle }: AdminSidebarProps
                   <Button
                     variant="ghost"
                     className={cn(
-                      "w-full justify-start h-auto p-3 pl-11 transition-all",
+                      "w-full justify-start h-auto p-3 transition-all",
                       themeColors.text,
                       themeColors.hover,
                       isActive && themeColors.active
