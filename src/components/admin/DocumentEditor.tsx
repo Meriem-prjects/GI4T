@@ -1285,6 +1285,7 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
           bibliography: editedData.bibliography?.trim() || null,
           bibliography_ar: editedData.bibliography_ar?.trim() ? sanitizeArabicTextFrontend(editedData.bibliography_ar.trim()) : null,
           textual_metadata: editedData.language === 'ar' && editedData.textual_metadata ? sanitizeArabicTextFrontend(editedData.textual_metadata) : editedData.textual_metadata || null,
+          page_contents: editedData.page_contents ? JSON.parse(JSON.stringify(editedData.page_contents)) : null,
         };
 
         const { error } = await supabase
