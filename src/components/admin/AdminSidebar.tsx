@@ -85,11 +85,11 @@ const AdminSidebar = ({ type, isCollapsed = false, onToggle }: AdminSidebarProps
   // Navigation items pour Observatoire - grouped contenus
   const observatoireContenuItems = {
     title: "Contenus",
+    description: "Gestion des contenus",
     icon: Folder,
     isOpen: contenuOpen,
     setIsOpen: setContenuOpen,
     items: [
-      { title: "Tous les contenus", href: `${basePath}/contenus`, icon: Folder, description: "Vue globale" },
       { title: "Blogs", href: `${basePath}/blogs`, icon: BookOpen, description: "Articles de blog" },
       { title: "Commentaires", href: `${basePath}/commentaires-content`, icon: MessageSquare, description: "Commentaires juridiques" },
       { title: "Analyses juridiques", href: `${basePath}/analyses-juridiques`, icon: PenTool, description: "Analyses et études" },
@@ -252,7 +252,7 @@ const AdminSidebar = ({ type, isCollapsed = false, onToggle }: AdminSidebarProps
     );
   };
 
-  const renderCollapsibleGroup = (group: { title: string; icon: any; isOpen: boolean; setIsOpen: (open: boolean) => void; items: { title: string; href: string; icon: any; description: string }[] }) => {
+  const renderCollapsibleGroup = (group: { title: string; description?: string; icon: any; isOpen: boolean; setIsOpen: (open: boolean) => void; items: { title: string; href: string; icon: any; description: string }[] }) => {
     const hasActiveItem = group.items.some(item => location.pathname === item.href);
     
     return (
@@ -278,6 +278,11 @@ const AdminSidebar = ({ type, isCollapsed = false, onToggle }: AdminSidebarProps
               <>
                 <div className="text-left flex-1">
                   <div className="font-medium">{group.title}</div>
+                  {group.description && (
+                    <div className={cn("text-xs", themeColors.textMuted)}>
+                      {group.description}
+                    </div>
+                  )}
                 </div>
                 <ChevronDown className={cn(
                   "w-4 h-4 transition-transform",
