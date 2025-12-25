@@ -116,8 +116,7 @@ const DocumentDetail = () => {
   const [suggestedDocuments, setSuggestedDocuments] = useState<SuggestedDocument[]>([]);
   const [relatedDocuments, setRelatedDocuments] = useState<SuggestedDocument[]>([]);
   const [loading, setLoading] = useState(true);
-  // Toggle entre "Résumé IA" et "Texte complet" - par défaut on affiche le résumé IA traduit
-  const [showFullOriginal, setShowFullOriginal] = useState(false);
+  const [showInDocumentLanguage, setShowInDocumentLanguage] = useState(false);
   
   // Track document view
   useDocumentView(document?.id);
@@ -125,7 +124,7 @@ const DocumentDetail = () => {
   // Réinitialiser quand le document change
   useEffect(() => {
     if (document) {
-      setShowFullOriginal(false);
+      setShowInDocumentLanguage(false);
     }
   }, [document?.id]);
 
@@ -393,78 +392,80 @@ const DocumentDetail = () => {
   }
 
   // Logique d'affichage du contenu :
-  // Le contenu suit TOUJOURS la langue de l'interface
-  // showFullOriginal bascule entre "Résumé IA" et "Texte complet"
+  // - Par défaut : le contenu s'affiche dans la langue de l'interface
+  // - Si showInDocumentLanguage = true : on affiche dans la langue originale du document
   
   const documentIsArabic = document.language === 'ar';
   const documentIsFrench = document.language === 'fr';
   const interfaceIsFrench = language === 'fr';
   const interfaceIsArabic = language === 'ar';
   
-  // On a besoin de traduction si la langue interface ≠ langue document
-  // (indépendamment de showFullOriginal - on traduit TOUJOURS dans la langue de l'interface)
-  const needsTranslation = 
+  // On a besoin de traduction si la langue interface ≠ langue document ET qu'on ne veut pas voir dans la langue du document
+  const needsTranslation = !showInDocumentLanguage && (
     (interfaceIsFrench && documentIsArabic) ||
-    (interfaceIsArabic && documentIsFrench);
+    (interfaceIsArabic && documentIsFrench)
+  );
   
-  // La langue d'affichage suit TOUJOURS la langue de l'interface
-  const displayLanguage = language;
+  // Détermine la langue d'affichage effective
+  const displayLanguage = showInDocumentLanguage 
+    ? document.language // Langue originale du document
+    : language; // Langue de l'interface
 
   // Build paginated content from page_contents if available and has multiple pages
   const buildPaginatedContent = (): string => {
     const rawPageContents = document.page_contents;
     
-    if (showFullOriginal) {
-      // Mode "Texte complet" : afficher tout le contenu, traduit si nécessaire
-      if (needsTranslation) {
-        // Interface différente du document → traduire les pages si possible
-        if (rawPageContents && Array.isArray(rawPageContents) && rawPageContents.length > 1) {
-          const pageContents = rawPageContents as PageContent[];
-          const allPagesHaveTranslation = pageContents.every(
-            page => page.translated_content && page.translated_content.trim() !== ''
-          );
-          
-          if (allPagesHaveTranslation) {
-            // Retourner les pages traduites
-            const sortedPages = [...pageContents].sort((a, b) => (a.pageNumber || 0) - (b.pageNumber || 0));
-            return sortedPages.map(page => 
-              `<div class="page-break" data-page="${page.pageNumber}">${page.translated_content || ''}</div>`
-            ).join('\n');
-          }
-        }
-        // Pas de traduction page par page → utiliser translated_content global s'il existe
-        if (document.translated_content) {
-          return document.translated_content;
-        }
-        // Pas de traduction disponible → afficher l'original
-        return document.content || '';
-      }
-      // Pas besoin de traduction → contenu original paginé
-      if (!rawPageContents || !Array.isArray(rawPageContents) || rawPageContents.length <= 1) {
-        return document.content || '';
-      }
-      const sortedPages = [...rawPageContents].sort((a: PageContent, b: PageContent) => (a.pageNumber || 0) - (b.pageNumber || 0));
-      return sortedPages.map((page: PageContent) => 
-        `<div class="page-break" data-page="${page.pageNumber}">${page.content || ''}</div>`
-      ).join('\n');
-    } else {
-      // Mode "Résumé IA" (par défaut) : afficher le résumé traduit
-      if (needsTranslation && document.translated_content) {
-        return document.translated_content;
-      }
-      // Pas besoin de traduction → contenu original (résumé ou content)
+    // Si on a besoin de traduction et qu'on a translated_content global, l'utiliser
+    if (needsTranslation && document.translated_content) {
+      return document.translated_content;
+    }
+    
+    // Si pas besoin de traduction OU pas de translated_content, utiliser le contenu original
+    if (!rawPageContents || !Array.isArray(rawPageContents) || rawPageContents.length <= 1) {
       return document.content || '';
     }
+    
+    const pageContents = rawPageContents as PageContent[];
+    
+    // Si on veut la traduction, vérifier si les pages ont des traductions
+    const allPagesHaveTranslation = pageContents.every(
+      page => page.translated_content && page.translated_content.trim() !== ''
+    );
+    
+    // Sort pages by page number
+    const sortedPages = [...pageContents].sort((a, b) => (a.pageNumber || 0) - (b.pageNumber || 0));
+    
+    return sortedPages.map(page => {
+      let pageContent: string;
+      
+      if (showInDocumentLanguage) {
+        // Affichage dans la langue du document = toujours page.content
+        pageContent = page.content || '';
+      } else if (needsTranslation && allPagesHaveTranslation) {
+        // Version traduite avec traductions de pages disponibles
+        pageContent = page.translated_content || '';
+      } else {
+        // Interface dans la même langue que le document : afficher l'original
+        pageContent = page.content || '';
+      }
+      
+      return `<div class="page-break" data-page="${page.pageNumber}">
+        ${pageContent}
+      </div>`;
+    }).join('\n');
   };
 
   const paginatedContent = buildPaginatedContent();
   const formattedContent = renderFormattedContent(paginatedContent);
   
-  // Détecter si on affiche le résumé traduit
-  const isShowingTranslatedSummary = !showFullOriginal && needsTranslation && !!document.translated_content;
+  // Détecter si on affiche la traduction (complète ou partielle)
+  const isShowingTranslated = needsTranslation && !!document.translated_content;
   
-  // Détecter si le texte complet est traduit
-  const isShowingTranslatedFull = showFullOriginal && needsTranslation && !!document.translated_content;
+  // Détecter si la traduction est incomplète (résumé seulement, pas de traduction page par page)
+  const isTranslationIncomplete = needsTranslation && document.translated_content && (
+    // La traduction est incomplète si elle est significativement plus courte que l'original
+    document.translated_content.length < (document.content?.length || 0) * 0.5
+  );
   
   // Use Arabic fields based on interface language
   const currentTitle = language === 'ar' && document.title_ar ? document.title_ar : document.title;
@@ -876,17 +877,19 @@ const DocumentDetail = () => {
 
             {/* Action Buttons */}
             <div className={`flex flex-wrap items-center justify-center gap-4 mb-8 ${isRTL ? 'flex-row-reverse' : ''}`}>
-              {/* Toggle entre Résumé IA et Texte complet */}
+              {/* Toggle pour voir dans la langue originale du document */}
               {document.translated_content && document.translated_content !== document.content && (
                 <Button 
-                  variant={showFullOriginal ? "default" : "outline"}
-                  onClick={() => setShowFullOriginal(!showFullOriginal)}
+                  variant={showInDocumentLanguage ? "default" : "outline"}
+                  onClick={() => setShowInDocumentLanguage(!showInDocumentLanguage)}
                   className={isRTL ? 'flex-row-reverse' : ''}
                 >
                   <FileText className={`w-4 h-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />
-                  {showFullOriginal 
-                    ? (language === 'ar' ? 'عرض الملخص المترجم' : "Afficher le résumé IA")
-                    : (language === 'ar' ? 'عرض النص الكامل' : "Afficher le texte complet")
+                  {showInDocumentLanguage 
+                    ? (language === 'ar' ? 'العودة إلى لغة الواجهة' : "Revenir à la langue de l'interface")
+                    : (language === 'ar' 
+                        ? `عرض باللغة الأصلية (${documentIsArabic ? 'عربية' : 'فرنسية'})`
+                        : `Voir dans la langue originale (${documentIsArabic ? 'arabe' : 'français'})`)
                   }
                 </Button>
               )}
@@ -937,16 +940,19 @@ const DocumentDetail = () => {
             {document.translated_content && document.translated_content !== document.content && (
               <div className="text-center mb-6 space-y-2">
                 <Badge variant="secondary" className="bg-blue-100 text-blue-800">
-                  {showFullOriginal 
-                    ? (language === 'ar' ? 'النص الكامل' : "Texte complet")
-                    : (language === 'ar' ? 'الملخص المترجم بالذكاء الاصطناعي' : "Résumé traduit par l'IA")
+                  {isShowingTranslated 
+                    ? (language === 'ar' ? 'النسخة المترجمة بالذكاء الاصطناعي' : "Version traduite par l'IA")
+                    : (language === 'ar' ? 'النسخة الأصلية' : 'Version originale')
                   }
-                  {(isShowingTranslatedSummary || isShowingTranslatedFull) && (
-                    <span className="ml-2">
-                      ({language === 'ar' ? 'مترجم' : 'traduit'})
-                    </span>
-                  )}
                 </Badge>
+                {isTranslationIncomplete && isShowingTranslated && (
+                  <p className="text-sm text-muted-foreground">
+                    {language === 'ar' 
+                      ? 'ملاحظة: هذه ترجمة ملخصة. الترجمة الكاملة للمقال غير متوفرة حاليًا.'
+                      : "Note : Ceci est une traduction résumée. La traduction complète de l'article n'est pas encore disponible."
+                    }
+                  </p>
+                )}
               </div>
             )}
             
