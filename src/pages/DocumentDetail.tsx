@@ -412,64 +412,70 @@ const DocumentDetail = () => {
     }
   }
 
-  // L'affichage SUIT TOUJOURS la langue de l'interface
-  // Si interface FR et document AR → on veut le contenu traduit en FR
-  // Si interface AR et document AR → on veut le contenu original en AR
-  const documentIsArabic = document.language === 'ar';
-  const documentIsFrench = document.language === 'fr';
-  const needsFrenchContent = language === 'fr';
-  const needsArabicContent = language === 'ar';
+  // Déterminer si on veut la version traduite (langue interface ≠ langue document)
+  const wantsTranslation = !showOriginal && (
+    (language === 'fr' && document.language === 'ar') ||
+    (language === 'ar' && document.language === 'fr')
+  );
   
-  // On a besoin de traduction quand la langue interface ≠ langue du document
-  const needsTranslation = (needsFrenchContent && documentIsArabic) || (needsArabicContent && documentIsFrench);
+  // DEBUG: Log translation state
+  console.log('DEBUG Translation State:', { 
+    showOriginal, 
+    language, 
+    docLanguage: document.language, 
+    wantsTranslation, 
+    hasTranslatedContent: !!document.translated_content,
+    translatedContentLength: document.translated_content?.length || 0
+  });
 
   // Build paginated content from page_contents if available and has multiple pages
   const buildPaginatedContent = (): string => {
     const rawPageContents = document.page_contents;
     
-    // showOriginal = false → Version traduite par l'IA (résumée)
-    // showOriginal = true → Version originale complète (traduite page par page si nécessaire)
+    // DEBUG: Log at start of buildPaginatedContent
+    console.log('DEBUG buildPaginatedContent:', { 
+      wantsTranslation, 
+      hasTranslatedContent: !!document.translated_content,
+      rawPageContentsLength: Array.isArray(rawPageContents) ? rawPageContents.length : 0
+    });
     
-    if (!showOriginal) {
-      // "Version traduite par l'IA" - utiliser translated_content global si disponible
-      if (needsTranslation && document.translated_content) {
-        return document.translated_content;
-      }
-      // Pas de traduction nécessaire ou pas disponible, afficher le contenu original
-      return document.content || '';
+    // Si on veut la traduction et qu'on a translated_content global, l'utiliser directement
+    // (car les pages individuelles n'ont souvent pas de traductions)
+    if (wantsTranslation && document.translated_content) {
+      console.log('DEBUG: Using translated_content, length:', document.translated_content.length);
+      return document.translated_content;
     }
-    
-    // showOriginal = true → "Version originale" 
-    // Mais on affiche TOUJOURS dans la langue de l'interface
     
     // Validate and parse page_contents from JSON
     if (!rawPageContents || !Array.isArray(rawPageContents) || rawPageContents.length <= 1) {
-      // Pas de contenu paginé, utiliser le contenu simple
-      if (needsTranslation && document.translated_content) {
-        // Interface différente de la langue du document → utiliser traduction si disponible
-        return document.translated_content;
+      // Si on veut la traduction mais pas de translated_content, retourner le contenu original
+      if (wantsTranslation) {
+        return document.content || '';
       }
-      return document.content || '';
+      return displayContent;
     }
     
     const pageContents = rawPageContents as PageContent[];
     
-    // Sort pages by page number
-    const sortedPages = [...pageContents].sort((a, b) => (a.pageNumber || 0) - (b.pageNumber || 0));
-    
-    // Vérifier si les pages ont des traductions
-    const pagesHaveTranslation = pageContents.some(
+    // Si on veut la traduction, vérifier si les pages ont des traductions
+    const allPagesHaveTranslation = pageContents.every(
       page => page.translated_content && page.translated_content.trim() !== ''
     );
+    
+    // Sort pages by page number
+    const sortedPages = [...pageContents].sort((a, b) => (a.pageNumber || 0) - (b.pageNumber || 0));
     
     return sortedPages.map(page => {
       let pageContent: string;
       
-      if (needsTranslation && pagesHaveTranslation) {
-        // Interface différente de la langue du document → utiliser traduction page par page si disponible
-        pageContent = page.translated_content || page.content || '';
+      if (showOriginal) {
+        // Version originale = toujours page.content
+        pageContent = page.content || '';
+      } else if (wantsTranslation && allPagesHaveTranslation) {
+        // Version traduite avec traductions de pages disponibles
+        pageContent = page.translated_content || '';
       } else {
-        // Interface dans la même langue que le document → afficher l'original
+        // Interface dans la même langue que le document : afficher l'original
         pageContent = page.content || '';
       }
       
@@ -482,11 +488,12 @@ const DocumentDetail = () => {
   const paginatedContent = buildPaginatedContent();
   const formattedContent = renderFormattedContent(paginatedContent);
   
-  // Détecter si on affiche la traduction IA (quand showOriginal = false et traduction dispo)
-  const isShowingAITranslation = !showOriginal && needsTranslation && !!document.translated_content;
+  // Détecter si on affiche la traduction (complète ou partielle)
+  const isShowingTranslated = wantsTranslation && !!document.translated_content && !showOriginal;
   
-  // Détecter si la traduction est incomplète (résumé seulement)
-  const isTranslationIncomplete = needsTranslation && document.translated_content && (
+  // Détecter si la traduction est incomplète (résumé seulement, pas de traduction page par page)
+  const isTranslationIncomplete = wantsTranslation && document.translated_content && (
+    // La traduction est incomplète si elle est significativement plus courte que l'original
     document.translated_content.length < (document.content?.length || 0) * 0.5
   );
   
@@ -900,17 +907,17 @@ const DocumentDetail = () => {
 
             {/* Action Buttons */}
             <div className={`flex flex-wrap items-center justify-center gap-4 mb-8 ${isRTL ? 'flex-row-reverse' : ''}`}>
-              {/* Toggle between AI summary and full original */}
+              {/* Toggle between original and translated */}
               {document.translated_content && document.translated_content !== document.content && (
                 <Button 
-                  variant={showOriginal ? "default" : "outline"}
+                  variant={showOriginal ? "outline" : "default"}
                   onClick={() => setShowOriginal(!showOriginal)}
                   className={isRTL ? 'flex-row-reverse' : ''}
                 >
                   <FileText className={`w-4 h-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />
                   {showOriginal 
-                    ? (language === 'ar' ? 'عرض النسخة المختصرة' : 'Afficher la version IA (résumée)')
-                    : (language === 'ar' ? 'عرض النسخة الكاملة' : 'Afficher la version complète')
+                    ? (language === 'ar' ? 'عرض النسخة المترجمة' : 'Afficher la version traduite')
+                    : (language === 'ar' ? 'عرض النسخة الأصلية' : 'Afficher la version originale')
                   }
                 </Button>
               )}
@@ -961,12 +968,12 @@ const DocumentDetail = () => {
             {document.translated_content && document.translated_content !== document.content && (
               <div className="text-center mb-6 space-y-2">
                 <Badge variant="secondary" className="bg-blue-100 text-blue-800">
-                  {isShowingAITranslation 
-                    ? (language === 'ar' ? 'النسخة المترجمة بالذكاء الاصطناعي (مختصرة)' : "Version traduite par l'IA (résumée)")
-                    : (language === 'ar' ? 'النسخة الكاملة' : 'Version complète')
+                  {isShowingTranslated 
+                    ? (language === 'ar' ? 'النسخة المترجمة بالذكاء الاصطناعي' : "Version traduite par l'IA")
+                    : (language === 'ar' ? 'النسخة الأصلية' : 'Version originale')
                   }
                 </Badge>
-                {isTranslationIncomplete && isShowingAITranslation && (
+                {isTranslationIncomplete && isShowingTranslated && (
                   <p className="text-sm text-muted-foreground">
                     {language === 'ar' 
                       ? 'ملاحظة: هذه ترجمة ملخصة. الترجمة الكاملة للمقال غير متوفرة حاليًا.'
@@ -978,7 +985,7 @@ const DocumentDetail = () => {
             )}
             
             {/* Message when translation is needed but not available */}
-            {needsTranslation && !document.translated_content && (
+            {wantsTranslation && !document.translated_content && (
               <div className="text-center mb-6 p-4 bg-amber-50 border border-amber-200 rounded-lg">
                 <p className="text-sm text-amber-800">
                   {language === 'ar' 
