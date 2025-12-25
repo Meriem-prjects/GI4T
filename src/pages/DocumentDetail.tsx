@@ -116,17 +116,20 @@ const DocumentDetail = () => {
   const [suggestedDocuments, setSuggestedDocuments] = useState<SuggestedDocument[]>([]);
   const [relatedDocuments, setRelatedDocuments] = useState<SuggestedDocument[]>([]);
   const [loading, setLoading] = useState(true);
-  const [showInDocumentLanguage, setShowInDocumentLanguage] = useState(false);
+  const [showOriginal, setShowOriginal] = useState(false);
   
   // Track document view
   useDocumentView(document?.id);
 
-  // Réinitialiser quand le document change
+  // Réinitialiser showOriginal quand le document ou la langue change
+  // Par défaut : montrer la version traduite si la langue interface ≠ langue document
   useEffect(() => {
     if (document) {
-      setShowInDocumentLanguage(false);
+      // showOriginal = false signifie qu'on veut la traduction si disponible
+      // On le remet toujours à false pour privilégier la version traduite
+      setShowOriginal(false);
     }
-  }, [document?.id]);
+  }, [document?.id, language]);
 
   useEffect(() => {
     const fetchDocument = async () => {
@@ -391,38 +394,65 @@ const DocumentDetail = () => {
     );
   }
 
-  // Logique d'affichage du contenu :
-  // - Par défaut : le contenu s'affiche dans la langue de l'interface
-  // - Si showInDocumentLanguage = true : on affiche dans la langue originale du document
-  
-  const documentIsArabic = document.language === 'ar';
-  const documentIsFrench = document.language === 'fr';
-  const interfaceIsFrench = language === 'fr';
-  const interfaceIsArabic = language === 'ar';
-  
-  // On a besoin de traduction si la langue interface ≠ langue document ET qu'on ne veut pas voir dans la langue du document
-  const needsTranslation = !showInDocumentLanguage && (
-    (interfaceIsFrench && documentIsArabic) ||
-    (interfaceIsArabic && documentIsFrench)
+  // Choose content based on interface language and original language
+  const prefersArabic = language === 'ar';
+  let displayContent: string;
+
+  if (prefersArabic) {
+    if (showOriginal) {
+      displayContent = document.content;
+    } else {
+      displayContent = document.language === 'ar' ? document.content : (document.translated_content || document.content);
+    }
+  } else {
+    if (showOriginal) {
+      displayContent = document.content;
+    } else {
+      displayContent = document.language === 'fr' ? document.content : (document.translated_content || document.content);
+    }
+  }
+
+  // Déterminer si on veut la version traduite (langue interface ≠ langue document)
+  const wantsTranslation = !showOriginal && (
+    (language === 'fr' && document.language === 'ar') ||
+    (language === 'ar' && document.language === 'fr')
   );
   
-  // Détermine la langue d'affichage effective
-  const displayLanguage = showInDocumentLanguage 
-    ? document.language // Langue originale du document
-    : language; // Langue de l'interface
+  // DEBUG: Log translation state
+  console.log('DEBUG Translation State:', { 
+    showOriginal, 
+    language, 
+    docLanguage: document.language, 
+    wantsTranslation, 
+    hasTranslatedContent: !!document.translated_content,
+    translatedContentLength: document.translated_content?.length || 0
+  });
 
   // Build paginated content from page_contents if available and has multiple pages
   const buildPaginatedContent = (): string => {
     const rawPageContents = document.page_contents;
     
-    // Si on a besoin de traduction et qu'on a translated_content global, l'utiliser
-    if (needsTranslation && document.translated_content) {
+    // DEBUG: Log at start of buildPaginatedContent
+    console.log('DEBUG buildPaginatedContent:', { 
+      wantsTranslation, 
+      hasTranslatedContent: !!document.translated_content,
+      rawPageContentsLength: Array.isArray(rawPageContents) ? rawPageContents.length : 0
+    });
+    
+    // Si on veut la traduction et qu'on a translated_content global, l'utiliser directement
+    // (car les pages individuelles n'ont souvent pas de traductions)
+    if (wantsTranslation && document.translated_content) {
+      console.log('DEBUG: Using translated_content, length:', document.translated_content.length);
       return document.translated_content;
     }
     
-    // Si pas besoin de traduction OU pas de translated_content, utiliser le contenu original
+    // Validate and parse page_contents from JSON
     if (!rawPageContents || !Array.isArray(rawPageContents) || rawPageContents.length <= 1) {
-      return document.content || '';
+      // Si on veut la traduction mais pas de translated_content, retourner le contenu original
+      if (wantsTranslation) {
+        return document.content || '';
+      }
+      return displayContent;
     }
     
     const pageContents = rawPageContents as PageContent[];
@@ -438,10 +468,10 @@ const DocumentDetail = () => {
     return sortedPages.map(page => {
       let pageContent: string;
       
-      if (showInDocumentLanguage) {
-        // Affichage dans la langue du document = toujours page.content
+      if (showOriginal) {
+        // Version originale = toujours page.content
         pageContent = page.content || '';
-      } else if (needsTranslation && allPagesHaveTranslation) {
+      } else if (wantsTranslation && allPagesHaveTranslation) {
         // Version traduite avec traductions de pages disponibles
         pageContent = page.translated_content || '';
       } else {
@@ -459,10 +489,10 @@ const DocumentDetail = () => {
   const formattedContent = renderFormattedContent(paginatedContent);
   
   // Détecter si on affiche la traduction (complète ou partielle)
-  const isShowingTranslated = needsTranslation && !!document.translated_content;
+  const isShowingTranslated = wantsTranslation && !!document.translated_content && !showOriginal;
   
   // Détecter si la traduction est incomplète (résumé seulement, pas de traduction page par page)
-  const isTranslationIncomplete = needsTranslation && document.translated_content && (
+  const isTranslationIncomplete = wantsTranslation && document.translated_content && (
     // La traduction est incomplète si elle est significativement plus courte que l'original
     document.translated_content.length < (document.content?.length || 0) * 0.5
   );
@@ -877,19 +907,17 @@ const DocumentDetail = () => {
 
             {/* Action Buttons */}
             <div className={`flex flex-wrap items-center justify-center gap-4 mb-8 ${isRTL ? 'flex-row-reverse' : ''}`}>
-              {/* Toggle pour voir dans la langue originale du document */}
+              {/* Toggle between original and translated */}
               {document.translated_content && document.translated_content !== document.content && (
                 <Button 
-                  variant={showInDocumentLanguage ? "default" : "outline"}
-                  onClick={() => setShowInDocumentLanguage(!showInDocumentLanguage)}
+                  variant={showOriginal ? "outline" : "default"}
+                  onClick={() => setShowOriginal(!showOriginal)}
                   className={isRTL ? 'flex-row-reverse' : ''}
                 >
                   <FileText className={`w-4 h-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />
-                  {showInDocumentLanguage 
-                    ? (language === 'ar' ? 'العودة إلى لغة الواجهة' : "Revenir à la langue de l'interface")
-                    : (language === 'ar' 
-                        ? `عرض باللغة الأصلية (${documentIsArabic ? 'عربية' : 'فرنسية'})`
-                        : `Voir dans la langue originale (${documentIsArabic ? 'arabe' : 'français'})`)
+                  {showOriginal 
+                    ? (language === 'ar' ? 'عرض النسخة المترجمة' : 'Afficher la version traduite')
+                    : (language === 'ar' ? 'عرض النسخة الأصلية' : 'Afficher la version originale')
                   }
                 </Button>
               )}
@@ -957,12 +985,12 @@ const DocumentDetail = () => {
             )}
             
             {/* Message when translation is needed but not available */}
-            {needsTranslation && !document.translated_content && (
+            {wantsTranslation && !document.translated_content && (
               <div className="text-center mb-6 p-4 bg-amber-50 border border-amber-200 rounded-lg">
                 <p className="text-sm text-amber-800">
                   {language === 'ar' 
-                    ? `ملاحظة: هذا المقال متوفر فقط بلغته الأصلية (${documentIsFrench ? 'الفرنسية' : 'العربية'}). الترجمة غير متوفرة حاليًا.`
-                    : `Note : Cet article est disponible uniquement dans sa langue originale (${documentIsArabic ? 'arabe' : 'français'}). La traduction n'est pas encore disponible.`
+                    ? 'ملاحظة: هذا المقال متوفر فقط بلغته الأصلية (الفرنسية). الترجمة العربية غير متوفرة حاليًا.'
+                    : "Note : Cet article est disponible uniquement dans sa langue originale (arabe). La traduction française n'est pas encore disponible."
                   }
                 </p>
               </div>
