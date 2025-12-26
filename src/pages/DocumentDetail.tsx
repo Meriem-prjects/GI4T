@@ -857,49 +857,6 @@ const DocumentDetail = () => {
               />
             </div>
 
-            {/* Action Buttons */}
-            <div className={`flex flex-wrap items-center justify-center gap-4 mb-8 ${isRTL ? 'flex-row-reverse' : ''}`}>
-              {document.file_url && (
-                <Button onClick={() => handleDownload(document.file_url, `${document.title}.pdf`)} className={isRTL ? 'flex-row-reverse' : ''}>
-                  <Download className={`w-4 h-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />
-                  {language === 'ar' ? 'تحميل الوثيقة الأصلية' : 'Télécharger le document original'}
-                </Button>
-              )}
-              
-              {document.pdf_url && (
-                <Button variant="outline" onClick={() => handleDownload(document.pdf_url, `${document.title}_pdf.pdf`)} className={isRTL ? 'flex-row-reverse' : ''}>
-                  <Download className={`w-4 h-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />
-                  {language === 'ar' ? 'تحميل PDF' : 'Télécharger PDF'}
-                </Button>
-              )}
-
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" size="icon">
-                    <MoreVertical className="w-5 h-5" />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align={isRTL ? 'start' : 'end'} className="bg-popover">
-                  <DropdownMenuItem 
-                    onClick={() => window.print()}
-                    className={`cursor-pointer ${isRTL ? 'flex-row-reverse' : ''}`}
-                  >
-                    <Printer className={`w-4 h-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />
-                    {language === 'ar' ? 'طباعة' : 'Imprimer'}
-                  </DropdownMenuItem>
-                  <DropdownMenuItem 
-                    onClick={() => navigator.share?.({ 
-                      title: currentTitle, 
-                      url: window.location.href 
-                    }).catch(() => navigator.clipboard.writeText(window.location.href))}
-                    className={`cursor-pointer ${isRTL ? 'flex-row-reverse' : ''}`}
-                  >
-                    <Share2 className={`w-4 h-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />
-                    {language === 'ar' ? 'مشاركة' : 'Partager'}
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-            </div>
             
           </div>
 
@@ -934,6 +891,40 @@ const DocumentDetail = () => {
                 )}
               </div>
             )}
+          </div>
+
+          {/* Action Buttons - Below Content */}
+          <div className={`flex flex-wrap items-center justify-center gap-4 mt-8 ${isRTL ? 'flex-row-reverse' : ''}`}>
+            {(document.file_url || document.pdf_url) && (
+              <Button 
+                onClick={() => handleDownload(document.file_url || document.pdf_url, `${document.title}.pdf`)} 
+                className={isRTL ? 'flex-row-reverse' : ''}
+              >
+                <Download className={`w-4 h-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />
+                {language === 'ar' ? 'تحميل' : 'Télécharger'}
+              </Button>
+            )}
+            
+            <Button 
+              variant="outline" 
+              onClick={() => window.print()}
+              className={isRTL ? 'flex-row-reverse' : ''}
+            >
+              <Printer className={`w-4 h-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />
+              {language === 'ar' ? 'طباعة' : 'Imprimer'}
+            </Button>
+            
+            <Button 
+              variant="outline" 
+              onClick={() => navigator.share?.({ 
+                title: currentTitle, 
+                url: window.location.href 
+              }).catch(() => navigator.clipboard.writeText(window.location.href))}
+              className={isRTL ? 'flex-row-reverse' : ''}
+            >
+              <Share2 className={`w-4 h-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />
+              {language === 'ar' ? 'مشاركة' : 'Partager'}
+            </Button>
           </div>
 
           {/* Keywords */}
