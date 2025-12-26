@@ -15,7 +15,7 @@ import { useEffect, useState } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Separator } from "@/components/ui/separator";
 import { createSlug, createCategorySlug, createDocumentPath } from "@/lib/urlUtils";
-import { renderFormattedContent } from "@/utils/contentFormatter";
+import { renderFormattedContent, removeKeywordsFromContent, removeTitleFromContent } from "@/utils/contentFormatter";
 import { normalizeArabicForDisplay } from "@/lib/arabicUtils";
 import { ArticleStatistics } from "@/components/ArticleStatistics";
 import { CommentSection } from "@/components/CommentSection";
@@ -447,7 +447,11 @@ const DocumentDetail = () => {
   };
 
   const paginatedContent = buildPaginatedContent();
-  const formattedContent = renderFormattedContent(paginatedContent);
+  
+  // Filter out keywords and repeated title from content
+  const contentWithoutKeywords = removeKeywordsFromContent(paginatedContent);
+  const cleanedContent = removeTitleFromContent(contentWithoutKeywords, document.title_ar || document.title);
+  const formattedContent = renderFormattedContent(cleanedContent);
   
   // Use Arabic fields based on interface language
   const currentTitle = language === 'ar' && document.title_ar ? document.title_ar : document.title;
@@ -927,19 +931,6 @@ const DocumentDetail = () => {
             </Button>
           </div>
 
-          {/* Keywords */}
-          {currentKeywords?.length > 0 && (
-            <div className={`mt-12 pt-6 border-t ${language === 'ar' ? 'text-right' : ''}`}>
-              <h3 className="text-lg font-semibold mb-4">{language === 'ar' ? 'الكلمات المفاتيح' : 'Mots-clés'}</h3>
-              <div className={`flex flex-wrap gap-2 ${language === 'ar' ? 'justify-end' : ''}`}>
-                {currentKeywords.map((keyword) => (
-                  <Badge key={keyword} variant="outline" className={language === 'ar' ? 'arabic-text font-arabic' : ''}>
-                    {language === 'ar' ? normalizeArabicForDisplay(keyword) : keyword}
-                  </Badge>
-                ))}
-              </div>
-            </div>
-          )}
 
           {/* Comment Section */}
           <div className="mt-12">
