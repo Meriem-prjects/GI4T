@@ -116,20 +116,9 @@ const DocumentDetail = () => {
   const [suggestedDocuments, setSuggestedDocuments] = useState<SuggestedDocument[]>([]);
   const [relatedDocuments, setRelatedDocuments] = useState<SuggestedDocument[]>([]);
   const [loading, setLoading] = useState(true);
-  const [showOriginal, setShowOriginal] = useState(false);
   
   // Track document view
   useDocumentView(document?.id);
-
-  // Réinitialiser showOriginal quand le document ou la langue change
-  // Par défaut : montrer la version traduite si la langue interface ≠ langue document
-  useEffect(() => {
-    if (document) {
-      // showOriginal = false signifie qu'on veut la traduction si disponible
-      // On le remet toujours à false pour privilégier la version traduite
-      setShowOriginal(false);
-    }
-  }, [document?.id, language]);
 
   useEffect(() => {
     const fetchDocument = async () => {
@@ -399,17 +388,9 @@ const DocumentDetail = () => {
   let displayContent: string;
 
   if (prefersArabic) {
-    if (showOriginal) {
-      displayContent = document.content;
-    } else {
-      displayContent = document.language === 'ar' ? document.content : (document.translated_content || document.content);
-    }
+    displayContent = document.language === 'ar' ? document.content : (document.translated_content || document.content);
   } else {
-    if (showOriginal) {
-      displayContent = document.content;
-    } else {
-      displayContent = document.language === 'fr' ? document.content : (document.translated_content || document.content);
-    }
+    displayContent = document.language === 'fr' ? document.content : (document.translated_content || document.content);
   }
 
   // L'affichage SUIT TOUJOURS la langue de l'interface
@@ -424,32 +405,9 @@ const DocumentDetail = () => {
   const needsTranslation = (needsFrenchContent && documentIsArabic) || (needsArabicContent && documentIsFrench);
 
   // Build paginated content from page_contents if available and has multiple pages
+  // Affiche directement la version complète du document
   const buildPaginatedContent = (): string => {
     const rawPageContents = document.page_contents;
-    
-    // showOriginal = false → Version traduite par l'IA (résumée)
-    // showOriginal = true → Version originale complète (traduite page par page si nécessaire)
-    
-    if (!showOriginal) {
-      // "Version traduite par l'IA (résumée)" - afficher le RÉSUMÉ court dans la langue de l'interface
-      const summaryToShow = language === 'ar' ? document.summary_ar : document.summary;
-      
-      if (summaryToShow && summaryToShow.trim() !== '') {
-        return summaryToShow;
-      }
-      
-      // Fallback sur le résumé de l'autre langue s'il n'y a pas de résumé dans la langue actuelle
-      const fallbackSummary = language === 'ar' ? document.summary : document.summary_ar;
-      if (fallbackSummary && fallbackSummary.trim() !== '') {
-        return fallbackSummary;
-      }
-      
-      // Dernier fallback sur le contenu si pas de résumé
-      return document.content || '';
-    }
-    
-    // showOriginal = true → "Version originale" 
-    // Mais on affiche TOUJOURS dans la langue de l'interface
     
     // Validate and parse page_contents from JSON
     if (!rawPageContents || !Array.isArray(rawPageContents) || rawPageContents.length <= 1) {
@@ -490,10 +448,6 @@ const DocumentDetail = () => {
 
   const paginatedContent = buildPaginatedContent();
   const formattedContent = renderFormattedContent(paginatedContent);
-  
-  // Détecter si on affiche le résumé IA (quand showOriginal = false et résumé dispo)
-  const hasSummary = !!(document.summary || document.summary_ar);
-  const isShowingAISummary = !showOriginal && hasSummary;
   
   // Use Arabic fields based on interface language
   const currentTitle = language === 'ar' && document.title_ar ? document.title_ar : document.title;
@@ -905,21 +859,6 @@ const DocumentDetail = () => {
 
             {/* Action Buttons */}
             <div className={`flex flex-wrap items-center justify-center gap-4 mb-8 ${isRTL ? 'flex-row-reverse' : ''}`}>
-              {/* Toggle between AI summary and full content */}
-              {hasSummary && (
-                <Button 
-                  variant={showOriginal ? "default" : "outline"}
-                  onClick={() => setShowOriginal(!showOriginal)}
-                  className={isRTL ? 'flex-row-reverse' : ''}
-                >
-                  <FileText className={`w-4 h-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />
-                  {showOriginal 
-                    ? (language === 'ar' ? 'عرض الملخص' : 'Afficher le résumé')
-                    : (language === 'ar' ? 'عرض النسخة الكاملة' : 'Afficher la version complète')
-                  }
-                </Button>
-              )}
-              
               {document.file_url && (
                 <Button onClick={() => handleDownload(document.file_url, `${document.title}.pdf`)} className={isRTL ? 'flex-row-reverse' : ''}>
                   <Download className={`w-4 h-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />
@@ -961,18 +900,6 @@ const DocumentDetail = () => {
                 </DropdownMenuContent>
               </DropdownMenu>
             </div>
-
-            {/* Content Type Indicator */}
-            {hasSummary && (
-              <div className="text-center mb-6 space-y-2">
-                <Badge variant="secondary" className="bg-blue-100 text-blue-800">
-                  {isShowingAISummary 
-                    ? (language === 'ar' ? 'الملخص' : "Résumé")
-                    : (language === 'ar' ? 'النسخة الكاملة' : 'Version complète')
-                  }
-                </Badge>
-              </div>
-            )}
             
           </div>
 
