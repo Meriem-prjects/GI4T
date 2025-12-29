@@ -503,6 +503,53 @@ serve(async (req) => {
         fileContent = `Exception PDF OCR: ${pdfException instanceof Error ? pdfException.message : String(pdfException)}`;
       }
       
+    } else if (
+      file.type === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' ||
+      file.type === 'application/msword' ||
+      file.name.toLowerCase().endsWith('.docx') ||
+      file.name.toLowerCase().endsWith('.doc')
+    ) {
+      // Handle Word documents (DOCX/DOC)
+      console.log('Processing Word document...');
+      
+      try {
+        const docxFormData = new FormData();
+        docxFormData.append('file', file);
+        
+        const { data: docxData, error: docxError } = await supabaseAdmin.functions.invoke('docx-parser', {
+          body: docxFormData
+        });
+        
+        console.log('DOCX Parser response:', docxData);
+        
+        if (docxError) {
+          console.error('DOCX Parser error:', docxError);
+          fileContent = `Erreur parsing Word: ${docxError.message}`;
+        } else if (docxData?.success && docxData?.content && docxData.content.length > 10) {
+          fileContent = docxData.content;
+          extractionSuccess = true;
+          analysisData.language = docxData.language || language;
+          
+          // Create page_contents for Word documents (single page)
+          pageContents = [{
+            pageNumber: 1,
+            content: docxData.content,
+            confidence: 1.0,
+            language: docxData.language || language
+          }];
+          processedPages = 1;
+          totalPagesVar = 1;
+          
+          console.log(`Word document parsed: ${fileContent.length} chars, language: ${analysisData.language}`);
+        } else {
+          console.warn('DOCX Parser returned insufficient content:', docxData);
+          fileContent = docxData?.error || 'Document Word ne contient pas de texte lisible';
+        }
+      } catch (docxException) {
+        console.error('DOCX Parser exception:', docxException);
+        fileContent = `Exception parsing Word: ${docxException instanceof Error ? docxException.message : String(docxException)}`;
+      }
+      
     } else if (file.type?.startsWith('image/') || /\.(jpg|jpeg|png|webp|gif|bmp|tiff)$/i.test(file.name)) {
       // Handle image files with OCR
       console.log('Processing image file with OCR...');
