@@ -135,8 +135,22 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
            docType?.name_ar === 'التعليقات';
   }, [editedData.document_type_id, documentTypes]);
   
-  // Check if document supports AI workflow (Analyses or Commentaires)
-  const supportsAIWorkflow = isAnalysisDocument || isCommentDocument;
+  // Detect if document is "Blogs"
+  const isBlogDocument = React.useMemo(() => {
+    if (!editedData.document_type_id || documentTypes.length === 0) return false;
+    const docType = documentTypes.find(dt => dt.id === editedData.document_type_id);
+    return docType?.name === 'Blogs';
+  }, [editedData.document_type_id, documentTypes]);
+  
+  // Detect if document is "Fiche de jurisprudence"
+  const isFicheJurisprudence = React.useMemo(() => {
+    if (!editedData.document_type_id || documentTypes.length === 0) return false;
+    const docType = documentTypes.find(dt => dt.id === editedData.document_type_id);
+    return docType?.name === 'Fiche de jurisprudence';
+  }, [editedData.document_type_id, documentTypes]);
+  
+  // Check if document supports AI workflow (Analyses, Commentaires, Blogs, Fiches)
+  const supportsAIWorkflow = isAnalysisDocument || isCommentDocument || isBlogDocument || isFicheJurisprudence;
   
   // Track if we've already normalized data on load to avoid re-normalizing
   const hasNormalizedOnLoad = React.useRef(false);
@@ -2120,12 +2134,9 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
         );
       })()}
 
-      {/* Bouton workflow complet pour documents d'analyse */}
+      {/* Bouton workflow complet pour documents supportés (Analyses, Commentaires, Blogs, Fiches) */}
       {(() => {
-        const currentDocType = documentTypes.find(dt => dt.id === editedData.document_type_id);
-        const isAnalysisDoc = currentDocType?.name === 'Analyses juridiques';
-        
-        if (isAnalysisDoc && editedData.page_contents && editedData.page_contents.length > 0) {
+        if (supportsAIWorkflow && editedData.page_contents && editedData.page_contents.length > 0) {
           return (
             <Card className="border-emerald-200 bg-emerald-50/50 dark:border-emerald-800 dark:bg-emerald-950/30">
               <CardContent className="pt-4">
