@@ -9,7 +9,7 @@ import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Save, Eye, EyeOff, X, AlertTriangle, FileText, ChevronLeft, ChevronRight, BookOpen, Brain, Loader2, CheckCircle, XCircle, Search } from 'lucide-react';
+import { Save, Eye, EyeOff, X, AlertTriangle, FileText, ChevronLeft, ChevronRight, BookOpen, Brain, Loader2, CheckCircle, XCircle, Search, RefreshCw } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { useCourtTypes } from '@/hooks/useCourtTypes';
@@ -3332,22 +3332,51 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
             <Card className="p-6">
               <div className="flex items-center justify-between mb-4">
                 <h3 className="text-lg font-semibold">Contenu du document</h3>
-                <Button
-                  variant="outline"
-                  onClick={() => setShowPreview(!showPreview)}
-                >
-                  {showPreview ? (
-                    <>
-                      <EyeOff className="mr-2 h-4 w-4" />
-                      Édition
-                    </>
-                  ) : (
-                    <>
-                      <Eye className="mr-2 h-4 w-4" />
-                      Aperçu
-                    </>
+                <div className="flex items-center gap-2">
+                  {editedData.page_contents && editedData.page_contents.length > 0 && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => {
+                        const consolidatedContent = editedData.page_contents!
+                          .sort((a, b) => a.pageNumber - b.pageNumber)
+                          .map(p => p.content)
+                          .join('\n\n');
+                        
+                        setEditedData(prev => ({
+                          ...prev,
+                          content: consolidatedContent
+                        }));
+                        setHasChanges(true);
+                        
+                        toast({
+                          title: "Contenu synchronisé",
+                          description: `Le contenu a été mis à jour avec ${editedData.page_contents!.length} page(s)`,
+                        });
+                      }}
+                      title="Synchroniser le contenu de l'éditeur avec le contenu par page"
+                    >
+                      <RefreshCw className="mr-2 h-4 w-4" />
+                      Sync pages
+                    </Button>
                   )}
-                </Button>
+                  <Button
+                    variant="outline"
+                    onClick={() => setShowPreview(!showPreview)}
+                  >
+                    {showPreview ? (
+                      <>
+                        <EyeOff className="mr-2 h-4 w-4" />
+                        Édition
+                      </>
+                    ) : (
+                      <>
+                        <Eye className="mr-2 h-4 w-4" />
+                        Aperçu
+                      </>
+                    )}
+                  </Button>
+                </div>
               </div>
               
               {showPreview ? (
