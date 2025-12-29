@@ -413,35 +413,40 @@ const DocumentDetail = () => {
   const cleanContentFromMetadata = (content: string, title: string, keywords: string[]): string => {
     let cleanedContent = content;
     
-    // Remove title if it appears at the beginning of content
+    // 1. Remove the header paragraph that contains title + author + affiliation
+    // This paragraph typically appears at the very beginning and contains the document title
     if (title) {
-      // Pattern to match the title at the beginning (with HTML tags variations)
-      const escapedTitle = escapeRegex(title.trim());
-      const titlePatterns = [
-        // Title in paragraph at the start
-        new RegExp(`^\\s*(<p[^>]*>)?\\s*${escapedTitle}\\s*(<\\/p>)?\\s*`, 'i'),
-        // Title in heading tags
-        new RegExp(`^\\s*<h[1-6][^>]*>\\s*${escapedTitle}\\s*<\\/h[1-6]>\\s*`, 'i'),
-        // Title in div.page-break at the start
-        new RegExp(`(<div[^>]*class="page-break"[^>]*>\\s*)(<p[^>]*>)?\\s*${escapedTitle}\\s*(<\\/p>)?`, 'i'),
-      ];
-      
-      titlePatterns.forEach(pattern => {
-        cleanedContent = cleanedContent.replace(pattern, '$1');
-      });
+      const escapedTitleStart = escapeRegex(title.trim().substring(0, Math.min(30, title.length)));
+      // Remove the first paragraph that contains the beginning of the title
+      const headerPattern = new RegExp(
+        `<p[^>]*>[\\s\\S]*?${escapedTitleStart}[\\s\\S]*?<\\/p>`,
+        'i'
+      );
+      cleanedContent = cleanedContent.replace(headerPattern, '');
     }
     
-    // Remove keywords line (Arabic, French, English patterns)
+    // 2. Remove the entire keywords paragraph (captures all content including <br/> tags until </p>)
     const keywordsPatterns = [
-      // Arabic keywords patterns
-      /(<p[^>]*>)?\s*(الكلمات المفاتيح|اﻟﻜﻠﻤﺎت اﻟﻤﻔﺎﺗﯿﺢ|الكلمات المفتاحية)\s*[:：]?\s*[^<]*(<\/p>)?/gi,
+      // Arabic keywords patterns - capture entire paragraph with [\s\S]*? to include <br/> tags
+      /<p[^>]*>\s*(الكلمات المفاتيح|اﻟﻜﻠﻤﺎت اﻟﻤﻔﺎﺗﯿﺢ|الكلمات المفتاحية)\s*[:：]?[\s\S]*?<\/p>/gi,
       // French keywords patterns
-      /(<p[^>]*>)?\s*Mots[- ]?cl[ée]s\s*[:：]?\s*[^<]*(<\/p>)?/gi,
+      /<p[^>]*>\s*Mots[- ]?cl[ée]s\s*[:：]?[\s\S]*?<\/p>/gi,
       // English keywords patterns
-      /(<p[^>]*>)?\s*Keywords\s*[:：]?\s*[^<]*(<\/p>)?/gi,
+      /<p[^>]*>\s*Keywords\s*[:：]?[\s\S]*?<\/p>/gi,
     ];
     
     keywordsPatterns.forEach(pattern => {
+      cleanedContent = cleanedContent.replace(pattern, '');
+    });
+    
+    // 3. Also handle cases where keywords appear without <p> wrapper but with line breaks
+    const inlineKeywordsPatterns = [
+      /(الكلمات المفاتيح|اﻟﻜﻠﻤﺎت اﻟﻤﻔﺎﺗﯿﺢ|الكلمات المفتاحية)\s*[:：]?[^<]*(<br\s*\/?>[^<]*)*(<br\s*\/?>)?/gi,
+      /Mots[- ]?cl[ée]s\s*[:：]?[^<]*(<br\s*\/?>[^<]*)*(<br\s*\/?>)?/gi,
+      /Keywords\s*[:：]?[^<]*(<br\s*\/?>[^<]*)*(<br\s*\/?>)?/gi,
+    ];
+    
+    inlineKeywordsPatterns.forEach(pattern => {
       cleanedContent = cleanedContent.replace(pattern, '');
     });
     
@@ -449,6 +454,8 @@ const DocumentDetail = () => {
     cleanedContent = cleanedContent.replace(/(<p[^>]*>\s*<\/p>\s*)+/gi, '');
     // Clean up multiple line breaks
     cleanedContent = cleanedContent.replace(/(<br\s*\/?>\s*){3,}/gi, '<br><br>');
+    // Clean up leading whitespace and empty lines
+    cleanedContent = cleanedContent.replace(/^(\s*<br\s*\/?>\s*)+/i, '');
     
     return cleanedContent.trim();
   };
