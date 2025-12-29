@@ -146,15 +146,24 @@ const PageCarousel: React.FC<PageCarouselProps> = ({ content, language }) => {
   return (
     <div className="page-carousel-container">
       {/* Header with navigation */}
-      <div className={`page-carousel-header flex items-center justify-between mb-4 p-3 bg-muted/50 rounded-lg ${isRTL ? 'flex-row-reverse' : ''}`}>
+      <div className={`page-carousel-header flex items-center justify-between mb-4 p-3 bg-muted/50 rounded-lg`}>
         <Button 
           variant="outline" 
           size="sm" 
-          onClick={isRTL ? scrollNext : scrollPrev}
-          disabled={isRTL ? !canScrollNext : !canScrollPrev}
+          onClick={scrollPrev}
+          disabled={!canScrollPrev}
         >
-          <ChevronLeft className="h-4 w-4" />
-          <span className="mx-2">{isRTL ? 'التالي' : 'Précédent'}</span>
+          {isRTL ? (
+            <>
+              <ChevronRight className="h-4 w-4" />
+              <span className="mx-2">السابق</span>
+            </>
+          ) : (
+            <>
+              <ChevronLeft className="h-4 w-4" />
+              <span className="mx-2">Précédent</span>
+            </>
+          )}
         </Button>
         
         <span className="text-sm font-medium text-muted-foreground">
@@ -167,11 +176,20 @@ const PageCarousel: React.FC<PageCarouselProps> = ({ content, language }) => {
         <Button 
           variant="outline" 
           size="sm" 
-          onClick={isRTL ? scrollPrev : scrollNext}
-          disabled={isRTL ? !canScrollPrev : !canScrollNext}
+          onClick={scrollNext}
+          disabled={!canScrollNext}
         >
-          <span className="mx-2">{isRTL ? 'السابق' : 'Suivant'}</span>
-          <ChevronRight className="h-4 w-4" />
+          {isRTL ? (
+            <>
+              <span className="mx-2">التالي</span>
+              <ChevronLeft className="h-4 w-4" />
+            </>
+          ) : (
+            <>
+              <span className="mx-2">Suivant</span>
+              <ChevronRight className="h-4 w-4" />
+            </>
+          )}
         </Button>
       </div>
 
