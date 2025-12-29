@@ -628,6 +628,28 @@ const DocumentDetail = () => {
               </h2>
             )}
 
+            {/* Quick metadata for Arabic - displayed before summary */}
+            {language === 'ar' && (document.created_at || category) && (
+              <div className="flex flex-wrap items-center justify-center gap-6 mb-6 text-sm" dir="rtl">
+                {document.created_at && (
+                  <div className="flex items-center gap-2 flex-row-reverse">
+                    <Calendar className="w-4 h-4 text-muted-foreground" />
+                    <span className="font-medium">تاريخ النشر:</span>
+                    <span>{formatDate(document.created_at)}</span>
+                  </div>
+                )}
+                {category && (
+                  <div className="flex items-center gap-2 flex-row-reverse">
+                    <Scale className="w-4 h-4 text-muted-foreground" />
+                    <span className="font-medium">فئة الحق الأساسي:</span>
+                    <Badge style={{ backgroundColor: category.color, color: '#ffffff' }}>
+                      {category.name_ar || category.name}
+                    </Badge>
+                  </div>
+                )}
+              </div>
+            )}
+
             {currentSummary && (
               <div 
                 className={`text-lg text-muted-foreground mb-8 max-w-4xl mx-auto ${language === 'ar' ? 'dir-rtl arabic-text font-arabic' : ''}`}
@@ -647,38 +669,23 @@ const DocumentDetail = () => {
                 <>
                   <div className={`grid md:grid-cols-2 gap-6 ${language === 'ar' ? 'text-right' : ''}`}>
                     <div className="space-y-3">
-                      {document.created_at && (
-                        <div className={`flex items-center gap-3 ${language === 'ar' ? 'flex-row-reverse justify-start' : 'justify-center md:justify-start'}`}>
+                      {/* Date - only show in French (Arabic displays at top) */}
+                      {language !== 'ar' && document.created_at && (
+                        <div className="flex items-center gap-3 justify-center md:justify-start">
                           <Calendar className="w-5 h-5 text-muted-foreground" />
-                          {language === 'ar' ? (
-                            <span><span className="font-medium">تاريخ النشر:</span> {formatDate(document.created_at)}</span>
-                          ) : (
-                            <>
-                              <span className="font-medium">Date de publication:</span>
-                              <span>{formatDate(document.created_at)}</span>
-                            </>
-                          )}
+                          <span className="font-medium">Date de publication:</span>
+                          <span>{formatDate(document.created_at)}</span>
                         </div>
                       )}
                       
-                      {category && (
-                        <div className={`flex items-center gap-3 ${language === 'ar' ? 'flex-row-reverse justify-start' : 'justify-center md:justify-start'}`}>
+                      {/* Category - only show in French (Arabic displays at top) */}
+                      {language !== 'ar' && category && (
+                        <div className="flex items-center gap-3 justify-center md:justify-start">
                           <Scale className="w-5 h-5 text-muted-foreground" />
-                          {language === 'ar' ? (
-                            <span>
-                              <span className="font-medium whitespace-nowrap">فئة الحق الأساسي:</span>{' '}
-                              <Badge className="font-normal whitespace-nowrap" style={{ backgroundColor: category.color, color: '#ffffff' }}>
-                                {category.name_ar || category.name}
-                              </Badge>
-                            </span>
-                          ) : (
-                            <>
-                              <span className="font-medium whitespace-nowrap">Catégorie de droit fondamental:</span>
-                              <Badge className="font-normal whitespace-nowrap" style={{ backgroundColor: category.color, color: '#ffffff' }}>
-                                {category.name}
-                              </Badge>
-                            </>
-                          )}
+                          <span className="font-medium whitespace-nowrap">Catégorie de droit fondamental:</span>
+                          <Badge className="font-normal whitespace-nowrap" style={{ backgroundColor: category.color, color: '#ffffff' }}>
+                            {category.name}
+                          </Badge>
                         </div>
                       )}
                     </div>
@@ -734,38 +741,23 @@ const DocumentDetail = () => {
                 <>
                   <div className={`grid md:grid-cols-2 gap-6 ${language === 'ar' ? 'text-right' : ''}`}>
                     <div className="space-y-3">
-                      {document.created_at && (
-                        <div className={`flex items-center gap-3 ${language === 'ar' ? 'flex-row-reverse justify-start' : 'justify-center md:justify-start'}`}>
+                      {/* Date - only show in French (Arabic displays at top) */}
+                      {language !== 'ar' && document.created_at && (
+                        <div className="flex items-center gap-3 justify-center md:justify-start">
                           <Calendar className="w-5 h-5 text-muted-foreground" />
-                          {language === 'ar' ? (
-                            <span><span className="font-medium">تاريخ النشر:</span> {formatDate(document.created_at)}</span>
-                          ) : (
-                            <>
-                              <span className="font-medium">Date de publication:</span>
-                              <span>{formatDate(document.created_at)}</span>
-                            </>
-                          )}
+                          <span className="font-medium">Date de publication:</span>
+                          <span>{formatDate(document.created_at)}</span>
                         </div>
                       )}
                       
-                      {category && (
-                        <div className={`flex items-center gap-3 ${language === 'ar' ? 'flex-row-reverse justify-start' : 'justify-center md:justify-start'}`}>
+                      {/* Category - only show in French (Arabic displays at top) */}
+                      {language !== 'ar' && category && (
+                        <div className="flex items-center gap-3 justify-center md:justify-start">
                           <Scale className="w-5 h-5 text-muted-foreground" />
-                          {language === 'ar' ? (
-                            <span>
-                              <span className="font-medium whitespace-nowrap">فئة الحق الأساسي:</span>{' '}
-                              <Badge className="font-normal whitespace-nowrap" style={{ backgroundColor: category.color, color: '#ffffff' }}>
-                                {category.name_ar || category.name}
-                              </Badge>
-                            </span>
-                          ) : (
-                            <>
-                              <span className="font-medium whitespace-nowrap">Catégorie de droit fondamental:</span>
-                              <Badge className="font-normal whitespace-nowrap" style={{ backgroundColor: category.color, color: '#ffffff' }}>
-                                {category.name}
-                              </Badge>
-                            </>
-                          )}
+                          <span className="font-medium whitespace-nowrap">Catégorie de droit fondamental:</span>
+                          <Badge className="font-normal whitespace-nowrap" style={{ backgroundColor: category.color, color: '#ffffff' }}>
+                            {category.name}
+                          </Badge>
                         </div>
                       )}
 
