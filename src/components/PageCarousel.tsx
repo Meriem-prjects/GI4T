@@ -90,7 +90,7 @@ const PageCarousel: React.FC<PageCarouselProps> = ({ content, language }) => {
   const [emblaRef, emblaApi] = useEmblaCarousel({ 
     loop: false,
     direction: isRTL ? 'rtl' : 'ltr',
-    align: 'center'
+    align: 'start'
   });
   
   const [currentIndex, setCurrentIndex] = useState(0);
