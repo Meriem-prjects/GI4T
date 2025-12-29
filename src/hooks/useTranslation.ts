@@ -375,6 +375,8 @@ type TranslationKey =
   | 'opinionArticlesDesc'
   | 'policyBriefs'
   | 'policyBriefsDesc'
+  | 'caseSheets'
+  | 'caseSheetsDesc'
   | 'recentPublications'
   | 'seeAllPublications'
   | 'readTime'
@@ -735,6 +737,8 @@ const translations: Record<'fr' | 'ar', Record<TranslationKey, string>> = {
     opinionArticlesDesc: 'Points de vue d\'experts sur les questions juridiques actuelles',
     policyBriefs: 'Blogs',
     policyBriefsDesc: 'Recommandations pour les décideurs politiques',
+    caseSheets: 'Fiches de jurisprudence',
+    caseSheetsDesc: 'Résumés et analyses des décisions de justice',
     recentPublications: 'Publications Récentes',
     seeAllPublications: 'Voir toutes les publications',
     readTime: 'de lecture',
@@ -1142,6 +1146,8 @@ const translations: Record<'fr' | 'ar', Record<TranslationKey, string>> = {
     opinionArticlesDesc: 'وجهات نظر الخبراء حول القضايا القانونية الحالية',
     policyBriefs: 'المدونات',
     policyBriefsDesc: 'توصيات لصناع القرار',
+    caseSheets: 'جذاذات فقه القضاء',
+    caseSheetsDesc: 'ملخصات وتحليلات للأحكام القضائية',
     recentPublications: 'المنشورات الأخيرة',
     seeAllPublications: 'عرض جميع المنشورات',
     readTime: 'للقراءة',

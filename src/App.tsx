@@ -20,6 +20,7 @@ import AnalysesJuridiques from "./pages/AnalysesJuridiques";
 import AnalysesJuridiquesByCategory from "./pages/AnalysesJuridiquesByCategory";
 import Commentaires from "./pages/Commentaires";
 import Blogs from "./pages/Blogs";
+import FichesJurisprudence from "./pages/FichesJurisprudence";
 import Actualites from "./pages/Actualites";
 import AccesAuxDroits from "./pages/AccesAuxDroits";
 import GuidesPratiques from "./pages/GuidesPratiques";
@@ -83,6 +84,7 @@ const App: React.FC = () => (
             <Route path="/observatoire/analyses-juridiques/:categorySlug/:documentSlug" element={<DocumentDetail />} />
             <Route path="/observatoire/commentaires" element={<Commentaires />} />
             <Route path="/observatoire/blogs" element={<Blogs />} />
+            <Route path="/observatoire/fiches-jurisprudence" element={<FichesJurisprudence />} />
             <Route path="/observatoire/actualites" element={<Actualites />} />
           </Route>
           

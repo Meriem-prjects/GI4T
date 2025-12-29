@@ -89,7 +89,7 @@ export const useAllAnalysesOpinions = () => {
       const { data: types, error: typesError } = await supabase
         .from('document_types')
         .select('id, name')
-        .in('name', ['Analyses juridiques', 'Commentaires', 'Blogs']);
+        .in('name', ['Analyses juridiques', 'Commentaires', 'Blogs', 'Fiche de jurisprudence']);
       
       if (typesError) throw typesError;
       if (!types || types.length === 0) return [];
@@ -133,7 +133,7 @@ export const useDocumentTypesCounts = () => {
       const { data: types, error: typesError } = await supabase
         .from('document_types')
         .select('id, name, name_ar')
-        .in('name', ['Analyses juridiques', 'Commentaires', 'Blogs']);
+        .in('name', ['Analyses juridiques', 'Commentaires', 'Blogs', 'Fiche de jurisprudence']);
       
       if (typesError) throw typesError;
       if (!types) return [];
