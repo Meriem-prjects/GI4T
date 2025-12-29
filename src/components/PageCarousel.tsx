@@ -194,8 +194,8 @@ const PageCarousel: React.FC<PageCarouselProps> = ({ content, language }) => {
       </div>
 
       {/* Carousel viewport */}
-      <div className="page-carousel-viewport overflow-hidden" ref={emblaRef} dir={isRTL ? 'rtl' : 'ltr'}>
-        <div className="page-carousel-container flex">
+      <div className="page-carousel-viewport overflow-hidden" ref={emblaRef}>
+        <div className={`page-carousel-container flex ${isRTL ? 'flex-row-reverse' : ''}`}>
           {pages.map((slideGroup, slideIndex) => (
             <div 
               key={slideIndex} 
