@@ -645,71 +645,69 @@ const DocumentDetail = () => {
               {isAnalysisDocument() ? (
                 // Format pour Analyses juridiques, Commentaires, Blogs
                 <>
-                  <div className={`grid md:grid-cols-2 gap-6 ${language === 'ar' ? 'text-right' : ''}`}>
-                    <div className="space-y-3">
-                      {document.created_at && (
-                        <div className={`flex items-center gap-3 ${language === 'ar' ? 'flex-row-reverse justify-start' : 'justify-center md:justify-start'}`}>
-                          <Calendar className="w-5 h-5 text-muted-foreground" />
-                          {language === 'ar' ? (
-                            <span><span className="font-medium">تاريخ النشر:</span> {formatDate(document.created_at)}</span>
-                          ) : (
-                            <>
-                              <span className="font-medium">Date de publication:</span>
-                              <span>{formatDate(document.created_at)}</span>
-                            </>
-                          )}
-                        </div>
-                      )}
+                  {/* Ligne 1 : Date + Auteur */}
+                  <div className={`flex flex-wrap items-start gap-6 mb-4 ${language === 'ar' ? 'flex-row-reverse justify-end' : 'justify-start'}`}>
+                    {document.created_at && (
+                      <div className={`flex items-center gap-3 ${language === 'ar' ? 'flex-row-reverse' : ''}`}>
+                        <Calendar className="w-5 h-5 text-muted-foreground" />
+                        {language === 'ar' ? (
+                          <span><span className="font-medium">تاريخ النشر:</span> {formatDate(document.created_at)}</span>
+                        ) : (
+                          <>
+                            <span className="font-medium">Date de publication:</span>
+                            <span>{formatDate(document.created_at)}</span>
+                          </>
+                        )}
+                      </div>
+                    )}
+                    
+                    {currentAuthor && (() => {
+                      const hasComma = currentAuthor.includes(',');
+                      const authorName = hasComma ? currentAuthor.split(',')[0].trim() : currentAuthor;
+                      const authorTitle = hasComma ? currentAuthor.split(',').slice(1).join(',').trim() : null;
                       
-                      {category && (
-                        <div className={`flex items-center gap-3 ${language === 'ar' ? 'flex-row-reverse justify-start' : 'justify-center md:justify-start'}`}>
-                          <Scale className="w-5 h-5 text-muted-foreground" />
-                          {language === 'ar' ? (
-                            <span>
-                              <span className="font-medium whitespace-nowrap">فئة الحق الأساسي:</span>{' '}
-                              <Badge className="font-normal whitespace-nowrap" style={{ backgroundColor: category.color, color: '#ffffff' }}>
-                                {category.name_ar || category.name}
-                              </Badge>
-                            </span>
-                          ) : (
-                            <>
-                              <span className="font-medium whitespace-nowrap">Catégorie de droit fondamental:</span>
-                              <Badge className="font-normal whitespace-nowrap" style={{ backgroundColor: category.color, color: '#ffffff' }}>
-                                {category.name}
-                              </Badge>
-                            </>
-                          )}
+                      return (
+                        <div className={`flex items-start gap-3 ${language === 'ar' ? 'flex-row-reverse' : ''}`}>
+                          <User className="w-5 h-5 text-muted-foreground mt-0.5" />
+                          <div className={`flex flex-col ${language === 'ar' ? 'items-end' : 'items-start'}`}>
+                            {language === 'ar' ? (
+                              <>
+                                <span><span className="font-medium">المؤلف:</span> <span>{authorName}</span></span>
+                                {authorTitle && <span className="text-sm text-muted-foreground">{authorTitle}</span>}
+                              </>
+                            ) : (
+                              <>
+                                <span><span className="font-medium">Auteur:</span> <span>{authorName}</span></span>
+                                {authorTitle && <span className="text-sm text-muted-foreground">{authorTitle}</span>}
+                              </>
+                            )}
+                          </div>
                         </div>
+                      );
+                    })()}
+                  </div>
+                  
+                  {/* Ligne 2 : Catégorie */}
+                  {category && (
+                    <div className={`flex items-center gap-3 ${language === 'ar' ? 'flex-row-reverse justify-end' : 'justify-start'}`}>
+                      <Scale className="w-5 h-5 text-muted-foreground" />
+                      {language === 'ar' ? (
+                        <span>
+                          <span className="font-medium whitespace-nowrap">فئة الحق الأساسي:</span>{' '}
+                          <Badge className="font-normal whitespace-nowrap" style={{ backgroundColor: category.color, color: '#ffffff' }}>
+                            {category.name_ar || category.name}
+                          </Badge>
+                        </span>
+                      ) : (
+                        <>
+                          <span className="font-medium whitespace-nowrap">Catégorie de droit fondamental:</span>
+                          <Badge className="font-normal whitespace-nowrap" style={{ backgroundColor: category.color, color: '#ffffff' }}>
+                            {category.name}
+                          </Badge>
+                        </>
                       )}
                     </div>
-
-                    <div className="space-y-3">
-                      {currentAuthor && (() => {
-                        const hasComma = currentAuthor.includes(',');
-                        const authorName = hasComma ? currentAuthor.split(',')[0].trim() : currentAuthor;
-                        const authorTitle = hasComma ? currentAuthor.split(',').slice(1).join(',').trim() : null;
-                        
-                        return (
-                          <div className={`flex items-start gap-3 ${language === 'ar' ? 'flex-row-reverse justify-start' : 'justify-center md:justify-start'}`}>
-                            <User className="w-5 h-5 text-muted-foreground mt-0.5" />
-                            <div className={`flex flex-col ${language === 'ar' ? 'items-end' : 'items-start'}`}>
-                              {language === 'ar' ? (
-                                <>
-                                  <span><span className="font-medium">المؤلف:</span> <span>{authorName}</span></span>
-                                  {authorTitle && <span className="text-sm text-muted-foreground">{authorTitle}</span>}
-                                </>
-                              ) : (
-                                <>
-                                  <span><span className="font-medium">Auteur:</span> <span>{authorName}</span></span>
-                                  {authorTitle && <span className="text-sm text-muted-foreground">{authorTitle}</span>}
-                                </>
-                              )}
-                            </div>
-                          </div>
-                        );
-                      })()}
-                    </div>
-                  </div>
+                  )}
 
                   {/* Section Bibliographie - intégrée dans les métadonnées */}
                   {currentBibliography && (
@@ -732,68 +730,72 @@ const DocumentDetail = () => {
               ) : (
                 // Format pour Fiches de jurisprudence
                 <>
-                  <div className={`grid md:grid-cols-2 gap-6 ${language === 'ar' ? 'text-right' : ''}`}>
-                    <div className="space-y-3">
-                      {document.created_at && (
-                        <div className={`flex items-center gap-3 ${language === 'ar' ? 'flex-row-reverse justify-start' : 'justify-center md:justify-start'}`}>
-                          <Calendar className="w-5 h-5 text-muted-foreground" />
-                          {language === 'ar' ? (
-                            <span><span className="font-medium">تاريخ النشر:</span> {formatDate(document.created_at)}</span>
-                          ) : (
-                            <>
-                              <span className="font-medium">Date de publication:</span>
-                              <span>{formatDate(document.created_at)}</span>
-                            </>
-                          )}
-                        </div>
-                      )}
+                  {/* Ligne 1 : Date + Auteur */}
+                  <div className={`flex flex-wrap items-start gap-6 mb-4 ${language === 'ar' ? 'flex-row-reverse justify-end' : 'justify-start'}`}>
+                    {document.created_at && (
+                      <div className={`flex items-center gap-3 ${language === 'ar' ? 'flex-row-reverse' : ''}`}>
+                        <Calendar className="w-5 h-5 text-muted-foreground" />
+                        {language === 'ar' ? (
+                          <span><span className="font-medium">تاريخ النشر:</span> {formatDate(document.created_at)}</span>
+                        ) : (
+                          <>
+                            <span className="font-medium">Date de publication:</span>
+                            <span>{formatDate(document.created_at)}</span>
+                          </>
+                        )}
+                      </div>
+                    )}
+                    
+                    {currentAuthor && (() => {
+                      const hasComma = currentAuthor.includes(',');
+                      const authorName = hasComma ? currentAuthor.split(',')[0].trim() : currentAuthor;
+                      const authorTitle = hasComma ? currentAuthor.split(',').slice(1).join(',').trim() : null;
                       
-                      {category && (
-                        <div className={`flex items-center gap-3 ${language === 'ar' ? 'flex-row-reverse justify-start' : 'justify-center md:justify-start'}`}>
-                          <Scale className="w-5 h-5 text-muted-foreground" />
-                          {language === 'ar' ? (
-                            <span>
-                              <span className="font-medium whitespace-nowrap">فئة الحق الأساسي:</span>{' '}
-                              <Badge className="font-normal whitespace-nowrap" style={{ backgroundColor: category.color, color: '#ffffff' }}>
-                                {category.name_ar || category.name}
-                              </Badge>
-                            </span>
-                          ) : (
-                            <>
-                              <span className="font-medium whitespace-nowrap">Catégorie de droit fondamental:</span>
-                              <Badge className="font-normal whitespace-nowrap" style={{ backgroundColor: category.color, color: '#ffffff' }}>
-                                {category.name}
-                              </Badge>
-                            </>
-                          )}
-                        </div>
-                      )}
-
-                      {currentAuthor && (() => {
-                        const hasComma = currentAuthor.includes(',');
-                        const authorName = hasComma ? currentAuthor.split(',')[0].trim() : currentAuthor;
-                        const authorTitle = hasComma ? currentAuthor.split(',').slice(1).join(',').trim() : null;
-                        
-                        return (
-                          <div className={`flex items-start gap-3 ${language === 'ar' ? 'flex-row-reverse justify-start' : 'justify-center md:justify-start'}`}>
-                            <User className="w-5 h-5 text-muted-foreground mt-0.5" />
-                            <div className={`flex flex-col ${language === 'ar' ? 'items-end' : 'items-start'}`}>
-                              {language === 'ar' ? (
-                                <>
-                                  <span><span className="font-medium">المؤلف:</span> <span className="font-semibold">{authorName}</span></span>
-                                  {authorTitle && <span className="text-sm text-muted-foreground">{authorTitle}</span>}
-                                </>
-                              ) : (
-                                <>
-                                  <span><span className="font-medium">Auteur:</span> <span className="font-semibold">{authorName}</span></span>
-                                  {authorTitle && <span className="text-sm text-muted-foreground">{authorTitle}</span>}
-                                </>
-                              )}
-                            </div>
+                      return (
+                        <div className={`flex items-start gap-3 ${language === 'ar' ? 'flex-row-reverse' : ''}`}>
+                          <User className="w-5 h-5 text-muted-foreground mt-0.5" />
+                          <div className={`flex flex-col ${language === 'ar' ? 'items-end' : 'items-start'}`}>
+                            {language === 'ar' ? (
+                              <>
+                                <span><span className="font-medium">المؤلف:</span> <span className="font-semibold">{authorName}</span></span>
+                                {authorTitle && <span className="text-sm text-muted-foreground">{authorTitle}</span>}
+                              </>
+                            ) : (
+                              <>
+                                <span><span className="font-medium">Auteur:</span> <span className="font-semibold">{authorName}</span></span>
+                                {authorTitle && <span className="text-sm text-muted-foreground">{authorTitle}</span>}
+                              </>
+                            )}
                           </div>
-                        );
-                      })()}
+                        </div>
+                      );
+                    })()}
+                  </div>
+                  
+                  {/* Ligne 2 : Catégorie */}
+                  {category && (
+                    <div className={`flex items-center gap-3 mb-4 ${language === 'ar' ? 'flex-row-reverse justify-end' : 'justify-start'}`}>
+                      <Scale className="w-5 h-5 text-muted-foreground" />
+                      {language === 'ar' ? (
+                        <span>
+                          <span className="font-medium whitespace-nowrap">فئة الحق الأساسي:</span>{' '}
+                          <Badge className="font-normal whitespace-nowrap" style={{ backgroundColor: category.color, color: '#ffffff' }}>
+                            {category.name_ar || category.name}
+                          </Badge>
+                        </span>
+                      ) : (
+                        <>
+                          <span className="font-medium whitespace-nowrap">Catégorie de droit fondamental:</span>
+                          <Badge className="font-normal whitespace-nowrap" style={{ backgroundColor: category.color, color: '#ffffff' }}>
+                            {category.name}
+                          </Badge>
+                        </>
+                      )}
                     </div>
+                  )}
+                  
+                  {/* Autres métadonnées en grille */}
+                  <div className={`grid md:grid-cols-2 gap-6 ${language === 'ar' ? 'text-right' : ''}`}>
 
                     <div className="space-y-3">
                       {currentCourt && (
