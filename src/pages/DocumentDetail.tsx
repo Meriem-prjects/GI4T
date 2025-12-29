@@ -404,6 +404,55 @@ const DocumentDetail = () => {
   // On a besoin de traduction quand la langue interface ≠ langue du document
   const needsTranslation = (needsFrenchContent && documentIsArabic) || (needsArabicContent && documentIsFrench);
 
+  // Helper to escape regex special characters
+  const escapeRegex = (str: string): string => {
+    return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  };
+
+  // Function to clean title and keywords from content to avoid duplication
+  const cleanContentFromMetadata = (content: string, title: string, keywords: string[]): string => {
+    let cleanedContent = content;
+    
+    // Remove title if it appears at the beginning of content
+    if (title) {
+      // Pattern to match the title at the beginning (with HTML tags variations)
+      const escapedTitle = escapeRegex(title.trim());
+      const titlePatterns = [
+        // Title in paragraph at the start
+        new RegExp(`^\\s*(<p[^>]*>)?\\s*${escapedTitle}\\s*(<\\/p>)?\\s*`, 'i'),
+        // Title in heading tags
+        new RegExp(`^\\s*<h[1-6][^>]*>\\s*${escapedTitle}\\s*<\\/h[1-6]>\\s*`, 'i'),
+        // Title in div.page-break at the start
+        new RegExp(`(<div[^>]*class="page-break"[^>]*>\\s*)(<p[^>]*>)?\\s*${escapedTitle}\\s*(<\\/p>)?`, 'i'),
+      ];
+      
+      titlePatterns.forEach(pattern => {
+        cleanedContent = cleanedContent.replace(pattern, '$1');
+      });
+    }
+    
+    // Remove keywords line (Arabic, French, English patterns)
+    const keywordsPatterns = [
+      // Arabic keywords patterns
+      /(<p[^>]*>)?\s*(الكلمات المفاتيح|اﻟﻜﻠﻤﺎت اﻟﻤﻔﺎﺗﯿﺢ|الكلمات المفتاحية)\s*[:：]?\s*[^<]*(<\/p>)?/gi,
+      // French keywords patterns
+      /(<p[^>]*>)?\s*Mots[- ]?cl[ée]s\s*[:：]?\s*[^<]*(<\/p>)?/gi,
+      // English keywords patterns
+      /(<p[^>]*>)?\s*Keywords\s*[:：]?\s*[^<]*(<\/p>)?/gi,
+    ];
+    
+    keywordsPatterns.forEach(pattern => {
+      cleanedContent = cleanedContent.replace(pattern, '');
+    });
+    
+    // Clean up consecutive empty paragraphs
+    cleanedContent = cleanedContent.replace(/(<p[^>]*>\s*<\/p>\s*)+/gi, '');
+    // Clean up multiple line breaks
+    cleanedContent = cleanedContent.replace(/(<br\s*\/?>\s*){3,}/gi, '<br><br>');
+    
+    return cleanedContent.trim();
+  };
+
   // Build paginated content from page_contents if available and has multiple pages
   // Affiche directement la version complète du document
   const buildPaginatedContent = (): string => {
@@ -412,11 +461,15 @@ const DocumentDetail = () => {
     // Validate and parse page_contents from JSON
     if (!rawPageContents || !Array.isArray(rawPageContents) || rawPageContents.length <= 1) {
       // Pas de contenu paginé, utiliser le contenu simple
+      let content = '';
       if (needsTranslation && document.translated_content) {
         // Interface différente de la langue du document → utiliser traduction si disponible
-        return document.translated_content;
+        content = document.translated_content;
+      } else {
+        content = document.content || '';
       }
-      return document.content || '';
+      // Clean metadata from first page content
+      return cleanContentFromMetadata(content, currentTitle, currentKeywords || []);
     }
     
     const pageContents = rawPageContents as PageContent[];
@@ -429,7 +482,7 @@ const DocumentDetail = () => {
       page => page.translated_content && page.translated_content.trim() !== ''
     );
     
-    return sortedPages.map(page => {
+    return sortedPages.map((page, index) => {
       let pageContent: string;
       
       if (needsTranslation && pagesHaveTranslation) {
@@ -438,6 +491,11 @@ const DocumentDetail = () => {
       } else {
         // Interface dans la même langue que le document → afficher l'original
         pageContent = page.content || '';
+      }
+      
+      // Clean metadata only from the first page (where title and keywords typically appear)
+      if (index === 0) {
+        pageContent = cleanContentFromMetadata(pageContent, currentTitle, currentKeywords || []);
       }
       
       return `<div class="page-break" data-page="${page.pageNumber}">
