@@ -453,6 +453,17 @@ const DocumentDetail = () => {
     return cleanedContent.trim();
   };
 
+  // Use Arabic fields based on interface language
+  const currentTitle = language === 'ar' && document.title_ar ? document.title_ar : document.title;
+  const currentSubtitle = language === 'ar' && document.subtitle_ar ? document.subtitle_ar : document.subtitle;
+  const currentSummary = language === 'ar' && document.summary_ar ? document.summary_ar : document.summary;
+  const currentAuthor = language === 'ar' && document.author_ar ? document.author_ar : document.author;
+  const currentCourt = language === 'ar' && document.court_ar ? document.court_ar : document.court;
+  const currentPlaintiff = language === 'ar' && document.plaintiff_ar ? document.plaintiff_ar : document.plaintiff;
+  const currentDefendant = language === 'ar' && document.defendant_ar ? document.defendant_ar : document.defendant;
+  const currentKeywords = language === 'ar' && document.keywords_ar ? document.keywords_ar : document.keywords;
+  const currentBibliography = language === 'ar' && document.bibliography_ar ? document.bibliography_ar : document.bibliography;
+
   // Build paginated content from page_contents if available and has multiple pages
   // Affiche directement la version complète du document
   const buildPaginatedContent = (): string => {
@@ -506,17 +517,6 @@ const DocumentDetail = () => {
 
   const paginatedContent = buildPaginatedContent();
   const formattedContent = renderFormattedContent(paginatedContent);
-  
-  // Use Arabic fields based on interface language
-  const currentTitle = language === 'ar' && document.title_ar ? document.title_ar : document.title;
-  const currentSubtitle = language === 'ar' && document.subtitle_ar ? document.subtitle_ar : document.subtitle;
-  const currentSummary = language === 'ar' && document.summary_ar ? document.summary_ar : document.summary;
-  const currentAuthor = language === 'ar' && document.author_ar ? document.author_ar : document.author;
-  const currentCourt = language === 'ar' && document.court_ar ? document.court_ar : document.court;
-  const currentPlaintiff = language === 'ar' && document.plaintiff_ar ? document.plaintiff_ar : document.plaintiff;
-  const currentDefendant = language === 'ar' && document.defendant_ar ? document.defendant_ar : document.defendant;
-  const currentKeywords = language === 'ar' && document.keywords_ar ? document.keywords_ar : document.keywords;
-  const currentBibliography = language === 'ar' && document.bibliography_ar ? document.bibliography_ar : document.bibliography;
   
   // Detect if this is an analysis document (not jurisprudence)
   const isAnalysisDocument = () => {
