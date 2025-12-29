@@ -680,6 +680,18 @@ serve(async (req) => {
       }
     }
 
+    // Consolidate page contents into a single content string if available
+    const consolidatedContent = pageContents && pageContents.length > 0
+      ? pageContents.map((p: { content: string }) => p.content).join('\n\n')
+      : finalContent;
+    
+    console.log('Content consolidation:', {
+      hasPageContents: !!pageContents && pageContents.length > 0,
+      pageContentsLength: pageContents?.length || 0,
+      consolidatedContentLength: consolidatedContent?.length || 0,
+      finalContentLength: finalContent?.length || 0
+    });
+
     // Save document to database with enhanced metadata
     const documentData = {
       original_filename: file.name,
@@ -688,7 +700,7 @@ serve(async (req) => {
       title_ar: analysisData.title_ar || null,
       summary: analysisData.summary || '',
       summary_ar: analysisData.summary_ar || null,
-      content: finalContent, // Store separated main content
+      content: consolidatedContent, // Store full consolidated content from pages
       translated_content: translatedContentVar || null, // Store exhaustive translation
       textual_metadata: textualMetadata || null, // Store separated textual metadata
       keywords: analysisData.keywords || [],
