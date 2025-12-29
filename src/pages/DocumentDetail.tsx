@@ -641,14 +641,14 @@ const DocumentDetail = () => {
             )}
 
             {/* Metadata */}
-            <div className={`bg-muted/30 rounded-lg p-6 mb-8 ${language === 'ar' ? 'dir-rtl' : ''}`}>
+            <div className={`bg-muted/30 rounded-lg p-6 mb-8 max-w-4xl mx-auto ${language === 'ar' ? 'dir-rtl' : ''}`}>
               {isAnalysisDocument() ? (
                 // Format pour Analyses juridiques, Commentaires, Blogs
                 <>
                   <div className={`grid md:grid-cols-2 gap-6 ${language === 'ar' ? 'text-right' : ''}`}>
                     <div className="space-y-3">
                       {document.created_at && (
-                        <div className={`flex items-center gap-3 ${language === 'ar' ? 'flex-row-reverse justify-start' : 'justify-center md:justify-start'}`}>
+                        <div className={`flex items-center gap-3 justify-start ${language === 'ar' ? 'flex-row-reverse' : ''}`}>
                           <Calendar className="w-5 h-5 text-muted-foreground" />
                           {language === 'ar' ? (
                             <span><span className="font-medium">تاريخ النشر:</span> {formatDate(document.created_at)}</span>
@@ -662,7 +662,7 @@ const DocumentDetail = () => {
                       )}
                       
                       {category && (
-                        <div className={`flex items-center gap-3 ${language === 'ar' ? 'flex-row-reverse justify-start' : 'justify-center md:justify-start'}`}>
+                        <div className={`flex items-center gap-3 justify-start ${language === 'ar' ? 'flex-row-reverse' : ''}`}>
                           <Scale className="w-5 h-5 text-muted-foreground" />
                           {language === 'ar' ? (
                             <span>
@@ -690,7 +690,7 @@ const DocumentDetail = () => {
                         const authorTitle = hasComma ? currentAuthor.split(',').slice(1).join(',').trim() : null;
                         
                         return (
-                          <div className={`flex items-start gap-3 ${language === 'ar' ? 'flex-row-reverse justify-start' : 'justify-center md:justify-start'}`}>
+                          <div className={`flex items-start gap-3 justify-start ${language === 'ar' ? 'flex-row-reverse' : ''}`}>
                             <User className="w-5 h-5 text-muted-foreground mt-0.5" />
                             <div className={`flex flex-col ${language === 'ar' ? 'items-end' : 'items-start'}`}>
                               {language === 'ar' ? (
@@ -735,7 +735,7 @@ const DocumentDetail = () => {
                   <div className={`grid md:grid-cols-2 gap-6 ${language === 'ar' ? 'text-right' : ''}`}>
                     <div className="space-y-3">
                       {document.created_at && (
-                        <div className={`flex items-center gap-3 ${language === 'ar' ? 'flex-row-reverse justify-start' : 'justify-center md:justify-start'}`}>
+                        <div className={`flex items-center gap-3 justify-start ${language === 'ar' ? 'flex-row-reverse' : ''}`}>
                           <Calendar className="w-5 h-5 text-muted-foreground" />
                           {language === 'ar' ? (
                             <span><span className="font-medium">تاريخ النشر:</span> {formatDate(document.created_at)}</span>
@@ -749,7 +749,7 @@ const DocumentDetail = () => {
                       )}
                       
                       {category && (
-                        <div className={`flex items-center gap-3 ${language === 'ar' ? 'flex-row-reverse justify-start' : 'justify-center md:justify-start'}`}>
+                        <div className={`flex items-center gap-3 justify-start ${language === 'ar' ? 'flex-row-reverse' : ''}`}>
                           <Scale className="w-5 h-5 text-muted-foreground" />
                           {language === 'ar' ? (
                             <span>
@@ -775,7 +775,7 @@ const DocumentDetail = () => {
                         const authorTitle = hasComma ? currentAuthor.split(',').slice(1).join(',').trim() : null;
                         
                         return (
-                          <div className={`flex items-start gap-3 ${language === 'ar' ? 'flex-row-reverse justify-start' : 'justify-center md:justify-start'}`}>
+                          <div className={`flex items-start gap-3 justify-start ${language === 'ar' ? 'flex-row-reverse' : ''}`}>
                             <User className="w-5 h-5 text-muted-foreground mt-0.5" />
                             <div className={`flex flex-col ${language === 'ar' ? 'items-end' : 'items-start'}`}>
                               {language === 'ar' ? (
@@ -797,7 +797,7 @@ const DocumentDetail = () => {
 
                     <div className="space-y-3">
                       {currentCourt && (
-                        <div className={`flex items-center gap-3 ${language === 'ar' ? 'flex-row-reverse justify-start' : 'justify-center md:justify-start'}`}>
+                        <div className={`flex items-center gap-3 justify-start ${language === 'ar' ? 'flex-row-reverse' : ''}`}>
                           <Building2 className="w-5 h-5 text-muted-foreground" />
                           {language === 'ar' ? (
                             <span><span className="font-medium">نوع المحكمة:</span> {currentCourt}</span>
@@ -811,7 +811,7 @@ const DocumentDetail = () => {
                       )}
 
                       {(document.court_category_type || document.court_category_type_ar) && (
-                        <div className={`flex items-center gap-3 ${language === 'ar' ? 'flex-row-reverse justify-start' : 'justify-center md:justify-start'}`}>
+                        <div className={`flex items-center gap-3 justify-start ${language === 'ar' ? 'flex-row-reverse' : ''}`}>
                           <Scale className="w-5 h-5 text-muted-foreground" />
                           {language === 'ar' ? (
                             <span><span className="font-medium">فئة المحكمة:</span> {capitalizeFirstLetter(document.court_category_type_ar || document.court_category_type || "غير محدد")}</span>
@@ -825,7 +825,7 @@ const DocumentDetail = () => {
                       )}
 
                       {currentCourtLevel && (
-                        <div className={`flex items-center gap-3 ${language === 'ar' ? 'flex-row-reverse justify-start' : 'justify-center md:justify-start'}`}>
+                        <div className={`flex items-center gap-3 justify-start ${language === 'ar' ? 'flex-row-reverse' : ''}`}>
                           <MapPin className="w-5 h-5 text-muted-foreground" />
                           {language === 'ar' ? (
                             <span><span className="font-medium">مستوى القضاء:</span> {currentCourtLevel}</span>
@@ -839,7 +839,7 @@ const DocumentDetail = () => {
                       )}
 
                       {document.year && (
-                        <div className={`flex items-center gap-3 ${language === 'ar' ? 'flex-row-reverse justify-start' : 'justify-center md:justify-start'}`}>
+                        <div className={`flex items-center gap-3 justify-start ${language === 'ar' ? 'flex-row-reverse' : ''}`}>
                           <Calendar className="w-5 h-5 text-muted-foreground" />
                           {language === 'ar' ? (
                             <span><span className="font-medium">السنة:</span> {document.year}</span>
