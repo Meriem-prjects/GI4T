@@ -505,7 +505,3 @@ All colors MUST be HSL.
   font-family: inherit;
 }
 
-/* RTL support for page carousel */
-[dir="rtl"] .page-carousel-dots {
-  flex-direction: row-reverse;
-}
