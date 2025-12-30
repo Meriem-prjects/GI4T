@@ -211,19 +211,25 @@ const PageCarousel: React.FC<PageCarouselProps> = ({ content, language }) => {
       </div>
 
       {/* Pagination dots */}
-      <div className={`page-carousel-dots flex justify-center gap-2 mt-6 ${isRTL ? 'flex-row-reverse' : ''}`}>
-        {pages.map((_, index) => (
-          <button
-            key={index}
-            onClick={() => scrollTo(index)}
-            className={`w-2.5 h-2.5 rounded-full transition-all duration-200 ${
-              index === currentIndex 
-                ? 'bg-primary scale-125' 
-                : 'bg-muted-foreground/30 hover:bg-muted-foreground/50'
-            }`}
-            aria-label={`Go to page ${index + 1}`}
-          />
-        ))}
+      <div className="page-carousel-dots flex justify-center gap-2 mt-6">
+        {pages.map((_, index) => {
+          // En RTL, inverser l'index pour que le point actif commence à droite
+          const displayIndex = isRTL ? (pages.length - 1 - index) : index;
+          const isActive = displayIndex === currentIndex;
+          
+          return (
+            <button
+              key={index}
+              onClick={() => scrollTo(displayIndex)}
+              className={`w-2.5 h-2.5 rounded-full transition-all duration-200 ${
+                isActive 
+                  ? 'bg-primary scale-125' 
+                  : 'bg-muted-foreground/30 hover:bg-muted-foreground/50'
+              }`}
+              aria-label={`Go to page ${displayIndex + 1}`}
+            />
+          );
+        })}
       </div>
 
       {/* Swipe hint for mobile */}
