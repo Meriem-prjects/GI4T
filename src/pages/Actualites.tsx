@@ -205,8 +205,10 @@ const Actualites = () => {
                     </Badge>
                   ))}
                 </div>
-                <Button size="lg">
-                  {t('readMore')}
+                <Button size="lg" asChild>
+                  <Link to={`/observatoire/actualites/${featuredNews.id}`}>
+                    {t('readMore')}
+                  </Link>
                 </Button>
               </div>
             </CardContent>
@@ -255,8 +257,10 @@ const Actualites = () => {
                       </Badge>
                     ))}
                   </div>
-                  <Button className="w-full" size="sm">
-                    {t('readMore')}
+                  <Button className="w-full" size="sm" asChild>
+                    <Link to={`/observatoire/actualites/${article.id}`}>
+                      {t('readMore')}
+                    </Link>
                   </Button>
                 </CardContent>
               </Card>
