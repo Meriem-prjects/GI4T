@@ -16,6 +16,7 @@ import AdminAnalysesJuridiques from "./AdminAnalysesJuridiques";
 import AdminFichesJurisprudence from "./AdminFichesJurisprudence";
 import AdminActualites from "./AdminActualites";
 import AdminActualitesEditor from "./AdminActualitesEditor";
+import AdminHistorique from "./AdminHistorique";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { LogOut, User } from "lucide-react";
@@ -72,7 +73,7 @@ const AdminObservatoire = () => {
             <Route path="validation" element={<AdminValidation />} />
             <Route path="commentaires" element={<AdminCommentaires />} />
             <Route path="statistiques" element={<AdminStatistiques />} />
-            <Route path="historique" element={<div className="p-6">Historique - En développement</div>} />
+            <Route path="historique" element={<AdminHistorique />} />
             <Route path="parametres" element={<AdminParametres />} />
           </Routes>
         </div>

@@ -46,6 +46,7 @@ export type Database = {
           entity_id: string
           entity_type: string
           id: string
+          user_id: string | null
         }
         Insert: {
           action: string
@@ -54,6 +55,7 @@ export type Database = {
           entity_id: string
           entity_type: string
           id?: string
+          user_id?: string | null
         }
         Update: {
           action?: string
@@ -62,6 +64,7 @@ export type Database = {
           entity_id?: string
           entity_type?: string
           id?: string
+          user_id?: string | null
         }
         Relationships: []
       }
