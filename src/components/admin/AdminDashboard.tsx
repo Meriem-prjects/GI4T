@@ -13,12 +13,15 @@ import {
 } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { useNavigate } from "react-router-dom";
 
 interface AdminDashboardProps {
   type: "observatoire" | "acces-aux-droits";
 }
 
 const AdminDashboard = ({ type }: AdminDashboardProps) => {
+  const navigate = useNavigate();
+  const basePath = type === "observatoire" ? "/admin/observatoire" : "/admin/acces-aux-droits";
   const themeColors = type === "observatoire" 
     ? {
         primary: "text-[hsl(var(--justclic-blue))]",
@@ -123,7 +126,10 @@ const AdminDashboard = ({ type }: AdminDashboardProps) => {
 
       {/* Statistics Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <Card>
+        <Card 
+          className="cursor-pointer hover:shadow-md transition-shadow"
+          onClick={() => navigate(`${basePath}/contenus`)}
+        >
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">
               {type === "observatoire" ? "Contenus publiés" : "Événements publiés"}
@@ -144,7 +150,10 @@ const AdminDashboard = ({ type }: AdminDashboardProps) => {
           </CardContent>
         </Card>
 
-        <Card>
+        <Card 
+          className="cursor-pointer hover:shadow-md transition-shadow"
+          onClick={() => navigate(`${basePath}/validation`)}
+        >
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">
               {type === "observatoire" ? "En attente" : "Brouillons"}
@@ -166,7 +175,10 @@ const AdminDashboard = ({ type }: AdminDashboardProps) => {
         </Card>
 
         {type === "observatoire" && (
-          <Card>
+          <Card 
+            className="cursor-pointer hover:shadow-md transition-shadow"
+            onClick={() => navigate(`${basePath}/contenus`)}
+          >
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Rejetés</CardTitle>
               <XCircle className="w-4 h-4 text-red-500" />
@@ -186,7 +198,10 @@ const AdminDashboard = ({ type }: AdminDashboardProps) => {
           </Card>
         )}
 
-        <Card>
+        <Card 
+          className="cursor-pointer hover:shadow-md transition-shadow"
+          onClick={() => navigate(`${basePath}/utilisateurs`)}
+        >
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">
               {type === "observatoire" ? "Utilisateurs actifs" : "Inscriptions"}
@@ -230,7 +245,11 @@ const AdminDashboard = ({ type }: AdminDashboardProps) => {
                           {stats.pending} document{stats.pending > 1 ? 's' : ''} nécessite{stats.pending > 1 ? 'nt' : ''} une validation
                         </p>
                       </div>
-                      <Button size="sm" variant="outline">
+                      <Button 
+                        size="sm" 
+                        variant="outline"
+                        onClick={() => navigate(`${basePath}/validation`)}
+                      >
                         Voir détails
                       </Button>
                     </div>
@@ -250,7 +269,11 @@ const AdminDashboard = ({ type }: AdminDashboardProps) => {
                           {stats.rejected} document{stats.rejected > 1 ? 's' : ''} à corriger
                         </p>
                       </div>
-                      <Button size="sm" variant="outline">
+                      <Button 
+                        size="sm" 
+                        variant="outline"
+                        onClick={() => navigate(`${basePath}/contenus`)}
+                      >
                         Gérer
                       </Button>
                     </div>
@@ -267,19 +290,34 @@ const AdminDashboard = ({ type }: AdminDashboardProps) => {
               <CardDescription>Actions rapides les plus utilisées</CardDescription>
             </CardHeader>
             <CardContent className="space-y-3">
-              <Button className={`w-full justify-start ${themeColors.badge} text-white hover:opacity-90`}>
+              <Button 
+                className={`w-full justify-start ${themeColors.badge} text-white hover:opacity-90`}
+                onClick={() => navigate(`${basePath}/editeur`)}
+              >
                 <Plus className="w-4 h-4 mr-2" />
                 Créer contenu
               </Button>
-              <Button variant="outline" className="w-full justify-start">
+              <Button 
+                variant="outline" 
+                className="w-full justify-start"
+                onClick={() => navigate(`${basePath}/utilisateurs`)}
+              >
                 <UserPlus className="w-4 h-4 mr-2" />
                 Ajouter utilisateur
               </Button>
-              <Button variant="outline" className="w-full justify-start">
+              <Button 
+                variant="outline" 
+                className="w-full justify-start"
+                onClick={() => navigate(`${basePath}/validation`)}
+              >
                 <Eye className="w-4 h-4 mr-2" />
                 Contenus en attente
               </Button>
-              <Button variant="outline" className="w-full justify-start">
+              <Button 
+                variant="outline" 
+                className="w-full justify-start"
+                onClick={() => navigate(`${basePath}/statistiques`)}
+              >
                 <BarChart3 className="w-4 h-4 mr-2" />
                 Voir les statistiques détaillées
               </Button>
