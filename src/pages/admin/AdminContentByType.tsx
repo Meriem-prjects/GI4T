@@ -26,6 +26,7 @@ import { useToast } from '@/hooks/use-toast';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { Link } from 'react-router-dom';
+import { logActivity } from '@/hooks/useActivityLog';
 
 interface Document {
   id: string;
@@ -154,12 +155,26 @@ const AdminContentByType: React.FC<AdminContentByTypeProps> = ({
         return;
       }
 
+      const currentDoc = documents.find(d => d.id === documentId);
+      const oldStatus = currentDoc?.status || 'draft';
+
       const { error } = await supabase
         .from('documents')
         .update({ status: newStatus })
         .eq('id', documentId);
 
       if (error) throw error;
+
+      await logActivity({
+        entityType: 'document',
+        entityId: documentId,
+        action: 'status_change',
+        details: {
+          old_status: oldStatus,
+          new_status: newStatus,
+          changed_at: new Date().toISOString()
+        }
+      });
 
       setDocuments(prev => 
         prev.map(doc => 
@@ -186,12 +201,26 @@ const AdminContentByType: React.FC<AdminContentByTypeProps> = ({
 
   const submitForValidation = async (documentId: string) => {
     try {
+      const currentDoc = documents.find(d => d.id === documentId);
+      const oldStatus = currentDoc?.status || 'draft';
+
       const { error } = await supabase
         .from('documents')
         .update({ status: 'pending_validation' })
         .eq('id', documentId);
 
       if (error) throw error;
+
+      await logActivity({
+        entityType: 'document',
+        entityId: documentId,
+        action: 'status_change',
+        details: {
+          old_status: oldStatus,
+          new_status: 'pending_validation',
+          changed_at: new Date().toISOString()
+        }
+      });
 
       setDocuments(prev => 
         prev.map(doc => 
@@ -270,6 +299,21 @@ const AdminContentByType: React.FC<AdminContentByTypeProps> = ({
         .in('id', selectedDocuments);
 
       if (error) throw error;
+
+      // Log activity for each document
+      for (const docId of selectedDocuments) {
+        const doc = documents.find(d => d.id === docId);
+        await logActivity({
+          entityType: 'document',
+          entityId: docId,
+          action: 'status_change',
+          details: {
+            old_status: doc?.status || 'draft',
+            new_status: 'pending_validation',
+            changed_at: new Date().toISOString()
+          }
+        });
+      }
 
       setDocuments(prev =>
         prev.map(doc =>
