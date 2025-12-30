@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Breadcrumb, BreadcrumbList, BreadcrumbItem, BreadcrumbLink, BreadcrumbPage, BreadcrumbSeparator } from "@/components/ui/breadcrumb";
-import { FileText, Pen, TrendingUp, Calendar, User } from "lucide-react";
+import { FileText, Pen, TrendingUp, Eye, Calendar, User, Scale } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useTranslation } from "@/hooks/useTranslation";
 import { useAllAnalysesOpinions, useDocumentTypesCounts } from "@/hooks/useDocumentsByType";
@@ -61,9 +61,9 @@ const AnalysesOpinions = () => {
         {/* Categories */}
         <section className="mb-12">
           <h2 className={`text-2xl font-bold mb-6 ${isRTL ? 'text-right' : ''}`}>{t('contentTypes')}</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             {countsLoading ? (
-              Array.from({ length: 3 }).map((_, i) => (
+              Array.from({ length: 4 }).map((_, i) => (
                 <Card key={i}>
                   <CardHeader>
                     <Skeleton className="h-8 w-8 mb-2" />
@@ -100,6 +100,14 @@ const AnalysesOpinions = () => {
                   icon: TrendingUp, 
                   color: "bg-purple-100 text-purple-800",
                   type: "blogs"
+                },
+                { 
+                  title: t('caseSheets'), 
+                  count: getTypeCount('Fiche de jurisprudence'), 
+                  description: t('caseSheetsDesc'), 
+                  icon: Scale, 
+                  color: "bg-amber-100 text-amber-800",
+                  type: "fiches-jurisprudence"
                 }
               ].map((category) => {
                 const Icon = category.icon;
