@@ -11,6 +11,7 @@ import { useToast } from "@/hooks/use-toast";
 import { CategoryCombobox } from "@/components/admin/CategoryCombobox";
 import { useNavigate } from "react-router-dom";
 import { useDocumentTypes } from "@/hooks/useDocumentTypes";
+import { logActivity } from "@/hooks/useActivityLog";
 
 interface Document {
   id: string;
@@ -127,6 +128,18 @@ const AdminValidation = () => {
 
       if (error) throw error;
 
+      // Log activity with user_id
+      await logActivity({
+        entityType: 'document',
+        entityId: documentId,
+        action: 'status_change',
+        details: {
+          old_status: 'pending_validation',
+          new_status: 'processed',
+          changed_at: new Date().toISOString()
+        }
+      });
+
       setDocuments(documents.filter(doc => doc.id !== documentId));
       toast({
         title: "Succès",
@@ -153,6 +166,18 @@ const AdminValidation = () => {
         .eq('id', documentId);
 
       if (error) throw error;
+
+      // Log activity with user_id
+      await logActivity({
+        entityType: 'document',
+        entityId: documentId,
+        action: 'status_change',
+        details: {
+          old_status: 'pending_validation',
+          new_status: 'draft',
+          changed_at: new Date().toISOString()
+        }
+      });
 
       setDocuments(documents.filter(doc => doc.id !== documentId));
       toast({
