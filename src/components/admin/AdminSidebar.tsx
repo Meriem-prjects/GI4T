@@ -100,6 +100,12 @@ const AdminSidebar = ({ type, isCollapsed = false, onToggle }: AdminSidebarProps
   // Navigation items pour Observatoire - bottom items
   const observatoireBottomItems = [
     {
+      title: "Actualités",
+      icon: Newspaper,
+      href: `${basePath}/actualites`,
+      description: "Gérer les actualités"
+    },
+    {
       title: "Éditeur",
       icon: FileText,
       href: `${basePath}/editeur`,
