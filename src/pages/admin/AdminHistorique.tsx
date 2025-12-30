@@ -18,7 +18,11 @@ import {
   ChevronLeft,
   ChevronRight,
   Download,
-  History
+  History,
+  Users,
+  FileCheck,
+  FileClock,
+  FileX
 } from "lucide-react";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
@@ -29,6 +33,7 @@ const AdminHistorique = () => {
   const { isAdmin } = useAuth();
   const [period, setPeriod] = useState("30");
   const [actionFilter, setActionFilter] = useState("all");
+  const [userFilter, setUserFilter] = useState("all");
   const [page, setPage] = useState(1);
 
   // Vérification d'accès - uniquement pour les super admins
@@ -75,9 +80,9 @@ const AdminHistorique = () => {
     return actionLabels[action] || { message: action || 'Action', icon: Activity, color: 'text-gray-600', bgColor: 'bg-gray-100' };
   };
 
-  // Récupérer l'historique des activités
-  const { data: activitiesData, isLoading } = useQuery({
-    queryKey: ["activity-history", period, actionFilter, page],
+  // Récupérer les statistiques
+  const { data: statsData } = useQuery({
+    queryKey: ["activity-stats", period, userFilter],
     queryFn: async () => {
       // Calculer la date limite
       let dateLimit = null;
@@ -85,6 +90,88 @@ const AdminHistorique = () => {
         const days = parseInt(period);
         dateLimit = new Date();
         dateLimit.setDate(dateLimit.getDate() - days);
+      }
+
+      // Récupérer les user IDs selon le filtre
+      let userIds: string[] | null = null;
+      if (userFilter !== "all" && userFilter !== "system") {
+        const { data: usersWithRole } = await supabase
+          .from("user_roles")
+          .select("user_id")
+          .eq("role", userFilter as any);
+        userIds = usersWithRole?.map(u => u.user_id) || [];
+      }
+
+      // Construire la requête pour les statistiques
+      let query = supabase
+        .from("activity_logs")
+        .select("action, details, user_id");
+
+      if (dateLimit) {
+        query = query.gte("created_at", dateLimit.toISOString());
+      }
+
+      if (userFilter === "system") {
+        query = query.is("user_id", null);
+      } else if (userIds && userIds.length > 0) {
+        query = query.in("user_id", userIds);
+      }
+
+      const { data: activities } = await query;
+
+      // Compter les documents en attente actuellement
+      const { count: pendingCount } = await supabase
+        .from("documents")
+        .select("*", { count: "exact", head: true })
+        .eq("status", "pending_validation");
+
+      // Calculer les statistiques
+      const validations = activities?.filter(a => {
+        const details = a.details as Record<string, any> | null;
+        return a.action === 'status_change' && details?.new_status === 'processed';
+      }).length || 0;
+
+      const rejections = activities?.filter(a => {
+        const details = a.details as Record<string, any> | null;
+        return a.action === 'status_change' && 
+          details?.new_status === 'draft' && 
+          details?.old_status === 'pending_validation';
+      }).length || 0;
+
+      const submissions = activities?.filter(a => {
+        const details = a.details as Record<string, any> | null;
+        return a.action === 'status_change' && details?.new_status === 'pending_validation';
+      }).length || 0;
+
+      return {
+        validations,
+        pending: pendingCount || 0,
+        rejections,
+        submissions
+      };
+    }
+  });
+
+  // Récupérer l'historique des activités
+  const { data: activitiesData, isLoading } = useQuery({
+    queryKey: ["activity-history", period, actionFilter, userFilter, page],
+    queryFn: async () => {
+      // Calculer la date limite
+      let dateLimit = null;
+      if (period !== "all") {
+        const days = parseInt(period);
+        dateLimit = new Date();
+        dateLimit.setDate(dateLimit.getDate() - days);
+      }
+
+      // Récupérer les user IDs selon le filtre de rôle
+      let userIds: string[] | null = null;
+      if (userFilter !== "all" && userFilter !== "system") {
+        const { data: usersWithRole } = await supabase
+          .from("user_roles")
+          .select("user_id")
+          .eq("role", userFilter as any);
+        userIds = usersWithRole?.map(u => u.user_id) || [];
       }
 
       // Construire la requête de base
@@ -96,6 +183,13 @@ const AdminHistorique = () => {
       // Appliquer le filtre de période
       if (dateLimit) {
         query = query.gte("created_at", dateLimit.toISOString());
+      }
+
+      // Appliquer le filtre de rôle
+      if (userFilter === "system") {
+        query = query.is("user_id", null);
+      } else if (userIds && userIds.length > 0) {
+        query = query.in("user_id", userIds);
       }
 
       // Appliquer le filtre d'action
@@ -131,7 +225,7 @@ const AdminHistorique = () => {
           .map(a => a.entity_id)
       )];
 
-      const userIds = [...new Set(
+      const activityUserIds = [...new Set(
         activities
           .filter(a => a.user_id)
           .map(a => a.user_id)
@@ -151,7 +245,7 @@ const AdminHistorique = () => {
       const { data: profiles } = await supabase
         .from("profiles")
         .select("user_id, first_name, last_name, email")
-        .in("user_id", userIds);
+        .in("user_id", activityUserIds);
 
       const userMap = new Map(
         profiles?.map(p => [
@@ -166,7 +260,7 @@ const AdminHistorique = () => {
       const { data: roles } = await supabase
         .from("user_roles")
         .select("user_id, role")
-        .in("user_id", userIds);
+        .in("user_id", activityUserIds);
 
       const roleMap = new Map(
         roles?.map(r => [r.user_id, r.role]) || []
@@ -227,18 +321,24 @@ const AdminHistorique = () => {
 
   const getRoleLabel = (role: string | null) => {
     const roleLabels: Record<string, string> = {
-      'admin': 'Super Admin',
+      'admin': 'Administrateur',
       'admin_observatoire': 'Validateur',
+      'editor': 'Éditeur',
+      'validator': 'Validateur',
       'admin_acces_droits': 'Admin Accès Droits',
       'user': 'Utilisateur'
     };
-    return roleLabels[role || ''] || role || 'Système';
+    return roleLabels[role || ''] || 'Système';
   };
 
-  const getRoleBadgeVariant = (role: string | null) => {
-    if (role === 'admin') return 'default';
-    if (role === 'admin_observatoire') return 'secondary';
-    return 'outline';
+  const getRoleBadgeVariant = (role: string | null): "default" | "secondary" | "outline" | "destructive" => {
+    switch (role) {
+      case 'admin': return 'default';
+      case 'admin_observatoire':
+      case 'validator': return 'secondary';
+      case 'editor': return 'outline';
+      default: return 'outline';
+    }
   };
 
   return (
@@ -251,7 +351,7 @@ const AdminHistorique = () => {
           <div>
             <h1 className="text-2xl font-bold">Historique des actions</h1>
             <p className="text-muted-foreground">
-              Suivi complet de toutes les activités administratives
+              Suivi des activités des administrateurs, validateurs et éditeurs
             </p>
           </div>
         </div>
@@ -259,6 +359,65 @@ const AdminHistorique = () => {
           <Download className="h-4 w-4 mr-2" />
           Exporter CSV
         </Button>
+      </div>
+
+      {/* Cartes de statistiques */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <Card>
+          <CardContent className="pt-6">
+            <div className="flex items-center gap-4">
+              <div className="p-3 rounded-lg bg-green-100">
+                <FileCheck className="h-6 w-6 text-green-600" />
+              </div>
+              <div>
+                <p className="text-2xl font-bold">{statsData?.validations || 0}</p>
+                <p className="text-sm text-muted-foreground">Documents validés</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardContent className="pt-6">
+            <div className="flex items-center gap-4">
+              <div className="p-3 rounded-lg bg-amber-100">
+                <FileClock className="h-6 w-6 text-amber-600" />
+              </div>
+              <div>
+                <p className="text-2xl font-bold">{statsData?.pending || 0}</p>
+                <p className="text-sm text-muted-foreground">En attente de validation</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardContent className="pt-6">
+            <div className="flex items-center gap-4">
+              <div className="p-3 rounded-lg bg-red-100">
+                <FileX className="h-6 w-6 text-red-600" />
+              </div>
+              <div>
+                <p className="text-2xl font-bold">{statsData?.rejections || 0}</p>
+                <p className="text-sm text-muted-foreground">Documents rejetés</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardContent className="pt-6">
+            <div className="flex items-center gap-4">
+              <div className="p-3 rounded-lg bg-blue-100">
+                <Plus className="h-6 w-6 text-blue-600" />
+              </div>
+              <div>
+                <p className="text-2xl font-bold">{statsData?.submissions || 0}</p>
+                <p className="text-sm text-muted-foreground">Soumissions</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
       </div>
 
       {/* Filtres */}
@@ -279,6 +438,23 @@ const AdminHistorique = () => {
                   <SelectItem value="30">30 derniers jours</SelectItem>
                   <SelectItem value="90">90 derniers jours</SelectItem>
                   <SelectItem value="all">Tout l'historique</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="flex flex-col gap-1.5">
+              <label className="text-sm font-medium">Rôle</label>
+              <Select value={userFilter} onValueChange={(v) => { setUserFilter(v); setPage(1); }}>
+                <SelectTrigger className="w-[180px]">
+                  <Users className="h-4 w-4 mr-2" />
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Tous les rôles</SelectItem>
+                  <SelectItem value="admin">Administrateur</SelectItem>
+                  <SelectItem value="admin_observatoire">Validateur</SelectItem>
+                  <SelectItem value="editor">Éditeur</SelectItem>
+                  <SelectItem value="system">Système (automatique)</SelectItem>
                 </SelectContent>
               </Select>
             </div>
