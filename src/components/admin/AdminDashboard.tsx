@@ -129,19 +129,46 @@ const AdminDashboard = ({ type }: AdminDashboardProps) => {
     return actionLabels[action] || { message: action || 'Action', icon: Activity, color: 'text-gray-500 bg-gray-100' };
   };
 
-  // Récupérer les dernières activités (uniquement pour Observatoire)
+  // Récupérer les dernières activités avec les titres des documents
   const { data: recentActivities } = useQuery({
     queryKey: ["recent-activities"],
     queryFn: async () => {
       if (type !== "observatoire") return [];
       
-      const { data } = await supabase
+      // Récupérer les logs d'activité
+      const { data: activities } = await supabase
         .from("activity_logs")
         .select("*")
         .order("created_at", { ascending: false })
         .limit(5);
 
-      return data || [];
+      if (!activities || activities.length === 0) return [];
+
+      // Récupérer les IDs des documents uniques
+      const documentIds = [...new Set(
+        activities
+          .filter(a => a.entity_type === 'document')
+          .map(a => a.entity_id)
+      )];
+
+      // Récupérer les titres des documents
+      const { data: documents } = await supabase
+        .from("documents")
+        .select("id, title, title_ar")
+        .in("id", documentIds);
+
+      // Créer un map des titres
+      const documentTitles = new Map(
+        documents?.map(d => [d.id, d.title || d.title_ar || 'Document sans titre']) || []
+      );
+
+      // Ajouter le titre à chaque activité
+      return activities.map(activity => ({
+        ...activity,
+        documentTitle: activity.entity_type === 'document' 
+          ? documentTitles.get(activity.entity_id) || 'Document supprimé'
+          : null
+      }));
     },
     enabled: type === "observatoire"
   });
@@ -380,8 +407,8 @@ const AdminDashboard = ({ type }: AdminDashboardProps) => {
                         </div>
                         <div>
                           <p className="font-medium">{formatted.message}</p>
-                          <p className="text-sm text-muted-foreground">
-                            {activity.entity_type === 'document' ? 'Document' : 'Contenu'}
+                          <p className="text-sm text-muted-foreground truncate max-w-[300px]">
+                            {activity.documentTitle || (activity.entity_type === 'document' ? 'Document' : 'Contenu')}
                           </p>
                         </div>
                       </div>
