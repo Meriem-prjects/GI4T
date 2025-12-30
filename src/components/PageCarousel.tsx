@@ -90,7 +90,7 @@ const PageCarousel: React.FC<PageCarouselProps> = ({ content, language }) => {
   const [emblaRef, emblaApi] = useEmblaCarousel({ 
     loop: false,
     direction: isRTL ? 'rtl' : 'ltr',
-    align: 'start'
+    align: 'center'
   });
   
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -146,24 +146,15 @@ const PageCarousel: React.FC<PageCarouselProps> = ({ content, language }) => {
   return (
     <div className="page-carousel-container">
       {/* Header with navigation */}
-      <div className={`page-carousel-header flex items-center justify-between mb-4 p-3 bg-muted/50 rounded-lg`}>
+      <div className={`page-carousel-header flex items-center justify-between mb-4 p-3 bg-muted/50 rounded-lg ${isRTL ? 'flex-row-reverse' : ''}`}>
         <Button 
           variant="outline" 
           size="sm" 
-          onClick={scrollPrev}
-          disabled={!canScrollPrev}
+          onClick={isRTL ? scrollNext : scrollPrev}
+          disabled={isRTL ? !canScrollNext : !canScrollPrev}
         >
-          {isRTL ? (
-            <>
-              <ChevronRight className="h-4 w-4" />
-              <span className="mx-2">السابق</span>
-            </>
-          ) : (
-            <>
-              <ChevronLeft className="h-4 w-4" />
-              <span className="mx-2">Précédent</span>
-            </>
-          )}
+          <ChevronLeft className="h-4 w-4" />
+          <span className="mx-2">{isRTL ? 'التالي' : 'Précédent'}</span>
         </Button>
         
         <span className="text-sm font-medium text-muted-foreground">
@@ -176,26 +167,17 @@ const PageCarousel: React.FC<PageCarouselProps> = ({ content, language }) => {
         <Button 
           variant="outline" 
           size="sm" 
-          onClick={scrollNext}
-          disabled={!canScrollNext}
+          onClick={isRTL ? scrollPrev : scrollNext}
+          disabled={isRTL ? !canScrollPrev : !canScrollNext}
         >
-          {isRTL ? (
-            <>
-              <span className="mx-2">التالي</span>
-              <ChevronLeft className="h-4 w-4" />
-            </>
-          ) : (
-            <>
-              <span className="mx-2">Suivant</span>
-              <ChevronRight className="h-4 w-4" />
-            </>
-          )}
+          <span className="mx-2">{isRTL ? 'السابق' : 'Suivant'}</span>
+          <ChevronRight className="h-4 w-4" />
         </Button>
       </div>
 
       {/* Carousel viewport */}
-      <div className="page-carousel-viewport overflow-hidden" ref={emblaRef}>
-        <div className={`page-carousel-container flex ${isRTL ? 'flex-row-reverse' : ''}`}>
+      <div className="page-carousel-viewport overflow-hidden" ref={emblaRef} dir={isRTL ? 'rtl' : 'ltr'}>
+        <div className="page-carousel-container flex">
           {pages.map((slideGroup, slideIndex) => (
             <div 
               key={slideIndex} 
