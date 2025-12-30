@@ -9,7 +9,12 @@ import {
   Plus,
   UserPlus,
   Eye,
-  BarChart3
+  BarChart3,
+  CheckCircle,
+  Edit,
+  Trash,
+  Activity,
+  LucideIcon
 } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -96,6 +101,33 @@ const AdminDashboard = ({ type }: AdminDashboardProps) => {
       }
     },
   });
+
+  // Fonction pour formater les messages d'activité
+  const formatActivityMessage = (activity: any): { message: string; icon: LucideIcon; color: string } => {
+    const { entity_type, action, details } = activity;
+    
+    if (entity_type === 'document' && action === 'status_change') {
+      const newStatus = details?.new_status;
+      
+      if (newStatus === 'processed') {
+        return { message: 'Document validé', icon: CheckCircle, color: 'text-green-500 bg-green-100' };
+      } else if (newStatus === 'pending_validation') {
+        return { message: 'Document soumis pour validation', icon: Clock, color: 'text-yellow-600 bg-yellow-100' };
+      } else if (newStatus === 'rejected' || newStatus === 'draft') {
+        return { message: 'Document rejeté', icon: XCircle, color: 'text-red-500 bg-red-100' };
+      }
+      return { message: 'Statut modifié', icon: Edit, color: 'text-blue-500 bg-blue-100' };
+    }
+    
+    // Actions génériques
+    const actionLabels: Record<string, { message: string; icon: LucideIcon; color: string }> = {
+      'create': { message: 'Nouveau contenu créé', icon: Plus, color: 'text-green-500 bg-green-100' },
+      'update': { message: 'Contenu modifié', icon: Edit, color: 'text-blue-500 bg-blue-100' },
+      'delete': { message: 'Contenu supprimé', icon: Trash, color: 'text-red-500 bg-red-100' },
+    };
+    
+    return actionLabels[action] || { message: action || 'Action', icon: Activity, color: 'text-gray-500 bg-gray-100' };
+  };
 
   // Récupérer les dernières activités (uniquement pour Observatoire)
   const { data: recentActivities } = useQuery({
@@ -336,26 +368,34 @@ const AdminDashboard = ({ type }: AdminDashboardProps) => {
           <CardContent>
             <div className="space-y-4">
               {recentActivities && recentActivities.length > 0 ? (
-                recentActivities.map((activity, index) => (
-                  <div key={index} className="flex items-center justify-between p-3 rounded-lg border">
-                    <div className="flex items-center space-x-3">
-                      <div className="w-8 h-8 bg-muted rounded-full flex items-center justify-center">
-                        <span className="text-sm font-medium">
-                          {activity.action?.charAt(0).toUpperCase() || 'A'}
-                        </span>
+                recentActivities.map((activity, index) => {
+                  const formatted = formatActivityMessage(activity);
+                  const IconComponent = formatted.icon;
+                  
+                  return (
+                    <div key={index} className="flex items-center justify-between p-3 rounded-lg border">
+                      <div className="flex items-center space-x-3">
+                        <div className={`w-8 h-8 rounded-full flex items-center justify-center ${formatted.color}`}>
+                          <IconComponent className="w-4 h-4" />
+                        </div>
+                        <div>
+                          <p className="font-medium">{formatted.message}</p>
+                          <p className="text-sm text-muted-foreground">
+                            {activity.entity_type === 'document' ? 'Document' : 'Contenu'}
+                          </p>
+                        </div>
                       </div>
-                      <div>
-                        <p className="font-medium">{activity.entity_type}</p>
-                        <p className="text-sm text-muted-foreground">
-                          {activity.action}
-                        </p>
+                      <div className="text-right text-sm text-muted-foreground">
+                        {new Date(activity.created_at).toLocaleDateString('fr-FR', {
+                          day: '2-digit',
+                          month: 'short',
+                          hour: '2-digit',
+                          minute: '2-digit'
+                        })}
                       </div>
                     </div>
-                    <div className="text-right text-sm text-muted-foreground">
-                      {new Date(activity.created_at).toLocaleDateString('fr-FR')}
-                    </div>
-                  </div>
-                ))
+                  );
+                })
               ) : (
                 <div className="text-center text-muted-foreground py-4">
                   Aucune activité récente
