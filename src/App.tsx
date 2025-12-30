@@ -22,6 +22,7 @@ import Commentaires from "./pages/Commentaires";
 import Blogs from "./pages/Blogs";
 import FichesJurisprudence from "./pages/FichesJurisprudence";
 import Actualites from "./pages/Actualites";
+import ActualiteDetail from "./pages/ActualiteDetail";
 import AccesAuxDroits from "./pages/AccesAuxDroits";
 import GuidesPratiques from "./pages/GuidesPratiques";
 import RessourcesPratiques from "./pages/RessourcesPratiques";
@@ -86,6 +87,7 @@ const App: React.FC = () => (
             <Route path="/observatoire/blogs" element={<Blogs />} />
             <Route path="/observatoire/fiches-jurisprudence" element={<FichesJurisprudence />} />
             <Route path="/observatoire/actualites" element={<Actualites />} />
+            <Route path="/observatoire/actualites/:newsId" element={<ActualiteDetail />} />
           </Route>
           
           {/* Accès aux droits interface - Unified Layout */}

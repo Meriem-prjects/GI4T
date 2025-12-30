@@ -80,3 +80,22 @@ export const useFeaturedNews = () => {
     }
   });
 };
+
+export const useNewsById = (id: string | undefined) => {
+  return useQuery({
+    queryKey: ['news', 'detail', id],
+    queryFn: async () => {
+      if (!id) return null;
+      const { data, error } = await supabase
+        .from('news')
+        .select('*')
+        .eq('id', id)
+        .eq('is_published', true)
+        .single();
+      
+      if (error) throw error;
+      return data as News;
+    },
+    enabled: !!id
+  });
+};
