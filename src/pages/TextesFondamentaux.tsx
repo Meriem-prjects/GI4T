@@ -3,7 +3,14 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Breadcrumb, BreadcrumbList, BreadcrumbItem, BreadcrumbLink, BreadcrumbPage, BreadcrumbSeparator } from "@/components/ui/breadcrumb";
-import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel";
+import {
+  Pagination,
+  PaginationContent,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from "@/components/ui/pagination";
 import { BookOpen, Scale, Users, Heart, ShieldCheck, GraduationCap, Search } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/client";
@@ -28,6 +35,8 @@ const TextesFondamentaux = () => {
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+  const categoriesPerPage = 9;
 
   useEffect(() => {
     const fetchJurisprudenceCategories = async () => {
@@ -120,6 +129,16 @@ const TextesFondamentaux = () => {
     (category.description_ar && category.description_ar.toLowerCase().includes(searchTerm.toLowerCase()))
   );
 
+  // Pagination logic
+  const totalPages = Math.ceil(filteredCategories.length / categoriesPerPage);
+  const startIndex = (currentPage - 1) * categoriesPerPage;
+  const paginatedCategories = filteredCategories.slice(startIndex, startIndex + categoriesPerPage);
+
+  // Reset to page 1 when search term changes
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm]);
+
   return (
     <div dir={isRTL ? 'rtl' : 'ltr'} className={`container mx-auto px-4 py-6 ${isRTL ? 'font-almarai' : ''}`}>
       {/* Breadcrumb */}
@@ -170,55 +189,75 @@ const TextesFondamentaux = () => {
           <div className="flex justify-center items-center py-12">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
           </div>
-        ) : filteredCategories.length > 0 ? (
-          <Carousel 
-            opts={{
-              align: "start",
-              slidesToScroll: 3
-            }} 
-            className="w-full"
-          >
-            <CarouselContent className="-ml-2 md:-ml-4">
-              {filteredCategories.map(category => {
+        ) : paginatedCategories.length > 0 ? (
+          <>
+            {/* Grid of categories - 3 columns desktop, 2 tablet, 1 mobile */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {paginatedCategories.map(category => {
                 const Icon = getIconForCategory(category.name);
                 return (
-                  <CarouselItem key={category.id} className="pl-2 md:pl-4 md:basis-1/3">
-                    <Card className="hover:shadow-lg transition-all duration-300 cursor-pointer h-[280px] flex flex-col">
-                      <CardHeader className="flex-1">
-                        <div className={`flex items-center justify-between mb-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
-                          <div 
-                            className="w-8 h-8 rounded-full flex items-center justify-center" 
-                            style={{ backgroundColor: category.color + '20' }}
-                          >
-                            <Icon className="w-5 h-5" style={{ color: category.color }} />
-                          </div>
-                          <Badge variant="secondary">{t('fundamentalRight')}</Badge>
+                  <Card key={category.id} className="hover:shadow-lg transition-all duration-300 cursor-pointer h-[280px] flex flex-col">
+                    <CardHeader className="flex-1">
+                      <div className={`flex items-center justify-between mb-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
+                        <div 
+                          className="w-8 h-8 rounded-full flex items-center justify-center" 
+                          style={{ backgroundColor: category.color + '20' }}
+                        >
+                          <Icon className="w-5 h-5" style={{ color: category.color }} />
                         </div>
-                        <CardTitle className={`text-lg mb-2 ${isRTL ? 'text-right' : ''}`}>
-                          {isRTL ? category.name_ar || category.name : category.name}
-                        </CardTitle>
-                        <CardDescription className={`line-clamp-2 text-sm leading-relaxed ${isRTL ? 'text-right' : ''}`}>
-                          {isRTL ? category.description_ar || category.description : category.description}
-                        </CardDescription>
-                      </CardHeader>
-                      <CardContent className="pt-0">
-                        <Button variant="outline" className="w-full" onClick={() => handleExploreCategory(category.name)}>
-                          <BookOpen className="w-4 h-4 mr-2" />
-                          {t('explore')}
-                        </Button>
-                      </CardContent>
-                    </Card>
-                  </CarouselItem>
+                        <Badge variant="secondary">{t('fundamentalRight')}</Badge>
+                      </div>
+                      <CardTitle className={`text-lg mb-2 ${isRTL ? 'text-right' : ''}`}>
+                        {isRTL ? category.name_ar || category.name : category.name}
+                      </CardTitle>
+                      <CardDescription className={`line-clamp-2 text-sm leading-relaxed ${isRTL ? 'text-right' : ''}`}>
+                        {isRTL ? category.description_ar || category.description : category.description}
+                      </CardDescription>
+                    </CardHeader>
+                    <CardContent className="pt-0">
+                      <Button variant="outline" className="w-full" onClick={() => handleExploreCategory(category.name)}>
+                        <BookOpen className={`w-4 h-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />
+                        {t('explore')}
+                      </Button>
+                    </CardContent>
+                  </Card>
                 );
               })}
-            </CarouselContent>
-            {filteredCategories.length > 3 && (
-              <>
-                <CarouselPrevious className="hidden md:flex -left-12" />
-                <CarouselNext className="hidden md:flex -right-12" />
-              </>
+            </div>
+
+            {/* Numeric pagination */}
+            {totalPages > 1 && (
+              <Pagination className="mt-8">
+                <PaginationContent className={isRTL ? 'flex-row-reverse' : ''}>
+                  <PaginationItem>
+                    <PaginationPrevious 
+                      onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                      className={currentPage === 1 ? 'pointer-events-none opacity-50' : 'cursor-pointer'}
+                    />
+                  </PaginationItem>
+                  
+                  {Array.from({ length: totalPages }, (_, i) => i + 1).map(page => (
+                    <PaginationItem key={page}>
+                      <PaginationLink
+                        onClick={() => setCurrentPage(page)}
+                        isActive={currentPage === page}
+                        className="cursor-pointer"
+                      >
+                        {page}
+                      </PaginationLink>
+                    </PaginationItem>
+                  ))}
+                  
+                  <PaginationItem>
+                    <PaginationNext 
+                      onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                      className={currentPage === totalPages ? 'pointer-events-none opacity-50' : 'cursor-pointer'}
+                    />
+                  </PaginationItem>
+                </PaginationContent>
+              </Pagination>
             )}
-          </Carousel>
+          </>
         ) : (
           <div className={`text-center py-8 text-muted-foreground ${isRTL ? 'text-right' : ''}`}>
             {searchTerm 
