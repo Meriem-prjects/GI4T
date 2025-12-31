@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -44,14 +44,39 @@ const CategoryForm = ({ isOpen, onClose, category }: CategoryFormProps) => {
   } = useForm<CategoryFormData>({
     resolver: zodResolver(categorySchema),
     defaultValues: {
-      name: category?.name || "",
-      name_ar: category?.name_ar || "",
-      description: category?.description || "",
-      description_ar: category?.description_ar || "",
-      color: category?.color || "#3B82F6",
-      parent_id: category?.parent_id || "none",
+      name: "",
+      name_ar: "",
+      description: "",
+      description_ar: "",
+      color: "#3B82F6",
+      parent_id: "none",
     },
   });
+
+  // Réinitialiser le formulaire quand category ou isOpen change
+  useEffect(() => {
+    if (isOpen) {
+      if (category) {
+        reset({
+          name: category.name || "",
+          name_ar: category.name_ar || "",
+          description: category.description || "",
+          description_ar: category.description_ar || "",
+          color: category.color || "#3B82F6",
+          parent_id: category.parent_id || "none",
+        });
+      } else {
+        reset({
+          name: "",
+          name_ar: "",
+          description: "",
+          description_ar: "",
+          color: "#3B82F6",
+          parent_id: "none",
+        });
+      }
+    }
+  }, [category, isOpen, reset]);
 
   const parentCategories = categories.filter(cat => 
     cat.id !== category?.id && !cat.parent_id
