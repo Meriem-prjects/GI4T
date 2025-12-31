@@ -15,10 +15,12 @@ import { useCategories, useDeleteCategory } from "@/hooks/useCategories";
 import { useCourtTypes, useDeleteCourtType } from "@/hooks/useCourtTypes";
 import { useJurisdictionLevels, useDeleteJurisdictionLevel } from "@/hooks/useJurisdictionLevels";
 import { useDocumentTypes, useDeleteDocumentType } from "@/hooks/useDocumentTypes";
+import { useLanguages, useDeleteLanguage } from "@/hooks/useLanguages";
 import CategoryForm from "@/components/admin/CategoryForm";
 import { CourtTypeForm } from "@/components/admin/CourtTypeForm";
 import { JurisdictionLevelForm } from "@/components/admin/JurisdictionLevelForm";
 import { DocumentTypeForm } from "@/components/admin/DocumentTypeForm";
+import { LanguageForm } from "@/components/admin/LanguageForm";
 import { EmbeddingsManager } from "@/components/admin/EmbeddingsManager";
 
 const AdminParametres = () => {
@@ -54,12 +56,15 @@ const AdminParametres = () => {
   const [documentTypeFormOpen, setDocumentTypeFormOpen] = useState(false);
   const [editingDocumentType, setEditingDocumentType] = useState<any>(null);
 
-  // Mock data for other sections (will be replaced with real data later)
+  // Languages from Supabase
+  const { data: languages = [], isLoading: languagesLoading } = useLanguages();
+  const deleteLanguage = useDeleteLanguage();
 
-  const [languages] = useState([
-    { id: "1", code: "fr", name: "Français", name_native: "Français", is_default: true, is_active: true },
-    { id: "2", code: "ar", name: "Arabe", name_native: "العربية", is_default: false, is_active: true }
-  ]);
+  // Language form state
+  const [languageFormOpen, setLanguageFormOpen] = useState(false);
+  const [editingLanguage, setEditingLanguage] = useState<any>(null);
+
+  // Mock data for other sections (will be replaced with real data later)
 
   const [users] = useState([
     { id: "1", first_name: "Ahmed", last_name: "Ben Ali", email: "ahmed@example.com", role: "admin" },
@@ -101,6 +106,9 @@ const AdminParametres = () => {
     } else if (type === 'document-type') {
       setEditingDocumentType(null);
       setDocumentTypeFormOpen(true);
+    } else if (type === 'languages') {
+      setEditingLanguage(null);
+      setLanguageFormOpen(true);
     } else {
       setCurrentForm({});
       setEditingId(null);
@@ -125,6 +133,10 @@ const AdminParametres = () => {
       const documentType = documentTypes.find(d => d.id === id);
       setEditingDocumentType(documentType);
       setDocumentTypeFormOpen(true);
+    } else if (type === 'language') {
+      const language = languages.find(l => l.id === id);
+      setEditingLanguage(language);
+      setLanguageFormOpen(true);
     } else {
       setCurrentForm({});
       setEditingId(id);
@@ -144,6 +156,10 @@ const AdminParametres = () => {
     } else if (type === 'document-type') {
       if (window.confirm("Êtes-vous sûr de vouloir supprimer ce type de fiche ?")) {
         deleteDocumentType.mutate(id);
+      }
+    } else if (type === 'language') {
+      if (window.confirm("Êtes-vous sûr de vouloir supprimer cette langue ?")) {
+        deleteLanguage.mutate(id);
       }
     } else {
       toast({
@@ -382,6 +398,11 @@ const AdminParametres = () => {
         </div>
       </CardHeader>
       <CardContent>
+        {languagesLoading ? (
+          <div className="flex items-center justify-center py-8">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+          </div>
+        ) : (
         <Table>
           <TableHeader>
             <TableRow>
@@ -418,6 +439,7 @@ const AdminParametres = () => {
             ))}
           </TableBody>
         </Table>
+        )}
       </CardContent>
     </Card>
   );
@@ -679,6 +701,13 @@ const AdminParametres = () => {
         isOpen={documentTypeFormOpen}
         onClose={() => setDocumentTypeFormOpen(false)}
         documentType={editingDocumentType}
+      />
+
+      {/* Language Form Dialog */}
+      <LanguageForm
+        isOpen={languageFormOpen}
+        onClose={() => setLanguageFormOpen(false)}
+        language={editingLanguage}
       />
     </div>
   );
