@@ -9,7 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Plus, Edit, Trash2, Building, Scale, FileText, Globe, Users, Shield, Sparkles } from "lucide-react";
+import { Plus, Edit, Trash2, Building, Scale, FileText, Globe, Shield, Sparkles } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useCategories, useDeleteCategory } from "@/hooks/useCategories";
 import { useCourtTypes, useDeleteCourtType } from "@/hooks/useCourtTypes";
@@ -66,10 +66,6 @@ const AdminParametres = () => {
 
   // Mock data for other sections (will be replaced with real data later)
 
-  const [users] = useState([
-    { id: "1", first_name: "Ahmed", last_name: "Ben Ali", email: "ahmed@example.com", role: "admin" },
-    { id: "2", first_name: "Fatma", last_name: "Trabelsi", email: "fatma@example.com", role: "editor" }
-  ]);
 
   // Category handlers
   const handleAddCategory = () => {
@@ -448,66 +444,6 @@ const AdminParametres = () => {
     </Card>
   );
 
-  const renderUsersTab = () => (
-    <Card>
-      <CardHeader>
-        <div className="flex items-center justify-between">
-          <div>
-            <CardTitle className="flex items-center gap-2">
-              <Users className="w-5 h-5" />
-              Utilisateurs & Rôles
-            </CardTitle>
-            <CardDescription>
-              Gérer les utilisateurs et leurs rôles (Admin, Éditeur, Validateur)
-            </CardDescription>
-          </div>
-          <Button onClick={() => handleAdd("users")} size="sm">
-            <Plus className="w-4 h-4 mr-2" />
-            Inviter
-          </Button>
-        </div>
-      </CardHeader>
-      <CardContent>
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Nom</TableHead>
-              <TableHead>Email</TableHead>
-              <TableHead>Rôle</TableHead>
-              <TableHead className="text-right">Actions</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {users.map((item) => (
-              <TableRow key={item.id}>
-                <TableCell className="font-medium">{item.first_name} {item.last_name}</TableCell>
-                <TableCell>{item.email}</TableCell>
-                <TableCell>
-                  <Badge variant={
-                    item.role === "admin" ? "default" : 
-                    item.role === "editor" ? "secondary" : "outline"
-                  }>
-                    {item.role === "admin" ? "Admin" : 
-                     item.role === "editor" ? "Éditeur" : "Validateur"}
-                  </Badge>
-                </TableCell>
-                <TableCell className="text-right">
-                  <div className="flex justify-end gap-2">
-                    <Button variant="outline" size="sm" onClick={() => handleEdit('user', item.id)}>
-                      <Edit className="w-4 h-4" />
-                    </Button>
-                    <Button variant="outline" size="sm" onClick={() => handleDelete('user', item.id)}>
-                      <Trash2 className="w-4 h-4" />
-                    </Button>
-                  </div>
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </CardContent>
-    </Card>
-  );
 
   const renderJurisdictionLevelsTab = () => (
     <Card>
@@ -582,12 +518,11 @@ const AdminParametres = () => {
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-        <TabsList className="grid w-full grid-cols-7">
+        <TabsList className="grid w-full grid-cols-6">
           <TabsTrigger value="court-types">Tribunaux</TabsTrigger>
           <TabsTrigger value="categories">Catégories</TabsTrigger>
           <TabsTrigger value="document-types">Types Fiches</TabsTrigger>
           <TabsTrigger value="languages">Langues</TabsTrigger>
-          <TabsTrigger value="users">Utilisateurs</TabsTrigger>
           <TabsTrigger value="jurisdiction-levels">Juridictions</TabsTrigger>
           <TabsTrigger value="embeddings">
             <Sparkles className="w-4 h-4 mr-2" />
@@ -611,9 +546,6 @@ const AdminParametres = () => {
           {renderLanguagesTab()}
         </TabsContent>
 
-        <TabsContent value="users" className="space-y-4">
-          {renderUsersTab()}
-        </TabsContent>
 
         <TabsContent value="jurisdiction-levels" className="space-y-4">
           {renderJurisdictionLevelsTab()}
