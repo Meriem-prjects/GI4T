@@ -274,129 +274,130 @@ const AdminActualites = () => {
           </CardContent>
         </Card>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid gap-4">
           {filteredNews.map((item) => {
             const categoryInfo = getCategoryInfo(item.category);
             
             return (
-              <Card key={item.id} className="overflow-hidden flex flex-col hover:shadow-lg transition-shadow">
-                {/* Image de couverture */}
-                <div className="relative aspect-video">
-                  {item.image_url ? (
-                    <img
-                      src={item.image_url}
-                      alt={item.title}
-                      className="w-full h-full object-cover"
-                    />
-                  ) : (
-                    <div className="w-full h-full bg-muted flex items-center justify-center">
-                      <Newspaper className="h-12 w-12 text-muted-foreground" />
+              <Card key={item.id} className="overflow-hidden">
+                <div className="flex">
+                  {/* Image */}
+                  {item.image_url && (
+                    <div className="w-48 h-32 flex-shrink-0">
+                      <img
+                        src={item.image_url}
+                        alt={item.title}
+                        className="w-full h-full object-cover"
+                      />
                     </div>
                   )}
                   
-                  {/* Badge À la une superposé */}
-                  {item.is_featured && (
-                    <Badge className="absolute top-2 left-2 bg-yellow-500 text-white">
-                      <Star className="h-3 w-3 mr-1 fill-current" />
-                      À la une
-                    </Badge>
-                  )}
-                  
-                  {/* Menu actions */}
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button variant="secondary" size="icon" className="absolute top-2 right-2 h-8 w-8">
-                        <MoreVertical className="h-4 w-4" />
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end">
-                      <DropdownMenuItem
-                        onClick={() => navigate(`/admin/observatoire/actualites/edit/${item.id}`)}
-                      >
-                        <Edit className="h-4 w-4 mr-2" />
-                        Modifier
-                      </DropdownMenuItem>
-                      <DropdownMenuItem
-                        onClick={() => togglePublished(item.id, item.is_published)}
-                      >
-                        {item.is_published ? (
-                          <>
-                            <EyeOff className="h-4 w-4 mr-2" />
-                            Dépublier
-                          </>
-                        ) : (
-                          <>
-                            <Eye className="h-4 w-4 mr-2" />
-                            Publier
-                          </>
-                        )}
-                      </DropdownMenuItem>
-                      <DropdownMenuItem
-                        onClick={() => toggleFeatured(item.id, item.is_featured)}
-                      >
-                        {item.is_featured ? (
-                          <>
-                            <StarOff className="h-4 w-4 mr-2" />
-                            Retirer de la une
-                          </>
-                        ) : (
-                          <>
-                            <Star className="h-4 w-4 mr-2" />
-                            Mettre à la une
-                          </>
-                        )}
-                      </DropdownMenuItem>
-                      <DropdownMenuItem
-                        className="text-destructive"
-                        onClick={() => {
-                          setItemToDelete(item.id);
-                          setDeleteDialogOpen(true);
-                        }}
-                      >
-                        <Trash2 className="h-4 w-4 mr-2" />
-                        Supprimer
-                      </DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
+                  {/* Content */}
+                  <div className="flex-1 p-4">
+                    <div className="flex items-start justify-between">
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2 mb-2">
+                          <Badge className={`${categoryInfo.color} text-white`}>
+                            {categoryInfo.label}
+                          </Badge>
+                          {item.is_featured && (
+                            <Badge variant="outline" className="border-yellow-500 text-yellow-600">
+                              <Star className="h-3 w-3 mr-1 fill-current" />
+                              À la une
+                            </Badge>
+                          )}
+                          {item.is_published ? (
+                            <Badge variant="outline" className="border-green-500 text-green-600">
+                              Publié
+                            </Badge>
+                          ) : (
+                            <Badge variant="outline" className="border-gray-400 text-gray-500">
+                              Brouillon
+                            </Badge>
+                          )}
+                        </div>
+                        
+                        <h3 className="font-semibold text-lg mb-1 line-clamp-1">
+                          {item.title}
+                        </h3>
+                        <p className="text-muted-foreground text-sm line-clamp-2 mb-2">
+                          {item.excerpt}
+                        </p>
+                        
+                        <div className="flex items-center gap-4 text-xs text-muted-foreground">
+                          {item.published_at && (
+                            <span>
+                              Publié le {format(new Date(item.published_at), "d MMMM yyyy", { locale: fr })}
+                            </span>
+                          )}
+                          {item.views !== null && (
+                            <span>{item.views} vues</span>
+                          )}
+                          {item.read_time && (
+                            <span>{item.read_time} min de lecture</span>
+                          )}
+                        </div>
+                      </div>
+                      
+                      {/* Actions */}
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button variant="ghost" size="icon">
+                            <MoreVertical className="h-4 w-4" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuItem
+                            onClick={() => navigate(`/admin/observatoire/actualites/edit/${item.id}`)}
+                          >
+                            <Edit className="h-4 w-4 mr-2" />
+                            Modifier
+                          </DropdownMenuItem>
+                          <DropdownMenuItem
+                            onClick={() => togglePublished(item.id, item.is_published)}
+                          >
+                            {item.is_published ? (
+                              <>
+                                <EyeOff className="h-4 w-4 mr-2" />
+                                Dépublier
+                              </>
+                            ) : (
+                              <>
+                                <Eye className="h-4 w-4 mr-2" />
+                                Publier
+                              </>
+                            )}
+                          </DropdownMenuItem>
+                          <DropdownMenuItem
+                            onClick={() => toggleFeatured(item.id, item.is_featured)}
+                          >
+                            {item.is_featured ? (
+                              <>
+                                <StarOff className="h-4 w-4 mr-2" />
+                                Retirer de la une
+                              </>
+                            ) : (
+                              <>
+                                <Star className="h-4 w-4 mr-2" />
+                                Mettre à la une
+                              </>
+                            )}
+                          </DropdownMenuItem>
+                          <DropdownMenuItem
+                            className="text-destructive"
+                            onClick={() => {
+                              setItemToDelete(item.id);
+                              setDeleteDialogOpen(true);
+                            }}
+                          >
+                            <Trash2 className="h-4 w-4 mr-2" />
+                            Supprimer
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </div>
+                  </div>
                 </div>
-                
-                {/* Contenu */}
-                <CardContent className="flex-1 flex flex-col p-4">
-                  {/* Badges catégorie et statut */}
-                  <div className="flex items-center gap-2 mb-3">
-                    <Badge className={`${categoryInfo.color} text-white text-xs`}>
-                      {categoryInfo.label}
-                    </Badge>
-                    {item.is_published ? (
-                      <Badge variant="outline" className="border-green-500 text-green-600 text-xs">
-                        Publié
-                      </Badge>
-                    ) : (
-                      <Badge variant="outline" className="border-gray-400 text-gray-500 text-xs">
-                        Brouillon
-                      </Badge>
-                    )}
-                  </div>
-                  
-                  {/* Titre */}
-                  <h3 className="font-semibold text-base mb-2 line-clamp-2">
-                    {item.title}
-                  </h3>
-                  
-                  {/* Extrait */}
-                  <p className="text-muted-foreground text-sm line-clamp-3 mb-4 flex-1">
-                    {item.excerpt}
-                  </p>
-                  
-                  {/* Métadonnées */}
-                  <div className="flex items-center gap-3 text-xs text-muted-foreground pt-3 border-t">
-                    {item.published_at && (
-                      <span>{format(new Date(item.published_at), "d MMM yyyy", { locale: fr })}</span>
-                    )}
-                    {item.views !== null && <span>{item.views} vues</span>}
-                    {item.read_time && <span>{item.read_time} min</span>}
-                  </div>
-                </CardContent>
               </Card>
             );
           })}
