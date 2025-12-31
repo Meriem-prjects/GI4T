@@ -121,6 +121,10 @@ const AdminParametres = () => {
       const jurisdictionLevel = jurisdictionLevels.find(j => j.id === id);
       setEditingJurisdictionLevel(jurisdictionLevel);
       setJurisdictionLevelFormOpen(true);
+    } else if (type === 'document-type') {
+      const documentType = documentTypes.find(d => d.id === id);
+      setEditingDocumentType(documentType);
+      setDocumentTypeFormOpen(true);
     } else {
       setCurrentForm({});
       setEditingId(id);
@@ -136,6 +140,10 @@ const AdminParametres = () => {
     } else if (type === 'jurisdiction-level') {
       if (window.confirm("Êtes-vous sûr de vouloir supprimer ce niveau de juridiction ?")) {
         deleteJurisdictionLevel.mutate(id);
+      }
+    } else if (type === 'document-type') {
+      if (window.confirm("Êtes-vous sûr de vouloir supprimer ce type de fiche ?")) {
+        deleteDocumentType.mutate(id);
       }
     } else {
       toast({
