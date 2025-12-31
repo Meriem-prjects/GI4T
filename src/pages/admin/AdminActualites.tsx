@@ -283,7 +283,7 @@ const AdminActualites = () => {
                 <div className="flex">
                   {/* Image */}
                   {item.image_url && (
-                    <div className="w-48 h-32 flex-shrink-0">
+                    <div className="w-48 flex-shrink-0 self-stretch">
                       <img
                         src={item.image_url}
                         alt={item.title}
