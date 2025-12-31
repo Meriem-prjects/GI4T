@@ -422,7 +422,11 @@ const AdminParametres = () => {
                 <TableCell>
                   <div className="flex gap-2">
                     {item.is_default && <Badge variant="default">Par défaut</Badge>}
-                    {item.is_active && <Badge variant="secondary">Active</Badge>}
+                    {item.is_active ? (
+                      <Badge variant="secondary">Active</Badge>
+                    ) : (
+                      <Badge variant="outline">Inactive</Badge>
+                    )}
                   </div>
                 </TableCell>
                 <TableCell className="text-right">
