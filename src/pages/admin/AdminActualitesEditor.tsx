@@ -243,7 +243,7 @@ const AdminActualitesEditor = () => {
   }
 
   return (
-    <div className="p-6 space-y-6 max-w-5xl mx-auto">
+    <div className="p-6 space-y-6 max-w-7xl mx-auto">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
@@ -278,9 +278,9 @@ const AdminActualitesEditor = () => {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
         {/* Main Content */}
-        <div className="lg:col-span-2 space-y-6">
+        <div className="lg:col-span-3 space-y-6">
           <Tabs defaultValue="fr" className="w-full">
             <TabsList className="mb-4">
               <TabsTrigger value="fr">Français</TabsTrigger>
@@ -421,7 +421,7 @@ const AdminActualitesEditor = () => {
         </div>
 
         {/* Sidebar */}
-        <div className="space-y-6">
+        <div className="space-y-6 lg:sticky lg:top-6 lg:self-start">
           {/* Publication Settings */}
           <Card>
             <CardHeader>
