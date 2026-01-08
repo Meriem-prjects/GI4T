@@ -11,9 +11,19 @@ html {
 }
 
 /* Prevent Radix UI scroll lock from causing layout shift */
-body[data-scroll-locked] {
+html body[data-scroll-locked],
+html body[data-scroll-locked][style] {
   margin-right: 0 !important;
+  margin-left: 0 !important;
+  padding-right: 0 !important;
   overflow: visible !important;
+}
+
+/* Neutralize Radix scroll bar compensation variable */
+:root,
+html,
+body {
+  --removed-body-scroll-bar-size: 0 !important;
 }
 
 /* Definition of the design system. All colors, gradients, fonts, etc should be defined here. 
