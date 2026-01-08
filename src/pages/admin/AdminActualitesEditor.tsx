@@ -243,7 +243,7 @@ const AdminActualitesEditor = () => {
   }
 
   return (
-    <div className="p-6 space-y-6">
+    <div className="p-6 space-y-6" dir="ltr">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">

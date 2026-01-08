@@ -39,7 +39,7 @@ const AdminHistorique = () => {
   // Vérification d'accès - uniquement pour les super admins
   if (!isAdmin) {
     return (
-      <div className="p-6 flex flex-col items-center justify-center min-h-[400px]">
+      <div className="p-6 flex flex-col items-center justify-center min-h-[400px]" dir="ltr">
         <AlertCircle className="h-16 w-16 text-destructive mb-4" />
         <h2 className="text-xl font-semibold mb-2">Accès refusé</h2>
         <p className="text-muted-foreground text-center max-w-md">
@@ -342,7 +342,7 @@ const AdminHistorique = () => {
   };
 
   return (
-    <div className="p-6 space-y-6">
+    <div className="p-6 space-y-6" dir="ltr">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
           <div className="p-2 rounded-lg bg-primary/10">

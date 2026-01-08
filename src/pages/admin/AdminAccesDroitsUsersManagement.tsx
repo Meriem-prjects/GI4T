@@ -126,7 +126,7 @@ const AdminAccesDroitsUsersManagement = () => {
   };
 
   return (
-    <div className="p-6 space-y-6">
+    <div className="p-6 space-y-6" dir="ltr">
       <div className="flex justify-between items-center">
         <div>
           <h1 className="text-3xl font-bold text-yellow-900">Gestion des utilisateurs</h1>

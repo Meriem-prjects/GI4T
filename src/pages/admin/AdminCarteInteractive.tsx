@@ -23,7 +23,7 @@ const AdminCarteInteractive = () => {
   const governoratesCovered = new Set(events.map(e => e.governorate_id).filter(Boolean)).size;
 
   return (
-    <div className="p-6 space-y-6">
+    <div className="p-6 space-y-6" dir="ltr">
       {/* Header */}
       <div>
         <h2 className="text-2xl font-bold text-foreground mb-2">Gestion Carte Interactive</h2>
