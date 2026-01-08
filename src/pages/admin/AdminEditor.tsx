@@ -203,20 +203,23 @@ const AdminEditor = () => {
 
   return (
     <div className="p-6 space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-foreground">
-            {isEditingExisting ? 'Édition de Document' : 'Éditeur de Documents'}
-          </h1>
-          <p className="text-muted-foreground">
-            {isEditingExisting 
-              ? 'Modifiez le contenu et les métadonnées du document'
-              : 'Téléchargez et éditez des documents avec l\'aide de l\'IA'
-            }
-          </p>
+      {/* Afficher le header seulement quand l'uploader est visible OU quand il y a plusieurs documents à sélectionner */}
+      {(showUploader || (!currentDocument && processedDocuments.length > 1)) && (
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-2xl font-bold text-foreground">
+              Éditeur de Documents
+            </h1>
+            <p className="text-muted-foreground">
+              Téléchargez et éditez des documents avec l'aide de l'IA
+            </p>
+          </div>
         </div>
-        
-        {(currentDocument || processedDocuments.length > 0) && (
+      )}
+
+      {/* Bouton "Retour" affiché seulement quand DocumentEditor est actif */}
+      {currentDocument && (
+        <div className="flex justify-end">
           <Button
             variant="outline"
             onClick={handleNewDocument}
@@ -225,8 +228,8 @@ const AdminEditor = () => {
             <ArrowLeft className="h-4 w-4" />
             <span>{isEditingExisting ? 'Retour aux contenus' : 'Nouveaux documents'}</span>
           </Button>
-        )}
-      </div>
+        </div>
+      )}
 
       {isLoading ? (
         <Card className="p-8">
