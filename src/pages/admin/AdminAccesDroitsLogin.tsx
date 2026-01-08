@@ -62,7 +62,7 @@ const AdminAccesDroitsLogin = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-yellow-50 to-yellow-100 p-4">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-yellow-50 to-yellow-100 p-4" dir="ltr">
       <Card className="w-full max-w-md border-yellow-200">
         <CardHeader className="space-y-1 text-center">
           <div className="flex justify-center mb-4">

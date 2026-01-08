@@ -13,7 +13,7 @@ const AdminAccesAuxDroits = () => {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
 
   return (
-    <div className="min-h-screen bg-slate-50 flex">
+    <div className="min-h-screen bg-slate-50 flex" dir="ltr">
       <AdminSidebar 
         type="acces-aux-droits"
         isCollapsed={sidebarCollapsed}
