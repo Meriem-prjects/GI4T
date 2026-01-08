@@ -174,6 +174,46 @@ All colors MUST be HSL.
   text-align: right;
 }
 
+/* ===== ADMIN LTR ISOLATION ===== */
+/* Force LTR behavior for admin zones - overrides RTL global settings */
+[dir="ltr"] {
+  direction: ltr !important;
+}
+
+[dir="ltr"] * {
+  direction: ltr;
+}
+
+[dir="ltr"] h1,
+[dir="ltr"] h2,
+[dir="ltr"] h3,
+[dir="ltr"] h4,
+[dir="ltr"] h5,
+[dir="ltr"] h6,
+[dir="ltr"] p,
+[dir="ltr"] span,
+[dir="ltr"] label,
+[dir="ltr"] div {
+  text-align: left;
+}
+
+[dir="ltr"] .flex-row {
+  flex-direction: row !important;
+}
+
+/* Preserve explicit text alignment within LTR zones */
+[dir="ltr"] .text-center {
+  text-align: center !important;
+}
+
+[dir="ltr"] .text-right {
+  text-align: right !important;
+}
+
+[dir="ltr"] .text-left {
+  text-align: left !important;
+}
+
 /* Arabic Typography and RTL Support */
 .arabic-text {
   font-family: 'Almarai', 'Noto Sans Arabic', 'Amiri', sans-serif;
