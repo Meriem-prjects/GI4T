@@ -21,7 +21,7 @@ const AdminAccesAuxDroits = () => {
       />
       
       <main className={cn(
-        "flex-1 overflow-auto transition-all duration-300",
+        "flex-1 overflow-y-scroll transition-all duration-300",
         sidebarCollapsed ? "ml-0" : "ml-0"
       )}>
         <div className="bg-white border-b border-slate-200 px-6 py-4">
