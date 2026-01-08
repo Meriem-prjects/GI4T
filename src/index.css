@@ -10,6 +10,12 @@ html {
   overflow-y: scroll;
 }
 
+/* Prevent Radix UI scroll lock from causing layout shift */
+body[data-scroll-locked] {
+  margin-right: 0 !important;
+  overflow: visible !important;
+}
+
 /* Definition of the design system. All colors, gradients, fonts, etc should be defined here. 
 All colors MUST be HSL.
 */
