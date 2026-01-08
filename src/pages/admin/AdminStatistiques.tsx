@@ -14,7 +14,7 @@ const AdminStatistiques = () => {
 
   if (isLoading) {
     return (
-      <div className="p-6 space-y-6">
+      <div className="p-6 space-y-6" dir="ltr">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           {[...Array(4)].map((_, i) => (
             <Skeleton key={i} className="h-32" />
@@ -27,7 +27,7 @@ const AdminStatistiques = () => {
   }
 
   return (
-    <div className="p-6 space-y-6">
+    <div className="p-6 space-y-6" dir="ltr">
       <div>
         <h2 className="text-2xl font-bold mb-2">Statistiques des articles</h2>
         <p className="text-muted-foreground">

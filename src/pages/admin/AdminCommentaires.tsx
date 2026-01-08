@@ -152,7 +152,7 @@ export default function AdminCommentaires() {
   const pendingCount = allComments.filter((c) => c.status === 'pending').length;
 
   return (
-    <div className="p-6 space-y-6">
+    <div className="p-6 space-y-6" dir="ltr">
       <div>
         <h1 className="text-3xl font-bold">Gestion des commentaires</h1>
         <p className="text-muted-foreground mt-2">

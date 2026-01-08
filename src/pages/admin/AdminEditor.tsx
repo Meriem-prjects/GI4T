@@ -202,7 +202,7 @@ const AdminEditor = () => {
   };
 
   return (
-    <div className="p-6 space-y-6">
+    <div className="p-6 space-y-6" dir="ltr">
       {/* Afficher le header seulement quand l'uploader est visible OU quand il y a plusieurs documents à sélectionner */}
       {(showUploader || (!currentDocument && processedDocuments.length > 1)) && (
         <div className="flex items-center justify-between">

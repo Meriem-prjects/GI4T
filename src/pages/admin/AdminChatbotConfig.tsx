@@ -299,7 +299,7 @@ const AdminChatbotConfig = () => {
 
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6" dir="ltr">
       <div>
         <h1 className="text-3xl font-bold">Configuration Chatbot & FAQ</h1>
         <p className="text-muted-foreground">Personnalisez l'assistant virtuel et gérez les documents d'apprentissage</p>
