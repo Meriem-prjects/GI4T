@@ -1940,7 +1940,7 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
   };
 
   return (
-    <div className="space-y-6" dir={currentLanguage === 'ar' ? 'rtl' : 'ltr'}>
+    <div className="space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
