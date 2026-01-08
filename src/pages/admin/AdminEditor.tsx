@@ -219,7 +219,7 @@ const AdminEditor = () => {
 
       {/* Bouton "Retour" affiché seulement quand DocumentEditor est actif */}
       {currentDocument && (
-        <div className="flex justify-end">
+        <div className="flex justify-start">
           <Button
             variant="outline"
             onClick={handleNewDocument}
