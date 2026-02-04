@@ -542,6 +542,28 @@ export const sanitizeArabicTextRaw = (text: string | null | undefined): string =
   // Normalize multiple spaces to single space (but preserve line breaks)
   sanitized = sanitized.replace(/[^\S\n\r]+/g, ' ');
   
+  // NEW: Pattern-based word separation for common OCR fusion errors
+  // Pattern 1: Arabic word (3+ letters) + article "ال" glued (most common)
+  // Example: "الإشكالالدّستوري" → "الإشكال الدّستوري"
+  sanitized = sanitized.replace(
+    /([\u0621-\u064A\u0651]{3,})(ال[\u0621-\u064A\u0651]{3,})/g,
+    '$1 $2'
+  );
+  
+  // Pattern 2: Word ending in ا/ة + لا (negation) glued
+  // Example: "أنّهالا" → "أنّها لا"
+  sanitized = sanitized.replace(
+    /([\u0621-\u064A\u0651]{2,}[اة])(لا(?:\s|$|[\u0621-\u064A]))/g,
+    '$1 $2'
+  );
+  
+  // Pattern 3: Word + relative pronouns (التي، الذي) glued
+  // Example: "الأسبابالتي" → "الأسباب التي"
+  sanitized = sanitized.replace(
+    /([\u0621-\u064A\u0651]{3,})(ال[تذ]ي)/g,
+    '$1 $2'
+  );
+  
   // Trim lines but preserve structure
   sanitized = sanitized.split('\n').map(line => line.trim()).join('\n');
   

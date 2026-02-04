@@ -490,6 +490,28 @@ export const normalizeArabicForDisplay = (text: string): string => {
     // Word ending with shadda + ال → add space before ال
     normalized = normalized.replace(/(\u0651)(ال[\u0621-\u064A])/g, '$1 $2');
     
+    // NEW: Pattern-based word separation for common OCR fusion errors
+    // Pattern 1: Arabic word (3+ letters) + article "ال" glued (most common)
+    // Example: "الإشكالالدّستوري" → "الإشكال الدّستوري"
+    normalized = normalized.replace(
+      /([\u0621-\u064A\u0651]{3,})(ال[\u0621-\u064A\u0651]{3,})/g,
+      '$1 $2'
+    );
+    
+    // Pattern 2: Word ending in ا/ة + لا (negation) glued
+    // Example: "أنّهالا" → "أنّها لا"
+    normalized = normalized.replace(
+      /([\u0621-\u064A\u0651]{2,}[اة])(لا(?:\s|$|[\u0621-\u064A]))/g,
+      '$1 $2'
+    );
+    
+    // Pattern 3: Word + relative pronouns (التي، الذي) glued
+    // Example: "الأسبابالتي" → "الأسباب التي"
+    normalized = normalized.replace(
+      /([\u0621-\u064A\u0651]{3,})(ال[تذ]ي)/g,
+      '$1 $2'
+    );
+    
     iterations++;
   }
   
