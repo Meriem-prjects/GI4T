@@ -1,111 +1,52 @@
 
 
-# Plan : Appliquer les couleurs thématiques aux boutons et pages
+## Plan: Repositionner le toggle IA et augmenter la hauteur de la barre de recherche
 
-## Problème identifié
+### Objectif
+Intégrer le bouton toggle IA directement dans la barre de recherche et augmenter la hauteur de cette dernière pour un design plus ergonomique.
 
-### 1. Bouton "Consulter" (AnalysesOpinions.tsx)
-- Actuellement : `variant="outline"` → hover jaune par défaut
-- Attendu : hover avec la couleur de l'icône de chaque carte
+### Changements prévus
 
-### 2. Pages individuelles
-- **Analyses juridiques** (AnalysesJuridiques.tsx) : utilise `text-primary` générique
-- **Commentaires** (Commentaires.tsx) : utilise `text-primary` générique  
-- **Blogs** (Blogs.tsx) : utilise `text-primary` générique
-- Attendu : chaque page utilise sa couleur thématique
+#### 1. Nouvelle structure de la barre de recherche
 
-## Thème de couleurs par type
-
-| Type | Couleur icône | Couleur fond | Couleur texte |
-|------|---------------|--------------|---------------|
-| Analyses juridiques | `bg-blue-600` | `bg-blue-50` | `text-blue-600` |
-| Commentaires | `bg-emerald-600` | `bg-emerald-50` | `text-emerald-600` |
-| Blogs | `bg-amber-500` | `bg-amber-50` | `text-amber-500` |
-
----
-
-## Fichiers à modifier
-
-| Fichier | Modification |
-|---------|--------------|
-| `src/pages/AnalysesOpinions.tsx` | Ajouter `hoverColor` à chaque carte et l'appliquer au bouton |
-| `src/pages/AnalysesJuridiques.tsx` | Appliquer thème bleu à l'icône et éléments clés |
-| `src/pages/Commentaires.tsx` | Appliquer thème vert émeraude |
-| `src/pages/Blogs.tsx` | Appliquer thème amber |
-
----
-
-## Détails techniques
-
-### 1. AnalysesOpinions.tsx - Boutons colorés
-
-Ajouter une propriété `hoverColor` pour chaque catégorie et l'appliquer au bouton :
-
-```tsx
-// Définition
-{ 
-  title: t('deepAnalyses'), 
-  iconColor: "bg-blue-600",
-  hoverColor: "hover:bg-blue-600 hover:text-white hover:border-blue-600",
-  ...
-},
-{ 
-  title: t('opinionArticles'), 
-  iconColor: "bg-emerald-600",
-  hoverColor: "hover:bg-emerald-600 hover:text-white hover:border-emerald-600",
-  ...
-},
-{ 
-  title: t('policyBriefs'), 
-  iconColor: "bg-amber-500",
-  hoverColor: "hover:bg-amber-500 hover:text-white hover:border-amber-500",
-  ...
-}
-
-// Application
-<Button 
-  variant="outline" 
-  className={`w-full ${category.hoverColor}`}
-  asChild
->
+**Avant (actuel):**
+```text
+┌─────────────────────────────────────────────────────────┐
+│  🔍  │  Barre de recherche                    │ Bouton  │
+└─────────────────────────────────────────────────────────┘
+                          ┌─────────┐
+                          │ ✨ IA 🔘│  (séparé en dessous)
+                          └─────────┘
 ```
 
-### 2. AnalysesJuridiques.tsx - Thème bleu
-
-```tsx
-// Hero Section - icône
-<FileText className="w-12 h-12 text-blue-600" />
-
-// Titre avec accent
-<h1 className="text-3xl md:text-4xl font-bold mb-4">
-  <span className="text-blue-600">{t('deepAnalyses')}</span>
-</h1>
+**Après (proposé):**
+```text
+┌───────────────────────────────────────────────────────────────────┐
+│  🔍  │  Barre de recherche (plus haute)     │ ✨ IA 🔘 │ Bouton  │
+└───────────────────────────────────────────────────────────────────┘
 ```
 
-### 3. Commentaires.tsx - Thème vert émeraude
+#### 2. Modifications techniques
 
-```tsx
-// Hero Section - icône
-<Pen className="w-12 h-12 text-emerald-600" />
-```
+**Fichier:** `src/pages/SearchResults.tsx`
 
-### 4. Blogs.tsx - Thème amber
+- **Augmenter la hauteur de l'Input** : Passer de `py-4 sm:py-6` a `py-5 sm:py-7` (environ +8px de hauteur)
 
-```tsx
-// Hero Section - icône
-<TrendingUp className="w-12 h-12 text-amber-500" />
-```
+- **Repositionner le toggle IA** : Le placer a l'interieur du conteneur relatif de la barre de recherche, positionne en `absolute` entre l'input et le bouton de recherche
 
----
+- **Ajuster les paddings** : Augmenter le padding droit de l'Input pour faire place au toggle IA + bouton de recherche
 
-## Résultat attendu
+- **Supprimer le conteneur separe** : Retirer le `<div className="flex items-center justify-center gap-2 mt-4 sm:mt-6">` qui contient actuellement le toggle
 
-| Élément | Avant | Après |
-|---------|-------|-------|
-| Bouton "Consulter" Analyses | Hover jaune | Hover bleu |
-| Bouton "Consulter" Commentaires | Hover jaune | Hover vert |
-| Bouton "Consulter" Blogs | Hover jaune | Hover amber |
-| Icône page Analyses | Bleu primary | Bleu-600 |
-| Icône page Commentaires | Bleu primary | Emerald-600 |
-| Icône page Blogs | Bleu primary | Amber-500 |
+#### 3. Layout adaptatif (Desktop/Mobile)
+
+- **Desktop** : Toggle IA visible avec label "IA" + switch, positionne avant le bouton de recherche
+- **Mobile** : Toggle IA compact (icone + switch seulement) pour economiser l'espace
+
+### Resultat attendu
+
+- Interface plus compacte et professionnelle
+- Moins de scroll necessaire
+- Toggle IA toujours visible et accessible
+- Barre de recherche plus imposante et ergonomique
 
