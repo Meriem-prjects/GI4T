@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui/button";
-import { Newspaper, FileText, ExternalLink, BookOpen } from "lucide-react";
+import { Home, Newspaper, FileText, ExternalLink, BookOpen } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { useLanguage } from "@/contexts/LanguageContext";
@@ -11,6 +11,12 @@ const ActualitesNav = () => {
   const { t } = useTranslation();
 
   const navItems = [
+    {
+      path: "/acces-aux-droits",
+      label: t('home'),
+      icon: Home,
+      description: t('homepage')
+    },
     {
       path: "/acces-aux-droits/actualites",
       label: t('actualites'),
