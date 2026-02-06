@@ -52,7 +52,7 @@ const Blogs = () => {
       {/* Hero Section */}
       <section className={`mb-8 sm:mb-12 ${isRTL ? 'text-right' : ''}`}>
         <div className={`flex items-center gap-4 mb-4 ${isRTL ? 'flex-row-reverse' : ''}`}>
-          <TrendingUp className="w-12 h-12 text-primary" />
+          <TrendingUp className="w-12 h-12 text-amber-500" />
           <div>
             <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold">{t('policyBriefs')}</h1>
             <p className="text-base sm:text-lg text-muted-foreground mt-2">

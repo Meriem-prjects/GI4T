@@ -218,11 +218,16 @@ const AnalysesJuridiques = () => {
       </div>
 
       {/* Hero Section */}
-      <section className={`text-center mb-12 ${isRTL ? 'text-right' : ''}`}>
-        <h1 className="text-3xl md:text-4xl font-bold mb-4">{t('deepAnalyses')}</h1>
-        <p className="text-lg text-muted-foreground max-w-3xl mx-auto">
-          {t('deepAnalysesDesc')}
-        </p>
+      <section className={`mb-12 ${isRTL ? 'text-right' : ''}`}>
+        <div className={`flex items-center gap-4 mb-4 ${isRTL ? 'flex-row-reverse' : ''}`}>
+          <FileText className="w-12 h-12 text-blue-600" />
+          <div>
+            <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold">{t('deepAnalyses')}</h1>
+            <p className="text-base sm:text-lg text-muted-foreground mt-2">
+              {t('deepAnalysesDesc')}
+            </p>
+          </div>
+        </div>
       </section>
 
       {/* Categories Carousel */}

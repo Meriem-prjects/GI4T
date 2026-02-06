@@ -51,7 +51,7 @@ const Commentaires = () => {
       {/* Hero Section */}
       <section className={`mb-8 sm:mb-12 ${isRTL ? 'text-right' : ''}`}>
         <div className={`flex items-center gap-4 mb-4 ${isRTL ? 'flex-row-reverse' : ''}`}>
-          <Pen className="w-12 h-12 text-primary" />
+          <Pen className="w-12 h-12 text-emerald-600" />
           <div>
             <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold">{t('opinionArticles')}</h1>
             <p className="text-base sm:text-lg text-muted-foreground mt-2">

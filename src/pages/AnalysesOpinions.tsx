@@ -85,6 +85,7 @@ const AnalysesOpinions = () => {
                   iconColor: "bg-blue-600",
                   bgColor: "bg-blue-50",
                   badgeColor: "bg-blue-600 text-white",
+                  hoverColor: "hover:bg-blue-600 hover:text-white hover:border-blue-600",
                   type: "analyses-juridiques"
                 },
                 { 
@@ -95,6 +96,7 @@ const AnalysesOpinions = () => {
                   iconColor: "bg-emerald-600",
                   bgColor: "bg-emerald-50",
                   badgeColor: "bg-emerald-600 text-white",
+                  hoverColor: "hover:bg-emerald-600 hover:text-white hover:border-emerald-600",
                   type: "commentaires"
                 },
                 { 
@@ -105,6 +107,7 @@ const AnalysesOpinions = () => {
                   iconColor: "bg-amber-500",
                   bgColor: "bg-amber-50",
                   badgeColor: "bg-amber-500 text-white",
+                  hoverColor: "hover:bg-amber-500 hover:text-white hover:border-amber-500",
                   type: "blogs"
                 }
               ].map((category) => {
@@ -127,7 +130,7 @@ const AnalysesOpinions = () => {
                     <CardContent className="pt-0">
                       <Button 
                         variant="outline" 
-                        className="w-full"
+                        className={`w-full ${category.hoverColor}`}
                         asChild
                       >
                         <Link to={`/observatoire/${category.type}`}>
