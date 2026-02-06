@@ -33,6 +33,7 @@ const TextesFondamentaux = () => {
   const { language, isRTL } = useLanguage();
   const { t } = useTranslation();
   const [categories, setCategories] = useState<Category[]>([]);
+  const [categoryCounts, setCategoryCounts] = useState<Record<string, number>>({});
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
@@ -66,6 +67,15 @@ const TextesFondamentaux = () => {
           .in('status', ['processed', 'published']);
         
         if (docsError) throw docsError;
+        
+        // Compter les documents par catégorie
+        const counts: Record<string, number> = {};
+        docsData?.forEach(doc => {
+          doc.document_categories?.forEach((dc: { category_id: string }) => {
+            counts[dc.category_id] = (counts[dc.category_id] || 0) + 1;
+          });
+        });
+        setCategoryCounts(counts);
         
         // Extraire les IDs uniques des catégories
         const categoryIds = [...new Set(
@@ -140,9 +150,9 @@ const TextesFondamentaux = () => {
   }, [searchTerm]);
 
   return (
-    <div dir={isRTL ? 'rtl' : 'ltr'} className={`container mx-auto px-4 py-6 ${isRTL ? 'font-almarai' : ''}`}>
+    <div dir={isRTL ? 'rtl' : 'ltr'} className={`container mx-auto px-4 py-4 ${isRTL ? 'font-almarai' : ''}`}>
       {/* Breadcrumb */}
-      <div className="mb-6 w-full flex justify-start">
+      <div className="mb-4 w-full flex justify-start">
         <Breadcrumb>
           <BreadcrumbList className={isRTL ? 'flex-row-reverse' : ''}>
             <BreadcrumbItem>
@@ -164,18 +174,18 @@ const TextesFondamentaux = () => {
         </Breadcrumb>
       </div>
 
-      {/* Hero Section */}
-      <section className={`text-center mb-12 ${isRTL ? 'text-right' : ''}`}>
-        <h1 className="text-3xl md:text-4xl font-bold mb-4">{t('fundamentalRightsTexts')}</h1>
-        <p className="text-lg text-muted-foreground max-w-3xl mx-auto">{t('fundamentalRightsDesc')}</p>
+      {/* Hero Section - Reduced spacing */}
+      <section className={`text-center mb-6 ${isRTL ? 'text-right' : ''}`}>
+        <h1 className="text-2xl md:text-3xl font-bold mb-2">{t('fundamentalRightsTexts')}</h1>
+        <p className="text-base text-muted-foreground max-w-3xl mx-auto">{t('fundamentalRightsDesc')}</p>
       </section>
 
       {/* Droits par catégorie */}
-      <section className="mb-12">
-        <h2 className={`text-2xl font-bold mb-6 ${isRTL ? 'text-right' : ''}`}>{t('rightsByCategory')}</h2>
+      <section className="mb-8">
+        <h2 className={`text-xl font-bold mb-4 ${isRTL ? 'text-right' : ''}`}>{t('rightsByCategory')}</h2>
         
         {/* Barre de recherche */}
-        <div className={`relative mb-8 max-w-md ${isRTL ? 'mr-0 ml-auto' : ''}`}>
+        <div className={`relative mb-6 max-w-md ${isRTL ? 'mr-0 ml-auto' : ''}`}>
           <Search className={`absolute ${isRTL ? 'right-3' : 'left-3'} top-3 h-4 w-4 text-muted-foreground`} />
           <Input 
             placeholder={t('searchCategory')} 
@@ -186,38 +196,65 @@ const TextesFondamentaux = () => {
         </div>
 
         {loading ? (
-          <div className="flex justify-center items-center py-12">
+          <div className="flex justify-center items-center py-8">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
           </div>
         ) : paginatedCategories.length > 0 ? (
           <>
-            {/* Grid of categories - 3 columns desktop, 2 tablet, 1 mobile */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {/* Grid of categories - reduced gap */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {paginatedCategories.map(category => {
                 const Icon = getIconForCategory(category.name);
+                const count = categoryCounts[category.id] || 0;
+                const categoryColor = category.color || '#6366f1';
+                
                 return (
-                  <Card key={category.id} className="hover:shadow-lg transition-all duration-300 cursor-pointer h-[280px] flex flex-col">
-                    <CardHeader className="flex-1">
+                  <Card 
+                    key={category.id} 
+                    className="hover:shadow-lg transition-all duration-300 cursor-pointer group"
+                    style={{ 
+                      borderColor: categoryColor + '30',
+                      backgroundColor: categoryColor + '05'
+                    }}
+                    onClick={() => handleExploreCategory(category.name)}
+                  >
+                    <CardHeader className="pb-2">
                       <div className={`flex items-center justify-between mb-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
                         <div 
-                          className="w-8 h-8 rounded-full flex items-center justify-center" 
-                          style={{ backgroundColor: category.color + '20' }}
+                          className="w-12 h-12 rounded-lg flex items-center justify-center shadow-sm" 
+                          style={{ backgroundColor: categoryColor }}
                         >
-                          <Icon className="w-5 h-5" style={{ color: category.color }} />
+                          <Icon className="w-6 h-6 text-white" />
                         </div>
-                        <Badge variant="secondary">{t('fundamentalRight')}</Badge>
+                        <Badge 
+                          className="text-white font-bold px-3 py-1"
+                          style={{ backgroundColor: categoryColor }}
+                        >
+                          {count} {isRTL ? 'وثيقة' : count === 1 ? 'fiche' : 'fiches'}
+                        </Badge>
                       </div>
-                      <CardTitle className={`text-lg mb-2 ${isRTL ? 'text-right' : ''}`}>
+                      <CardTitle className={`text-lg mb-1 group-hover:text-primary transition-colors ${isRTL ? 'text-right' : ''}`}>
                         {isRTL ? category.name_ar || category.name : category.name}
                       </CardTitle>
-                      <CardDescription className={`line-clamp-2 text-sm leading-relaxed ${isRTL ? 'text-right' : ''}`}>
+                      <CardDescription className={`line-clamp-2 text-sm ${isRTL ? 'text-right' : ''}`}>
                         {isRTL ? category.description_ar || category.description : category.description}
                       </CardDescription>
                     </CardHeader>
-                    <CardContent className="pt-0">
-                      <Button variant="outline" className="w-full" onClick={() => handleExploreCategory(category.name)}>
+                    <CardContent className="pt-2 pb-4">
+                      <Button 
+                        variant="outline" 
+                        className="w-full group-hover:border-current transition-colors"
+                        style={{ 
+                          color: categoryColor,
+                          borderColor: categoryColor + '50'
+                        }}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleExploreCategory(category.name);
+                        }}
+                      >
                         <BookOpen className={`w-4 h-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />
-                        {t('explore')}
+                        {isRTL ? 'استشارة' : 'Consulter'}
                       </Button>
                     </CardContent>
                   </Card>
@@ -227,7 +264,7 @@ const TextesFondamentaux = () => {
 
             {/* Numeric pagination */}
             {totalPages > 1 && (
-              <Pagination className="mt-8">
+              <Pagination className="mt-6">
                 <PaginationContent className={isRTL ? 'flex-row-reverse' : ''}>
                   <PaginationItem>
                     <PaginationPrevious 
@@ -259,7 +296,7 @@ const TextesFondamentaux = () => {
             )}
           </>
         ) : (
-          <div className={`text-center py-8 text-muted-foreground ${isRTL ? 'text-right' : ''}`}>
+          <div className={`text-center py-6 text-muted-foreground ${isRTL ? 'text-right' : ''}`}>
             {searchTerm 
               ? `${t('noCategoryFound')} "${searchTerm}"`
               : (isRTL ? 'لا توجد فئات متاحة حالياً' : 'Aucune catégorie disponible pour le moment')
