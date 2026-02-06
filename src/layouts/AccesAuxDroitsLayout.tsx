@@ -59,6 +59,9 @@ const AccesAuxDroitsLayout = () => {
             </Link>
             
             <nav className={`hidden md:flex items-center absolute ${isRTL ? 'right-1/2 translate-x-1/2' : 'left-1/2 -translate-x-1/2'} gap-6`}>
+              <Link to="/acces-aux-droits" className={`text-sm font-medium text-foreground hover:text-primary transition-colors duration-200 ${isRTL ? 'font-almarai' : ''}`}>
+                {t('home')}
+              </Link>
               <Link to="/acces-aux-droits/carte-interactive" className={`text-sm font-medium text-foreground hover:text-primary transition-colors duration-200 ${isRTL ? 'font-almarai' : ''}`}>
                 {t('interactiveMap')}
               </Link>
