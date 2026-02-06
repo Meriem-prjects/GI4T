@@ -73,31 +73,44 @@ const AccesAuxDroitsLayout = () => {
               </Link>
             </nav>
 
-            <div className={`flex items-center gap-2 sm:gap-4 ${isRTL ? 'mr-auto' : 'ml-auto'}`}>
+            <div className={`flex items-center gap-2 sm:gap-3 ${isRTL ? 'mr-auto' : 'ml-auto'}`}>
+              {/* Home Button - Enhanced */}
               <Link to="/acces-aux-droits">
-                <Button variant="outline" size="sm" className="text-xs sm:text-sm">
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  className="h-9 w-9 p-0 rounded-full border-primary/30 hover:bg-primary hover:text-primary-foreground hover:border-primary transition-all duration-200 shadow-sm"
+                >
                   <Home className="h-4 w-4" />
                 </Button>
               </Link>
-              <div className="flex items-center bg-muted rounded-full p-1">
+              
+              {/* Language Switcher - Enhanced */}
+              <div className="flex items-center bg-gradient-to-r from-primary/10 to-primary/5 rounded-full p-1 shadow-sm border border-primary/20">
                 <Button 
                   size="sm" 
                   onClick={() => setLanguage('fr')}
-                  className={`${language === 'fr' ? 'bg-primary text-primary-foreground' : 'bg-transparent text-muted-foreground'} rounded-full px-2 text-xs font-medium hover:bg-primary/90`}
+                  className={`${language === 'fr' ? 'bg-primary text-primary-foreground shadow-md' : 'bg-transparent text-muted-foreground hover:text-primary'} rounded-full px-3 py-1.5 text-xs font-semibold transition-all duration-200`}
                 >
                   FR
                 </Button>
                 <Button 
                   size="sm"
                   onClick={() => setLanguage('ar')}
-                  className={`${language === 'ar' ? 'bg-primary text-primary-foreground' : 'bg-transparent text-muted-foreground'} rounded-full px-2 text-xs font-medium hover:bg-primary/90`}
+                  className={`${language === 'ar' ? 'bg-primary text-primary-foreground shadow-md' : 'bg-transparent text-muted-foreground hover:text-primary'} rounded-full px-3 py-1.5 text-xs font-semibold transition-all duration-200`}
                 >
                   AR
                 </Button>
               </div>
+              
+              {/* JustClic Button - Enhanced */}
               <Link to="/">
-                <Button variant="outline" size="sm" className="px-2 sm:px-3">
-                  <img src="/Feelinx_upload/justclic-logo.png" alt="JustClic" className="h-5 sm:h-6" />
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  className="px-3 h-9 rounded-full border-primary/30 hover:bg-primary/10 hover:border-primary transition-all duration-200 shadow-sm"
+                >
+                  <img src="/Feelinx_upload/justclic-logo.png" alt="JustClic" className="h-5" />
                 </Button>
               </Link>
             </div>

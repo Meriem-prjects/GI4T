@@ -25,20 +25,20 @@ const HomeHeader = () => {
             </p>
           </div>
           
-          {/* Language Switcher */}
+          {/* Language Switcher - Enhanced */}
           <div className={`absolute ${isRTL ? 'left-0' : 'right-0'} top-1/2 -translate-y-1/2 flex items-center`}>
-            <div className="flex items-center bg-muted rounded-full p-1">
+            <div className="flex items-center bg-gradient-to-r from-primary/10 to-primary/5 rounded-full p-1 shadow-sm border border-primary/20">
               <Button 
                 size="sm" 
                 onClick={() => setLanguage('fr')}
-                className={`${language === 'fr' ? 'bg-primary text-primary-foreground' : 'bg-transparent text-muted-foreground'} rounded-full px-2 sm:px-4 py-1 text-xs sm:text-sm font-medium hover:bg-primary/90`}
+                className={`${language === 'fr' ? 'bg-primary text-primary-foreground shadow-md' : 'bg-transparent text-muted-foreground hover:text-primary'} rounded-full px-3 sm:px-4 py-1.5 text-xs sm:text-sm font-semibold transition-all duration-200`}
               >
                 FR
               </Button>
               <Button 
                 size="sm"
                 onClick={() => setLanguage('ar')}
-                className={`${language === 'ar' ? 'bg-primary text-primary-foreground' : 'bg-transparent text-muted-foreground'} rounded-full px-2 sm:px-4 py-1 text-xs sm:text-sm font-medium hover:bg-primary/90`}
+                className={`${language === 'ar' ? 'bg-primary text-primary-foreground shadow-md' : 'bg-transparent text-muted-foreground hover:text-primary'} rounded-full px-3 sm:px-4 py-1.5 text-xs sm:text-sm font-semibold transition-all duration-200`}
               >
                 AR
               </Button>
