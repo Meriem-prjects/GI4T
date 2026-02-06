@@ -3,17 +3,32 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { Search, ExternalLink, Shield, Users, Gavel, Heart, Home, Briefcase, ChevronRight } from "lucide-react";
+import { Search, ExternalLink, Shield, Users, Gavel, Heart, Home, Briefcase, ChevronRight, Globe } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useTranslation } from "@/hooks/useTranslation";
+
 const LiensUtilesContent = () => {
   const [searchTerm, setSearchTerm] = useState("");
+  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const { isRTL } = useLanguage();
   const { t } = useTranslation();
+
+  const categoryCards = [
+    { id: "institutions", name: isRTL ? "المؤسسات الرسمية" : "Institutions officielles", icon: Shield, color: "bg-blue-600", bgColor: "bg-blue-50", count: 3 },
+    { id: "droits", name: isRTL ? "حقوق الإنسان والحريات" : "Droits humains", icon: Users, color: "bg-rose-600", bgColor: "bg-rose-50", count: 3 },
+    { id: "justice", name: isRTL ? "العدالة" : "Justice", icon: Gavel, color: "bg-amber-600", bgColor: "bg-amber-50", count: 3 },
+    { id: "social", name: isRTL ? "الشؤون الاجتماعية" : "Aide sociale", icon: Heart, color: "bg-purple-600", bgColor: "bg-purple-50", count: 3 },
+    { id: "logement", name: isRTL ? "السكن" : "Logement", icon: Home, color: "bg-emerald-600", bgColor: "bg-emerald-50", count: 3 },
+    { id: "emploi", name: isRTL ? "التشغيل" : "Emploi", icon: Briefcase, color: "bg-cyan-600", bgColor: "bg-cyan-50", count: 3 }
+  ];
+
   const linkCategories = [
     {
+      id: "institutions",
       title: isRTL ? "المؤسسات الرسمية" : "Institutions officielles",
       icon: Shield,
+      color: "bg-blue-600",
+      bgColor: "bg-blue-50",
       links: [
         {
           name: "Présidence de la République Tunisienne",
@@ -36,8 +51,11 @@ const LiensUtilesContent = () => {
       ]
     },
     {
+      id: "droits",
       title: isRTL ? "حقوق الإنسان والحريات" : "Droits humains et libertés",
       icon: Users,
+      color: "bg-rose-600",
+      bgColor: "bg-rose-50",
       links: [
         {
           name: "Ligue Tunisienne des Droits de l'Homme",
@@ -60,8 +78,11 @@ const LiensUtilesContent = () => {
       ]
     },
     {
+      id: "justice",
       title: isRTL ? "العدالة والمساعدة القانونية" : "Justice et aide juridique",
       icon: Gavel,
+      color: "bg-amber-600",
+      bgColor: "bg-amber-50",
       links: [
         {
           name: "Ordre des Avocats de Tunis",
@@ -84,8 +105,11 @@ const LiensUtilesContent = () => {
       ]
     },
     {
+      id: "social",
       title: isRTL ? "الشؤون الاجتماعية والصحة" : "Aide sociale et santé",
       icon: Heart,
+      color: "bg-purple-600",
+      bgColor: "bg-purple-50",
       links: [
         {
           name: "Ministère des Affaires Sociales",
@@ -108,8 +132,11 @@ const LiensUtilesContent = () => {
       ]
     },
     {
+      id: "logement",
       title: isRTL ? "السكن والتعمير" : "Logement et urbanisme",
       icon: Home,
+      color: "bg-emerald-600",
+      bgColor: "bg-emerald-50",
       links: [
         {
           name: "Ministère de l'Équipement et de l'Habitat",
@@ -132,8 +159,11 @@ const LiensUtilesContent = () => {
       ]
     },
     {
+      id: "emploi",
       title: isRTL ? "التشغيل والتكوين" : "Emploi et formation",
       icon: Briefcase,
+      color: "bg-cyan-600",
+      bgColor: "bg-cyan-50",
       links: [
         {
           name: "Agence Nationale pour l'Emploi et le Travail Indépendant",
@@ -157,13 +187,15 @@ const LiensUtilesContent = () => {
     }
   ];
 
-  const filteredCategories = linkCategories.map(category => ({
-    ...category,
-    links: category.links.filter(link => 
-      link.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      link.description.toLowerCase().includes(searchTerm.toLowerCase())
-    )
-  })).filter(category => category.links.length > 0);
+  const filteredCategories = linkCategories
+    .filter(category => !selectedCategory || category.id === selectedCategory)
+    .map(category => ({
+      ...category,
+      links: category.links.filter(link => 
+        link.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        link.description.toLowerCase().includes(searchTerm.toLowerCase())
+      )
+    })).filter(category => category.links.length > 0);
 
   return (
     <main className="flex-1">
@@ -181,17 +213,17 @@ const LiensUtilesContent = () => {
       </div>
 
       {/* Main Content */}
-      <div className="container mx-auto px-4 py-8">
+      <div className="container mx-auto px-4 py-6">
         {/* Page Header */}
-        <div className="text-center mb-8 animate-fade-in">
-          <h1 className="text-3xl sm:text-4xl font-bold mb-4">{t('usefulLinksTitle')}</h1>
-          <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
+        <div className="text-center mb-6 animate-fade-in">
+          <h1 className="text-2xl sm:text-3xl font-bold mb-3">{t('usefulLinksTitle')}</h1>
+          <p className="text-base text-muted-foreground max-w-2xl mx-auto">
             {t('usefulLinksDesc')}
           </p>
         </div>
 
         {/* Search */}
-        <div className="mb-8 animate-fade-in">
+        <div className="mb-6 animate-fade-in">
           <div className="relative max-w-md mx-auto">
             <Search className={`absolute ${isRTL ? 'right-3' : 'left-3'} top-3 h-4 w-4 text-muted-foreground`} />
             <Input
@@ -203,26 +235,56 @@ const LiensUtilesContent = () => {
           </div>
         </div>
 
+        {/* Category Cards */}
+        <div className="mb-8 animate-fade-in">
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+            {categoryCards.map((cat) => {
+              const Icon = cat.icon;
+              const isSelected = selectedCategory === cat.id;
+              return (
+                <Card 
+                  key={cat.id}
+                  className={`cursor-pointer transition-all duration-200 hover:shadow-md hover:scale-[1.02] ${isSelected ? 'ring-2 ring-primary shadow-md' : ''} ${cat.bgColor}`}
+                  onClick={() => setSelectedCategory(isSelected ? null : cat.id)}
+                >
+                  <CardContent className="p-3 flex flex-col items-center text-center">
+                    <div className={`w-10 h-10 ${cat.color} rounded-lg flex items-center justify-center mb-2 shadow-sm`}>
+                      <Icon className="h-5 w-5 text-white" />
+                    </div>
+                    <span className="text-xs font-medium line-clamp-1">{cat.name}</span>
+                    <Badge variant="secondary" className="mt-1 text-xs">{cat.count}</Badge>
+                  </CardContent>
+                </Card>
+              );
+            })}
+          </div>
+        </div>
+
         {/* Links Categories */}
-        <div className="space-y-8 mb-12 animate-fade-in">
-          {filteredCategories.map((category, index) => {
+        <div className="space-y-8 mb-10 animate-fade-in">
+          {filteredCategories.map((category) => {
             const Icon = category.icon;
             return (
-              <div key={index}>
-                <div className="flex items-center gap-3 mb-4">
-                  <Icon className="h-6 w-6 text-primary" />
+              <div key={category.id}>
+                <div className={`flex items-center gap-3 mb-4 ${isRTL ? 'flex-row-reverse' : ''}`}>
+                  <div className={`w-10 h-10 ${category.color} rounded-lg flex items-center justify-center shadow-sm`}>
+                    <Icon className="h-5 w-5 text-white" />
+                  </div>
                   <h2 className="text-xl font-semibold">{category.title}</h2>
                 </div>
                 
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                   {category.links.map((link, linkIndex) => (
-                    <Card key={linkIndex} className="hover:shadow-md transition-shadow duration-300 hover-scale">
+                    <Card 
+                      key={linkIndex} 
+                      className={`hover:shadow-lg transition-all duration-300 border border-border/50 hover:border-border ${category.bgColor}`}
+                    >
                       <CardHeader className="pb-3">
                         <div className="flex items-start justify-between">
                           <CardTitle className="text-base leading-tight pr-2">{link.name}</CardTitle>
                           <div className="flex items-center gap-1 flex-shrink-0">
                             {link.verified && (
-                              <Badge variant="outline" className="text-xs bg-green-50 text-green-700 border-green-200">
+                              <Badge className="text-xs bg-green-600 text-white">
                                 {t('verified')}
                               </Badge>
                             )}
@@ -239,10 +301,11 @@ const LiensUtilesContent = () => {
                           rel="noopener noreferrer"
                           className="inline-block w-full"
                         >
-                            <Button className="w-full" size="sm">
-                              <ExternalLink className="h-3 w-3 mr-2" />
-                              {isRTL ? 'زيارة الموقع' : 'Visiter le site'}
-                            </Button>
+                          <Button className={`w-full ${category.color} text-white hover:opacity-90`} size="sm">
+                            <Globe className="h-3 w-3 mr-2" />
+                            {isRTL ? 'زيارة الموقع' : 'Visiter le site'}
+                            <ExternalLink className="h-3 w-3 ml-2" />
+                          </Button>
                         </a>
                       </CardContent>
                     </Card>
