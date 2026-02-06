@@ -49,23 +49,47 @@ const CarteInteractiveContent = () => {
           </p>
         </div>
 
-        {/* Layout: Events List + Map */}
-        <div className="grid grid-cols-1 lg:grid-cols-[30%_70%] gap-6">
-          {/* Left Side - Events List */}
-          <div className="space-y-4 overflow-y-auto max-h-[700px] pr-2 scrollbar-events">
-            <div className="sticky top-0 bg-background z-10 pb-4 space-y-4">
+        {/* Layout: Map first on mobile, then Events List */}
+        <div className="flex flex-col lg:grid lg:grid-cols-[30%_70%] gap-4 lg:gap-6">
+          {/* Map - First on mobile */}
+          <div className="order-1 lg:order-2 lg:sticky lg:top-4 h-[300px] sm:h-[400px] lg:h-[700px] overflow-visible">
+            <Card className="h-full overflow-visible">
+              <CardContent className="p-0 h-full overflow-visible relative">
+                <GovernorateMap 
+                  governorates={governorates} 
+                  events={filteredEvents}
+                />
+                
+                {/* Legend */}
+                <div className={`absolute top-2 sm:top-4 ${isRTL ? 'left-2 sm:left-4' : 'right-2 sm:right-4'} bg-white/95 backdrop-blur-sm rounded-lg shadow-lg p-2 sm:p-3 space-y-1.5 sm:space-y-2 border border-gray-200 z-[1000]`}>
+                  <div className={`flex items-center gap-1.5 sm:gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
+                    <div className="w-3 h-3 sm:w-4 sm:h-4 bg-green-600 rounded"></div>
+                    <span className="text-[10px] sm:text-xs font-medium text-gray-700">{t('actionCompleted')}</span>
+                  </div>
+                  <div className={`flex items-center gap-1.5 sm:gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
+                    <div className="w-3 h-3 sm:w-4 sm:h-4 bg-blue-600 rounded"></div>
+                    <span className="text-[10px] sm:text-xs font-medium text-gray-700">{t('upcomingEvent')}</span>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Events List - Second on mobile */}
+          <div className="order-2 lg:order-1 space-y-3 sm:space-y-4 lg:overflow-y-auto lg:max-h-[700px] lg:pr-2 scrollbar-events">
+            <div className="sticky top-0 bg-background z-10 pb-3 sm:pb-4 space-y-3 sm:space-y-4">
               <div className={`flex items-center justify-between ${isRTL ? 'flex-row-reverse' : ''}`}>
-                <h2 className="text-xl font-semibold">{t('events')}</h2>
-                <Badge variant="outline">{filteredEvents.length} {filteredEvents.length !== 1 ? t('events').toLowerCase() : t('events').toLowerCase()}</Badge>
+                <h2 className="text-lg sm:text-xl font-semibold">{t('events')}</h2>
+                <Badge variant="outline" className="text-xs sm:text-sm">{filteredEvents.length} {filteredEvents.length !== 1 ? t('events').toLowerCase() : t('events').toLowerCase()}</Badge>
               </div>
               
-              {/* Filter Bar */}
-              <div className="flex gap-2 flex-wrap">
+              {/* Filter Bar - Stacked on mobile */}
+              <div className="flex flex-col sm:flex-row gap-2 sm:flex-wrap">
                 <Button
                   variant={filter === 'all' ? 'default' : 'outline'}
                   size="sm"
                   onClick={() => setFilter('all')}
-                  className="flex-1 min-w-[100px]"
+                  className="flex-1 sm:min-w-[100px] h-10 sm:h-9 text-sm"
                 >
                   {t('allEvents')}
                 </Button>
@@ -73,7 +97,7 @@ const CarteInteractiveContent = () => {
                   variant={filter === 'action_realisee' ? 'default' : 'outline'}
                   size="sm"
                   onClick={() => setFilter('action_realisee')}
-                  className={`flex-1 min-w-[140px] ${
+                  className={`flex-1 sm:min-w-[140px] h-10 sm:h-9 text-sm ${
                     filter === 'action_realisee' 
                       ? 'bg-green-600 hover:bg-green-700 text-white' 
                       : 'border-green-600 text-green-600 hover:bg-green-50'
@@ -85,7 +109,7 @@ const CarteInteractiveContent = () => {
                   variant={filter === 'evenement_a_venir' ? 'default' : 'outline'}
                   size="sm"
                   onClick={() => setFilter('evenement_a_venir')}
-                  className={`flex-1 min-w-[140px] ${
+                  className={`flex-1 sm:min-w-[140px] h-10 sm:h-9 text-sm ${
                     filter === 'evenement_a_venir' 
                       ? 'bg-blue-600 hover:bg-blue-700 text-white' 
                       : 'border-blue-600 text-blue-600 hover:bg-blue-50'
@@ -97,31 +121,31 @@ const CarteInteractiveContent = () => {
             </div>
             
             {filteredEvents.length === 0 ? (
-              <div className="text-center py-12 text-muted-foreground">
-                <Calendar className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                <p>{t('noResults')}</p>
+              <div className="text-center py-8 sm:py-12 text-muted-foreground">
+                <Calendar className="h-10 w-10 sm:h-12 sm:w-12 mx-auto mb-3 sm:mb-4 opacity-50" />
+                <p className="text-sm sm:text-base">{t('noResults')}</p>
               </div>
             ) : (
               filteredEvents.map((event) => (
                 <Card key={event.id} className="hover:shadow-lg transition-shadow duration-300">
-                  <CardContent className="p-4">
+                  <CardContent className="p-3 sm:p-4">
                     {/* Event Image */}
                     {event.images && event.images.length > 0 && (
-                      <div className="mb-4 rounded-lg overflow-hidden">
+                      <div className="mb-3 sm:mb-4 rounded-lg overflow-hidden">
                         <img 
                           src={event.images[0]} 
                           alt={event.title}
-                          className="w-full h-48 object-cover"
+                          className="w-full h-36 sm:h-48 object-cover"
                         />
                       </div>
                     )}
                     
                     {/* Event Info */}
-                    <div className="space-y-3">
+                    <div className="space-y-2 sm:space-y-3">
                       <div className={`flex items-start justify-between gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
-                        <h3 className={`font-semibold text-lg flex-1 ${isRTL ? 'text-right' : ''}`}>{event.title}</h3>
+                        <h3 className={`font-semibold text-base sm:text-lg flex-1 ${isRTL ? 'text-right' : ''}`}>{event.title}</h3>
                         <Badge 
-                          className={`flex-shrink-0 ${
+                          className={`flex-shrink-0 text-xs ${
                             event.type === 'action_realisee' 
                               ? 'bg-green-600 text-white hover:bg-green-700' 
                               : 'bg-blue-600 text-white hover:bg-blue-700'
@@ -131,13 +155,13 @@ const CarteInteractiveContent = () => {
                         </Badge>
                       </div>
                       
-                      <p className={`text-sm text-muted-foreground line-clamp-2 ${isRTL ? 'text-right' : ''}`}>
+                      <p className={`text-xs sm:text-sm text-muted-foreground line-clamp-2 ${isRTL ? 'text-right' : ''}`}>
                         {event.description}
                       </p>
                       
-                      <div className="space-y-2 text-sm">
+                      <div className="space-y-1.5 sm:space-y-2 text-xs sm:text-sm">
                         <div className={`flex items-center gap-2 text-muted-foreground ${isRTL ? 'flex-row-reverse' : ''}`}>
-                          <Calendar className="h-4 w-4 flex-shrink-0" />
+                          <Calendar className="h-3.5 w-3.5 sm:h-4 sm:w-4 flex-shrink-0" />
                           <span>{new Date(event.event_date).toLocaleDateString(isRTL ? 'ar-TN' : 'fr-FR', {
                             year: 'numeric',
                             month: 'long',
@@ -147,21 +171,21 @@ const CarteInteractiveContent = () => {
                         
                         {event.governorate?.name && (
                           <div className={`flex items-center gap-2 text-muted-foreground ${isRTL ? 'flex-row-reverse' : ''}`}>
-                            <MapPin className="h-4 w-4 flex-shrink-0" />
+                            <MapPin className="h-3.5 w-3.5 sm:h-4 sm:w-4 flex-shrink-0" />
                             <span>{event.governorate.name}</span>
                           </div>
                         )}
                         
                         {event.people_impacted && (
                           <div className={`flex items-center gap-2 text-muted-foreground ${isRTL ? 'flex-row-reverse' : ''}`}>
-                            <Users className="h-4 w-4 flex-shrink-0" />
+                            <Users className="h-3.5 w-3.5 sm:h-4 sm:w-4 flex-shrink-0" />
                             <span>{event.people_impacted} {isRTL ? 'شخص متأثر' : 'personnes impactées'}</span>
                           </div>
                         )}
                         
                         {event.available_places && event.type === 'evenement_a_venir' && (
                           <div className={`flex items-center gap-2 text-muted-foreground ${isRTL ? 'flex-row-reverse' : ''}`}>
-                            <Users className="h-4 w-4 flex-shrink-0" />
+                            <Users className="h-3.5 w-3.5 sm:h-4 sm:w-4 flex-shrink-0" />
                             <span>{event.available_places} {isRTL ? 'مقعد متاح' : 'places disponibles'}</span>
                           </div>
                         )}
@@ -171,30 +195,6 @@ const CarteInteractiveContent = () => {
                 </Card>
               ))
             )}
-          </div>
-
-          {/* Right Side - Map */}
-          <div className="lg:sticky lg:top-4 h-[700px] overflow-visible">
-            <Card className="h-full overflow-visible">
-              <CardContent className="p-0 h-full overflow-visible relative">
-                <GovernorateMap 
-                  governorates={governorates} 
-                  events={filteredEvents}
-                />
-                
-                {/* Legend */}
-                <div className={`absolute top-4 ${isRTL ? 'left-4' : 'right-4'} bg-white/95 backdrop-blur-sm rounded-lg shadow-lg p-3 space-y-2 border border-gray-200 z-[1000]`}>
-                  <div className={`flex items-center gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
-                    <div className="w-4 h-4 bg-green-600 rounded"></div>
-                    <span className="text-xs font-medium text-gray-700">{t('actionCompleted')}</span>
-                  </div>
-                  <div className={`flex items-center gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
-                    <div className="w-4 h-4 bg-blue-600 rounded"></div>
-                    <span className="text-xs font-medium text-gray-700">{t('upcomingEvent')}</span>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
           </div>
         </div>
       </div>

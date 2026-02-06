@@ -35,7 +35,7 @@ const ObservatoireSection = () => {
       }}
       className="bg-gradient-to-br from-[#4164D7] to-[#5574E0] border-0 shadow-2xl hover:shadow-3xl transition-all cursor-pointer hover:scale-[1.02] duration-300"
     >
-      <CardContent className="p-8 sm:p-12 flex flex-col items-center justify-center space-y-8 min-h-[500px]">
+      <CardContent className="p-5 sm:p-8 md:p-12 flex flex-col items-center justify-center space-y-5 sm:space-y-8 min-h-[350px] sm:min-h-[450px] md:min-h-[500px]">
         {/* Logo */}
         <div className="flex-shrink-0">
           <img
