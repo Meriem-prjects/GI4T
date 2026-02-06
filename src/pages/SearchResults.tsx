@@ -302,7 +302,7 @@ const SearchResults = () => {
               
               {/* AI Toggle - Integrated inside search bar */}
               <div 
-                className={`absolute ${isRTL ? 'left-20 sm:left-28' : 'right-20 sm:right-28'} top-1/2 transform -translate-y-1/2 flex items-center gap-1.5 sm:gap-2 px-2 sm:px-3 py-1 sm:py-1.5 rounded-full transition-all duration-300 cursor-pointer ${
+                className={`absolute ${isRTL ? 'left-28 sm:left-36' : 'right-28 sm:right-36'} top-1/2 transform -translate-y-1/2 flex items-center gap-1.5 sm:gap-2 px-2 sm:px-3 py-1 sm:py-1.5 rounded-full transition-all duration-300 cursor-pointer ${
                   useAI 
                     ? 'bg-primary/10 border border-primary/30' 
                     : 'bg-muted/50 border border-transparent hover:bg-muted'
