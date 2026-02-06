@@ -413,7 +413,9 @@ type TranslationKey =
   | 'translatePagesStep'
   | 'translatePagesStepDesc'
   | 'consolidateStep'
-  | 'consolidateStepDesc';
+  | 'consolidateStepDesc'
+  | 'filters'
+  | 'applyFilters';
 
 const translations: Record<'fr' | 'ar', Record<TranslationKey, string>> = {
   fr: {
@@ -826,6 +828,9 @@ const translations: Record<'fr' | 'ar', Record<TranslationKey, string>> = {
     translatePagesStepDesc: 'Traduit le contenu complet de chaque page individuellement',
     consolidateStep: 'Consolider',
     consolidateStepDesc: 'Fusionne toutes les pages traduites en un seul contenu',
+    // Mobile filters
+    filters: 'Filtres',
+    applyFilters: 'Appliquer les filtres',
   },
   ar: {
     // Homepage
@@ -1240,6 +1245,9 @@ const translations: Record<'fr' | 'ar', Record<TranslationKey, string>> = {
     translatePagesStepDesc: 'ترجمة المحتوى الكامل لكل صفحة بشكل فردي',
     consolidateStep: 'دمج',
     consolidateStepDesc: 'دمج جميع الصفحات المترجمة في محتوى واحد',
+    // Mobile filters
+    filters: 'عوامل التصفية',
+    applyFilters: 'تطبيق الفلاتر',
   },
 };
 

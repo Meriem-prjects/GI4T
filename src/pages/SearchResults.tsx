@@ -1,6 +1,8 @@
 import { useState, useEffect, useRef } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { Search, Filter, Grid3X3, List, Loader2, Sparkles, ChevronDown, ChevronUp, Calendar, Scale, FileText, RotateCcw } from "lucide-react";
+import { useIsMobile } from "@/hooks/use-mobile";
+import MobileSearchFilters from "@/components/observatoire/MobileSearchFilters";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -25,6 +27,7 @@ const SearchResults = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const { language, isRTL } = useLanguage();
   const { t } = useTranslation();
+  const isMobile = useIsMobile();
   
   // Fetch filter options first to get year range
   const { categories, courtTypes, jurisdictionLevels, documentTypes, yearRange, isLoading: filtersLoading } = useSearchFilters();
@@ -253,11 +256,11 @@ const SearchResults = () => {
 
   return (
     <div dir={isRTL ? 'rtl' : 'ltr'} className={`min-h-screen ${isRTL ? 'font-almarai' : ''}`}>
-      {/* Hero Search Section */}
+      {/* Hero Search Section - Optimized for mobile */}
       <div ref={searchBarRef} className="bg-gradient-to-br from-primary/5 via-primary/10 to-accent/5 border-b">
-        <div className="container mx-auto px-4 py-8">
-          {/* Breadcrumb */}
-          <div className="mb-6">
+        <div className="container mx-auto px-3 sm:px-4 py-4 sm:py-8">
+          {/* Breadcrumb - Hidden on small mobile */}
+          <div className="mb-4 sm:mb-6 hidden sm:block">
             <Breadcrumb>
               <BreadcrumbList className={isRTL ? 'flex-row-reverse' : ''}>
                 <BreadcrumbItem>
@@ -279,11 +282,11 @@ const SearchResults = () => {
             </Breadcrumb>
           </div>
 
-          {/* Search Bar */}
+          {/* Search Bar - Mobile optimized */}
           <div className="max-w-4xl mx-auto">
             <div className="relative group">
-              <div className={`absolute ${isRTL ? 'right-0' : 'left-0'} top-0 bottom-0 w-14 bg-primary/10 rounded-l-xl flex items-center justify-center`}>
-                <Search className="text-primary" size={22} />
+              <div className={`absolute ${isRTL ? 'right-0' : 'left-0'} top-0 bottom-0 w-10 sm:w-14 bg-primary/10 rounded-l-xl flex items-center justify-center`}>
+                <Search className="text-primary" size={isMobile ? 18 : 22} />
               </div>
               <Input
                 placeholder={useAI ? t('aiSearchPlaceholder') : t('searchDocumentsPlaceholder')}
@@ -294,20 +297,21 @@ const SearchResults = () => {
                     setCurrentPage(1);
                   }
                 }}
-                className={`${isRTL ? 'pr-16 pl-32' : 'pl-16 pr-32'} py-6 text-base bg-background rounded-xl border-2 border-transparent focus:border-primary/30 shadow-lg transition-all duration-300 group-hover:shadow-xl`}
+                className={`${isRTL ? 'pr-12 sm:pr-16 pl-20 sm:pl-32' : 'pl-12 sm:pl-16 pr-20 sm:pr-32'} py-4 sm:py-6 text-sm sm:text-base bg-background rounded-xl border-2 border-transparent focus:border-primary/30 shadow-lg transition-all duration-300 group-hover:shadow-xl`}
               />
               <Button 
-                className={`absolute ${isRTL ? 'left-2' : 'right-2'} top-1/2 transform -translate-y-1/2 px-6 rounded-lg shadow-md hover:shadow-lg transition-all duration-300`}
+                className={`absolute ${isRTL ? 'left-1 sm:left-2' : 'right-1 sm:right-2'} top-1/2 transform -translate-y-1/2 px-3 sm:px-6 h-8 sm:h-10 text-sm rounded-lg shadow-md hover:shadow-lg transition-all duration-300`}
                 onClick={() => setCurrentPage(1)}
               >
-                {t('search')}
+                <Search className="w-4 h-4 sm:hidden" />
+                <span className="hidden sm:inline">{t('search')}</span>
               </Button>
             </div>
             
-            {/* AI Toggle - Simple */}
-            <div className="flex flex-col items-center gap-2 mt-6">
+            {/* AI Toggle - Compact on mobile */}
+            <div className="flex items-center justify-center gap-2 mt-4 sm:mt-6">
               <div 
-                className={`flex items-center gap-3 px-4 py-2 rounded-full transition-all duration-300 cursor-pointer ${
+                className={`flex items-center gap-2 sm:gap-3 px-3 sm:px-4 py-1.5 sm:py-2 rounded-full transition-all duration-300 cursor-pointer ${
                   useAI 
                     ? 'bg-primary/10 border-2 border-primary/30' 
                     : 'bg-muted/50 border-2 border-transparent hover:bg-muted'
@@ -317,11 +321,9 @@ const SearchResults = () => {
                   setCurrentPage(1);
                 }}
               >
-                <div className={`p-1.5 rounded-full transition-all duration-300 ${useAI ? 'bg-primary text-primary-foreground' : 'bg-muted-foreground/20'}`}>
-                  <Sparkles className={`h-4 w-4 transition-all duration-300 ${useAI ? 'animate-pulse' : ''}`} />
-                </div>
-                <span className={`text-sm font-medium transition-colors ${useAI ? 'text-primary' : 'text-muted-foreground'}`}>
-                  {t('intelligentSearchAI')}
+                <Sparkles className={`h-4 w-4 transition-all duration-300 ${useAI ? 'text-primary animate-pulse' : 'text-muted-foreground'}`} />
+                <span className={`text-xs sm:text-sm font-medium transition-colors ${useAI ? 'text-primary' : 'text-muted-foreground'}`}>
+                  IA
                 </span>
                 <Switch
                   checked={useAI}
@@ -329,22 +331,17 @@ const SearchResults = () => {
                     setUseAI(checked);
                     setCurrentPage(1);
                   }}
-                  className="data-[state=checked]:bg-primary"
+                  className="data-[state=checked]:bg-primary scale-90 sm:scale-100"
                 />
               </div>
-              {useAI && (
-                <p className="text-xs text-muted-foreground text-center max-w-md animate-fade-in">
-                  💡 {t('aiModeDescription')}
-                </p>
-              )}
             </div>
           </div>
 
-          {/* Year Range Badge */}
-          {yearRange && (
-            <div className="flex justify-center mt-6">
-              <Badge variant="outline" className="px-4 py-2 text-sm bg-background/80 backdrop-blur-sm">
-                <Calendar className="w-4 h-4 mr-2" />
+          {/* Year Range Badge - Smaller on mobile */}
+          {yearRange && !isMobile && (
+            <div className="flex justify-center mt-4 sm:mt-6">
+              <Badge variant="outline" className="px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm bg-background/80 backdrop-blur-sm">
+                <Calendar className="w-3 h-3 sm:w-4 sm:h-4 mr-1.5 sm:mr-2" />
                 {yearFrom || yearRange.minYear} - {yearTo || yearRange.maxYear}
               </Badge>
             </div>
@@ -353,10 +350,55 @@ const SearchResults = () => {
       </div>
 
       {/* Main Content */}
-      <div className="container mx-auto px-4 py-6">
+      <div className="container mx-auto px-3 sm:px-4 py-4 sm:py-6">
+        {/* Mobile: Filters button + Sort in header */}
+        {isMobile && (
+          <div className="flex items-center justify-between gap-2 mb-4 p-3 bg-muted/30 rounded-xl">
+            <div className="flex items-center gap-2">
+              <MobileSearchFilters
+                categories={categories}
+                courtTypes={courtTypes}
+                jurisdictionLevels={jurisdictionLevels}
+                documentTypes={documentTypes}
+                yearRange={yearRange}
+                selectedCourtType={selectedCourtType}
+                setSelectedCourtType={(v) => { setSelectedCourtType(v); setCurrentPage(1); }}
+                yearFrom={yearFrom}
+                setYearFrom={(v) => { setYearFrom(v); setCurrentPage(1); }}
+                yearTo={yearTo}
+                setYearTo={(v) => { setYearTo(v); setCurrentPage(1); }}
+                selectedCategories={selectedCategories}
+                toggleCategory={toggleCategory}
+                selectedJurisdictionLevel={selectedJurisdictionLevel}
+                setSelectedJurisdictionLevel={(v) => { setSelectedJurisdictionLevel(v); setCurrentPage(1); }}
+                selectedDocumentType={selectedDocumentType}
+                setSelectedDocumentType={(v) => { setSelectedDocumentType(v); setCurrentPage(1); }}
+                resetFilters={resetFilters}
+                activeFilterCount={activeFilterCount}
+              />
+              {searchLoading ? (
+                <Loader2 className="w-4 h-4 animate-spin text-primary" />
+              ) : (
+                <span className="text-sm font-medium">
+                  <span className="text-primary font-bold">{totalResults}</span> {t(totalResults === 1 ? 'decisionSingular' : 'decisionPlural')}
+                </span>
+              )}
+            </div>
+            <Select value={sortBy} onValueChange={(value) => setSortBy(value as "recent" | "relevance")}>
+              <SelectTrigger className="w-28 h-9 text-xs bg-background">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="recent">{t('recent')}</SelectItem>
+                <SelectItem value="relevance">{t('relevance')}</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+        )}
+
         <div className="flex flex-col lg:flex-row gap-6">
-          {/* Left Sidebar - Filters */}
-          <div className="w-full lg:w-80 space-y-4">
+          {/* Left Sidebar - Filters (Desktop only) */}
+          <div className="hidden lg:block w-80 space-y-4">
             <Card className="lg:sticky lg:top-4 lg:max-h-[calc(100vh-2rem)] lg:overflow-y-auto scrollbar-thin shadow-lg border-0">
               <CardHeader className="pb-4 bg-gradient-to-r from-muted/50 to-muted/30 rounded-t-lg">
                 <div className="flex items-center justify-between">
@@ -628,73 +670,75 @@ const SearchResults = () => {
 
           {/* Main Content */}
           <div className="flex-1">
-            {/* Results Header */}
-            <div className="flex items-center justify-between mb-6 flex-wrap gap-4 p-4 bg-muted/30 rounded-xl">
-              <div className="flex items-center gap-4">
-                {searchLoading ? (
-                  <div className="flex items-center gap-2">
-                    <Loader2 className="w-5 h-5 animate-spin text-primary" />
-                    <span className="text-sm font-medium">
-                      {useAI ? t('aiSearchInProgress') : t('searchInProgress')}
-                    </span>
-                  </div>
-                ) : (
-                  <div className="flex items-center gap-3">
+            {/* Results Header - Desktop only */}
+            {!isMobile && (
+              <div className="flex items-center justify-between mb-6 flex-wrap gap-4 p-4 bg-muted/30 rounded-xl">
+                <div className="flex items-center gap-4">
+                  {searchLoading ? (
                     <div className="flex items-center gap-2">
-                      <span className="text-2xl font-bold text-primary">{totalResults}</span>
-                      <span className="text-sm text-muted-foreground">
-                        {language === 'ar' ? (
-                          <>
-                            {totalResults === 1 ? t('decisionSingular') : t('decisionPlural')} {t('foundPlural')}
-                          </>
-                        ) : (
-                          <>
-                            {t(totalResults === 1 ? 'decisionSingular' : 'decisionPlural')} {t(totalResults === 1 ? 'foundSingular' : 'foundPlural')}
-                          </>
-                        )}
+                      <Loader2 className="w-5 h-5 animate-spin text-primary" />
+                      <span className="text-sm font-medium">
+                        {useAI ? t('aiSearchInProgress') : t('searchInProgress')}
                       </span>
                     </div>
-                    {useAI && searchData?.aiPowered && (
-                      <Badge className="gap-1 bg-primary/10 text-primary border-primary/20">
-                        <Sparkles className="h-3 w-3" />
-                        IA
-                      </Badge>
-                    )}
-                  </div>
-                )}
-              </div>
-
-              <div className="flex items-center gap-3">
-                <div className="flex items-center gap-1 bg-background rounded-lg p-1 border">
-                  <Button 
-                    variant={viewMode === "grid" ? "default" : "ghost"} 
-                    size="sm"
-                    onClick={() => setViewMode("grid")}
-                    className="h-8 w-8 p-0"
-                  >
-                    <Grid3X3 className="w-4 h-4" />
-                  </Button>
-                  <Button 
-                    variant={viewMode === "list" ? "default" : "ghost"} 
-                    size="sm"
-                    onClick={() => setViewMode("list")}
-                    className="h-8 w-8 p-0"
-                  >
-                    <List className="w-4 h-4" />
-                  </Button>
+                  ) : (
+                    <div className="flex items-center gap-3">
+                      <div className="flex items-center gap-2">
+                        <span className="text-2xl font-bold text-primary">{totalResults}</span>
+                        <span className="text-sm text-muted-foreground">
+                          {language === 'ar' ? (
+                            <>
+                              {totalResults === 1 ? t('decisionSingular') : t('decisionPlural')} {t('foundPlural')}
+                            </>
+                          ) : (
+                            <>
+                              {t(totalResults === 1 ? 'decisionSingular' : 'decisionPlural')} {t(totalResults === 1 ? 'foundSingular' : 'foundPlural')}
+                            </>
+                          )}
+                        </span>
+                      </div>
+                      {useAI && searchData?.aiPowered && (
+                        <Badge className="gap-1 bg-primary/10 text-primary border-primary/20">
+                          <Sparkles className="h-3 w-3" />
+                          IA
+                        </Badge>
+                      )}
+                    </div>
+                  )}
                 </div>
-                
-                <Select value={sortBy} onValueChange={(value) => setSortBy(value as "recent" | "relevance")}>
-                  <SelectTrigger className="w-40 bg-background">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="recent">{t('recent')}</SelectItem>
-                    <SelectItem value="relevance">{t('relevance')}</SelectItem>
-                  </SelectContent>
-                </Select>
+
+                <div className="flex items-center gap-3">
+                  <div className="flex items-center gap-1 bg-background rounded-lg p-1 border">
+                    <Button 
+                      variant={viewMode === "grid" ? "default" : "ghost"} 
+                      size="sm"
+                      onClick={() => setViewMode("grid")}
+                      className="h-8 w-8 p-0"
+                    >
+                      <Grid3X3 className="w-4 h-4" />
+                    </Button>
+                    <Button 
+                      variant={viewMode === "list" ? "default" : "ghost"} 
+                      size="sm"
+                      onClick={() => setViewMode("list")}
+                      className="h-8 w-8 p-0"
+                    >
+                      <List className="w-4 h-4" />
+                    </Button>
+                  </div>
+                  
+                  <Select value={sortBy} onValueChange={(value) => setSortBy(value as "recent" | "relevance")}>
+                    <SelectTrigger className="w-40 bg-background">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="recent">{t('recent')}</SelectItem>
+                      <SelectItem value="relevance">{t('relevance')}</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
               </div>
-            </div>
+            )}
 
             {/* Active Filters Pills */}
             {activeFilters.length > 0 && (
@@ -730,7 +774,7 @@ const SearchResults = () => {
               </div>
             ) : (
               <TooltipProvider>
-                <div className={`grid gap-4 mb-8 ${viewMode === "list" ? "grid-cols-1" : "grid-cols-1 md:grid-cols-2"}`}>
+                <div className={`grid gap-3 sm:gap-4 mb-8 ${isMobile ? "grid-cols-1" : viewMode === "list" ? "grid-cols-1" : "grid-cols-1 md:grid-cols-2"}`}>
                   {searchResults.map((result, index) => {
                     const similarity = (result as any).similarity;
                     const primaryColor = result.categories[0]?.color || '#3b82f6';
@@ -744,7 +788,7 @@ const SearchResults = () => {
                           borderLeft: `4px solid ${primaryColor}`
                         }}
                       >
-                        <CardHeader className="pb-3 space-y-3">
+                        <CardHeader className="pb-2 sm:pb-3 space-y-2 sm:space-y-3 p-3 sm:p-6">
                           {/* Top Row: Court + Year */}
                           <div className="flex items-start justify-between gap-2">
                             <div className="flex items-center gap-2 text-sm text-muted-foreground">
@@ -805,11 +849,11 @@ const SearchResults = () => {
                           )}
                         </CardHeader>
 
-                        <CardContent className="pt-0 flex-1 flex flex-col justify-between">
+                        <CardContent className="pt-0 flex-1 flex flex-col justify-between p-3 sm:p-6 sm:pt-0">
                           {/* Summary */}
                           {result.summary && (
-                            <div className="mb-4">
-                              <p className={`text-sm text-muted-foreground leading-relaxed ${
+                            <div className="mb-3 sm:mb-4">
+                              <p className={`text-xs sm:text-sm text-muted-foreground leading-relaxed ${
                                 expandedSummaries.has(result.id) ? '' : 'line-clamp-2'
                               } ${language === 'ar' ? 'arabic-text font-arabic text-right' : ''}`}>
                                 {language === 'ar' ? result.summary_ar || result.summary : result.summary}
@@ -836,13 +880,13 @@ const SearchResults = () => {
                           )}
 
                           {/* Categories & Action */}
-                          <div className="space-y-3">
-                            <div className={`flex gap-2 flex-wrap ${isRTL ? 'justify-end' : ''}`}>
-                              {result.categories.slice(0, 2).map((category) => (
+                          <div className="space-y-2 sm:space-y-3">
+                            <div className={`flex gap-1.5 sm:gap-2 flex-wrap ${isRTL ? 'justify-end' : ''}`}>
+                              {result.categories.slice(0, isMobile ? 1 : 2).map((category) => (
                                 <Badge 
                                   key={category.id} 
                                   variant="outline" 
-                                  className="text-xs"
+                                  className="text-xs px-2 py-0.5"
                                   style={{ 
                                     borderColor: category.color || undefined,
                                     color: category.color || undefined,
@@ -852,9 +896,9 @@ const SearchResults = () => {
                                   {language === 'ar' ? category.name_ar || category.name : category.name}
                                 </Badge>
                               ))}
-                              {result.categories.length > 2 && (
-                                <Badge variant="outline" className="text-xs">
-                                  +{result.categories.length - 2}
+                              {result.categories.length > (isMobile ? 1 : 2) && (
+                                <Badge variant="outline" className="text-xs px-2 py-0.5">
+                                  +{result.categories.length - (isMobile ? 1 : 2)}
                                 </Badge>
                               )}
                             </div>
@@ -868,14 +912,14 @@ const SearchResults = () => {
                                 >
                                   <Button 
                                     size="sm" 
-                                    className="gap-2 shadow-md hover:shadow-lg transition-all"
+                                    className="gap-2 shadow-md hover:shadow-lg transition-all text-xs sm:text-sm h-8 sm:h-9"
                                     style={{ backgroundColor: primaryColor }}
                                   >
                                     {t('consult')}
                                   </Button>
                                 </Link>
                               ) : (
-                                <Button variant="outline" size="sm" disabled>
+                                <Button variant="outline" size="sm" disabled className="text-xs sm:text-sm h-8 sm:h-9">
                                   {t('consult')}
                                 </Button>
                               )}
@@ -889,36 +933,39 @@ const SearchResults = () => {
               </TooltipProvider>
             )}
 
-            {/* Pagination */}
+            {/* Pagination - Mobile optimized */}
             {!searchLoading && searchResults.length > 0 && totalPages > 1 && (
-              <div className={`flex justify-center gap-2 flex-wrap ${isRTL ? 'flex-row-reverse' : ''}`}>
+              <div className={`flex justify-center gap-1.5 sm:gap-2 flex-wrap ${isRTL ? 'flex-row-reverse' : ''}`}>
                 <Button 
                   variant="outline"
+                  size={isMobile ? "sm" : "default"}
                   onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
                   disabled={currentPage === 1}
-                  className="shadow-sm"
+                  className="shadow-sm h-8 sm:h-10 px-2 sm:px-4"
                 >
-                  {t('previous')}
+                  {isMobile ? '←' : t('previous')}
                 </Button>
                 
-                {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                {Array.from({ length: Math.min(isMobile ? 3 : 5, totalPages) }, (_, i) => {
                   let pageNum;
-                  if (totalPages <= 5) {
+                  const maxDisplay = isMobile ? 3 : 5;
+                  if (totalPages <= maxDisplay) {
                     pageNum = i + 1;
-                  } else if (currentPage <= 3) {
+                  } else if (currentPage <= Math.ceil(maxDisplay / 2)) {
                     pageNum = i + 1;
-                  } else if (currentPage >= totalPages - 2) {
-                    pageNum = totalPages - 4 + i;
+                  } else if (currentPage >= totalPages - Math.floor(maxDisplay / 2)) {
+                    pageNum = totalPages - maxDisplay + 1 + i;
                   } else {
-                    pageNum = currentPage - 2 + i;
+                    pageNum = currentPage - Math.floor(maxDisplay / 2) + i;
                   }
                   
                   return (
                     <Button
                       key={pageNum}
                       variant={currentPage === pageNum ? "default" : "outline"}
+                      size={isMobile ? "sm" : "default"}
                       onClick={() => setCurrentPage(pageNum)}
-                      className="shadow-sm"
+                      className="shadow-sm h-8 sm:h-10 w-8 sm:w-10 p-0"
                     >
                       {pageNum}
                     </Button>
@@ -927,11 +974,12 @@ const SearchResults = () => {
                 
                 <Button 
                   variant="outline"
+                  size={isMobile ? "sm" : "default"}
                   onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
                   disabled={currentPage === totalPages}
-                  className="shadow-sm"
+                  className="shadow-sm h-8 sm:h-10 px-2 sm:px-4"
                 >
-                  {t('next')}
+                  {isMobile ? '→' : t('next')}
                 </Button>
               </div>
             )}
