@@ -82,7 +82,9 @@ const AnalysesOpinions = () => {
                   count: getTypeCount('Analyses juridiques'), 
                   description: t('deepAnalysesDesc'), 
                   icon: FileText, 
-                  color: "bg-blue-100 text-blue-800",
+                  iconColor: "bg-blue-600",
+                  bgColor: "bg-blue-50",
+                  badgeColor: "bg-blue-600 text-white",
                   type: "analyses-juridiques"
                 },
                 { 
@@ -90,7 +92,9 @@ const AnalysesOpinions = () => {
                   count: getTypeCount('Commentaires'), 
                   description: t('opinionArticlesDesc'), 
                   icon: Pen, 
-                  color: "bg-green-100 text-green-800",
+                  iconColor: "bg-emerald-600",
+                  bgColor: "bg-emerald-50",
+                  badgeColor: "bg-emerald-600 text-white",
                   type: "commentaires"
                 },
                 { 
@@ -98,22 +102,29 @@ const AnalysesOpinions = () => {
                   count: getTypeCount('Blogs'), 
                   description: t('policyBriefsDesc'), 
                   icon: TrendingUp, 
-                  color: "bg-purple-100 text-purple-800",
+                  iconColor: "bg-amber-500",
+                  bgColor: "bg-amber-50",
+                  badgeColor: "bg-amber-500 text-white",
                   type: "blogs"
                 }
               ].map((category) => {
                 const Icon = category.icon;
                 return (
-                  <Card key={category.title} className="hover:shadow-lg transition-all duration-300 cursor-pointer">
-                    <CardHeader className={isRTL ? 'text-right' : ''}>
-                      <div className={`flex items-center justify-between mb-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
-                        <Icon className="w-8 h-8 text-primary" />
-                        <Badge className={category.color}>{category.count}</Badge>
+                  <Card 
+                    key={category.title} 
+                    className={`hover:shadow-lg transition-all duration-300 cursor-pointer ${category.bgColor} hover:scale-105`}
+                  >
+                    <CardHeader className={`pb-4 ${isRTL ? 'text-right' : ''}`}>
+                      <div className={`flex items-center justify-between mb-4 ${isRTL ? 'flex-row-reverse' : ''}`}>
+                        <div className={`w-12 h-12 ${category.iconColor} rounded-lg flex items-center justify-center`}>
+                          <Icon className="text-white" size={24} />
+                        </div>
+                        <Badge className={category.badgeColor}>{category.count}</Badge>
                       </div>
                       <CardTitle className="text-lg">{category.title}</CardTitle>
                       <CardDescription>{category.description}</CardDescription>
                     </CardHeader>
-                    <CardContent>
+                    <CardContent className="pt-0">
                       <Button 
                         variant="outline" 
                         className="w-full"
