@@ -337,15 +337,6 @@ const SearchResults = () => {
             </div>
           </div>
 
-          {/* Year Range Badge - Smaller on mobile */}
-          {yearRange && !isMobile && (
-            <div className="flex justify-center mt-4 sm:mt-6">
-              <Badge variant="outline" className="px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm bg-background/80 backdrop-blur-sm">
-                <Calendar className="w-3 h-3 sm:w-4 sm:h-4 mr-1.5 sm:mr-2" />
-                {yearFrom || yearRange.minYear} - {yearTo || yearRange.maxYear}
-              </Badge>
-            </div>
-          )}
         </div>
       </div>
 
