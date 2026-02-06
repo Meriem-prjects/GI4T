@@ -37,6 +37,7 @@ const TextesFondamentaux = () => {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
+  const [hoveredCard, setHoveredCard] = useState<string | null>(null);
   const categoriesPerPage = 9;
 
   useEffect(() => {
@@ -208,15 +209,19 @@ const TextesFondamentaux = () => {
                 const count = categoryCounts[category.id] || 0;
                 const categoryColor = category.color || '#6366f1';
                 
+                const isHovered = hoveredCard === category.id;
+                
                 return (
                   <Card 
                     key={category.id} 
-                    className="hover:shadow-lg transition-all duration-300 cursor-pointer group"
+                    className="hover:shadow-lg transition-all duration-300 cursor-pointer border-2"
                     style={{ 
-                      borderColor: categoryColor + '30',
-                      backgroundColor: categoryColor + '05'
+                      borderColor: categoryColor,
+                      backgroundColor: categoryColor + '08'
                     }}
                     onClick={() => handleExploreCategory(category.name)}
+                    onMouseEnter={() => setHoveredCard(category.id)}
+                    onMouseLeave={() => setHoveredCard(null)}
                   >
                     <CardHeader className="pb-2">
                       <div className={`flex items-center justify-between mb-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
@@ -233,7 +238,10 @@ const TextesFondamentaux = () => {
                           {count} {isRTL ? 'وثيقة' : count === 1 ? 'fiche' : 'fiches'}
                         </Badge>
                       </div>
-                      <CardTitle className={`text-lg mb-1 group-hover:text-primary transition-colors ${isRTL ? 'text-right' : ''}`}>
+                      <CardTitle 
+                        className={`text-lg mb-1 transition-colors ${isRTL ? 'text-right' : ''}`}
+                        style={{ color: isHovered ? categoryColor : undefined }}
+                      >
                         {isRTL ? category.name_ar || category.name : category.name}
                       </CardTitle>
                       <CardDescription className={`line-clamp-2 text-sm ${isRTL ? 'text-right' : ''}`}>
@@ -243,10 +251,11 @@ const TextesFondamentaux = () => {
                     <CardContent className="pt-2 pb-4">
                       <Button 
                         variant="outline" 
-                        className="w-full group-hover:border-current transition-colors"
+                        className="w-full transition-all duration-300"
                         style={{ 
-                          color: categoryColor,
-                          borderColor: categoryColor + '50'
+                          backgroundColor: isHovered ? categoryColor : 'transparent',
+                          color: isHovered ? 'white' : categoryColor,
+                          borderColor: categoryColor
                         }}
                         onClick={(e) => {
                           e.stopPropagation();
