@@ -214,9 +214,8 @@ const TextesFondamentaux = () => {
                 return (
                   <Card 
                     key={category.id} 
-                    className="hover:shadow-lg transition-all duration-300 cursor-pointer border-2"
+                    className="hover:shadow-lg transition-all duration-300 cursor-pointer border border-border/50 hover:border-border"
                     style={{ 
-                      borderColor: categoryColor,
                       backgroundColor: categoryColor + '08'
                     }}
                     onClick={() => handleExploreCategory(category.name)}
