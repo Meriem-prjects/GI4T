@@ -1,160 +1,111 @@
 
-# Plan : Corriger les mots arabes fusionnés lors de l'extraction OCR
 
-## Diagnostic complet
+# Plan : Appliquer les couleurs thématiques aux boutons et pages
 
-### Origine du problème
+## Problème identifié
 
-Les mots fusionnés en arabe proviennent de **deux sources** dans le pipeline d'extraction :
+### 1. Bouton "Consulter" (AnalysesOpinions.tsx)
+- Actuellement : `variant="outline"` → hover jaune par défaut
+- Attendu : hover avec la couleur de l'icône de chaque carte
 
-1. **Google Cloud Vision OCR** (`pdf-ocr-batch/index.ts`)
-   - L'OCR retourne parfois des mots collés sans espace
-   - Exemple : "الإشكالالدّستوري" au lieu de "الإشكال الدّستوري"
+### 2. Pages individuelles
+- **Analyses juridiques** (AnalysesJuridiques.tsx) : utilise `text-primary` générique
+- **Commentaires** (Commentaires.tsx) : utilise `text-primary` générique  
+- **Blogs** (Blogs.tsx) : utilise `text-primary` générique
+- Attendu : chaque page utilise sa couleur thématique
 
-2. **Extraction PDF directe** (`pdf-reader/index.ts`)
-   - Les fragments de texte sont concaténés avec des espaces basés sur les positions X/Y
-   - Si les fragments sont trop proches, pas d'espace ajouté
+## Thème de couleurs par type
 
-### Mots fusionnés identifiés dans votre document
-
-| Fusionné | Correct | Pattern |
-|----------|---------|---------|
-| الإشكالالدّستوري | الإشكال الدّستوري | mot + article "ال" |
-| اعتبارالمتطلّبات | اعتبار المتطلّبات | mot + article "ال" |
-| الأسبابالتي | الأسباب التي | mot + article "ال" |
-| أنّهالا | أنّها لا | mot + "لا" |
-
-### Pourquoi cela se produit sur "chaque fiche"
-
-Le problème est systémique : chaque document passe par le même pipeline d'OCR, et les patterns de fusion sont récurrents car ils suivent des règles linguistiques arabes (article défini "ال", négation "لا").
+| Type | Couleur icône | Couleur fond | Couleur texte |
+|------|---------------|--------------|---------------|
+| Analyses juridiques | `bg-blue-600` | `bg-blue-50` | `text-blue-600` |
+| Commentaires | `bg-emerald-600` | `bg-emerald-50` | `text-emerald-600` |
+| Blogs | `bg-amber-500` | `bg-amber-50` | `text-amber-500` |
 
 ---
 
-## Solution proposée
-
-### Stratégie : Correction ciblée des patterns de fusion courants
-
-Ajouter des regex spécifiques pour séparer les mots fusionnés **uniquement pour les cas documentés** sans risquer de casser des mots correctement formés.
-
-### Fichiers à modifier
+## Fichiers à modifier
 
 | Fichier | Modification |
 |---------|--------------|
-| `supabase/functions/_shared/utils.ts` | Ajouter patterns de séparation dans `sanitizeArabicTextRaw` |
-| `src/lib/arabicUtils.ts` | Synchroniser les mêmes patterns côté frontend |
+| `src/pages/AnalysesOpinions.tsx` | Ajouter `hoverColor` à chaque carte et l'appliquer au bouton |
+| `src/pages/AnalysesJuridiques.tsx` | Appliquer thème bleu à l'icône et éléments clés |
+| `src/pages/Commentaires.tsx` | Appliquer thème vert émeraude |
+| `src/pages/Blogs.tsx` | Appliquer thème amber |
 
-### Patterns de correction à ajouter
+---
 
-```text
-Pattern 1 : Séparation article "ال" collé après un mot arabe
-─────────────────────────────────────────────────────────────
-Avant : "الإشكالالدّستوري"
-Après : "الإشكال الدّستوري"
-Regex : /([\u0621-\u064A]{3,})(ال[\u0621-\u064A]{3,})/g → '$1 $2'
+## Détails techniques
 
-Pattern 2 : Séparation "لا" (négation) collé après un mot
-────────────────────────────────────────────────────────────
-Avant : "أنّهالا"
-Après : "أنّها لا"
-Regex : /([\u0621-\u064A]{2,}ا)(لا[\s])/g → '$1 $2'
+### 1. AnalysesOpinions.tsx - Boutons colorés
 
-Pattern 3 : Séparation "التي" collé après un mot
-────────────────────────────────────────────────
-Avant : "الأسبابالتي"
-Après : "الأسباب التي"
-(Couvert par Pattern 1)
+Ajouter une propriété `hoverColor` pour chaque catégorie et l'appliquer au bouton :
+
+```tsx
+// Définition
+{ 
+  title: t('deepAnalyses'), 
+  iconColor: "bg-blue-600",
+  hoverColor: "hover:bg-blue-600 hover:text-white hover:border-blue-600",
+  ...
+},
+{ 
+  title: t('opinionArticles'), 
+  iconColor: "bg-emerald-600",
+  hoverColor: "hover:bg-emerald-600 hover:text-white hover:border-emerald-600",
+  ...
+},
+{ 
+  title: t('policyBriefs'), 
+  iconColor: "bg-amber-500",
+  hoverColor: "hover:bg-amber-500 hover:text-white hover:border-amber-500",
+  ...
+}
+
+// Application
+<Button 
+  variant="outline" 
+  className={`w-full ${category.hoverColor}`}
+  asChild
+>
 ```
 
-### Code à ajouter dans `sanitizeArabicTextRaw`
+### 2. AnalysesJuridiques.tsx - Thème bleu
 
-Actuellement, cette fonction n'applique qu'une correction minimale. Elle sera enrichie avec des patterns **sûrs et testés** :
+```tsx
+// Hero Section - icône
+<FileText className="w-12 h-12 text-blue-600" />
 
-```typescript
-// Dans sanitizeArabicTextRaw - NOUVEAUX PATTERNS
+// Titre avec accent
+<h1 className="text-3xl md:text-4xl font-bold mb-4">
+  <span className="text-blue-600">{t('deepAnalyses')}</span>
+</h1>
+```
 
-// Pattern: mot arabe (3+ lettres) + article "ال" collé
-// Exemple: "الإشكالالدّستوري" → "الإشكال الدّستوري"
-sanitized = sanitized.replace(
-  /([\u0621-\u064A\u0651]{3,})(ال[\u0621-\u064A]{3,})/g, 
-  '$1 $2'
-);
+### 3. Commentaires.tsx - Thème vert émeraude
 
-// Pattern: mot finissant par ا/ة + "لا" collé
-// Exemple: "أنّهالا" → "أنّها لا"
-sanitized = sanitized.replace(
-  /([\u0621-\u064A]{2,}[اة])(لا\s)/g, 
-  '$1 $2'
-);
+```tsx
+// Hero Section - icône
+<Pen className="w-12 h-12 text-emerald-600" />
+```
 
-// Pattern: mot + "التي" ou "الذي" collés
-sanitized = sanitized.replace(
-  /([\u0621-\u064A]{3,})(ال[تذ]ي)/g, 
-  '$1 $2'
-);
+### 4. Blogs.tsx - Thème amber
+
+```tsx
+// Hero Section - icône
+<TrendingUp className="w-12 h-12 text-amber-500" />
 ```
 
 ---
 
-## Changements détaillés
+## Résultat attendu
 
-### 1. Backend : `supabase/functions/_shared/utils.ts`
+| Élément | Avant | Après |
+|---------|-------|-------|
+| Bouton "Consulter" Analyses | Hover jaune | Hover bleu |
+| Bouton "Consulter" Commentaires | Hover jaune | Hover vert |
+| Bouton "Consulter" Blogs | Hover jaune | Hover amber |
+| Icône page Analyses | Bleu primary | Bleu-600 |
+| Icône page Commentaires | Bleu primary | Emerald-600 |
+| Icône page Blogs | Bleu primary | Amber-500 |
 
-Dans la fonction `sanitizeArabicTextRaw` (lignes 515-549), ajouter après la normalisation des espaces :
-
-```typescript
-// NEW: Pattern-based word separation for common OCR fusion errors
-// Pattern 1: Arabic word + article "ال" glued (most common)
-sanitized = sanitized.replace(
-  /([\u0621-\u064A\u0651]{3,})(ال[\u0621-\u064A\u0651]{3,})/g,
-  '$1 $2'
-);
-
-// Pattern 2: Word ending in ا/ة + لا (negation) glued
-sanitized = sanitized.replace(
-  /([\u0621-\u064A\u0651]{2,}[اة])(لا(?:\s|$|[\u0621-\u064A]))/g,
-  '$1 $2'
-);
-
-// Pattern 3: Word + relative pronouns (التي، الذي) glued
-sanitized = sanitized.replace(
-  /([\u0621-\u064A\u0651]{3,})(ال[تذ]ي)/g,
-  '$1 $2'
-);
-```
-
-### 2. Frontend : `src/lib/arabicUtils.ts`
-
-Synchroniser les mêmes patterns dans `normalizeArabicForDisplay` pour l'affichage cohérent.
-
----
-
-## Risques et précautions
-
-### ⚠️ Leçon apprise (mémoire du projet)
-
-Des patterns regex génériques ont précédemment **cassé des textes correctement espacés** (voir mémoire `arabic-regex-destructive-patterns-lesson`). 
-
-### ✅ Pourquoi ces patterns sont sûrs
-
-1. **Pattern 1** : Requiert 3+ lettres avant ET après "ال" → évite de séparer "بالحق" (correct)
-2. **Pattern 2** : Requiert mot finissant par ا/ة + "لا" → très spécifique
-3. **Pattern 3** : Cible uniquement "التي"/"الذي" → pas de faux positifs
-
-### 📋 Tests recommandés
-
-Tester sur des documents existants avant déploiement pour vérifier :
-- Les mots fusionnés sont corrigés ✓
-- Les mots corrects ne sont pas cassés ✓
-
----
-
-## Résumé
-
-| Aspect | Détail |
-|--------|--------|
-| **Cause** | OCR et extraction PDF ne détectent pas tous les espaces |
-| **Impact** | Quelques mots fusionnés par document (récurrent) |
-| **Solution** | Regex ciblées pour patterns communs de fusion |
-| **Fichiers modifiés** | `utils.ts` (backend), `arabicUtils.ts` (frontend) |
-| **Risque** | Minimal si patterns limités aux cas documentés |
-| **Alternative** | Bouton "Corriger AR" pour correction IA manuelle |
