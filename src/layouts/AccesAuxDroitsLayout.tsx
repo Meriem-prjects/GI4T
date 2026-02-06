@@ -1,8 +1,9 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Link, Outlet, useLocation } from "react-router-dom";
-import { Home, Menu } from "lucide-react";
+import { Home, Menu, ChevronDown, ChevronRight, Map, Image, Newspaper, MessageCircle } from "lucide-react";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import CarteInteractiveNav from "@/components/CarteInteractiveNav";
 import MediathequeNav from "@/components/MediathequeNav";
 import ActualitesNav from "@/components/ActualitesNav";
@@ -13,9 +14,18 @@ import { useTranslation } from "@/hooks/useTranslation";
 
 const AccesAuxDroitsLayout = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [openSections, setOpenSections] = useState<string[]>([]);
   const location = useLocation();
   const { language, setLanguage, isRTL } = useLanguage();
   const { t } = useTranslation();
+
+  const toggleSection = (section: string) => {
+    setOpenSections(prev => 
+      prev.includes(section) 
+        ? prev.filter(s => s !== section)
+        : [...prev, section]
+    );
+  };
 
   // Determine which sub-navigation to show based on current route
   const getSubNav = () => {
@@ -31,6 +41,48 @@ const AccesAuxDroitsLayout = () => {
     }
     return null;
   };
+
+  // Mobile menu structure with parent-child hierarchy
+  const menuSections = [
+    {
+      id: 'carte',
+      label: t('interactiveMap'),
+      icon: Map,
+      link: '/acces-aux-droits/carte-interactive',
+      children: [
+        { label: t('usefulAddresses'), link: '/acces-aux-droits/adresses-utiles' }
+      ]
+    },
+    {
+      id: 'mediatheque',
+      label: t('mediaLibrary'),
+      icon: Image,
+      link: '/acces-aux-droits/mediatheque',
+      children: [
+        { label: t('photoAlbums'), link: '/acces-aux-droits/albums-photos' }
+      ]
+    },
+    {
+      id: 'actualites',
+      label: t('actualites'),
+      icon: Newspaper,
+      link: '/acces-aux-droits/actualites',
+      children: [
+        { label: t('practicalResources'), link: '/acces-aux-droits/ressources-pratiques' },
+        { label: t('usefulLinks'), link: '/acces-aux-droits/liens-utiles' },
+        { label: t('practicalGuides'), link: '/acces-aux-droits/guides-pratiques' }
+      ]
+    },
+    {
+      id: 'faq',
+      label: t('faq'),
+      icon: MessageCircle,
+      link: '/acces-aux-droits/foire-aux-questions',
+      children: [
+        { label: t('virtualAssistant'), link: '/acces-aux-droits/assistant-virtuel' }
+      ]
+    }
+  ];
 
   return (
     <div className="min-h-screen bg-background">
@@ -121,29 +173,96 @@ const AccesAuxDroitsLayout = () => {
                     <Menu className="h-5 w-5" />
                   </Button>
                 </SheetTrigger>
-                <SheetContent side={isRTL ? "left" : "right"} className="w-80">
+                <SheetContent side={isRTL ? "left" : "right"} className="w-80 overflow-y-auto">
                   <div className="flex flex-col h-full">
                     <div className={`flex items-center p-4 border-b ${isRTL ? 'space-x-reverse space-x-2' : 'space-x-2'}`}>
                       <img src="/Feelinx_upload/logo-acces-aux-droits.png" alt={t('accessToRights')} className="h-6 sm:h-8 w-auto" />
                       <h2 className={`font-bold text-primary ${isRTL ? 'font-almarai' : ''}`}>{t('accessToRights')}</h2>
                     </div>
-                    <nav className="flex flex-col space-y-1 mt-4 px-4">
-                      <Link to="/acces-aux-droits" onClick={() => setIsMobileMenuOpen(false)} className={`text-base hover:text-primary p-3 rounded-lg hover:bg-muted ${isRTL ? 'font-almarai text-right' : ''}`}>{t('home')}</Link>
-                      <Link to="/acces-aux-droits/carte-interactive" onClick={() => setIsMobileMenuOpen(false)} className={`text-base hover:text-primary p-3 rounded-lg hover:bg-muted ${isRTL ? 'font-almarai text-right' : ''}`}>{t('interactiveMap')}</Link>
-                      <Link to="/acces-aux-droits/adresses-utiles" onClick={() => setIsMobileMenuOpen(false)} className={`text-base hover:text-primary p-3 rounded-lg hover:bg-muted ${isRTL ? 'font-almarai text-right' : ''}`}>{t('usefulAddresses')}</Link>
-                      <Link to="/acces-aux-droits/mediatheque" onClick={() => setIsMobileMenuOpen(false)} className={`text-base hover:text-primary p-3 rounded-lg hover:bg-muted ${isRTL ? 'font-almarai text-right' : ''}`}>{t('mediaLibrary')}</Link>
-                      <Link to="/acces-aux-droits/albums-photos" onClick={() => setIsMobileMenuOpen(false)} className={`text-base hover:text-primary p-3 rounded-lg hover:bg-muted ${isRTL ? 'font-almarai text-right' : ''}`}>{t('photoAlbums')}</Link>
-                      <Link to="/acces-aux-droits/actualites" onClick={() => setIsMobileMenuOpen(false)} className={`text-base hover:text-primary p-3 rounded-lg hover:bg-muted ${isRTL ? 'font-almarai text-right' : ''}`}>{t('actualites')}</Link>
-                      <Link to="/acces-aux-droits/foire-aux-questions" onClick={() => setIsMobileMenuOpen(false)} className={`text-base hover:text-primary p-3 rounded-lg hover:bg-muted ${isRTL ? 'font-almarai text-right' : ''}`}>{t('faq')}</Link>
-                      <Link to="/acces-aux-droits/assistant-virtuel" onClick={() => setIsMobileMenuOpen(false)} className={`text-base hover:text-primary p-3 rounded-lg hover:bg-muted ${isRTL ? 'font-almarai text-right' : ''}`}>{t('virtualAssistant')}</Link>
-                      <Link to="/acces-aux-droits/ressources-pratiques" onClick={() => setIsMobileMenuOpen(false)} className={`text-base hover:text-primary p-3 rounded-lg hover:bg-muted ${isRTL ? 'font-almarai text-right' : ''}`}>{t('practicalResources')}</Link>
-                      <Link to="/acces-aux-droits/liens-utiles" onClick={() => setIsMobileMenuOpen(false)} className={`text-base hover:text-primary p-3 rounded-lg hover:bg-muted ${isRTL ? 'font-almarai text-right' : ''}`}>{t('usefulLinks')}</Link>
-                      <Link to="/acces-aux-droits/guides-pratiques" onClick={() => setIsMobileMenuOpen(false)} className={`text-base hover:text-primary p-3 rounded-lg hover:bg-muted ${isRTL ? 'font-almarai text-right' : ''}`}>{t('practicalGuides')}</Link>
-                      <div className="border-t pt-4 mt-4">
-                        <Link to="/" onClick={() => setIsMobileMenuOpen(false)} className={`text-base hover:text-primary p-3 rounded-lg hover:bg-muted flex items-center ${isRTL ? 'flex-row-reverse font-almarai' : ''}`}>
-                          <span>{isRTL ? '← ' : '→ '}{t('homepage')}</span>
-                        </Link>
-                      </div>
+                    
+                    <nav className="flex flex-col mt-4 px-2">
+                      {/* Home Link */}
+                      <Link 
+                        to="/acces-aux-droits" 
+                        onClick={() => setIsMobileMenuOpen(false)} 
+                        className={`text-base font-medium hover:text-primary p-3 rounded-lg hover:bg-muted flex items-center gap-3 ${isRTL ? 'font-almarai flex-row-reverse text-right' : ''}`}
+                      >
+                        <Home className="h-5 w-5 text-primary" />
+                        {t('home')}
+                      </Link>
+                      
+                      <div className="h-px bg-border my-2" />
+                      
+                      {/* Hierarchical Menu Sections */}
+                      {menuSections.map((section) => {
+                        const Icon = section.icon;
+                        const isOpen = openSections.includes(section.id);
+                        const isCurrentSection = location.pathname.includes(section.link.split('/').pop() || '');
+                        
+                        return (
+                          <div key={section.id} className="mb-1">
+                            <Collapsible open={isOpen} onOpenChange={() => toggleSection(section.id)}>
+                              <div className={`flex items-center ${isRTL ? 'flex-row-reverse' : ''}`}>
+                                <Link 
+                                  to={section.link}
+                                  onClick={() => setIsMobileMenuOpen(false)}
+                                  className={`flex-1 text-base font-medium p-3 rounded-lg hover:bg-muted flex items-center gap-3 ${
+                                    isCurrentSection ? 'text-primary bg-primary/5' : 'hover:text-primary'
+                                  } ${isRTL ? 'font-almarai flex-row-reverse text-right' : ''}`}
+                                >
+                                  <Icon className={`h-5 w-5 ${isCurrentSection ? 'text-primary' : 'text-muted-foreground'}`} />
+                                  {section.label}
+                                </Link>
+                                <CollapsibleTrigger asChild>
+                                  <Button 
+                                    variant="ghost" 
+                                    size="sm" 
+                                    className="h-10 w-10 p-0 hover:bg-muted"
+                                  >
+                                    {isOpen ? (
+                                      <ChevronDown className="h-4 w-4 text-muted-foreground" />
+                                    ) : (
+                                      <ChevronRight className={`h-4 w-4 text-muted-foreground ${isRTL ? 'rotate-180' : ''}`} />
+                                    )}
+                                  </Button>
+                                </CollapsibleTrigger>
+                              </div>
+                              
+                              <CollapsibleContent>
+                                <div className={`${isRTL ? 'pr-6 border-r-2' : 'pl-6 border-l-2'} border-muted ml-5 mr-5 mt-1 mb-2`}>
+                                  {section.children.map((child, idx) => {
+                                    const isChildCurrent = location.pathname === child.link;
+                                    return (
+                                      <Link
+                                        key={idx}
+                                        to={child.link}
+                                        onClick={() => setIsMobileMenuOpen(false)}
+                                        className={`block text-sm p-2.5 rounded-lg hover:bg-muted ${
+                                          isChildCurrent ? 'text-primary font-medium bg-primary/5' : 'text-muted-foreground hover:text-foreground'
+                                        } ${isRTL ? 'font-almarai text-right' : ''}`}
+                                      >
+                                        {child.label}
+                                      </Link>
+                                    );
+                                  })}
+                                </div>
+                              </CollapsibleContent>
+                            </Collapsible>
+                          </div>
+                        );
+                      })}
+                      
+                      <div className="h-px bg-border my-3" />
+                      
+                      {/* Footer Link */}
+                      <Link 
+                        to="/" 
+                        onClick={() => setIsMobileMenuOpen(false)} 
+                        className={`text-sm text-muted-foreground hover:text-primary p-3 rounded-lg hover:bg-muted flex items-center gap-2 ${isRTL ? 'flex-row-reverse font-almarai' : ''}`}
+                      >
+                        <span>{isRTL ? '←' : '→'}</span>
+                        <span>{t('homepage')}</span>
+                      </Link>
                     </nav>
                   </div>
                 </SheetContent>
