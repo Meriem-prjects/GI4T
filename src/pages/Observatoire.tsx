@@ -94,14 +94,14 @@ const Observatoire = () => {
   return (
     <div dir={isRTL ? 'rtl' : 'ltr'} className={isRTL ? 'font-almarai' : ''}>
       {/* Hero Section with Search */}
-      <section className="bg-gradient-to-br from-primary to-primary-foreground text-primary-foreground py-4 sm:py-8 md:py-16">
+      <section className="bg-gradient-to-br from-primary to-primary-foreground text-primary-foreground py-4 sm:py-6 md:py-12 lg:py-16">
         <div className="container mx-auto px-4 text-center">
-          <p className={`text-sm sm:text-base md:text-lg lg:text-xl mb-6 sm:mb-8 md:mb-12 max-w-3xl mx-auto opacity-90 px-2 sm:px-4 leading-relaxed ${isRTL ? 'text-right' : ''}`}>
+          <p className={`text-sm sm:text-base md:text-lg lg:text-xl mb-4 sm:mb-6 md:mb-10 max-w-3xl mx-auto opacity-90 px-2 sm:px-4 leading-relaxed ${isRTL ? 'text-right' : ''}`}>
             {t('observatoireHeroText')}
           </p>
           
           {/* Search Bar with Autocomplete */}
-          <div className="max-w-4xl mx-auto mb-6 md:mb-8">
+          <div className="max-w-4xl mx-auto mb-4 sm:mb-6 md:mb-8">
             <SearchAutocomplete
               value={searchQuery}
               onChange={setSearchQuery}
@@ -111,16 +111,16 @@ const Observatoire = () => {
             />
           </div>
 
-          {/* Popular Tags */}
-          <div className="mb-6 md:mb-8">
-            <p className={`text-sm mb-3 md:mb-4 opacity-80 ${isRTL ? 'text-right' : ''}`}>{t('popularSearches')} :</p>
-            <div className={`flex flex-wrap justify-center gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
+          {/* Popular Tags - Horizontal scroll on mobile */}
+          <div className="mb-4 sm:mb-6 md:mb-8">
+            <p className={`text-xs sm:text-sm mb-2 sm:mb-3 md:mb-4 opacity-80 ${isRTL ? 'text-right' : ''}`}>{t('popularSearches')} :</p>
+            <div className={`flex overflow-x-auto pb-2 sm:flex-wrap sm:justify-center gap-2 scrollbar-hide ${isRTL ? 'flex-row-reverse' : ''}`}>
               {popularTags.map((tag) => (
                 <Button
                   key={tag}
                   variant="secondary"
                   size="sm"
-                  className="bg-background/20 text-primary-foreground hover:bg-background/30 text-xs sm:text-sm px-2 sm:px-3 py-1 sm:py-2 h-auto rounded-full"
+                  className="bg-background/20 text-primary-foreground hover:bg-background/30 text-xs sm:text-sm px-2 sm:px-3 py-1 sm:py-2 h-auto rounded-full whitespace-nowrap flex-shrink-0"
                 >
                   {tag}
                 </Button>
@@ -128,8 +128,8 @@ const Observatoire = () => {
             </div>
           </div>
 
-          {/* Advanced Filters */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4 max-w-5xl mx-auto">
+          {/* Advanced Filters - 2 columns on mobile */}
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-3 md:gap-4 max-w-5xl mx-auto">
             {/* Categories Filter */}
             <Select value={selectedCategory} onValueChange={setSelectedCategory}>
               <SelectTrigger className={`bg-background text-foreground h-10 sm:h-12 text-sm md:text-base ${isRTL ? 'text-right' : ''}`}>
