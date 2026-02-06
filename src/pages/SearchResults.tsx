@@ -282,10 +282,10 @@ const SearchResults = () => {
             </Breadcrumb>
           </div>
 
-          {/* Search Bar - Mobile optimized */}
+          {/* Search Bar - Mobile optimized with integrated AI toggle */}
           <div className="max-w-4xl mx-auto">
             <div className="relative group">
-              <div className={`absolute ${isRTL ? 'right-0' : 'left-0'} top-0 bottom-0 w-10 sm:w-14 bg-primary/10 rounded-l-xl flex items-center justify-center`}>
+              <div className={`absolute ${isRTL ? 'right-0' : 'left-0'} top-0 bottom-0 w-10 sm:w-14 bg-primary/10 ${isRTL ? 'rounded-r-xl' : 'rounded-l-xl'} flex items-center justify-center`}>
                 <Search className="text-primary" size={isMobile ? 18 : 22} />
               </div>
               <Input
@@ -297,32 +297,23 @@ const SearchResults = () => {
                     setCurrentPage(1);
                   }
                 }}
-                className={`${isRTL ? 'pr-12 sm:pr-16 pl-20 sm:pl-32' : 'pl-12 sm:pl-16 pr-20 sm:pr-32'} py-4 sm:py-6 text-sm sm:text-base bg-background rounded-xl border-2 border-transparent focus:border-primary/30 shadow-lg transition-all duration-300 group-hover:shadow-xl`}
+                className={`${isRTL ? 'pr-12 sm:pr-16 pl-36 sm:pl-56' : 'pl-12 sm:pl-16 pr-36 sm:pr-56'} h-14 sm:h-16 text-sm sm:text-base bg-background rounded-xl border-2 border-transparent focus:border-primary/30 shadow-lg transition-all duration-300 group-hover:shadow-xl`}
               />
-              <Button 
-                className={`absolute ${isRTL ? 'left-1 sm:left-2' : 'right-1 sm:right-2'} top-1/2 transform -translate-y-1/2 px-3 sm:px-6 h-8 sm:h-10 text-sm rounded-lg shadow-md hover:shadow-lg transition-all duration-300`}
-                onClick={() => setCurrentPage(1)}
-              >
-                <Search className="w-4 h-4 sm:hidden" />
-                <span className="hidden sm:inline">{t('search')}</span>
-              </Button>
-            </div>
-            
-            {/* AI Toggle - Compact on mobile */}
-            <div className="flex items-center justify-center gap-2 mt-4 sm:mt-6">
+              
+              {/* AI Toggle - Integrated inside search bar */}
               <div 
-                className={`flex items-center gap-2 sm:gap-3 px-3 sm:px-4 py-1.5 sm:py-2 rounded-full transition-all duration-300 cursor-pointer ${
+                className={`absolute ${isRTL ? 'left-20 sm:left-28' : 'right-20 sm:right-28'} top-1/2 transform -translate-y-1/2 flex items-center gap-1.5 sm:gap-2 px-2 sm:px-3 py-1 sm:py-1.5 rounded-full transition-all duration-300 cursor-pointer ${
                   useAI 
-                    ? 'bg-primary/10 border-2 border-primary/30' 
-                    : 'bg-muted/50 border-2 border-transparent hover:bg-muted'
+                    ? 'bg-primary/10 border border-primary/30' 
+                    : 'bg-muted/50 border border-transparent hover:bg-muted'
                 }`}
                 onClick={() => {
                   setUseAI(!useAI);
                   setCurrentPage(1);
                 }}
               >
-                <Sparkles className={`h-4 w-4 transition-all duration-300 ${useAI ? 'text-primary animate-pulse' : 'text-muted-foreground'}`} />
-                <span className={`text-xs sm:text-sm font-medium transition-colors ${useAI ? 'text-primary' : 'text-muted-foreground'}`}>
+                <Sparkles className={`h-3.5 w-3.5 sm:h-4 sm:w-4 transition-all duration-300 ${useAI ? 'text-primary animate-pulse' : 'text-muted-foreground'}`} />
+                <span className={`hidden sm:inline text-xs font-medium transition-colors ${useAI ? 'text-primary' : 'text-muted-foreground'}`}>
                   IA
                 </span>
                 <Switch
@@ -331,9 +322,17 @@ const SearchResults = () => {
                     setUseAI(checked);
                     setCurrentPage(1);
                   }}
-                  className="data-[state=checked]:bg-primary scale-90 sm:scale-100"
+                  className="data-[state=checked]:bg-primary scale-75 sm:scale-90"
                 />
               </div>
+              
+              <Button 
+                className={`absolute ${isRTL ? 'left-1 sm:left-2' : 'right-1 sm:right-2'} top-1/2 transform -translate-y-1/2 px-3 sm:px-6 h-10 sm:h-12 text-sm rounded-lg shadow-md hover:shadow-lg transition-all duration-300`}
+                onClick={() => setCurrentPage(1)}
+              >
+                <Search className="w-4 h-4 sm:hidden" />
+                <span className="hidden sm:inline">{t('search')}</span>
+              </Button>
             </div>
           </div>
 
