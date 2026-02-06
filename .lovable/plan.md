@@ -1,82 +1,120 @@
 
 
-## Plan: Ameliorer la page Droits Fondamentaux
+## Plan: Améliorer les couleurs des cartes de catégories
 
-### Problemes identifies
+### Problèmes identifiés
 
-1. **Cartes trop hautes** - Hauteur fixe de 280px creant beaucoup d'espace vide
-2. **Cartes vides** - Pas de compteur de documents, juste un badge "Droit fondamental" inutile
-3. **Espacement excessif** - Trop de marges entre les sections
-4. **Design peu attractif** - Manque de couleurs et d'informations utiles
+En regardant la capture d'écran :
 
-### Solution proposee
+1. **Bordures trop discrètes** - L'opacité à 30% (`#color30`) rend les bordures presque invisibles
+2. **Hover du bouton Consulter** - N'a pas de fond coloré au survol, seulement un changement de bordure
+3. **Titre au hover** - Utilise `text-primary` générique au lieu de la couleur thématique de la catégorie
 
-Transformer les cartes des categories pour qu'elles ressemblent au style de la page AnalysesOpinions avec:
-
-#### 1. Nouveau design des cartes
-
-**Avant:**
-```text
-┌─────────────────────────────────┐
-│  ○ icone      [Droit fondamental]│
-│                                   │  <- 280px de hauteur fixe
-│  Titre de la categorie           │
-│  Description courte...           │
-│                                   │
-│  [    Explorer    ]              │
-└─────────────────────────────────┘
-```
-
-**Apres:**
-```text
-┌─────────────────────────────────┐
-│  ■ icone coloree        [23]    │  <- Badge avec nombre de documents
-│  Titre de la categorie          │
-│  Description courte...          │  <- Hauteur automatique, plus compact
-│  [    Consulter    ]            │
-└─────────────────────────────────┘
-```
-
-#### 2. Modifications techniques
+### Modifications proposées
 
 **Fichier:** `src/pages/TextesFondamentaux.tsx`
 
-- **Supprimer la hauteur fixe** : Retirer `h-[280px]` des cartes
-- **Ajouter le compteur de documents** : Recuperer et afficher le nombre de fiches par categorie dans un Badge colore
-- **Reduire les espacements** : 
-  - Hero section: `mb-12` -> `mb-6`
-  - Section title: `mb-6` -> `mb-4`
-  - Grid gap: `gap-6` -> `gap-4`
-  - Container padding: `py-6` -> `py-4`
-- **Ameliorer le style des cartes** :
-  - Ajouter une couleur de fond legere basee sur `category.color`
-  - Icone dans un conteneur carre colore (12x12 au lieu de 8x8 rond)
-  - Badge avec le nombre de documents au lieu de "Droit fondamental"
-- **Bouton colore** : Style hover avec la couleur de la categorie
+#### 1. Bordure des cartes plus visible
 
-#### 3. Recuperation des compteurs
-
-Modifier la requete Supabase pour inclure le nombre de documents par categorie:
-
-```typescript
-// Ajouter un state pour stocker les compteurs
-const [categoryCounts, setCategoryCounts] = useState<Record<string, number>>({});
-
-// Dans fetchJurisprudenceCategories, compter les documents par categorie
-const counts = docsData.reduce((acc, doc) => {
-  doc.document_categories?.forEach(dc => {
-    acc[dc.category_id] = (acc[dc.category_id] || 0) + 1;
-  });
-  return acc;
-}, {} as Record<string, number>);
-setCategoryCounts(counts);
+**Avant:**
+```tsx
+borderColor: categoryColor + '30'  // 30% d'opacité = presque invisible
 ```
 
-#### 4. Resultat attendu
+**Après:**
+```tsx
+borderColor: categoryColor + '60'  // 60% d'opacité = plus visible
+// ou mieux : border-2 avec couleur pleine
+```
 
-- Cartes plus compactes et informatives
-- Nombre de documents visible pour chaque categorie
-- Interface plus moderne et coloree
-- Meilleure utilisation de l'espace
-- Coherence avec le style de AnalysesOpinions
+#### 2. Hover du bouton Consulter avec fond coloré
+
+**Avant:**
+```tsx
+<Button 
+  variant="outline" 
+  className="w-full group-hover:border-current transition-colors"
+  style={{ 
+    color: categoryColor,
+    borderColor: categoryColor + '50'
+  }}
+>
+```
+
+**Après:**
+```tsx
+<Button 
+  variant="outline" 
+  className="w-full transition-all duration-300 hover:text-white"
+  style={{ 
+    color: categoryColor,
+    borderColor: categoryColor,
+    '--hover-bg': categoryColor
+  } as React.CSSProperties}
+  onMouseEnter={(e) => e.currentTarget.style.backgroundColor = categoryColor}
+  onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+>
+```
+
+Ou utiliser une approche CSS avec `group-hover`:
+```tsx
+// Ajouter une classe personnalisée pour le hover
+className="w-full transition-all duration-300 group-hover:text-white"
+style={{ 
+  color: categoryColor,
+  borderColor: categoryColor,
+}}
+// Avec onMouseEnter/onMouseLeave pour le background
+```
+
+#### 3. Titre au hover avec couleur de la catégorie
+
+**Avant:**
+```tsx
+className="... group-hover:text-primary ..."
+```
+
+**Après:**
+Utiliser un style inline pour le hover ou une classe dynamique :
+```tsx
+<CardTitle 
+  className="text-lg mb-1 transition-colors"
+  style={{ '--hover-color': categoryColor } as React.CSSProperties}
+>
+  // Avec gestion onMouseEnter/onMouseLeave sur la Card
+```
+
+#### 4. Solution technique recommandée
+
+Utiliser un state local pour gérer le hover de chaque carte :
+
+```tsx
+// Dans le map des catégories
+const [hoveredCard, setHoveredCard] = useState<string | null>(null);
+
+<Card 
+  onMouseEnter={() => setHoveredCard(category.id)}
+  onMouseLeave={() => setHoveredCard(null)}
+  style={{ 
+    borderColor: categoryColor,
+    backgroundColor: categoryColor + '08'
+  }}
+>
+  <CardTitle style={{ 
+    color: hoveredCard === category.id ? categoryColor : undefined 
+  }}>
+  
+  <Button style={{ 
+    backgroundColor: hoveredCard === category.id ? categoryColor : 'transparent',
+    color: hoveredCard === category.id ? 'white' : categoryColor,
+    borderColor: categoryColor
+  }}>
+```
+
+### Résultat attendu
+
+- Bordures des cartes clairement colorées selon leur thème
+- Titre qui prend la couleur de la catégorie au survol
+- Bouton "Consulter" avec fond coloré au survol et texte blanc
+- Cohérence visuelle entre l'icône, le badge, et les éléments interactifs
 
