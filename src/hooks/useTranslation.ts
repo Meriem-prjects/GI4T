@@ -395,6 +395,8 @@ type TranslationKey =
   | 'event'
   | 'publication'
   // Observatoire Navigation
+  | 'observatoireNavHome'
+  | 'observatoireNavHomeDesc'
   | 'observatoireNavSearch'
   | 'observatoireNavSearchDesc'
   | 'observatoireNavFundamentalRights'
@@ -805,6 +807,8 @@ const translations: Record<'fr' | 'ar', Record<TranslationKey, string>> = {
     tagVisa: 'Visa',
     tagNaturalisation: 'Naturalisation',
     // Observatoire Navigation
+    observatoireNavHome: 'Accueil',
+    observatoireNavHomeDesc: 'Page d\'accueil',
     observatoireNavSearch: 'Recherche',
     observatoireNavSearchDesc: 'Recherche avancée',
     observatoireNavFundamentalRights: 'Droits fondamentaux',
@@ -1217,6 +1221,8 @@ const translations: Record<'fr' | 'ar', Record<TranslationKey, string>> = {
     tagVisa: 'تأشيرة',
     tagNaturalisation: 'التجنيس',
     // Observatoire Navigation
+    observatoireNavHome: 'الرئيسية',
+    observatoireNavHomeDesc: 'الصفحة الرئيسية',
     observatoireNavSearch: 'بحث',
     observatoireNavSearchDesc: 'بحث متقدم',
     observatoireNavFundamentalRights: 'الحقوق الأساسية',
