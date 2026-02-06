@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui/button";
-import { Search, BookOpen, FileText, Newspaper } from "lucide-react";
+import { Home, Search, BookOpen, FileText, Newspaper } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { useLanguage } from "@/contexts/LanguageContext";
@@ -11,6 +11,12 @@ const ObservatoireNav = () => {
   const { t } = useTranslation();
 
   const navItems = [
+    {
+      path: "/observatoire",
+      label: t('observatoireNavHome'),
+      icon: Home,
+      description: t('observatoireNavHomeDesc')
+    },
     {
       path: "/observatoire/search-results",
       label: t('observatoireNavSearch'),
