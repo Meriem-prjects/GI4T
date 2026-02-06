@@ -1,52 +1,82 @@
 
 
-## Plan: Repositionner le toggle IA et augmenter la hauteur de la barre de recherche
+## Plan: Ameliorer la page Droits Fondamentaux
 
-### Objectif
-Intégrer le bouton toggle IA directement dans la barre de recherche et augmenter la hauteur de cette dernière pour un design plus ergonomique.
+### Problemes identifies
 
-### Changements prévus
+1. **Cartes trop hautes** - Hauteur fixe de 280px creant beaucoup d'espace vide
+2. **Cartes vides** - Pas de compteur de documents, juste un badge "Droit fondamental" inutile
+3. **Espacement excessif** - Trop de marges entre les sections
+4. **Design peu attractif** - Manque de couleurs et d'informations utiles
 
-#### 1. Nouvelle structure de la barre de recherche
+### Solution proposee
 
-**Avant (actuel):**
+Transformer les cartes des categories pour qu'elles ressemblent au style de la page AnalysesOpinions avec:
+
+#### 1. Nouveau design des cartes
+
+**Avant:**
 ```text
-┌─────────────────────────────────────────────────────────┐
-│  🔍  │  Barre de recherche                    │ Bouton  │
-└─────────────────────────────────────────────────────────┘
-                          ┌─────────┐
-                          │ ✨ IA 🔘│  (séparé en dessous)
-                          └─────────┘
+┌─────────────────────────────────┐
+│  ○ icone      [Droit fondamental]│
+│                                   │  <- 280px de hauteur fixe
+│  Titre de la categorie           │
+│  Description courte...           │
+│                                   │
+│  [    Explorer    ]              │
+└─────────────────────────────────┘
 ```
 
-**Après (proposé):**
+**Apres:**
 ```text
-┌───────────────────────────────────────────────────────────────────┐
-│  🔍  │  Barre de recherche (plus haute)     │ ✨ IA 🔘 │ Bouton  │
-└───────────────────────────────────────────────────────────────────┘
+┌─────────────────────────────────┐
+│  ■ icone coloree        [23]    │  <- Badge avec nombre de documents
+│  Titre de la categorie          │
+│  Description courte...          │  <- Hauteur automatique, plus compact
+│  [    Consulter    ]            │
+└─────────────────────────────────┘
 ```
 
 #### 2. Modifications techniques
 
-**Fichier:** `src/pages/SearchResults.tsx`
+**Fichier:** `src/pages/TextesFondamentaux.tsx`
 
-- **Augmenter la hauteur de l'Input** : Passer de `py-4 sm:py-6` a `py-5 sm:py-7` (environ +8px de hauteur)
+- **Supprimer la hauteur fixe** : Retirer `h-[280px]` des cartes
+- **Ajouter le compteur de documents** : Recuperer et afficher le nombre de fiches par categorie dans un Badge colore
+- **Reduire les espacements** : 
+  - Hero section: `mb-12` -> `mb-6`
+  - Section title: `mb-6` -> `mb-4`
+  - Grid gap: `gap-6` -> `gap-4`
+  - Container padding: `py-6` -> `py-4`
+- **Ameliorer le style des cartes** :
+  - Ajouter une couleur de fond legere basee sur `category.color`
+  - Icone dans un conteneur carre colore (12x12 au lieu de 8x8 rond)
+  - Badge avec le nombre de documents au lieu de "Droit fondamental"
+- **Bouton colore** : Style hover avec la couleur de la categorie
 
-- **Repositionner le toggle IA** : Le placer a l'interieur du conteneur relatif de la barre de recherche, positionne en `absolute` entre l'input et le bouton de recherche
+#### 3. Recuperation des compteurs
 
-- **Ajuster les paddings** : Augmenter le padding droit de l'Input pour faire place au toggle IA + bouton de recherche
+Modifier la requete Supabase pour inclure le nombre de documents par categorie:
 
-- **Supprimer le conteneur separe** : Retirer le `<div className="flex items-center justify-center gap-2 mt-4 sm:mt-6">` qui contient actuellement le toggle
+```typescript
+// Ajouter un state pour stocker les compteurs
+const [categoryCounts, setCategoryCounts] = useState<Record<string, number>>({});
 
-#### 3. Layout adaptatif (Desktop/Mobile)
+// Dans fetchJurisprudenceCategories, compter les documents par categorie
+const counts = docsData.reduce((acc, doc) => {
+  doc.document_categories?.forEach(dc => {
+    acc[dc.category_id] = (acc[dc.category_id] || 0) + 1;
+  });
+  return acc;
+}, {} as Record<string, number>);
+setCategoryCounts(counts);
+```
 
-- **Desktop** : Toggle IA visible avec label "IA" + switch, positionne avant le bouton de recherche
-- **Mobile** : Toggle IA compact (icone + switch seulement) pour economiser l'espace
+#### 4. Resultat attendu
 
-### Resultat attendu
-
-- Interface plus compacte et professionnelle
-- Moins de scroll necessaire
-- Toggle IA toujours visible et accessible
-- Barre de recherche plus imposante et ergonomique
+- Cartes plus compactes et informatives
+- Nombre de documents visible pour chaque categorie
+- Interface plus moderne et coloree
+- Meilleure utilisation de l'espace
+- Coherence avec le style de AnalysesOpinions
 
