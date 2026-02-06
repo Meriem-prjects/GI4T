@@ -300,9 +300,9 @@ const SearchResults = () => {
                 className={`${isRTL ? 'pr-12 sm:pr-16 pl-36 sm:pl-56' : 'pl-12 sm:pl-16 pr-36 sm:pr-56'} h-14 sm:h-16 text-sm sm:text-base bg-background rounded-xl border-2 border-transparent focus:border-primary/30 shadow-lg transition-all duration-300 group-hover:shadow-xl`}
               />
               
-              {/* AI Toggle - Integrated inside search bar */}
+              {/* AI Toggle - Integrated inside search bar with proper RTL spacing */}
               <div 
-                className={`absolute ${isRTL ? 'left-28 sm:left-36' : 'right-28 sm:right-36'} top-1/2 transform -translate-y-1/2 flex items-center gap-1.5 sm:gap-2 px-2 sm:px-3 py-1 sm:py-1.5 rounded-full transition-all duration-300 cursor-pointer ${
+                className={`absolute ${isRTL ? 'left-[90px] sm:left-[140px]' : 'right-[90px] sm:right-[140px]'} top-1/2 transform -translate-y-1/2 flex items-center gap-1.5 sm:gap-2 px-2 sm:px-3 py-1 sm:py-1.5 rounded-full transition-all duration-300 cursor-pointer ${
                   useAI 
                     ? 'bg-primary/10 border border-primary/30' 
                     : 'bg-muted/50 border border-transparent hover:bg-muted'
