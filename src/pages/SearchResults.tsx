@@ -304,45 +304,39 @@ const SearchResults = () => {
               </Button>
             </div>
             
-            {/* AI Toggle - Enhanced with Tooltip */}
-            <div className="flex items-center justify-center gap-4 mt-6">
-              <TooltipProvider>
-                <Tooltip delayDuration={0}>
-                  <TooltipTrigger asChild>
-                    <div 
-                      className={`flex items-center gap-3 px-4 py-2 rounded-full transition-all duration-300 cursor-pointer ${
-                        useAI 
-                          ? 'bg-primary/10 border-2 border-primary/30' 
-                          : 'bg-muted/50 border-2 border-transparent hover:bg-muted'
-                      }`}
-                      onClick={() => {
-                        setUseAI(!useAI);
-                        setCurrentPage(1);
-                      }}
-                    >
-                      <div className={`p-1.5 rounded-full transition-all duration-300 ${useAI ? 'bg-primary text-primary-foreground' : 'bg-muted-foreground/20'}`}>
-                        <Sparkles className={`h-4 w-4 transition-all duration-300 ${useAI ? 'animate-pulse' : ''}`} />
-                      </div>
-                      <span className={`text-sm font-medium transition-colors ${useAI ? 'text-primary' : 'text-muted-foreground'}`}>
-                        {t('intelligentSearchAI')}
-                      </span>
-                      <Switch
-                        checked={useAI}
-                        onCheckedChange={(checked) => {
-                          setUseAI(checked);
-                          setCurrentPage(1);
-                        }}
-                        className="data-[state=checked]:bg-primary"
-                      />
-                    </div>
-                  </TooltipTrigger>
-                  <TooltipContent side="bottom" className="max-w-xs p-3 bg-popover border shadow-lg">
-                    <p className="text-sm text-popover-foreground">
-                      💡 {t('aiModeDescription')}
-                    </p>
-                  </TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
+            {/* AI Toggle - Simple */}
+            <div className="flex flex-col items-center gap-2 mt-6">
+              <div 
+                className={`flex items-center gap-3 px-4 py-2 rounded-full transition-all duration-300 cursor-pointer ${
+                  useAI 
+                    ? 'bg-primary/10 border-2 border-primary/30' 
+                    : 'bg-muted/50 border-2 border-transparent hover:bg-muted'
+                }`}
+                onClick={() => {
+                  setUseAI(!useAI);
+                  setCurrentPage(1);
+                }}
+              >
+                <div className={`p-1.5 rounded-full transition-all duration-300 ${useAI ? 'bg-primary text-primary-foreground' : 'bg-muted-foreground/20'}`}>
+                  <Sparkles className={`h-4 w-4 transition-all duration-300 ${useAI ? 'animate-pulse' : ''}`} />
+                </div>
+                <span className={`text-sm font-medium transition-colors ${useAI ? 'text-primary' : 'text-muted-foreground'}`}>
+                  {t('intelligentSearchAI')}
+                </span>
+                <Switch
+                  checked={useAI}
+                  onCheckedChange={(checked) => {
+                    setUseAI(checked);
+                    setCurrentPage(1);
+                  }}
+                  className="data-[state=checked]:bg-primary"
+                />
+              </div>
+              {useAI && (
+                <p className="text-xs text-muted-foreground text-center max-w-md animate-fade-in">
+                  💡 {t('aiModeDescription')}
+                </p>
+              )}
             </div>
           </div>
 
