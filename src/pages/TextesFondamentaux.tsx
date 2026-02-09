@@ -151,9 +151,9 @@ const TextesFondamentaux = () => {
   }, [searchTerm]);
 
   return (
-    <div dir={isRTL ? 'rtl' : 'ltr'} className={`container mx-auto px-4 py-4 ${isRTL ? 'font-almarai' : ''}`}>
+    <div dir={isRTL ? 'rtl' : 'ltr'} className={`container mx-auto px-4 py-6 ${isRTL ? 'font-almarai' : ''}`}>
       {/* Breadcrumb */}
-      <div className="mb-4 w-full flex justify-start">
+      <div className="mb-6 w-full flex justify-start">
         <Breadcrumb>
           <BreadcrumbList className={isRTL ? 'flex-row-reverse' : ''}>
             <BreadcrumbItem>
