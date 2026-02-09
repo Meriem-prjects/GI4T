@@ -273,7 +273,7 @@ const SearchResults = () => {
       <div ref={searchBarRef} className="bg-gradient-to-br from-primary/5 via-primary/10 to-accent/5 border-b">
         <div className="container mx-auto px-3 sm:px-4 py-6 sm:py-10">
           {/* Breadcrumb */}
-          <div className="mb-4 sm:mb-6 hidden sm:block">
+          <div className="mb-6">
             <Breadcrumb>
               <BreadcrumbList className={isRTL ? 'flex-row-reverse' : ''}>
                 <BreadcrumbItem>
