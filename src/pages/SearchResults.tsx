@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { Link, useSearchParams } from "react-router-dom";
-import { Search, Filter, Grid3X3, List, Loader2, Sparkles, ChevronDown, ChevronUp, Calendar, Scale, FileText, RotateCcw } from "lucide-react";
+import { Search, Filter, Grid3X3, List, Loader2, Sparkles, ChevronDown, ChevronUp, Calendar, Scale, FileText, RotateCcw, Hash } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
 import MobileSearchFilters from "@/components/observatoire/MobileSearchFilters";
 import { Button } from "@/components/ui/button";
@@ -18,6 +18,7 @@ import { Breadcrumb, BreadcrumbList, BreadcrumbItem, BreadcrumbLink, BreadcrumbP
 import { Progress } from "@/components/ui/progress";
 import { useDocumentSearch } from "@/hooks/useDocumentSearch";
 import { useSearchFilters } from "@/hooks/useSearchFilters";
+import { useDocumentKeywords } from "@/hooks/useDocumentKeywords";
 import { createDocumentPath } from "@/lib/urlUtils";
 import { format } from "date-fns";
 import { useLanguage } from "@/contexts/LanguageContext";
@@ -31,6 +32,9 @@ const SearchResults = () => {
   
   // Fetch filter options first to get year range
   const { categories, courtTypes, jurisdictionLevels, documentTypes, yearRange, isLoading: filtersLoading } = useSearchFilters();
+  
+  // Fetch popular keywords for tags
+  const { data: popularKeywords } = useDocumentKeywords(language);
 
   // State for filters
   const [searchQuery, setSearchQuery] = useState("");
@@ -254,12 +258,21 @@ const SearchResults = () => {
     return "bg-muted";
   };
 
+  // Handle tag click - search for that keyword
+  const handleTagClick = (keyword: string) => {
+    setSearchQuery(keyword);
+    setCurrentPage(1);
+  };
+
+  // Get top 12 popular tags for display
+  const displayTags = popularKeywords?.slice(0, 12) || [];
+
   return (
     <div dir={isRTL ? 'rtl' : 'ltr'} className={`min-h-screen ${isRTL ? 'font-almarai' : ''}`}>
-      {/* Hero Search Section - Optimized for mobile */}
+      {/* Hero Search Section - Nouveau Design Style Actualites/Assistant */}
       <div ref={searchBarRef} className="bg-gradient-to-br from-primary/5 via-primary/10 to-accent/5 border-b">
-        <div className="container mx-auto px-3 sm:px-4 py-4 sm:py-8">
-          {/* Breadcrumb - Hidden on small mobile */}
+        <div className="container mx-auto px-3 sm:px-4 py-6 sm:py-10">
+          {/* Breadcrumb */}
           <div className="mb-4 sm:mb-6 hidden sm:block">
             <Breadcrumb>
               <BreadcrumbList className={isRTL ? 'flex-row-reverse' : ''}>
@@ -282,60 +295,111 @@ const SearchResults = () => {
             </Breadcrumb>
           </div>
 
-          {/* Search Bar - Mobile optimized with integrated AI toggle */}
-          <div className="max-w-4xl mx-auto">
-            <div className="relative group">
-              <div className={`absolute ${isRTL ? 'right-0' : 'left-0'} top-0 bottom-0 w-10 sm:w-14 bg-primary/10 ${isRTL ? 'rounded-r-xl' : 'rounded-l-xl'} flex items-center justify-center`}>
-                <Search className="text-primary" size={isMobile ? 18 : 22} />
-              </div>
-              <Input
-                placeholder={useAI ? t('aiSearchPlaceholder') : t('searchDocumentsPlaceholder')}
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter') {
-                    setCurrentPage(1);
-                  }
-                }}
-                className={`${isRTL ? 'pr-12 sm:pr-16 pl-36 sm:pl-56' : 'pl-12 sm:pl-16 pr-36 sm:pr-56'} h-14 sm:h-16 text-sm sm:text-base bg-background rounded-xl border-2 border-transparent focus:border-primary/30 shadow-lg transition-all duration-300 group-hover:shadow-xl`}
-              />
-              
-              {/* AI Toggle - Integrated inside search bar with proper RTL spacing */}
-              <div 
-                className={`absolute ${isRTL ? 'left-[90px] sm:left-[140px]' : 'right-[90px] sm:right-[140px]'} top-1/2 transform -translate-y-1/2 flex items-center gap-1.5 sm:gap-2 px-2 sm:px-3 py-1 sm:py-1.5 rounded-full transition-all duration-300 cursor-pointer ${
-                  useAI 
-                    ? 'bg-primary/10 border border-primary/30' 
-                    : 'bg-muted/50 border border-transparent hover:bg-muted'
-                }`}
-                onClick={() => {
-                  setUseAI(!useAI);
-                  setCurrentPage(1);
-                }}
-              >
-                <Sparkles className={`h-3.5 w-3.5 sm:h-4 sm:w-4 transition-all duration-300 ${useAI ? 'text-primary animate-pulse' : 'text-muted-foreground'}`} />
-                <span className={`hidden sm:inline text-xs font-medium transition-colors ${useAI ? 'text-primary' : 'text-muted-foreground'}`}>
-                  IA
-                </span>
-                <Switch
-                  checked={useAI}
-                  onCheckedChange={(checked) => {
-                    setUseAI(checked);
-                    setCurrentPage(1);
-                  }}
-                  className="data-[state=checked]:bg-primary scale-75 sm:scale-90"
-                />
-              </div>
-              
-              <Button 
-                className={`absolute ${isRTL ? 'left-1 sm:left-2' : 'right-1 sm:right-2'} top-1/2 transform -translate-y-1/2 px-3 sm:px-6 h-10 sm:h-12 text-sm rounded-lg shadow-md hover:shadow-lg transition-all duration-300`}
-                onClick={() => setCurrentPage(1)}
-              >
-                <Search className="w-4 h-4 sm:hidden" />
-                <span className="hidden sm:inline">{t('search')}</span>
-              </Button>
-            </div>
+          {/* Titre et Description centrés */}
+          <div className="text-center mb-6 sm:mb-8">
+            <h1 className={`text-2xl sm:text-3xl md:text-4xl font-bold mb-2 sm:mb-3 ${isRTL ? 'font-arabic' : ''}`}>
+              {isRTL ? 'بحث في الوثائق القانونية' : 'Recherche Juridique'}
+            </h1>
+            <p className={`text-muted-foreground text-sm sm:text-base max-w-2xl mx-auto ${isRTL ? 'font-arabic' : ''}`}>
+              {isRTL 
+                ? 'ابحث في قاعدة بياناتنا الشاملة للوثائق والقرارات والفقه القانوني'
+                : 'Explorez notre base de données complète de documents, décisions et jurisprudence'
+              }
+            </p>
           </div>
 
+          {/* Barre de recherche stylée - Card blanc avec bordure jaune */}
+          <div className="max-w-3xl mx-auto">
+            <div className="relative bg-white rounded-xl shadow-lg border-2 border-yellow-400 overflow-hidden">
+              <div className="flex items-center">
+                {/* Icône de recherche */}
+                <div className={`flex items-center justify-center w-12 sm:w-14 h-14 sm:h-16 bg-yellow-50 ${isRTL ? 'border-l' : 'border-r'} border-yellow-200`}>
+                  <Search className="text-yellow-600" size={isMobile ? 20 : 24} />
+                </div>
+                
+                {/* Input */}
+                <Input
+                  placeholder={useAI 
+                    ? (isRTL ? 'اطرح سؤالك بالذكاء الاصطناعي...' : 'Posez votre question avec l\'IA...')
+                    : (isRTL ? 'ابحث في الوثائق...' : 'Rechercher dans les documents...')
+                  }
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      setCurrentPage(1);
+                    }
+                  }}
+                  className={`flex-1 h-14 sm:h-16 text-sm sm:text-base border-0 focus-visible:ring-0 focus-visible:ring-offset-0 bg-transparent ${isRTL ? 'text-right pr-4' : 'text-left pl-4'}`}
+                />
+                
+                {/* AI Toggle - Élégant */}
+                <div 
+                  className={`flex items-center gap-1.5 sm:gap-2 px-2 sm:px-3 py-1.5 sm:py-2 mx-1 sm:mx-2 rounded-full cursor-pointer transition-all duration-300 ${
+                    useAI 
+                      ? 'bg-gradient-to-r from-purple-500 to-indigo-500 text-white shadow-md' 
+                      : 'bg-gray-100 hover:bg-gray-200 text-gray-600'
+                  }`}
+                  onClick={() => {
+                    setUseAI(!useAI);
+                    setCurrentPage(1);
+                  }}
+                >
+                  <Sparkles className={`h-4 w-4 ${useAI ? 'animate-pulse' : ''}`} />
+                  <span className="hidden sm:inline text-xs font-medium">IA</span>
+                </div>
+                
+                {/* Bouton Rechercher */}
+                <Button 
+                  className={`h-14 sm:h-16 px-4 sm:px-8 ${isRTL ? 'rounded-l-none rounded-r-lg' : 'rounded-r-none rounded-l-lg'} bg-primary hover:bg-primary/90 text-white font-medium shadow-none`}
+                  onClick={() => setCurrentPage(1)}
+                >
+                  <Search className="w-5 h-5 sm:hidden" />
+                  <span className="hidden sm:inline">{isRTL ? 'بحث' : 'Rechercher'}</span>
+                </Button>
+              </div>
+            </div>
+            
+            {/* AI Mode Indicator */}
+            {useAI && (
+              <div className="mt-3 text-center">
+                <Badge variant="secondary" className="bg-purple-100 text-purple-700 border-purple-200">
+                  <Sparkles className="w-3 h-3 mr-1" />
+                  {isRTL ? 'وضع البحث الذكي مفعّل' : 'Mode recherche intelligente activé'}
+                </Badge>
+              </div>
+            )}
+          </div>
+
+          {/* Tags populaires */}
+          {displayTags.length > 0 && (
+            <div className="mt-6 sm:mt-8">
+              <div className="flex items-center justify-center gap-2 mb-3">
+                <Hash className="w-4 h-4 text-muted-foreground" />
+                <span className={`text-sm text-muted-foreground font-medium ${isRTL ? 'font-arabic' : ''}`}>
+                  {isRTL ? 'كلمات مفتاحية شائعة' : 'Mots-clés populaires'}
+                </span>
+              </div>
+              <div className="flex flex-wrap justify-center gap-2 max-w-4xl mx-auto overflow-x-auto hide-scrollbar pb-2">
+                {displayTags.map((tag, index) => (
+                  <Button
+                    key={index}
+                    variant="outline"
+                    size="sm"
+                    onClick={() => handleTagClick(tag.keyword)}
+                    className={`rounded-full text-xs sm:text-sm whitespace-nowrap border-primary/30 hover:bg-primary/10 hover:border-primary transition-all duration-200 ${
+                      searchQuery === tag.keyword ? 'bg-primary/10 border-primary text-primary' : ''
+                    } ${isRTL ? 'font-arabic' : ''}`}
+                  >
+                    {tag.keyword}
+                    <Badge variant="secondary" className="ml-1.5 text-[10px] px-1.5 py-0 h-4 bg-muted">
+                      {tag.count}
+                    </Badge>
+                  </Button>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
       </div>
 
