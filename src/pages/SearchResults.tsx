@@ -363,13 +363,15 @@ const SearchResults = () => {
               </div>
             </div>
             
-            {/* AI Mode Indicator */}
+            {/* AI explanation inside the search card */}
             {useAI && (
-              <div className="mt-3 text-center">
-                <Badge variant="secondary" className="bg-purple-100 text-purple-700 border-purple-200">
-                  <Sparkles className="w-3 h-3 mr-1" />
-                  {isRTL ? 'وضع البحث الذكي مفعّل' : 'Mode recherche intelligente activé'}
-                </Badge>
+              <div className={`px-4 pb-3 flex items-center gap-2 text-xs text-indigo-600 animate-in fade-in slide-in-from-top-1 duration-300 ${isRTL ? 'flex-row-reverse font-arabic' : ''}`}>
+                <Sparkles className="w-3 h-3 flex-shrink-0" />
+                <span>
+                  {isRTL 
+                    ? 'يحلل الذكاء الاصطناعي معنى بحثك للعثور على الوثائق الأكثر صلة' 
+                    : "L'IA analyse le sens de votre recherche pour trouver les documents les plus pertinents"}
+                </span>
               </div>
             )}
           </div>
