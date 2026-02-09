@@ -1,47 +1,40 @@
 
 
-## Plan: Uniformiser le Breadcrumb sur toutes les pages Observatoire
+## Plan: Ameliorer l'indicateur IA et les tags populaires
 
-### Probleme
-Le breadcrumb (fil d'Ariane) n'est pas au meme niveau sur toutes les pages :
-- **Actualites** et **Analyses & Opinions** : correctement place dans `container mx-auto px-4 py-6` avec `mb-6`
-- **Search Results** : cache sur mobile (`hidden sm:block`) et enfoui dans la section hero gradient
-- **Textes Fondamentaux (Droits fondamentaux)** : utilise `py-4` et `mb-4` au lieu de `py-6` et `mb-6`
-- En arabe, le breadcrumb utilise `flex-row-reverse` mais certaines pages manquent de coherence RTL
+### 1. Deplacer l'indicateur IA dans la barre de recherche
 
----
+Actuellement, "Mode recherche intelligente active" s'affiche en dessous de la barre comme un badge separe. Il sera integre directement dans la barre de recherche, sous forme d'un petit texte explicatif.
 
-### Corrections
-
-#### 1. SearchResults.tsx
-- Retirer `hidden sm:block` du breadcrumb pour le rendre visible sur mobile
-- Changer `mb-4 sm:mb-6` en `mb-6` pour etre coherent
-- Garder le breadcrumb dans la section hero mais le rendre toujours visible
-
-#### 2. TextesFondamentaux.tsx
-- Changer `py-4` en `py-6` sur le container principal
-- Changer `mb-4` en `mb-6` sur le wrapper du breadcrumb
-
-#### 3. Verification RTL sur toutes les pages
-- S'assurer que le breadcrumb utilise `flex-row-reverse` en mode arabe
-- Verifier que le separateur (chevron) pointe dans la bonne direction en RTL
-
----
-
-### Standard a appliquer partout
+**Changement dans `SearchResults.tsx`** :
+- Supprimer le badge "Mode recherche intelligente active" qui est en dessous de la barre (lignes 366-374)
+- Ajouter un texte explicatif a l'interieur de la barre de recherche, sous l'input, qui explique ce que l'IA fait
 
 ```text
-Structure coherente :
-<div className="container mx-auto px-4 py-6">
-  <div className="mb-6 w-full flex justify-start">
-    <Breadcrumb>
-      <BreadcrumbList className={isRTL ? 'flex-row-reverse' : ''}>
-        ...
-      </BreadcrumbList>
-    </Breadcrumb>
-  </div>
-</div>
+┌──────────────────────────────────────────────────────────┐
+│ [🔍] Rechercher...                        [✨ IA] [→]  │
+│  ✨ L'IA analyse le sens de votre question              │
+│     pour trouver les documents les plus pertinents       │
+└──────────────────────────────────────────────────────────┘
 ```
+
+Le texte explicatif sera :
+- FR : "L'IA analyse le sens de votre recherche pour trouver les documents les plus pertinents"
+- AR : "يحلل الذكاء الاصطناعي معنى بحثك للعثور على الوثائق الأكثر صلة"
+
+Ce texte n'apparait que quand le toggle IA est active, en petit sous l'input, toujours a l'interieur de la card blanche.
+
+---
+
+### 2. Tags populaires - Deja fonctionnels
+
+Les tags affiches sont deja des mots-cles reels extraits des fiches publiees via le hook `useDocumentKeywords`. Ce hook :
+- Interroge la table `documents` pour les fiches publiees (`published = true`)
+- Extrait les champs `keywords` (FR) et `keywords_ar` (AR)
+- Compte la frequence de chaque mot-cle
+- Affiche les 50 plus frequents tries par nombre d'occurrences
+
+**Amelioration** : Reduire le `staleTime` du cache de 30 minutes a 5 minutes pour que les tags se mettent a jour plus rapidement quand de nouvelles fiches sont publiees.
 
 ---
 
@@ -49,7 +42,6 @@ Structure coherente :
 
 | Fichier | Modification |
 |---------|-------------|
-| `src/pages/SearchResults.tsx` | Retirer `hidden sm:block`, uniformiser espacement |
-| `src/pages/TextesFondamentaux.tsx` | `py-4` -> `py-6`, `mb-4` -> `mb-6` |
+| `src/pages/SearchResults.tsx` | Deplacer l'indicateur IA dans la barre, ajouter texte explicatif |
+| `src/hooks/useDocumentKeywords.ts` | Reduire staleTime de 30min a 5min |
 
-2 fichiers modifies, corrections mineures mais impactantes pour la coherence visuelle.
