@@ -1,213 +1,118 @@
 
-## Plan: Audit et Amelioration de la Version Mobile UX/UI
+## Plan: Ameliorer l'interface de recherche - Style Actualites/Assistant
 
-Ce plan presente une strategie complete pour verifier et ameliorer l'experience utilisateur mobile sur l'ensemble de l'application.
-
----
-
-### Phase 1: Corrections des Headers Mobile
-
-#### 1.1 ObservatoireHeader.tsx - Boutons de controle invisibles sur mobile
-**Probleme identifie**: Les boutons Home, Language Switcher et JustClic sont caches sur mobile (`hidden sm:flex`)
-**Solution**:
-- Deplacer les controles principaux en dehors du bloc `hidden sm:flex`
-- Creer une version compacte pour mobile
-- Positionner le language switcher et home button a gauche du menu hamburger
-
-```text
-Avant (mobile):     Logo + Titre     [Menu]
-Apres (mobile):     Logo + Titre     [Home][FR|AR][Menu]
-```
-
-#### 1.2 AccesAuxDroitsLayout.tsx - Meme probleme
-**Probleme**: Les boutons sont visibles mais le positionnement absolu du menu hamburger cause des chevauchements
-**Solution**:
-- Retirer `absolute right-4 top-3` du bouton menu
-- Integrer le menu dans le flux normal du header
-- Reduire la taille des boutons sur mobile (`h-8 w-8` au lieu de `h-9 w-9`)
-
-#### 1.3 HomeHeader.tsx - Navigation cachee sur mobile
-**Probleme**: Les liens de navigation (Qui sommes-nous, Actualites, FAQ) ne sont pas accessibles sur mobile
-**Solution**:
-- Ajouter un menu hamburger pour la version mobile
-- Ou convertir en navigation horizontale scrollable
+### Objectif
+Redessiner la barre de recherche de la page SearchResults pour qu'elle ressemble davantage aux pages Actualites et Assistant Virtuel avec un design plus propre et immersif.
 
 ---
 
-### Phase 2: Navigation Secondaire Mobile
+### Modifications prevues
 
-#### 2.1 ObservatoireNav, CarteInteractiveNav, etc.
-**Probleme**: La navigation horizontale deborde sur mobile avec des descriptions longues
-**Solutions**:
-- Cacher les descriptions sur mobile (`hidden md:block` - deja present)
-- Ajouter `overflow-x-auto` avec `scrollbar-hide` (deja present mais verifier)
-- Reduire les paddings sur mobile
+#### 1. Hero Section - Nouveau Design
+**Fichier**: `src/pages/SearchResults.tsx`
 
-#### 2.2 Indicateur de scroll
-**Amelioration**: Ajouter un indicateur visuel de defilement horizontal sur mobile
+**Changements**:
+- Ajouter un titre centre "Recherche" / "بحث" au-dessus de la barre de recherche
+- Ajouter une description explicative sous le titre
+- Remonter la barre de recherche dans une card centree avec fond blanc et ombre
+- Integrer le toggle IA dans la barre de maniere plus elegante
+- Ajouter une section avec les tags populaires comme sur Observatoire.tsx
+
+**Design vise**:
 ```text
-[< ] [ Accueil ] [ Recherche ] [ Droits ] [ Analyses ] [ > ]
-         ^-- indicateur de scroll
+┌─────────────────────────────────────────┐
+│        نتائج البحث / Résultats          │  <- Titre centre
+│   Recherchez dans notre base de         │  <- Description
+│   documents juridiques                  │
+│                                         │
+│  ┌─────────────────────────────────┐   │
+│  │ [🔍] Rechercher...      [IA]  →│   │  <- Barre de recherche
+│  └─────────────────────────────────┘   │
+│                                         │
+│  Tags: RGPD | Liberté | Travail |...   │  <- Tags populaires
+└─────────────────────────────────────────┘
 ```
 
 ---
 
-### Phase 3: Pages Principales - Optimisation Mobile
-
-#### 3.1 Page d'Accueil (Index.tsx)
-**Ameliorations**:
-- Reduire `min-h-[500px]` des cartes Observatoire/Acces aux Droits pour mobile
-- Utiliser `min-h-[350px] sm:min-h-[500px]`
-- Reduire les paddings (`p-4 sm:p-8 md:p-12`)
-
-#### 3.2 Observatoire.tsx
-**Problemes identifies**:
-- Hero section trop haute sur mobile
-- Filtres Select prennent trop d'espace
-- Tags populaires difficiles a taper
-
-**Solutions**:
-- Reduire `py-4 sm:py-8 md:py-16`
-- Filtres: utiliser 2 colonnes sur mobile au lieu de 4
-- Tags: permettre le scroll horizontal
-
-#### 3.3 AccesAuxDroits.tsx
-**Ameliorations**:
-- Cartes Quick Access: 2 colonnes sur mobile au lieu de 1
-- Section Droits par categorie: Cartes empilables avec moins de padding
-- Bouton Explorer: pleine largeur sur mobile
+#### 2. Style de la barre de recherche
+- Hauteur plus grande (`h-14 sm:h-16`)
+- Fond blanc avec bordure jaune comme la page d'accueil
+- Icone de recherche a gauche dans un conteneur dedie
+- Toggle IA positionne proprement avec label visible
+- Bouton de recherche a droite avec texte visible
 
 ---
 
-### Phase 4: Carte Interactive - Optimisation Mobile
+#### 3. Ajout des tags populaires
+Reprendre le composant des tags depuis `Observatoire.tsx`:
+- Tags dynamiques selon la langue (FR/AR)
+- Style: boutons arrondis avec fond leger
+- Scroll horizontal sur mobile
 
-#### 4.1 CarteInteractiveContent.tsx
-**Probleme majeur**: Layout `grid-cols-1 lg:grid-cols-[30%_70%]` place la carte apres la liste sur mobile
-**Solutions**:
-- Inverser l'ordre: carte en haut, liste en dessous sur mobile
-- Limiter la hauteur de la carte sur mobile (`h-[300px] lg:h-[700px]`)
-- Ajouter un bouton "Voir la liste" qui scrolle vers les evenements
+---
 
-```text
-Mobile Layout:
-┌─────────────────────┐
-│      Carte (300px)  │
-├─────────────────────┤
-│  [Filtres]          │
-├─────────────────────┤
-│  Liste Evenements   │
-│  (scroll)           │
-└─────────────────────┘
+#### 4. Optimisation mobile
+- Titre et description adaptes (taille reduite)
+- Barre de recherche pleine largeur
+- Tags en scroll horizontal
+- Espacement reduit pour economiser l'espace vertical
+
+---
+
+### Structure du code modifie
+
+```tsx
+{/* Hero Search Section - Nouveau Design */}
+<div className="bg-gradient-to-br from-primary/5 via-primary/10 to-accent/5 border-b">
+  <div className="container mx-auto px-4 py-6 sm:py-10">
+    {/* Breadcrumb */}
+    ...
+    
+    {/* Titre et Description */}
+    <div className="text-center mb-6">
+      <h1>{t('searchResults')}</h1>
+      <p>{t('searchDescription')}</p>
+    </div>
+    
+    {/* Barre de recherche stylisee */}
+    <div className="max-w-3xl mx-auto">
+      <div className="relative bg-white rounded-xl shadow-lg border-2 border-yellow-400">
+        <Search icon />
+        <Input className="h-14 sm:h-16 rounded-xl" />
+        <AI Toggle />
+        <Button>Rechercher</Button>
+      </div>
+    </div>
+    
+    {/* Tags populaires */}
+    <div className="flex justify-center gap-2 mt-4">
+      {popularTags.map(...)}
+    </div>
+  </div>
+</div>
 ```
 
 ---
 
-### Phase 5: Recherche et Resultats
-
-#### 5.1 SearchResults.tsx (deja bien optimise)
-**Verifications**:
-- MobileSearchFilters utilise correctement le Drawer
-- Header compact avec filtres + tri
-- Pagination simplifiee
-
-**Ameliorations potentielles**:
-- Ajouter un bouton "Retour en haut" flottant
-- Skeleton loading plus adapte au mobile
-
-#### 5.2 SearchAutocomplete.tsx
-**Ameliorations**:
-- Reduire la hauteur sur mobile (`h-12 sm:h-14 md:h-16`)
-- Dropdown suggestions: pleine largeur, max-height adapte
-- Clavier virtuel: scroll automatique pour garder l'input visible
+### Traductions a ajouter
+Si necessaires dans le fichier de traductions:
+- `searchPageTitle`: "Recherche" / "بحث"
+- `searchPageDescription`: "Recherchez dans notre base de documents juridiques" / "ابحث في قاعدة وثائقنا القانونية"
 
 ---
 
-### Phase 6: Pages de Detail
+### Resume technique
 
-#### 6.1 DocumentDetail.tsx
-**Ameliorations**:
-- Metadata sidebar: en dessous du contenu sur mobile (deja `lg:col-span-1`)
-- Boutons action (Download, Share): barre fixe en bas sur mobile
-- Images/PDF: zoom tactile active
-
-#### 6.2 ActualiteDetail.tsx
-**Ameliorations**:
-- Image cover: hauteur maximale reduite sur mobile
-- Boutons partage: taille augmentee pour touch (min 44px)
-- Articles connexes: carousel horizontal au lieu de grille
+| Element | Modification |
+|---------|-------------|
+| Hero section | Ajout titre + description centres |
+| Barre de recherche | Style card blanc avec bordure jaune, hauteur augmentee |
+| Toggle IA | Design plus elegant avec label visible |
+| Tags populaires | Reprendre le style Observatoire |
+| Mobile | Optimisation des espacements et scroll horizontal |
 
 ---
 
-### Phase 7: Formulaires et Interactions
-
-#### 7.1 Touch Targets
-**Regle**: Tous les elements interactifs doivent avoir minimum 44x44px
-**Fichiers concernes**:
-- Tous les Button avec `size="sm"`
-- Checkboxes et Radio buttons dans les filtres
-- Links dans le footer
-
-#### 7.2 FAQ Page (FoireAuxQuestions.tsx)
-**Ameliorations**:
-- Accordion items: padding augmente pour le touch
-- Search input: hauteur adequate (`h-12 sm:h-14`)
-
----
-
-### Phase 8: Footer et Elements Globaux
-
-#### 8.1 Footer.tsx
-**Ameliorations**:
-- Grille 4 colonnes -> 2 colonnes sur mobile puis 1 colonne
-- Boutons reseaux sociaux: taille augmentee
-- Input newsletter: empiler verticalement sur mobile
-
-#### 8.2 Scroll Behavior
-**Ameliorations globales**:
-- Ajouter un bouton "Scroll to Top" global
-- Smooth scroll pour les ancres
-- Pull-to-refresh feeling (optionnel)
-
----
-
-### Phase 9: Performance Mobile
-
-#### 9.1 Images
-- Verifier que les images utilisent des tailles responsives
-- Lazy loading pour les images hors viewport
-- Format WebP avec fallback
-
-#### 9.2 Animations
-- Reduire les animations sur `prefers-reduced-motion`
-- Supprimer `hover:scale-105` sur touch (utiliser active states)
-
----
-
-### Resume des Fichiers a Modifier
-
-| Fichier | Modifications |
-|---------|---------------|
-| `ObservatoireHeader.tsx` | Boutons visibles sur mobile, layout ajuste |
-| `AccesAuxDroitsLayout.tsx` | Menu hamburger repositionne, controles visibles |
-| `HomeHeader.tsx` | Ajouter navigation mobile |
-| `Index.tsx` | Hauteurs/paddings responsives pour cartes |
-| `Observatoire.tsx` | Filtres 2 colonnes mobile, hero compact |
-| `AccesAuxDroits.tsx` | Quick access 2 colonnes, cartes compactes |
-| `CarteInteractiveContent.tsx` | Carte en haut, liste en bas, hauteur ajustee |
-| `SearchAutocomplete.tsx` | Hauteur responsive, dropdown optimise |
-| `DocumentDetail.tsx` | Barre actions fixe mobile, metadata empilee |
-| `ActualiteDetail.tsx` | Articles connexes en carousel, boutons touch |
-| `FoireAuxQuestions.tsx` | Touch targets agrandis |
-| `Footer.tsx` | Grille responsive, boutons plus grands |
-| `src/index.css` | Styles globaux mobile, scroll to top |
-
----
-
-### Priorites d'Implementation
-
-1. **Critique**: Headers avec controles visibles sur mobile
-2. **Haute**: Carte Interactive layout mobile  
-3. **Moyenne**: Pages principales (Index, Observatoire, AccesAuxDroits)
-4. **Standard**: Touch targets et spacing
-5. **Finition**: Animations et performance
-
+### Fichiers a modifier
+- `src/pages/SearchResults.tsx` - Refonte du hero section avec nouveau design
