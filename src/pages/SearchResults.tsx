@@ -269,31 +269,34 @@ const SearchResults = () => {
 
   return (
     <div dir={isRTL ? 'rtl' : 'ltr'} className={`min-h-screen ${isRTL ? 'font-almarai' : ''}`}>
-      {/* Hero Search Section - Nouveau Design Style Actualites/Assistant */}
+      {/* Breadcrumb - Outside hero for consistent positioning */}
+      <div className="container mx-auto px-4 py-6">
+        <div className="mb-6 w-full flex justify-start">
+          <Breadcrumb>
+            <BreadcrumbList className={isRTL ? 'flex-row-reverse' : ''}>
+              <BreadcrumbItem>
+                <BreadcrumbLink asChild>
+                  <Link to="/">{t('home')}</Link>
+                </BreadcrumbLink>
+              </BreadcrumbItem>
+              <BreadcrumbSeparator />
+              <BreadcrumbItem>
+                <BreadcrumbLink asChild>
+                  <Link to="/observatoire">{t('observatory')}</Link>
+                </BreadcrumbLink>
+              </BreadcrumbItem>
+              <BreadcrumbSeparator />
+              <BreadcrumbItem>
+                <BreadcrumbPage>{t('searchResults')}</BreadcrumbPage>
+              </BreadcrumbItem>
+            </BreadcrumbList>
+          </Breadcrumb>
+        </div>
+      </div>
+
+      {/* Hero Search Section */}
       <div ref={searchBarRef} className="bg-gradient-to-br from-primary/5 via-primary/10 to-accent/5 border-b">
         <div className="container mx-auto px-3 sm:px-4 py-6 sm:py-10">
-          {/* Breadcrumb */}
-          <div className="mb-6">
-            <Breadcrumb>
-              <BreadcrumbList className={isRTL ? 'flex-row-reverse' : ''}>
-                <BreadcrumbItem>
-                  <BreadcrumbLink asChild>
-                    <Link to="/" className="text-muted-foreground hover:text-foreground">{t('home')}</Link>
-                  </BreadcrumbLink>
-                </BreadcrumbItem>
-                <BreadcrumbSeparator />
-                <BreadcrumbItem>
-                  <BreadcrumbLink asChild>
-                    <Link to="/observatoire" className="text-muted-foreground hover:text-foreground">{t('observatory')}</Link>
-                  </BreadcrumbLink>
-                </BreadcrumbItem>
-                <BreadcrumbSeparator />
-                <BreadcrumbItem>
-                  <BreadcrumbPage className="font-medium">{t('searchResults')}</BreadcrumbPage>
-                </BreadcrumbItem>
-              </BreadcrumbList>
-            </Breadcrumb>
-          </div>
 
           {/* Titre et Description centrés */}
           <div className="text-center mb-6 sm:mb-8">
