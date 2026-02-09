@@ -41,6 +41,6 @@ export const useDocumentKeywords = (language: 'fr' | 'ar' = 'fr') => {
 
       return sortedKeywords;
     },
-    staleTime: 1000 * 60 * 30, // Cache for 30 minutes
+    staleTime: 1000 * 60 * 5, // Cache for 5 minutes
   });
 };
