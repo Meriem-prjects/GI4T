@@ -102,7 +102,7 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
   const [searchParams] = useSearchParams();
   const isFromValidation = searchParams.get('source') === 'validation';
   const { t } = useTranslation();
-  
+
   const [editedData, setEditedData] = useState<DocumentData>(documentData);
   const [showPreview, setShowPreview] = useState(false);
   const [hasChanges, setHasChanges] = useState(false);
@@ -113,52 +113,52 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
   const [selectedCategoryIds, setSelectedCategoryIds] = useState<string[]>([]);
   const [newReference, setNewReference] = useState('');
   const [newReferenceAr, setNewReferenceAr] = useState('');
-  
+
   // Synchronize ref with state to avoid stale closure
   useEffect(() => {
     documentTypesRef.current = documentTypes;
   }, [documentTypes]);
-  
+
   // Detect if document is "Analyses juridiques"
   const isAnalysisDocument = React.useMemo(() => {
     if (!editedData.document_type_id || documentTypes.length === 0) return false;
     const docType = documentTypes.find(dt => dt.id === editedData.document_type_id);
-    return docType?.name === 'Analyses juridiques' || 
-           docType?.name_ar === 'التحليلات القانونية';
+    return docType?.name === 'Analyses juridiques' ||
+      docType?.name_ar === 'التحليلات القانونية';
   }, [editedData.document_type_id, documentTypes]);
-  
+
   // Detect if document is "Commentaires"
   const isCommentDocument = React.useMemo(() => {
     if (!editedData.document_type_id || documentTypes.length === 0) return false;
     const docType = documentTypes.find(dt => dt.id === editedData.document_type_id);
-    return docType?.name === 'Commentaires' || 
-           docType?.name_ar === 'التعليقات';
+    return docType?.name === 'Commentaires' ||
+      docType?.name_ar === 'التعليقات';
   }, [editedData.document_type_id, documentTypes]);
-  
+
   // Detect if document is "Blogs"
   const isBlogDocument = React.useMemo(() => {
     if (!editedData.document_type_id || documentTypes.length === 0) return false;
     const docType = documentTypes.find(dt => dt.id === editedData.document_type_id);
     return docType?.name === 'Blogs';
   }, [editedData.document_type_id, documentTypes]);
-  
+
   // Detect if document is "Fiche de jurisprudence"
   const isFicheJurisprudence = React.useMemo(() => {
     if (!editedData.document_type_id || documentTypes.length === 0) return false;
     const docType = documentTypes.find(dt => dt.id === editedData.document_type_id);
     return docType?.name === 'Fiche de jurisprudence';
   }, [editedData.document_type_id, documentTypes]);
-  
+
   // Check if document supports AI workflow (Analyses, Commentaires, Blogs, Fiches)
   const supportsAIWorkflow = isAnalysisDocument || isCommentDocument || isBlogDocument || isFicheJurisprudence;
-  
+
   // Track if we've already normalized data on load to avoid re-normalizing
   const hasNormalizedOnLoad = React.useRef(false);
-  
+
   // Hook pour récupérer les types de tribunaux et niveaux de juridiction
   const { data: courtTypes = [] } = useCourtTypes();
   const { data: jurisdictionLevels = [] } = useJurisdictionLevels();
-  
+
   // Hooks pour les catégories de documents
   const { data: documentCategories = [] } = useDocumentCategories(editedData.id);
   const updateDocumentCategories = useUpdateDocumentCategories();
@@ -167,7 +167,7 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
   const [currentView, setCurrentView] = useState<'editor' | 'pdf' | 'pages'>('editor');
   const [currentLanguage, setCurrentLanguage] = useState<'fr' | 'ar'>('fr');
   const [isAnalyzing, setIsAnalyzing] = useState(false);
-  const [translatedByAI, setTranslatedByAI] = useState<{fr: boolean, ar: boolean}>({fr: false, ar: false});
+  const [translatedByAI, setTranslatedByAI] = useState<{ fr: boolean, ar: boolean }>({ fr: false, ar: false });
   const [currentPage, setCurrentPage] = useState(1);
   const [translatedContent, setTranslatedContent] = useState<string>('');
   const [validationRemarks, setValidationRemarks] = useState<string>('');
@@ -193,12 +193,12 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
     console.log('Document subtitle_ar:', documentData.subtitle_ar);
     console.log('Document subtitle_ar length:', documentData.subtitle_ar?.length);
     console.log('Document subtitle_ar chars:', documentData.subtitle_ar?.split('').map(c => c.charCodeAt(0)));
-    
+
     // Initialize selectedCourtType if document has court_category_type
     if (documentData.court_category_type) {
       setSelectedCourtType(documentData.court_category_type);
     }
-    
+
     // Note: We no longer normalize Arabic fields on load to preserve original spacing and syntax
     // Normalization will only happen during save to ensure data consistency in database
   }, [documentData]);
@@ -208,7 +208,7 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
     if (editedData.language === 'ar' && editedData.content && !hasShownSpacingWarning.current) {
       const hasSeparatedDiacritics = /[\u0621-\u064A]\s+[\u064B-\u0652]/.test(editedData.content);
       const hasGluedWords = /[\u0621-\u064A]{8,}/.test(editedData.content);
-      
+
       if (hasSeparatedDiacritics || hasGluedWords) {
         hasShownSpacingWarning.current = true;
         toast({
@@ -221,10 +221,10 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
   }, [editedData.content, editedData.language, toast]);
 
   useEffect(() => {
-    
+
     loadCategories();
     loadDocumentTypes();
-    
+
     // Cleanup Realtime channels on unmount
     return () => {
       supabase.getChannels().forEach(channel => {
@@ -284,12 +284,12 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
 
   const autoExtractMetadata = async () => {
     if (!editedData.id) return;
-    
+
     setIsReprocessing(true);
-    
+
     try {
       console.log('Auto-extracting metadata for document:', editedData.id);
-      
+
       const { data, error } = await supabase.functions.invoke('reprocess-document', {
         body: { documentId: editedData.id }
       });
@@ -317,7 +317,7 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
           textual_metadata: (updatedDoc as any).textual_metadata,
           content: updatedDoc.content
         }));
-        
+
         if (data.separated) {
           console.log(`Métadonnées extraites automatiquement: ${data.textualMetadataLength} caractères`);
         }
@@ -354,12 +354,12 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
 
     // Mark page as translating
     setTranslatingPages(prev => new Set(prev).add(pageNumber));
-    
+
     // Update local state to show "translating" status
     setEditedData(prev => ({
       ...prev,
-      page_contents: prev.page_contents?.map(p => 
-        p.pageNumber === pageNumber 
+      page_contents: prev.page_contents?.map(p =>
+        p.pageNumber === pageNumber
           ? { ...p, translation_status: 'translating' }
           : p
       )
@@ -367,7 +367,7 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
 
     try {
       console.log(`🔄 Translating page ${pageNumber}...`);
-      
+
       const { data, error } = await supabase.functions.invoke('translate-page', {
         body: {
           document_id: editedData.id,
@@ -388,17 +388,17 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
       }
 
       console.log(`✅ Page ${pageNumber} translated successfully`);
-      
+
       // Update local state with translation
       setEditedData(prev => ({
         ...prev,
-        page_contents: prev.page_contents?.map(p => 
-          p.pageNumber === pageNumber 
-            ? { 
-                ...p, 
-                translated_content: data.translated_content,
-                translation_status: 'completed'
-              }
+        page_contents: prev.page_contents?.map(p =>
+          p.pageNumber === pageNumber
+            ? {
+              ...p,
+              translated_content: data.translated_content,
+              translation_status: 'completed'
+            }
             : p
         )
       }));
@@ -409,8 +409,8 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
       });
 
       // Check if all pages are now translated and consolidate automatically
-      const updatedPageContents = editedData.page_contents?.map(p => 
-        p.pageNumber === pageNumber 
+      const updatedPageContents = editedData.page_contents?.map(p =>
+        p.pageNumber === pageNumber
           ? { ...p, translated_content: data.translated_content, translation_status: 'completed' as const }
           : p
       );
@@ -426,12 +426,12 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
 
     } catch (err: any) {
       console.error(`Error translating page ${pageNumber}:`, err);
-      
+
       // Update status to error
       setEditedData(prev => ({
         ...prev,
-        page_contents: prev.page_contents?.map(p => 
-          p.pageNumber === pageNumber 
+        page_contents: prev.page_contents?.map(p =>
+          p.pageNumber === pageNumber
             ? { ...p, translation_status: 'error' }
             : p
         )
@@ -453,12 +453,12 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
 
   const consolidatePageTranslations = async () => {
     if (!editedData.page_contents || !editedData.id) return;
-    
+
     // Collect all page translations in order
     const sortedPages = editedData.page_contents
       .sort((a, b) => a.pageNumber - b.pageNumber)
       .filter(page => page.translated_content && page.translated_content.trim() !== '');
-    
+
     if (sortedPages.length === 0) {
       toast({
         title: "⚠️ Aucune traduction",
@@ -467,29 +467,29 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
       });
       return;
     }
-    
+
     // Join all translations with page structure (without page number display)
     const consolidatedContent = sortedPages
-      .map((page, index) => 
+      .map((page, index) =>
         `<div class="page-break" data-page="${page.pageNumber}">
           ${page.translated_content}
         </div>`
       )
       .join('\n');
-    
+
     // Update local state
     setTranslatedContent(consolidatedContent);
     setEditedData(prev => ({
       ...prev,
       translated_content: consolidatedContent
     }));
-    
+
     // Update database
     const { error } = await supabase
       .from('documents')
       .update({ translated_content: consolidatedContent })
       .eq('id', editedData.id);
-    
+
     if (error) {
       console.error('Error consolidating translations:', error);
       toast({
@@ -534,27 +534,27 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
         title: "🔄 Workflow complet démarré",
         description: `Traduction de ${totalPages} pages...`,
       });
-      
+
       const translationsMap = new Map<number, string>();
-      
+
       // Pre-fill with existing translations
       for (const page of editedData.page_contents) {
         if (page.translated_content && page.translated_content.trim() !== '') {
           translationsMap.set(page.pageNumber, page.translated_content);
         }
       }
-      
+
       // Translate missing pages
       for (let i = 0; i < editedData.page_contents.length; i++) {
         const page = editedData.page_contents[i];
-        
+
         if (translationsMap.has(page.pageNumber)) {
           console.log(`Page ${page.pageNumber} déjà traduite, passage à la suivante`);
           continue;
         }
-        
+
         console.log(`Translating page ${page.pageNumber}/${totalPages}...`);
-        
+
         // Call translation API directly
         const { data, error } = await supabase.functions.invoke('translate-page', {
           body: {
@@ -569,18 +569,18 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
         if (error || !data?.translated_content) {
           throw new Error(`Erreur traduction page ${page.pageNumber}: ${error?.message || 'Pas de contenu traduit'}`);
         }
-        
+
         translationsMap.set(page.pageNumber, data.translated_content);
-        
+
         toast({
           title: "📄 Traduction en cours",
           description: `Page ${i + 1}/${totalPages} traduite`,
         });
-        
+
         // Small delay to avoid rate limiting
         await new Promise(resolve => setTimeout(resolve, 500));
       }
-      
+
       // Step 2: Consolidate with local data
       setCompletedWorkflowSteps(['translation']);
       setWorkflowStep('consolidation');
@@ -588,32 +588,32 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
         title: "🔄 Consolidation",
         description: "Assemblage des traductions...",
       });
-      
+
       const sortedPages = Array.from(translationsMap.entries()).sort((a, b) => a[0] - b[0]);
       const consolidatedContent = sortedPages.map(([_, content]) => content).join('\n\n');
-      
+
       // Update page_contents with all translations
       const updatedPageContents = editedData.page_contents.map(p => ({
         ...p,
         translated_content: translationsMap.get(p.pageNumber) || p.translated_content || '',
         translation_status: 'completed' as const
       }));
-      
+
       // Update state once with all data
       setEditedData(prev => ({
         ...prev,
         page_contents: updatedPageContents,
         translated_content: consolidatedContent
       }));
-      
+
       setTranslatedContent(consolidatedContent);
-      
+
       // Persist to database
-      await supabase.from('documents').update({ 
+      await supabase.from('documents').update({
         translated_content: consolidatedContent,
         page_contents: updatedPageContents as any
       }).eq('id', editedData.id);
-      
+
       toast({
         title: "✅ Consolidation terminée",
         description: `${sortedPages.length} pages consolidées avec succès`,
@@ -628,7 +628,7 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
       });
 
       await new Promise(resolve => setTimeout(resolve, 1000));
-      
+
       // Use smart-document-analysis with both original and translated content
       const { data: analysisData, error: analysisError } = await supabase.functions.invoke('smart-document-analysis', {
         body: {
@@ -649,7 +649,7 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
       if (analysisData?.success && analysisData?.analysis) {
         const analysis = analysisData.analysis;
         const isPrimaryArabic = sourceLanguage === 'ar';
-        
+
         // Map results correctly based on primary language
         if (isPrimaryArabic) {
           // Arabic is primary - analysis result goes to Arabic fields, translation to French
@@ -661,8 +661,8 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
             summary: analysis.translatedSummary || prev.summary,
             author_ar: analysis.metadata?.author ? normalizeArabicForDisplay(analysis.metadata.author) : prev.author_ar,
             author: analysis.metadataTranslated?.author || prev.author,
-            bibliography_ar: analysis.metadata?.bibliography 
-              ? normalizeArabicForDisplay(analysis.metadata.bibliography) 
+            bibliography_ar: analysis.metadata?.bibliography
+              ? normalizeArabicForDisplay(analysis.metadata.bibliography)
               : prev.bibliography_ar,
             bibliography: analysis.metadataTranslated?.bibliography || prev.bibliography,
             keywords_ar: (() => {
@@ -705,7 +705,7 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
             author: analysis.metadata?.author || prev.author,
             author_ar: analysis.metadataTranslated?.author ? normalizeArabicForDisplay(analysis.metadataTranslated.author) : prev.author_ar,
             bibliography: analysis.metadata?.bibliography || prev.bibliography,
-            bibliography_ar: analysis.metadataTranslated?.bibliography 
+            bibliography_ar: analysis.metadataTranslated?.bibliography
               ? normalizeArabicForDisplay(analysis.metadataTranslated.bibliography)
               : prev.bibliography_ar,
             keywords: (() => {
@@ -738,7 +738,7 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
             legal_references_ar: analysis.metadataTranslated?.legal_references || prev.legal_references_ar,
           }));
         }
-        
+
         toast({
           title: "✅ Analyse IA terminée",
           description: "Métadonnées extraites et traduites dans les deux langues",
@@ -768,7 +768,7 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
   // Helper to parse and clean keywords array
   const parseKeywordsArray = (keywords: any[]): string[] => {
     if (!keywords || !Array.isArray(keywords)) return [];
-    
+
     return keywords.flatMap(k => {
       if (typeof k === 'string') {
         const trimmed = k.trim();
@@ -799,7 +799,7 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
         .from('categories')
         .select('*')
         .order('name');
-      
+
       if (error) {
         console.error('Error loading categories:', error);
         toast({
@@ -822,7 +822,7 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
         .from('document_types')
         .select('*')
         .order('name');
-      
+
       if (error) {
         console.error('Error loading document types:', error);
         toast({
@@ -850,10 +850,10 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
     }
 
     setIsAnalyzing(true);
-    
+
     try {
       console.log('Starting AI analysis...');
-      
+
       // Health check ping before sending the main request
       try {
         const healthCheck = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/smart-document-analysis`, {
@@ -862,7 +862,7 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
             'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
           },
         });
-        
+
         if (!healthCheck.ok) {
           console.warn('Health check failed:', healthCheck.status);
           toast({
@@ -891,32 +891,32 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
       const maxAttempts = 2;
       let data: any = null;
       let error: any = null;
-      
+
       while (attempt < maxAttempts) {
         attempt++;
         console.log(`Analysis attempt ${attempt}/${maxAttempts}`);
-        
+
         try {
-      const response = await supabase.functions.invoke('smart-document-analysis', {
-        body: {
-          textualMetadata: editedData.textual_metadata || '',
-          content: editedData.content,
-          translatedContent: editedData.translated_content || '', // Include consolidated translation
-          currentLanguage: editedData.language || 'fr',
-          mode: 'quick',
-          documentType: documentTypes.find(dt => dt.id === editedData.document_type_id)?.name || ''
-        }
-      });
-          
+          const response = await supabase.functions.invoke('smart-document-analysis', {
+            body: {
+              textualMetadata: editedData.textual_metadata || '',
+              content: editedData.content,
+              translatedContent: editedData.translated_content || '', // Include consolidated translation
+              currentLanguage: editedData.language || 'fr',
+              mode: 'quick',
+              documentType: documentTypes.find(dt => dt.id === editedData.document_type_id)?.name || ''
+            }
+          });
+
           data = response.data;
           error = response.error;
-          
+
           console.log('AI Analysis response:', { data, error });
 
           // Handle specific error cases
           if (error) {
             console.error('Error from edge function:', error);
-            
+
             // Check for network/connection errors that should trigger retry
             if (error.message && error.message.includes('Failed to send a request to the Edge Function')) {
               lastError = error;
@@ -926,7 +926,7 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
                 continue;
               }
             }
-            
+
             // Handle rate limit
             if ((error as any).status === 429) {
               toast({
@@ -937,7 +937,7 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
               setIsAnalyzing(false);
               return;
             }
-            
+
             // Handle payment required
             if ((error as any).status === 402) {
               toast({
@@ -948,7 +948,7 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
               setIsAnalyzing(false);
               return;
             }
-            
+
             throw error;
           }
 
@@ -965,14 +965,14 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
             }
             throw new Error(data?.error || 'Analyse échouée');
           }
-          
+
           // Success - break out of retry loop
           break;
-          
+
         } catch (attemptError) {
           lastError = attemptError;
-          if (attempt < maxAttempts && 
-              lastError?.message?.includes('Failed to send a request to the Edge Function')) {
+          if (attempt < maxAttempts &&
+            lastError?.message?.includes('Failed to send a request to the Edge Function')) {
             console.log('Retrying after error...');
             await new Promise(resolve => setTimeout(resolve, 1000));
             continue;
@@ -984,7 +984,7 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
       if (data.success && data.analysis) {
         const analysis = (data as any).analysis;
         const isPrimaryArabic = editedData.language === 'ar';
-        
+
         // Debug: Log analysis result to verify content
         console.log('🔍 AI Analysis Result:', {
           isPrimaryArabic,
@@ -999,7 +999,7 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
         // Verify that translations are in the correct language
         const verifyTranslationLanguage = (text: string, expectedLanguage: 'ar' | 'fr'): boolean => {
           if (!text) return true;
-          
+
           if (expectedLanguage === 'ar') {
             return /[\u0600-\u06FF]/.test(text);
           } else {
@@ -1024,16 +1024,16 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
             console.warn('translatedSummary is not in Arabic:', analysis.translatedSummary);
           }
         }
-        
+
         // DON'T change the original content - keep it intact
         // Only update metadata fields
-        
+
         // Store the translated textual metadata from AI analysis
         setTranslatedTextualMetadata(analysis.textualMetadataTranslated || '');
-        
+
         // Apply suggested dropdown selections from AI analysis
         const suggestionIds = data.suggestionIds || {};
-        
+
         // Assign fields based on document's primary language
         if (isPrimaryArabic) {
           // Arabic is primary - analysis result goes to Arabic fields, translation to French
@@ -1066,8 +1066,8 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
             // Analysis-specific fields (Arabic primary)
             validation_date: analysis.metadata?.validation_date || prev.validation_date,
             legal_references_ar: analysis.metadata?.legal_references || prev.legal_references_ar,
-            bibliography_ar: analysis.metadata?.bibliography 
-              ? normalizeArabicForDisplay(analysis.metadata.bibliography) 
+            bibliography_ar: analysis.metadata?.bibliography
+              ? normalizeArabicForDisplay(analysis.metadata.bibliography)
               : prev.bibliography_ar,
             // Traductions en français
             legal_references: analysis.metadataTranslated?.legal_references || prev.legal_references,
@@ -1142,7 +1142,7 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
             bibliography: analysis.metadata?.bibliography || prev.bibliography,
             // Traductions en arabe
             legal_references_ar: analysis.metadataTranslated?.legal_references || prev.legal_references_ar,
-            bibliography_ar: analysis.metadataTranslated?.bibliography 
+            bibliography_ar: analysis.metadataTranslated?.bibliography
               ? normalizeArabicForDisplay(analysis.metadataTranslated.bibliography)
               : prev.bibliography_ar,
             // Keep original French content, don't replace it
@@ -1213,7 +1213,7 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
         });
 
         setHasChanges(true);
-        
+
         toast({
           title: "Analyse IA terminée (mode rapide)",
           description: `Métadonnées extraites et classifications automatiques appliquées. Pour une traduction intégrale du contenu complet, utilisez l'analyse complète.`,
@@ -1229,13 +1229,13 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
         status: error?.status,
         stack: error?.stack?.split('\n').slice(0, 3).join('\n')
       });
-      
+
       const isNetworkError = error?.message?.includes('Failed to send a request to the Edge Function') ||
-                             error?.message?.includes('Failed to fetch');
-      
+        error?.message?.includes('Failed to fetch');
+
       toast({
         title: isNetworkError ? "Erreur de connexion" : "Erreur lors de l'analyse IA",
-        description: isNetworkError 
+        description: isNetworkError
           ? "Impossible de joindre le service d'analyse. Vérifiez votre connexion et réessayez."
           : (error instanceof Error ? error.message : "Une erreur est survenue lors de l'analyse"),
         variant: "destructive",
@@ -1316,7 +1316,7 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
         }
 
         console.log('Document successfully updated in database');
-        
+
         // Update document categories
         if (editedData.id) {
           await updateDocumentCategories.mutateAsync({
@@ -1331,7 +1331,7 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
         title: "Document sauvegardé",
         description: "Le document a été sauvegardé en tant que brouillon",
       });
-      
+
       // Mapping des types de documents vers leurs routes respectives
       const getRedirectRoute = (documentTypeId: string | undefined) => {
         const typeRoutes: Record<string, string> = {
@@ -1342,7 +1342,7 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
         };
         return typeRoutes[documentTypeId || ''] || '/admin/observatoire/contenus';
       };
-      
+
       // Navigate to the appropriate content section after a short delay
       setTimeout(() => {
         window.location.href = getRedirectRoute(editedData.document_type_id);
@@ -1370,7 +1370,7 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
 
       const { error } = await supabase
         .from('documents')
-        .update({ 
+        .update({
           status: 'processed',
           published: true,
           updated_at: new Date().toISOString()
@@ -1385,7 +1385,7 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
         const { error: embeddingError } = await supabase.functions.invoke('generate-document-embeddings', {
           body: { documentId: editedData.id }
         });
-        
+
         if (embeddingError) {
           console.error('Embedding generation error:', embeddingError);
         } else {
@@ -1423,7 +1423,7 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
         return;
       }
 
-      const updateData: any = { 
+      const updateData: any = {
         status: 'draft',
         updated_at: new Date().toISOString()
       };
@@ -1434,7 +1434,7 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
       }
 
       const { error } = await supabase
-        .from('documents') 
+        .from('documents')
         .update(updateData)
         .eq('id', editedData.id);
 
@@ -1449,7 +1449,7 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
     } catch (error) {
       console.error('Return error:', error);
       toast({
-        title: "Erreur", 
+        title: "Erreur",
         description: "Impossible de retourner le document.",
         variant: "destructive"
       });
@@ -1467,10 +1467,10 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
     }
 
     setIsReprocessing(true);
-    
+
     try {
       console.log('Reprocessing document:', editedData.id);
-      
+
       const { data, error } = await supabase.functions.invoke('reprocess-document', {
         body: { documentId: editedData.id }
       });
@@ -1498,10 +1498,10 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
           textual_metadata: (updatedDoc as any).textual_metadata,
           content: updatedDoc.content
         }));
-        
+
         toast({
           title: "Retraitement terminé",
-          description: data.separated 
+          description: data.separated
             ? `Document retraité avec succès. Métadonnées: ${data.textualMetadataLength} caractères, Contenu: ${data.contentLength} caractères.`
             : "Document retraité, aucune séparation trouvée.",
           variant: "default"
@@ -1511,7 +1511,7 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
     } catch (error: any) {
       console.error('Reprocess error:', error);
       toast({
-        title: "Erreur de retraitement", 
+        title: "Erreur de retraitement",
         description: error.message || "Impossible de retraiter le document.",
         variant: "destructive"
       });
@@ -1523,24 +1523,24 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
   const addKeyword = (language: 'fr' | 'ar' = 'fr') => {
     let keyword = language === 'fr' ? newKeyword.trim() : newKeywordAr.trim();
     const field = language === 'fr' ? 'keywords' : 'keywords_ar';
-    
+
     // Apply normalization for Arabic keywords
     if (language === 'ar' && keyword) {
       keyword = normalizeArabicForDisplay(handleArabicInput(keyword));
     }
-    
+
     // Check for duplicates (case-insensitive, space-normalized)
     const existing = editedData[field] || [];
-    const isDuplicate = existing.some(k => 
+    const isDuplicate = existing.some(k =>
       k.toLowerCase().trim().replace(/\s+/g, ' ') === keyword.toLowerCase().trim().replace(/\s+/g, ' ')
     );
-    
+
     if (keyword && !isDuplicate) {
       setEditedData(prev => ({
         ...prev,
         [field]: [...(prev[field] || []), keyword]
       }));
-      
+
       if (language === 'fr') {
         setNewKeyword('');
       } else {
@@ -1549,7 +1549,7 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
       setHasChanges(true);
     }
   };
-  
+
   const fixArabicKeywords = () => {
     setEditedData(prev => ({
       ...prev,
@@ -1580,19 +1580,19 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
 
   const switchPrimaryLanguage = async (newPrimaryLanguage: string) => {
     if (newPrimaryLanguage === editedData.language) return;
-    
+
     const oldLanguage = editedData.language;
-    
+
     // Update primary language
     setEditedData(prev => ({
       ...prev,
       language: newPrimaryLanguage
     }));
-    
+
     // Switch to the new primary language tab
     setCurrentLanguage(newPrimaryLanguage as 'fr' | 'ar');
     setHasChanges(true);
-    
+
     toast({
       title: "Langue principale changée",
       description: `${getLanguageLabel(newPrimaryLanguage)} est maintenant la langue principale`,
@@ -1611,7 +1611,7 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
   // Get content to display based on current language
   const getCurrentContent = () => {
     let content = '';
-    
+
     if (currentLanguage === editedData.language) {
       // Show original content in primary language
       content = editedData.fullContent || editedData.content;
@@ -1619,7 +1619,7 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
       // Show translated content in secondary language - prioritize consolidated page translations
       content = editedData.translated_content || translatedContent || editedData.fullContent || editedData.content;
     }
-    
+
     // Normalize Arabic text to connect disconnected letters (e.g., "فـقـه" → "فقه")
     if (currentLanguage === 'ar' && content) {
       return normalizeArabicForDisplay(content);
@@ -1650,61 +1650,125 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
 
     setIsCleaningArabic(true);
     try {
-      // Normalize all Arabic fields using sanitizeArabicTextFrontend for proper joining
-      const cleaned = {
-        ...editedData,
+      toast({
+        title: "🧠 Correction hybride démarrée",
+        description: "Traitement Regex + IA en cours...",
+      });
+
+      // Pass 1: Local Regex Sanitization (Fast and reliable for known patterns)
+      const locallyCleaned = {
         title_ar: editedData.title_ar ? sanitizeArabicTextFrontend(editedData.title_ar) : editedData.title_ar,
         subtitle_ar: editedData.subtitle_ar ? sanitizeArabicTextFrontend(editedData.subtitle_ar) : editedData.subtitle_ar,
         content: editedData.language === 'ar' && editedData.content ? sanitizeArabicTextFrontend(editedData.content) : editedData.content,
-        textual_metadata: editedData.language === 'ar' && editedData.textual_metadata ? sanitizeArabicTextFrontend(editedData.textual_metadata) : editedData.textual_metadata,
         summary_ar: editedData.summary_ar ? sanitizeArabicTextFrontend(editedData.summary_ar) : editedData.summary_ar,
-        keywords_ar: editedData.keywords_ar?.map(k => sanitizeArabicTextFrontend(k)),
         author_ar: editedData.author_ar ? sanitizeArabicTextFrontend(editedData.author_ar) : editedData.author_ar,
         court_ar: editedData.court_ar ? sanitizeArabicTextFrontend(editedData.court_ar) : editedData.court_ar,
         plaintiff_ar: editedData.plaintiff_ar ? sanitizeArabicTextFrontend(editedData.plaintiff_ar) : editedData.plaintiff_ar,
         defendant_ar: editedData.defendant_ar ? sanitizeArabicTextFrontend(editedData.defendant_ar) : editedData.defendant_ar,
-        court_level_ar: editedData.court_level_ar ? sanitizeArabicTextFrontend(editedData.court_level_ar) : editedData.court_level_ar,
-        court_category_type_ar: editedData.court_category_type_ar ? sanitizeArabicTextFrontend(editedData.court_category_type_ar) : editedData.court_category_type_ar,
+        textual_metadata: editedData.language === 'ar' && editedData.textual_metadata ? sanitizeArabicTextFrontend(editedData.textual_metadata) : editedData.textual_metadata,
+        bibliography_ar: editedData.bibliography_ar ? sanitizeArabicTextFrontend(editedData.bibliography_ar) : editedData.bibliography_ar,
+        page_contents: editedData.language === 'ar' && editedData.page_contents ? editedData.page_contents.map(p => ({
+          ...p,
+          content: sanitizeArabicTextFrontend(p.content),
+        })) : editedData.page_contents,
       };
 
-      // Save to database
+      // Update local state briefly with Pass 1 results
+      setEditedData(prev => ({ ...prev, ...locallyCleaned }));
+
+      // Pass 2: AI Correction for remaining semantic fusions
+      const fieldsToCorrect = [
+        { key: 'title_ar', val: locallyCleaned.title_ar },
+        { key: 'summary_ar', val: locallyCleaned.summary_ar },
+        { key: 'textual_metadata', val: locallyCleaned.textual_metadata },
+        { key: 'content', val: locallyCleaned.content },
+      ];
+
+      const correctedFields: any = { ...locallyCleaned };
+
+      // AI correction for metadata
+      await Promise.all(fieldsToCorrect.slice(0, 3).map(async (field) => {
+        if (field.val && field.val.trim()) {
+          const result = await correctSingleArabicField(field.val);
+          if (result) {
+            correctedFields[field.key] = result;
+          }
+        }
+      }));
+
+      // AI correction for content (with page support)
+      if (locallyCleaned.content?.trim()) {
+        if (locallyCleaned.content.length <= 12000) {
+          const result = await correctSingleArabicField(locallyCleaned.content);
+          if (result) {
+            correctedFields['content'] = result;
+          }
+        } else if (locallyCleaned.page_contents && locallyCleaned.page_contents.length > 0) {
+          const totalPages = locallyCleaned.page_contents.length;
+          const aiCorrectedPages = [...locallyCleaned.page_contents];
+
+          for (let i = 0; i < totalPages; i++) {
+            const page = locallyCleaned.page_contents[i];
+            if (page.content?.trim()) {
+              const res = await correctSingleArabicField(page.content);
+              if (res) {
+                aiCorrectedPages[i] = { ...page, content: res };
+              }
+            }
+            setCorrectionProgress({ current: i + 1, total: totalPages });
+          }
+          correctedFields['page_contents'] = aiCorrectedPages;
+          correctedFields['content'] = aiCorrectedPages
+            .sort((a, b) => a.pageNumber - b.pageNumber)
+            .map(p => p.content)
+            .filter(c => c && c.trim() !== '')
+            .join('\n\n');
+        }
+      }
+
+      // Pass 3: Final Regex Polish (Catch anything AI missed or reintroduced)
+      const finalizedFields: any = { ...correctedFields };
+      for (const key in finalizedFields) {
+        if (typeof finalizedFields[key] === 'string' && (key.endsWith('_ar') || key === 'content' || key === 'textual_metadata')) {
+          finalizedFields[key] = sanitizeArabicTextFrontend(finalizedFields[key]);
+        } else if (key === 'page_contents' && Array.isArray(finalizedFields[key])) {
+          finalizedFields[key] = finalizedFields[key].map((p: any) => ({
+            ...p,
+            content: sanitizeArabicTextFrontend(p.content)
+          }));
+        }
+      }
+
+      // Part 3: Persist all corrections to the database
       const { error } = await supabase
         .from('documents')
-        .update({
-          title_ar: cleaned.title_ar,
-          subtitle_ar: cleaned.subtitle_ar,
-          content: cleaned.content,
-          textual_metadata: cleaned.textual_metadata,
-          summary_ar: cleaned.summary_ar,
-          keywords_ar: cleaned.keywords_ar,
-          author_ar: cleaned.author_ar,
-          court_ar: cleaned.court_ar,
-          plaintiff_ar: cleaned.plaintiff_ar,
-          defendant_ar: cleaned.defendant_ar,
-          court_level_ar: cleaned.court_level_ar,
-          court_category_type_ar: cleaned.court_category_type_ar,
-        })
+        .update(finalizedFields)
         .eq('id', editedData.id);
 
       if (error) throw error;
 
-      setEditedData(cleaned);
+      // Update local state
+      setEditedData(prev => ({
+        ...prev,
+        ...finalizedFields
+      }));
       setHasChanges(false);
-      
+
       toast({
-        title: "Nettoyage réussi",
-        description: "Tous les champs arabes ont été normalisés",
+        title: "✅ Nettoyage hybride réussi",
+        description: "Tous les champs arabes ont été corrigés avec précision (Regex + IA).",
         variant: "default"
       });
     } catch (error: any) {
-      console.error('Arabic cleanup error:', error);
+      console.error('AI Arabic cleanup error:', error);
       toast({
-        title: "Erreur de nettoyage",
-        description: error.message || "Impossible de nettoyer les champs arabes",
+        title: "Erreur de nettoyage IA",
+        description: error.message || "Impossible de corriger les champs avec l'IA",
         variant: "destructive"
       });
     } finally {
       setIsCleaningArabic(false);
+      setCorrectionProgress({ current: 0, total: 0 });
     }
   };
 
@@ -1737,7 +1801,7 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
 
         try {
           console.log(`Correcting page ${page.pageNumber}/${totalPages}...`);
-          
+
           const { data, error } = await supabase.functions.invoke('arabic-spacing-fixer', {
             body: { text: page.content }
           });
@@ -1789,12 +1853,12 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
   // Helper function to correct a single Arabic field
   const correctSingleArabicField = async (text: string): Promise<string | null> => {
     if (!text || text.trim() === '') return null;
-    
+
     try {
       const { data, error } = await supabase.functions.invoke('arabic-spacing-fixer', {
         body: { text }
       });
-      
+
       if (error) throw error;
       return data?.correctedText || text;
     } catch (error) {
@@ -1814,7 +1878,7 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
     }
 
     setIsCorrectingSpacing(true);
-    
+
     // Count fields to correct
     const fieldsToCorrect = [
       editedData.title_ar?.trim() ? 'title_ar' : null,
@@ -1823,10 +1887,10 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
       editedData.bibliography_ar?.trim() ? 'bibliography_ar' : null,
       editedData.content?.trim() ? 'content' : null,
     ].filter(Boolean);
-    
+
     const totalFields = fieldsToCorrect.length;
     let currentField = 0;
-    
+
     setCorrectionProgress({ current: 0, total: totalFields });
 
     try {
@@ -1834,7 +1898,7 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
 
       // Correct metadata fields in parallel
       const metadataPromises: Promise<void>[] = [];
-      
+
       if (editedData.title_ar?.trim()) {
         metadataPromises.push(
           correctSingleArabicField(editedData.title_ar).then(result => {
@@ -1844,7 +1908,7 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
           })
         );
       }
-      
+
       if (editedData.subtitle_ar?.trim()) {
         metadataPromises.push(
           correctSingleArabicField(editedData.subtitle_ar).then(result => {
@@ -1854,7 +1918,7 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
           })
         );
       }
-      
+
       if (editedData.summary_ar?.trim()) {
         metadataPromises.push(
           correctSingleArabicField(editedData.summary_ar).then(result => {
@@ -1864,7 +1928,7 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
           })
         );
       }
-      
+
       if (editedData.bibliography_ar?.trim()) {
         metadataPromises.push(
           correctSingleArabicField(editedData.bibliography_ar).then(result => {
@@ -1889,7 +1953,7 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
         } else if (editedData.page_contents && editedData.page_contents.length > 0) {
           // Long content with pages: page-by-page correction
           setIsCorrectingSpacing(false); // Will be set by correctArabicSpacingPageByPage
-          
+
           // Apply metadata corrections first
           if (Object.keys(correctedFields).length > 0) {
             setEditedData(prev => ({
@@ -1897,9 +1961,9 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
               ...correctedFields
             }));
           }
-          
+
           await correctArabicSpacingPageByPage();
-          
+
           toast({
             title: "✅ Correction réussie",
             description: `Métadonnées et contenu (page par page) corrigés`,
@@ -1988,21 +2052,21 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
         const currentDocType = documentTypes.find(dt => dt.id === editedData.document_type_id);
         const isAnalysisOrComment = currentDocType?.name === 'Analyses juridiques' || currentDocType?.name === 'Commentaires';
         const docTypeName = currentDocType?.name || '';
-        
+
         return (
           <Card className="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-950/30 dark:to-indigo-950/30 border-blue-200 dark:border-blue-800" dir="ltr">
             <CardContent className="p-6">
               <div className="flex items-center gap-2 mb-4">
                 <Brain className="h-5 w-5 text-blue-600 dark:text-blue-400" />
                 <h4 className="font-semibold text-blue-900 dark:text-blue-100">
-                  {isAnalysisOrComment 
-                    ? (docTypeName === 'Commentaires' 
-                        ? '💬 Workflow recommandé pour Commentaires' 
-                        : '📚 Workflow recommandé pour documents d\'analyse')
+                  {isAnalysisOrComment
+                    ? (docTypeName === 'Commentaires'
+                      ? '💬 Workflow recommandé pour Commentaires'
+                      : '📚 Workflow recommandé pour documents d\'analyse')
                     : '🧠 Workflow de traitement IA'}
                 </h4>
               </div>
-              
+
               {isAnalysisOrComment ? (
                 /* Workflow pour documents d'analyse : Traduire → Consolider → Analyse IA */
                 <>
@@ -2020,18 +2084,18 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
                           📖 Traduire toutes les pages
                         </p>
                         <p className="text-xs text-emerald-700 dark:text-emerald-300 leading-relaxed">
-                          {docTypeName === 'Commentaires' 
+                          {docTypeName === 'Commentaires'
                             ? 'Traduit le contenu complet de chaque page du commentaire'
                             : 'Traduit le contenu complet de chaque page (y compris la bibliographie en fin de document)'}
                         </p>
                       </div>
                     </div>
-                    
+
                     {/* Flèche */}
                     <div className="hidden md:flex items-center justify-center">
                       <ChevronRight className="h-6 w-6 text-blue-400 dark:text-blue-600" />
                     </div>
-                    
+
                     {/* Étape 2 - Consolidation */}
                     <div className="flex-1 flex items-start gap-3">
                       <div className="flex-shrink-0 w-8 h-8 bg-amber-500 dark:bg-amber-600 text-white rounded-full flex items-center justify-center font-bold text-sm">
@@ -2046,12 +2110,12 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
                         </p>
                       </div>
                     </div>
-                    
+
                     {/* Flèche */}
                     <div className="hidden md:flex items-center justify-center">
                       <ChevronRight className="h-6 w-6 text-blue-400 dark:text-blue-600" />
                     </div>
-                    
+
                     {/* Étape 3 - Analyse IA */}
                     <div className="flex-1 flex items-start gap-3">
                       <div className="flex-shrink-0 w-8 h-8 bg-blue-600 dark:bg-blue-500 text-white rounded-full flex items-center justify-center font-bold text-sm">
@@ -2062,7 +2126,7 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
                           🤖 Analyse IA
                         </p>
                         <p className="text-xs text-blue-700 dark:text-blue-300 leading-relaxed">
-                          {docTypeName === 'Commentaires' 
+                          {docTypeName === 'Commentaires'
                             ? 'Extrait les métadonnées: titre, auteur, mots-clés, référence du jugement commenté'
                             : 'Extrait les métadonnées et la bibliographie du contenu complet traduit'}
                         </p>
@@ -2087,12 +2151,12 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
                       </p>
                     </div>
                   </div>
-                  
+
                   {/* Flèche */}
                   <div className="hidden md:flex items-center justify-center">
                     <ChevronRight className="h-6 w-6 text-blue-400 dark:text-blue-600" />
                   </div>
-                  
+
                   {/* Étape 2 - Traduction page par page */}
                   <div className="flex-1 flex items-start gap-3">
                     <div className="flex-shrink-0 w-8 h-8 bg-emerald-600 dark:bg-emerald-500 text-white rounded-full flex items-center justify-center font-bold text-sm">
@@ -2107,12 +2171,12 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
                       </p>
                     </div>
                   </div>
-                  
+
                   {/* Flèche */}
                   <div className="hidden md:flex items-center justify-center">
                     <ChevronRight className="h-6 w-6 text-blue-400 dark:text-blue-600" />
                   </div>
-                  
+
                   {/* Étape 3 - Consolidation */}
                   <div className="flex-1 flex items-start gap-3">
                     <div className="flex-shrink-0 w-8 h-8 bg-amber-500 dark:bg-amber-600 text-white rounded-full flex items-center justify-center font-bold text-sm">
@@ -2198,8 +2262,8 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
               )}
             </Button>
           )}
-          
-          
+
+
           <Button
             variant="outline"
             onClick={() => setShowPreview(!showPreview)}
@@ -2216,10 +2280,10 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
               </>
             )}
           </Button>
-          
-          
-          <Button 
-            onClick={runAIAnalysis} 
+
+
+          <Button
+            onClick={runAIAnalysis}
             disabled={isAnalyzing || !editedData.content}
             variant="secondary"
           >
@@ -2232,7 +2296,7 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
           </Button>
 
 
-          
+
           {isFromValidation ? (
             <div className="flex space-x-2">
               <Button onClick={handlePublish} variant="default">
@@ -2255,8 +2319,8 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
 
       {/* Main Content */}
       {currentView === 'pdf' && editedData.file_url ? (
-        <PDFViewer 
-          fileUrl={getStorageUrl(editedData.file_url)} 
+        <PDFViewer
+          fileUrl={getStorageUrl(editedData.file_url)}
           title={editedData.title}
         />
       ) : currentView === 'pages' && editedData.page_contents ? (
@@ -2307,14 +2371,14 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
               </Button>
             </div>
           </div>
-          
+
           {editedData.page_contents.find(p => p.pageNumber === currentPage) && (() => {
             const currentPageData = editedData.page_contents.find(p => p.pageNumber === currentPage)!;
             const targetLang = editedData.language === 'fr' ? 'ar' : 'fr';
             const isTranslating = translatingPages.has(currentPage);
             const hasTranslation = currentPageData.translated_content;
             const translationStatus = currentPageData.translation_status;
-            
+
             return (
               <div className="space-y-4">
                 {/* Side-by-side view */}
@@ -2331,7 +2395,7 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
                         </Badge>
                       )}
                     </div>
-                    <div 
+                    <div
                       className="prose prose-sm max-w-none p-4 border rounded bg-muted/30 min-h-[400px] max-h-[600px] overflow-y-auto"
                       dir={editedData.language === 'ar' ? 'rtl' : 'ltr'}
                     >
@@ -2368,7 +2432,7 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
                         )}
                       </div>
                     </div>
-                    <div 
+                    <div
                       className="prose prose-sm max-w-none p-4 border rounded min-h-[400px] max-h-[600px] overflow-y-auto relative"
                       dir={targetLang === 'ar' ? 'rtl' : 'ltr'}
                       style={{ backgroundColor: hasTranslation ? 'hsl(var(--muted) / 0.3)' : 'hsl(var(--muted) / 0.1)' }}
@@ -2399,7 +2463,7 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
                           </div>
                         </div>
                       )}
-                      
+
                       {/* Retranslate button if already translated */}
                       {hasTranslation && !isTranslating && (
                         <div className="absolute top-2 right-2">
@@ -2419,7 +2483,7 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
               </div>
             );
           })()}
-          
+
           {/* Pages overview */}
           <div className="mt-6">
             <h4 className="text-sm font-semibold mb-3">Aperçu des pages</h4>
@@ -2428,7 +2492,7 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
                 const isTranslated = page.translation_status === 'completed';
                 const isTranslating = translatingPages.has(page.pageNumber);
                 const hasError = page.translation_status === 'error';
-                
+
                 return (
                   <Button
                     key={page.pageNumber}
@@ -2459,7 +2523,7 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
           <div className="space-y-6">
             <Card className="p-6">
               <h3 className="text-lg font-semibold mb-4">Métadonnées</h3>
-              
+
               {/* Validation Remarks - Only show when coming from validation */}
               {isFromValidation && (
                 <div className="mb-6 p-4 border rounded-lg bg-muted/50">
@@ -2474,7 +2538,7 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
                   />
                 </div>
               )}
-              
+
               <div className="space-y-4">
                 <Tabs value={currentLanguage} onValueChange={(value) => setCurrentLanguage(value as 'fr' | 'ar')}>
                   <TabsList className="grid w-full grid-cols-2">
@@ -2498,7 +2562,7 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
                       </>
                     )}
                   </TabsList>
-                  
+
                   <TabsContent value="fr" className="space-y-4">
                     <div>
                       <Label className="text-sm font-medium">
@@ -2528,15 +2592,15 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
                       />
                     </div>
 
-                     <div>
-                       <MultiCategorySelector
-                         categories={categories}
-                         selectedCategoryIds={selectedCategoryIds}
-                         onCategoryIdsChange={setSelectedCategoryIds}
-                         showArabic={currentLanguage === 'ar'}
-                         maxCategories={5}
-                       />
-                     </div>
+                    <div>
+                      <MultiCategorySelector
+                        categories={categories}
+                        selectedCategoryIds={selectedCategoryIds}
+                        onCategoryIdsChange={setSelectedCategoryIds}
+                        showArabic={currentLanguage === 'ar'}
+                        maxCategories={5}
+                      />
+                    </div>
 
                     <div>
                       <Label className="text-sm font-medium">Type de document</Label>
@@ -2757,14 +2821,14 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
                             <div className="mt-1 space-y-2">
                               <div className="flex flex-wrap gap-2 min-h-[32px] p-2 border rounded-md bg-background">
                                 {(editedData.legal_references || []).map((ref, index) => (
-                                  <Badge 
-                                    key={index} 
+                                  <Badge
+                                    key={index}
                                     variant="secondary"
                                     className="flex items-center gap-1 px-2 py-1"
                                   >
                                     {ref}
-                                    <X 
-                                      className="h-3 w-3 cursor-pointer hover:text-destructive" 
+                                    <X
+                                      className="h-3 w-3 cursor-pointer hover:text-destructive"
                                       onClick={() => {
                                         const newRefs = [...(editedData.legal_references || [])];
                                         newRefs.splice(index, 1);
@@ -2864,15 +2928,15 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
                       />
                     </div>
 
-                     <div>
-                       <MultiCategorySelector
-                         categories={categories}
-                         selectedCategoryIds={selectedCategoryIds}
-                         onCategoryIdsChange={setSelectedCategoryIds}
-                         showArabic={currentLanguage === 'ar'}
-                         maxCategories={5}
-                       />
-                     </div>
+                    <div>
+                      <MultiCategorySelector
+                        categories={categories}
+                        selectedCategoryIds={selectedCategoryIds}
+                        onCategoryIdsChange={setSelectedCategoryIds}
+                        showArabic={currentLanguage === 'ar'}
+                        maxCategories={5}
+                      />
+                    </div>
 
                     <div>
                       <Label className="text-sm font-medium">نوع الوثيقة</Label>
@@ -2931,13 +2995,13 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
                               <SelectTrigger className="mt-1 h-8 bg-background" dir="rtl">
                                 <SelectValue placeholder="اختر فئة" />
                               </SelectTrigger>
-                               <SelectContent className="bg-background border shadow-lg z-50">
-                                 {courtTypes.map((courtType) => (
-                                   <SelectItem key={courtType.id} value={courtType.name_ar || courtType.name}>
-                                     {courtType.name_ar || courtType.name}
-                                   </SelectItem>
-                                 ))}
-                               </SelectContent>
+                              <SelectContent className="bg-background border shadow-lg z-50">
+                                {courtTypes.map((courtType) => (
+                                  <SelectItem key={courtType.id} value={courtType.name_ar || courtType.name}>
+                                    {courtType.name_ar || courtType.name}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
                             </Select>
                           </div>
 
@@ -3068,14 +3132,14 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
                             <div className="mt-1 space-y-2">
                               <div className="flex flex-wrap gap-2 min-h-[32px] p-2 border rounded-md bg-background" dir="rtl">
                                 {(editedData.legal_references_ar || []).map((ref, index) => (
-                                  <Badge 
-                                    key={index} 
+                                  <Badge
+                                    key={index}
                                     variant="secondary"
                                     className="flex items-center gap-1 px-2 py-1"
                                   >
                                     {ref}
-                                    <X 
-                                      className="h-3 w-3 cursor-pointer hover:text-destructive" 
+                                    <X
+                                      className="h-3 w-3 cursor-pointer hover:text-destructive"
                                       onClick={() => {
                                         const newRefs = [...(editedData.legal_references_ar || [])];
                                         newRefs.splice(index, 1);
@@ -3182,7 +3246,7 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
                       <span className="text-xs text-muted-foreground ml-2">(ذكاء اصطناعي)</span>
                     )}
                   </Label>
-                   <CKEditorMini
+                  <CKEditorMini
                     content={currentLanguage === 'ar' ? (editedData.summary_ar || '') : (editedData.summary || '')}
                     onChange={(value) => {
                       setEditedData(prev => ({
@@ -3220,7 +3284,11 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
                       value={currentLanguage === 'ar' ? newKeywordAr : newKeyword}
                       onChange={(e) => {
                         const value = currentLanguage === 'ar' ? handleArabicInput(e.target.value) : e.target.value;
-                        currentLanguage === 'ar' ? setNewKeywordAr(value) : setNewKeyword(value);
+                        if (currentLanguage === 'ar') {
+                          setNewKeywordAr(value);
+                        } else {
+                          setNewKeyword(value);
+                        }
                       }}
                       placeholder={currentLanguage === 'ar' ? 'إضافة كلمة مفتاحية' : 'Ajouter un mot-clé'}
                       onKeyPress={(e) => {
@@ -3231,9 +3299,9 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
                       }}
                       dir={currentLanguage === 'ar' ? 'rtl' : 'ltr'}
                     />
-                    <Button 
-                      type="button" 
-                      onClick={() => addKeyword(currentLanguage as 'fr' | 'ar')} 
+                    <Button
+                      type="button"
+                      onClick={() => addKeyword(currentLanguage as 'fr' | 'ar')}
                       size="sm"
                       variant="secondary"
                     >
@@ -3253,7 +3321,7 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
                   </div>
                 </div>
               </Card>
-              
+
               {/* Textual Metadata section */}
               <Card className="p-4 lg:col-span-full">
                 <div className="space-y-3">
@@ -3269,70 +3337,82 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
                       </div>
                     )}
                   </div>
-                    <Textarea
-                      value={currentLanguage === editedData.language ? (editedData.textual_metadata || '') : (translatedTextualMetadata || '')}
-                      onChange={(e) => {
-                        if (currentLanguage === editedData.language) {
-                          const value = currentLanguage === 'ar' ? handleArabicInput(e.target.value) : e.target.value;
-                          setEditedData(prev => ({
-                            ...prev,
-                            textual_metadata: value
-                          }));
-                        }
-                      }}
-                      placeholder={
-                        currentLanguage === editedData.language
-                          ? (
-                              editedData.textual_metadata
-                                ? (currentLanguage === 'ar' ? 'معطيات نصية إضافية...' : 'Métadonnées textuelles extraites du document...')
-                                : (currentLanguage === 'ar'
-                                    ? 'لا توجد معطيات نصية مستخرجة. جاري المعالجة التلقائية...'
-                                    : 'Aucune métadonnée extraite. Traitement automatique en cours...'
-                                  )
-                            )
-                          : (
-                              translatedTextualMetadata
-                                ? (currentLanguage === 'ar' ? 'ترجمة المعطيات النصية' : 'Traduction des métadonnées textuelles')
-                                : (currentLanguage === 'ar' ? 'لا توجد ترجمة بعد. شغّل التحليل بالذكاء الاصطناعي...' : 'Pas encore de traduction. Lancez l’analyse IA...')
-                            )
+                  <Textarea
+                    value={currentLanguage === editedData.language ? (editedData.textual_metadata || '') : (translatedTextualMetadata || '')}
+                    onChange={(e) => {
+                      if (currentLanguage === editedData.language) {
+                        const value = currentLanguage === 'ar' ? handleArabicInput(e.target.value) : e.target.value;
+                        setEditedData(prev => ({
+                          ...prev,
+                          textual_metadata: value
+                        }));
                       }
-                      className={`min-h-[100px] text-sm resize-vertical ${
-                        (currentLanguage === editedData.language ? editedData.textual_metadata : translatedTextualMetadata)
-                          ? 'bg-background border-input'
-                          : 'bg-muted/30 border-muted-foreground/30 text-muted-foreground'
+                    }}
+                    placeholder={
+                      currentLanguage === editedData.language
+                        ? (
+                          editedData.textual_metadata
+                            ? (currentLanguage === 'ar' ? 'معطيات نصية إضافية...' : 'Métadonnées textuelles extraites du document...')
+                            : (currentLanguage === 'ar'
+                              ? 'لا توجد معطيات نصية مستخرجة. جاري المعالجة التلقائية...'
+                              : 'Aucune métadonnée extraite. Traitement automatique en cours...'
+                            )
+                        )
+                        : (
+                          translatedTextualMetadata
+                            ? (currentLanguage === 'ar' ? 'ترجمة المعطيات النصية' : 'Traduction des métadonnées textuelles')
+                            : (currentLanguage === 'ar' ? 'لا توجد ترجمة بعد. شغّل التحليل بالذكاء الاصطناعي...' : 'Pas encore de traduction. Lancez l’analyse IA...')
+                        )
+                    }
+                    className={`min-h-[100px] text-sm resize-vertical ${(currentLanguage === editedData.language ? editedData.textual_metadata : translatedTextualMetadata)
+                      ? 'bg-background border-input'
+                      : 'bg-muted/30 border-muted-foreground/30 text-muted-foreground'
                       }`}
-                      dir={currentLanguage === 'ar' ? 'rtl' : 'ltr'}
-                      readOnly={currentLanguage !== editedData.language}
-                    />
-                   <div className="flex items-center justify-between text-xs">
-                     <span className="text-muted-foreground">
-                       {currentLanguage !== editedData.language
-                         ? (currentLanguage === 'ar' 
-                             ? 'الترجمة الآلية للمعطيات النصية - للقراءة فقط'
-                             : 'Traduction automatique des métadonnées textuelles - lecture seule'
-                           )
-                         : (currentLanguage === 'ar' 
-                             ? 'يفصل النظام تلقائياً بين المعطيات النصية والمحتوى عند كلمة "المشكل" أو مرادفاتها'
-                             : 'Le système sépare automatiquement les métadonnées du contenu au mot "المشكل" ou ses variantes'
-                           )
-                       }
-                     </span>
-                     <span className={`font-medium ${(currentLanguage === editedData.language ? editedData.textual_metadata : translatedTextualMetadata) ? 'text-primary' : 'text-muted-foreground'}`}>
-                       {(currentLanguage === editedData.language ? editedData.textual_metadata : translatedTextualMetadata)
-                         ? `${(currentLanguage === editedData.language ? editedData.textual_metadata!.length : translatedTextualMetadata.length)} caractères`
-                         : (currentLanguage !== editedData.language ? 'Non disponible' : 'Non extraites')
-                       }
-                     </span>
-                   </div>
+                    dir={currentLanguage === 'ar' ? 'rtl' : 'ltr'}
+                    readOnly={currentLanguage !== editedData.language}
+                  />
+                  <div className="flex items-center justify-between text-xs">
+                    <span className="text-muted-foreground">
+                      {currentLanguage !== editedData.language
+                        ? (currentLanguage === 'ar'
+                          ? 'الترجمة الآلية للمعطيات النصية - للقراءة فقط'
+                          : 'Traduction automatique des métadonnées textuelles - lecture seule'
+                        )
+                        : (currentLanguage === 'ar'
+                          ? 'يفصل النظام تلقائياً بين المعطيات النصية والمحتوى عند كلمة "المشكل" أو مرادفاتها'
+                          : 'Le système sépare automatiquement les métadonnées du contenu au mot "المشكل" ou ses variantes'
+                        )
+                      }
+                    </span>
+                    <span className={`font-medium ${(currentLanguage === editedData.language ? editedData.textual_metadata : translatedTextualMetadata) ? 'text-primary' : 'text-muted-foreground'}`}>
+                      {(currentLanguage === editedData.language ? editedData.textual_metadata : translatedTextualMetadata)
+                        ? `${(currentLanguage === editedData.language ? editedData.textual_metadata!.length : translatedTextualMetadata.length)} caractères`
+                        : (currentLanguage !== editedData.language ? 'Non disponible' : 'Non extraites')
+                      }
+                    </span>
+                  </div>
                 </div>
               </Card>
-              
+
             </div>
 
             <Card className="p-6">
               <div className="flex items-center justify-between mb-4">
                 <h3 className="text-lg font-semibold">Contenu du document</h3>
                 <div className="flex items-center gap-2">
+                  {editedData.language === 'ar' && (
+                    <Button
+                      variant="secondary"
+                      size="sm"
+                      onClick={cleanArabicDocument}
+                      disabled={isCleaningArabic}
+                      title="Corriger les fusions et ligatures arabes dans tout le document"
+                      className="bg-blue-600 hover:bg-blue-700 text-white"
+                    >
+                      {isCleaningArabic ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Brain className="mr-2 h-4 w-4" />}
+                      Correction Arabe
+                    </Button>
+                  )}
                   {editedData.page_contents && editedData.page_contents.length > 0 && (
                     <Button
                       variant="outline"
@@ -3342,13 +3422,13 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
                           .sort((a, b) => a.pageNumber - b.pageNumber)
                           .map(p => p.content)
                           .join('\n\n');
-                        
+
                         setEditedData(prev => ({
                           ...prev,
                           content: consolidatedContent
                         }));
                         setHasChanges(true);
-                        
+
                         toast({
                           title: "Contenu synchronisé",
                           description: `Le contenu a été mis à jour avec ${editedData.page_contents!.length} page(s)`,
@@ -3378,9 +3458,9 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
                   </Button>
                 </div>
               </div>
-              
+
               {showPreview ? (
-                <div 
+                <div
                   className="prose prose-sm max-w-none p-4 border rounded bg-muted/30 max-h-[600px] overflow-y-auto"
                   dir={currentLanguage === 'ar' ? 'rtl' : 'ltr'}
                 >
@@ -3392,8 +3472,25 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
                       {currentLanguage === 'ar' ? editedData.subtitle_ar : editedData.subtitle}
                     </h5>
                   ) : null}
-                  <div 
-                    className="prose prose-sm max-w-none text-sm leading-relaxed [&>h1]:text-xl [&>h1]:font-bold [&>h1]:mb-3 [&>h2]:text-lg [&>h2]:font-semibold [&>h2]:mb-2 [&>h3]:text-base [&>h3]:font-medium [&>h3]:mb-2 [&>p]:mb-2 [&>br]:block [&>br]:content-[''] [&>br]:mt-2" 
+
+                  {/* Performance fix to avoid redundant checks */}
+                  {(() => {
+                    const metadata = currentLanguage === editedData.language
+                      ? editedData.textual_metadata
+                      : translatedTextualMetadata;
+
+                    if (metadata) {
+                      return (
+                        <div className="textual-metadata mb-6 p-4 bg-muted/50 border-y border-border/30 text-center italic whitespace-pre-wrap font-serif text-sm text-muted-foreground uppercase tracking-wider">
+                          {metadata}
+                        </div>
+                      );
+                    }
+                    return null;
+                  })()}
+
+                  <div
+                    className="prose prose-sm max-w-none text-sm leading-relaxed [&>h1]:text-xl [&>h1]:font-bold [&>h1]:mb-3 [&>h2]:text-lg [&>h2]:font-semibold [&>h2]:mb-2 [&>h3]:text-base [&>h3]:font-medium [&>h3]:mb-2 [&>p]:mb-2 [&>br]:block [&>br]:content-[''] [&>br]:mt-2"
                     dir={currentLanguage === 'ar' ? 'rtl' : 'ltr'}
                     dangerouslySetInnerHTML={{ __html: renderFormattedContent(getCurrentContent()) }}
                   />
@@ -3406,7 +3503,7 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
                     .map((page) => (
                       <div key={page.pageNumber} className="page-break">
                         <CKEditorWrapper
-                          content={currentLanguage === 'ar' 
+                          content={currentLanguage === 'ar'
                             ? normalizeArabicForDisplay(currentLanguage === editedData.language ? page.content : (page.translated_content || ''))
                             : (currentLanguage === editedData.language ? page.content : (page.translated_content || ''))}
                           onChange={(newContent) => {
@@ -3414,13 +3511,13 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
                               ...prev,
                               page_contents: prev.page_contents?.map(p =>
                                 p.pageNumber === page.pageNumber
-                                  ? { 
-                                      ...p, 
-                                      ...(currentLanguage === editedData.language 
-                                        ? { content: newContent }
-                                        : { translated_content: newContent }
-                                      )
-                                    }
+                                  ? {
+                                    ...p,
+                                    ...(currentLanguage === editedData.language
+                                      ? { content: newContent }
+                                      : { translated_content: newContent }
+                                    )
+                                  }
                                   : p
                               )
                             }));
@@ -3449,8 +3546,8 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
                     }
                   }}
                   language={currentLanguage as 'fr' | 'ar'}
-                  placeholder={currentLanguage === editedData.language ? 
-                    "Contenu du document..." : 
+                  placeholder={currentLanguage === editedData.language ?
+                    "Contenu du document..." :
                     "Contenu traduit..."
                   }
                   className="min-h-[600px]"

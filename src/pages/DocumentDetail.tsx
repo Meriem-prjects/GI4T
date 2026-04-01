@@ -79,6 +79,8 @@ interface Document {
   defendant_ar?: string;
   bibliography?: string;
   bibliography_ar?: string;
+  textual_metadata?: string;
+  translated_textual_metadata?: string;
   page_contents?: JsonPageContents;
 }
 
@@ -104,9 +106,9 @@ interface SuggestedDocument {
 }
 
 const DocumentDetail = () => {
-  const { categorySlug, documentSlug, documentId } = useParams<{ 
-    categorySlug?: string; 
-    documentSlug?: string; 
+  const { categorySlug, documentSlug, documentId } = useParams<{
+    categorySlug?: string;
+    documentSlug?: string;
     documentId?: string;
   }>();
   const { isRTL, language } = useLanguage();
@@ -116,7 +118,7 @@ const DocumentDetail = () => {
   const [suggestedDocuments, setSuggestedDocuments] = useState<SuggestedDocument[]>([]);
   const [relatedDocuments, setRelatedDocuments] = useState<SuggestedDocument[]>([]);
   const [loading, setLoading] = useState(true);
-  
+
   // Track document view
   useDocumentView(document?.id);
 
@@ -125,7 +127,7 @@ const DocumentDetail = () => {
       // Handle direct document ID route (for analyses juridiques, commentaires, blogs)
       if (documentId) {
         console.log('Fetching document by ID:', documentId);
-        
+
         const { data, error } = await supabase
           .from('documents')
           .select(`
@@ -157,7 +159,7 @@ const DocumentDetail = () => {
           if (data.categories) {
             setCategory(data.categories as Category);
           }
-          
+
           // Fetch suggested documents based on document type
           if (data.document_type_id) {
             const { data: suggested } = await supabase
@@ -176,17 +178,17 @@ const DocumentDetail = () => {
               .eq('published', true)
               .neq('id', documentId)
               .limit(3);
-            
+
             if (suggested) {
               setSuggestedDocuments(suggested as SuggestedDocument[]);
             }
           }
         }
-        
+
         setLoading(false);
         return;
       }
-      
+
       // Original logic for categorySlug/documentSlug route
       if (!categorySlug || !documentSlug) {
         console.log('Missing categorySlug or documentSlug:', { categorySlug, documentSlug });
@@ -274,7 +276,7 @@ const DocumentDetail = () => {
           .neq('id', matchingDocument.id)
           .in('status', ['published', 'processed'])
           .limit(5);
-        
+
         setSuggestedDocuments(suggestedData || []);
 
         // Fetch related documents (similar keywords/legal domains)
@@ -326,16 +328,16 @@ const DocumentDetail = () => {
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
-      
+
       const blob = await response.blob();
       const downloadUrl = URL.createObjectURL(blob);
-      
+
       const link = window.document.createElement('a');
       link.href = downloadUrl;
       link.download = filename || 'document.pdf';
       window.document.body.appendChild(link);
       link.click();
-      
+
       // Cleanup
       window.document.body.removeChild(link);
       URL.revokeObjectURL(downloadUrl);
@@ -400,7 +402,7 @@ const DocumentDetail = () => {
   const documentIsFrench = document.language === 'fr';
   const needsFrenchContent = language === 'fr';
   const needsArabicContent = language === 'ar';
-  
+
   // On a besoin de traduction quand la langue interface ≠ langue du document
   const needsTranslation = (needsFrenchContent && documentIsArabic) || (needsArabicContent && documentIsFrench);
 
@@ -411,52 +413,63 @@ const DocumentDetail = () => {
 
   // Function to clean title and keywords from content to avoid duplication
   const cleanContentFromMetadata = (content: string, title: string, keywords: string[]): string => {
+    if (!content) return content;
     let cleanedContent = content;
-    
+
     // 1. Remove the header paragraph that contains title + author + affiliation
     // This paragraph typically appears at the very beginning and contains the document title
-    if (title) {
-      const escapedTitleStart = escapeRegex(title.trim().substring(0, Math.min(30, title.length)));
-      // Remove the first paragraph that contains the beginning of the title
-      const headerPattern = new RegExp(
-        `<p[^>]*>[\\s\\S]*?${escapedTitleStart}[\\s\\S]*?<\\/p>`,
-        'i'
-      );
-      cleanedContent = cleanedContent.replace(headerPattern, '');
+    if (title && title.trim().length > 0) {
+      // Find the first paragraph
+      const firstParMatch = cleanedContent.match(/<p[^>]*>(.*?)<\/p>/si);
+      if (firstParMatch) {
+        const firstPar = firstParMatch[0];
+        const firstParText = firstParMatch[1].replace(/<[^>]*>/g, '').trim();
+        const titleSnippet = title.trim();
+
+        // Clean it only if the first paragraph actually contains a significant chunk of the title
+        // and is short enough to most likely be JUST the title/header info
+        if (titleSnippet.length > 5 && (
+          firstParText.toLowerCase() === titleSnippet.toLowerCase() ||
+          (firstParText.length < titleSnippet.length + 30 && firstParText.toLowerCase().includes(titleSnippet.toLowerCase()))
+        )) {
+          cleanedContent = cleanedContent.replace(firstPar, '');
+        }
+      }
     }
-    
+
     // 2. Remove the entire keywords paragraph (captures all content including <br/> tags until </p>)
     const keywordsPatterns = [
-      // Arabic keywords patterns - capture entire paragraph with [\s\S]*? to include <br/> tags
-      /<p[^>]*>\s*(الكلمات المفاتيح|اﻟﻜﻠﻤﺎت اﻟﻤﻔﺎﺗﯿﺢ|الكلمات المفتاحية)\s*[:：]?[\s\S]*?<\/p>/gi,
+      // Arabic keywords patterns - STOP at any tag to avoid matching across <br/> or nested tags
+      /<p[^>]*>\s*(?:الكلمات المفاتيح|اﻟﻜﻠﻤﺎت اﻟﻤﻔﺎﺗﯿﺢ|الكلمات المفتاحية|الكلمات الدالة)\s*[:：]?[^<]*<\/p>/gi,
       // French keywords patterns
-      /<p[^>]*>\s*Mots[- ]?cl[ée]s\s*[:：]?[\s\S]*?<\/p>/gi,
+      /<p[^>]*>\s*Mots[- ]?cl[ée]s\s*[:：]?[^<]*<\/p>/gi,
       // English keywords patterns
-      /<p[^>]*>\s*Keywords\s*[:：]?[\s\S]*?<\/p>/gi,
+      /<p[^>]*>\s*Keywords\s*[:：]?[^<]*<\/p>/gi,
     ];
-    
+
     keywordsPatterns.forEach(pattern => {
       cleanedContent = cleanedContent.replace(pattern, '');
     });
-    
+
     // 3. Also handle cases where keywords appear without <p> wrapper but with line breaks
+    // CONSERVATIVE: Only match keywords on the SAME line/paragraph. Never match across <br/> or tags.
     const inlineKeywordsPatterns = [
-      /(الكلمات المفاتيح|اﻟﻜﻠﻤﺎت اﻟﻤﻔﺎﺗﯿﺢ|الكلمات المفتاحية)\s*[:：]?[^<]*(<br\s*\/?>[^<]*)*(<br\s*\/?>)?/gi,
-      /Mots[- ]?cl[ée]s\s*[:：]?[^<]*(<br\s*\/?>[^<]*)*(<br\s*\/?>)?/gi,
-      /Keywords\s*[:：]?[^<]*(<br\s*\/?>[^<]*)*(<br\s*\/?>)?/gi,
+      /(?:الكلمات المفاتيح|اﻟﻜﻠﻤﺎت اﻟﻤﻔﺎﺗﯿﺢ|الكلمات المفتاحية|الكلمات الدالة)\s*[:：]?[^\n\r\u2028\u2029<]*/gi,
+      /Mots[- ]?cl[ée]s\s*[:：]?[^\n\r\u2028\u2029<]*/gi,
+      /Keywords\s*[:：]?[^\n\r\u2028\u2029<]*/gi,
     ];
-    
+
     inlineKeywordsPatterns.forEach(pattern => {
       cleanedContent = cleanedContent.replace(pattern, '');
     });
-    
+
     // Clean up consecutive empty paragraphs
     cleanedContent = cleanedContent.replace(/(<p[^>]*>\s*<\/p>\s*)+/gi, '');
     // Clean up multiple line breaks
     cleanedContent = cleanedContent.replace(/(<br\s*\/?>\s*){3,}/gi, '<br><br>');
     // Clean up leading whitespace and empty lines
     cleanedContent = cleanedContent.replace(/^(\s*<br\s*\/?>\s*)+/i, '');
-    
+
     return cleanedContent.trim();
   };
 
@@ -475,7 +488,21 @@ const DocumentDetail = () => {
   // Affiche directement la version complète du document
   const buildPaginatedContent = (): string => {
     const rawPageContents = document.page_contents;
-    
+
+    // Get the textual metadata based on current language
+    const getTextualMetadata = () => {
+      if (!document) return null;
+      if (language === 'ar') {
+        return document.translated_textual_metadata || document.textual_metadata;
+      }
+      return document.textual_metadata;
+    };
+
+    const textualMetadata = getTextualMetadata();
+    const metadataHtml = textualMetadata
+      ? `<div class="textual-metadata mb-8 p-6 bg-muted/30 border-y border-border/50 text-center italic whitespace-pre-wrap font-serif leading-relaxed text-muted-foreground uppercase tracking-wider">${textualMetadata}</div>`
+      : '';
+
     // Validate and parse page_contents from JSON
     if (!rawPageContents || !Array.isArray(rawPageContents) || rawPageContents.length <= 1) {
       // Pas de contenu paginé, utiliser le contenu simple
@@ -486,23 +513,24 @@ const DocumentDetail = () => {
       } else {
         content = document.content || '';
       }
-      // Clean metadata from first page content
-      return cleanContentFromMetadata(content, currentTitle, currentKeywords || []);
+      // Clean metadata from first page content and prepend textual metadata
+      const cleaned = cleanContentFromMetadata(content, currentTitle, currentKeywords || []);
+      return metadataHtml + cleaned;
     }
-    
+
     const pageContents = rawPageContents as PageContent[];
-    
+
     // Sort pages by page number
     const sortedPages = [...pageContents].sort((a, b) => (a.pageNumber || 0) - (b.pageNumber || 0));
-    
+
     // Vérifier si les pages ont des traductions
     const pagesHaveTranslation = pageContents.some(
       page => page.translated_content && page.translated_content.trim() !== ''
     );
-    
+
     return sortedPages.map((page, index) => {
       let pageContent: string;
-      
+
       if (needsTranslation && pagesHaveTranslation) {
         // Interface différente de la langue du document → utiliser traduction page par page si disponible
         pageContent = page.translated_content || page.content || '';
@@ -510,12 +538,15 @@ const DocumentDetail = () => {
         // Interface dans la même langue que le document → afficher l'original
         pageContent = page.content || '';
       }
-      
+
       // Clean metadata only from the first page (where title and keywords typically appear)
       if (index === 0) {
         pageContent = cleanContentFromMetadata(pageContent, currentTitle, currentKeywords || []);
+
+        // Prepend textual metadata to the first page so it appears in the carousel
+        pageContent = metadataHtml + pageContent;
       }
-      
+
       return `<div class="page-break" data-page="${page.pageNumber}">
         ${pageContent}
       </div>`;
@@ -524,19 +555,19 @@ const DocumentDetail = () => {
 
   const paginatedContent = buildPaginatedContent();
   const formattedContent = renderFormattedContent(paginatedContent);
-  
+
   // Detect if this is an analysis document (not jurisprudence)
   const isAnalysisDocument = () => {
     const typeName = document.document_types?.name;
     return ['Analyses juridiques', 'Commentaires', 'Blogs'].includes(typeName || '');
   };
-  
+
   // Format court level: replace underscores with spaces and translate for Arabic
   const formatCourtLevel = (level: string | null) => {
     if (!level) return null;
-    
+
     const formatted = level.replace(/_/g, ' ');
-    
+
     if (language === 'ar') {
       // Translate common court levels to Arabic
       const translations: { [key: string]: string } = {
@@ -547,14 +578,14 @@ const DocumentDetail = () => {
         'cour suprême': 'المحكمة العليا',
         'cour supreme': 'المحكمة العليا'
       };
-      
+
       const lowerCaseFormatted = formatted.toLowerCase();
       return translations[lowerCaseFormatted] || formatted;
     }
-    
+
     return formatted;
   };
-  
+
   const currentCourtLevel = formatCourtLevel(language === 'ar' && document.court_level_ar ? document.court_level_ar : document.court_level);
 
   return (
@@ -563,52 +594,52 @@ const DocumentDetail = () => {
       <div className="mb-6 w-full flex justify-start">
         <Breadcrumb>
           <BreadcrumbList className={isRTL ? 'flex-row-reverse' : ''}>
-          <BreadcrumbItem>
-            <BreadcrumbLink asChild>
-              <Link to="/">{t('home')}</Link>
-            </BreadcrumbLink>
-          </BreadcrumbItem>
-          <BreadcrumbSeparator />
-          <BreadcrumbItem>
-            <BreadcrumbLink asChild>
-              <Link to="/observatoire">{t('observatory')}</Link>
-            </BreadcrumbLink>
-          </BreadcrumbItem>
-          <BreadcrumbSeparator />
-          {documentId ? (
-            // For direct document access (analyses juridiques, commentaires, blogs)
-            <>
-              <BreadcrumbItem>
-                <BreadcrumbLink asChild>
-                  <Link to="/observatoire/analyses-opinions">{t('analysesOpinions')}</Link>
-                </BreadcrumbLink>
-              </BreadcrumbItem>
-              <BreadcrumbSeparator />
-            </>
-          ) : (
-            // For category-based documents
-            <>
-              <BreadcrumbItem>
-                <BreadcrumbLink asChild>
-                  <Link to="/observatoire/droits-fondamentaux">{t('fundamentalRights')}</Link>
-                </BreadcrumbLink>
-              </BreadcrumbItem>
-              <BreadcrumbSeparator />
-            </>
-          )}
-          {category && !documentId && (
-            <>
-              <BreadcrumbItem>
-                <BreadcrumbLink asChild>
-                  <Link to={`/observatoire/droits-fondamentaux/${createCategorySlug(category.name)}`}>{isRTL ? (category.name_ar || category.name) : category.name}</Link>
-                </BreadcrumbLink>
-              </BreadcrumbItem>
-              <BreadcrumbSeparator />
-            </>
-          )}
-          <BreadcrumbItem>
-            <BreadcrumbPage className="max-w-[200px] truncate">{currentTitle}</BreadcrumbPage>
-          </BreadcrumbItem>
+            <BreadcrumbItem>
+              <BreadcrumbLink asChild>
+                <Link to="/">{t('home')}</Link>
+              </BreadcrumbLink>
+            </BreadcrumbItem>
+            <BreadcrumbSeparator />
+            <BreadcrumbItem>
+              <BreadcrumbLink asChild>
+                <Link to="/observatoire">{t('observatory')}</Link>
+              </BreadcrumbLink>
+            </BreadcrumbItem>
+            <BreadcrumbSeparator />
+            {documentId ? (
+              // For direct document access (analyses juridiques, commentaires, blogs)
+              <>
+                <BreadcrumbItem>
+                  <BreadcrumbLink asChild>
+                    <Link to="/observatoire/analyses-opinions">{t('analysesOpinions')}</Link>
+                  </BreadcrumbLink>
+                </BreadcrumbItem>
+                <BreadcrumbSeparator />
+              </>
+            ) : (
+              // For category-based documents
+              <>
+                <BreadcrumbItem>
+                  <BreadcrumbLink asChild>
+                    <Link to="/observatoire/droits-fondamentaux">{t('fundamentalRights')}</Link>
+                  </BreadcrumbLink>
+                </BreadcrumbItem>
+                <BreadcrumbSeparator />
+              </>
+            )}
+            {category && !documentId && (
+              <>
+                <BreadcrumbItem>
+                  <BreadcrumbLink asChild>
+                    <Link to={`/observatoire/droits-fondamentaux/${createCategorySlug(category.name)}`}>{isRTL ? (category.name_ar || category.name) : category.name}</Link>
+                  </BreadcrumbLink>
+                </BreadcrumbItem>
+                <BreadcrumbSeparator />
+              </>
+            )}
+            <BreadcrumbItem>
+              <BreadcrumbPage className="max-w-[200px] truncate">{currentTitle}</BreadcrumbPage>
+            </BreadcrumbItem>
           </BreadcrumbList>
         </Breadcrumb>
       </div>
@@ -621,7 +652,7 @@ const DocumentDetail = () => {
             <h1 className={`text-3xl md:text-4xl font-bold mb-4 leading-tight ${language === 'ar' ? 'dir-rtl' : ''}`}>
               {currentTitle}
             </h1>
-            
+
             {currentSubtitle && (
               <h2 className={`text-xl md:text-2xl font-semibold mb-6 text-muted-foreground max-w-4xl mx-auto ${language === 'ar' ? 'dir-rtl' : ''}`}>
                 {currentSubtitle}
@@ -629,13 +660,13 @@ const DocumentDetail = () => {
             )}
 
             {currentSummary && (
-              <div 
+              <div
                 className={`text-lg text-muted-foreground mb-8 max-w-4xl mx-auto ${language === 'ar' ? 'dir-rtl arabic-text font-arabic' : ''}`}
                 dir={language === 'ar' ? 'rtl' : 'ltr'}
-                dangerouslySetInnerHTML={{ 
-                  __html: language === 'ar' 
+                dangerouslySetInnerHTML={{
+                  __html: language === 'ar'
                     ? normalizeArabicForDisplay(currentSummary.replace(/<\/?p>/gi, '').trim())
-                    : currentSummary.replace(/<\/?p>/gi, '').trim() 
+                    : currentSummary.replace(/<\/?p>/gi, '').trim()
                 }}
               />
             )}
@@ -660,12 +691,12 @@ const DocumentDetail = () => {
                         )}
                       </div>
                     )}
-                    
+
                     {currentAuthor && (() => {
                       const hasComma = currentAuthor.includes(',');
                       const authorName = hasComma ? currentAuthor.split(',')[0].trim() : currentAuthor;
                       const authorTitle = hasComma ? currentAuthor.split(',').slice(1).join(',').trim() : null;
-                      
+
                       return (
                         <div className={`flex items-start gap-3 ${language === 'ar' ? 'flex-row-reverse' : ''}`}>
                           <User className="w-5 h-5 text-muted-foreground mt-0.5" />
@@ -686,7 +717,7 @@ const DocumentDetail = () => {
                       );
                     })()}
                   </div>
-                  
+
                   {/* Ligne 2 : Catégorie */}
                   {category && (
                     <div className={`flex items-center gap-3 ${language === 'ar' ? 'flex-row-reverse justify-end' : 'justify-start'}`}>
@@ -716,12 +747,12 @@ const DocumentDetail = () => {
                         <BookOpen className="w-4 h-4" />
                         {language === 'ar' ? 'المراجع / الببليوغرافيا' : 'Références / Bibliographie'}
                       </h4>
-                      <div 
+                      <div
                         className={`text-sm leading-relaxed whitespace-pre-wrap ${language === 'ar' ? 'text-right arabic-text font-arabic' : ''}`}
-                        dangerouslySetInnerHTML={{ 
+                        dangerouslySetInnerHTML={{
                           __html: language === 'ar'
                             ? normalizeArabicForDisplay(currentBibliography.replace(/<\/?p>/gi, '').trim())
-                            : currentBibliography.replace(/<\/?p>/gi, '').trim() 
+                            : currentBibliography.replace(/<\/?p>/gi, '').trim()
                         }}
                       />
                     </div>
@@ -745,12 +776,12 @@ const DocumentDetail = () => {
                         )}
                       </div>
                     )}
-                    
+
                     {currentAuthor && (() => {
                       const hasComma = currentAuthor.includes(',');
                       const authorName = hasComma ? currentAuthor.split(',')[0].trim() : currentAuthor;
                       const authorTitle = hasComma ? currentAuthor.split(',').slice(1).join(',').trim() : null;
-                      
+
                       return (
                         <div className={`flex items-start gap-3 ${language === 'ar' ? 'flex-row-reverse' : ''}`}>
                           <User className="w-5 h-5 text-muted-foreground mt-0.5" />
@@ -771,7 +802,7 @@ const DocumentDetail = () => {
                       );
                     })()}
                   </div>
-                  
+
                   {/* Ligne 2 : Catégorie */}
                   {category && (
                     <div className={`flex items-center gap-3 mb-4 ${language === 'ar' ? 'flex-row-reverse justify-end' : 'justify-start'}`}>
@@ -793,7 +824,7 @@ const DocumentDetail = () => {
                       )}
                     </div>
                   )}
-                  
+
                   {/* Autres métadonnées en grille */}
                   <div className={`grid md:grid-cols-2 gap-6 ${language === 'ar' ? 'text-right' : ''}`}>
 
@@ -891,7 +922,7 @@ const DocumentDetail = () => {
                             )}
                           </div>
                         </div>
-                        
+
                         {/* Second column - Defendant for French, Plaintiff for Arabic */}
                         <div className={`space-y-2 ${language === 'ar' ? 'text-right md:order-1' : ''}`}>
                           <h4 className="font-semibold text-sm text-muted-foreground uppercase tracking-wide">
@@ -914,17 +945,17 @@ const DocumentDetail = () => {
                   )}
                 </>
               )}
-             </div>
+            </div>
 
             {/* Article Statistics */}
             <div className="w-full my-8">
-              <ArticleStatistics 
-                documentId={document.id} 
+              <ArticleStatistics
+                documentId={document.id}
                 contentLength={document.content?.length || 0}
               />
             </div>
 
-            
+
           </div>
 
 
@@ -932,12 +963,12 @@ const DocumentDetail = () => {
           <div className={`w-full ${language === 'ar' ? 'dir-rtl' : ''}`}>
             {formattedContent ? (
               hasPageBreaks(formattedContent) ? (
-                <PageCarousel 
-                  content={formattedContent} 
-                  language={language as 'fr' | 'ar'} 
+                <PageCarousel
+                  content={formattedContent}
+                  language={language as 'fr' | 'ar'}
                 />
               ) : (
-                <div 
+                <div
                   className={`document-content space-y-6 w-full ${language === 'ar' ? 'text-right' : ''}`}
                   dir={language === 'ar' ? 'rtl' : 'ltr'}
                   dangerouslySetInnerHTML={{ __html: formattedContent }}
@@ -963,29 +994,29 @@ const DocumentDetail = () => {
           {/* Action Buttons - Below Content */}
           <div className={`flex flex-wrap items-center justify-center gap-4 mt-8 ${isRTL ? 'flex-row-reverse' : ''}`}>
             {(document.file_url || document.pdf_url) && (
-              <Button 
-                onClick={() => handleDownload(document.file_url || document.pdf_url, `${document.title}.pdf`)} 
+              <Button
+                onClick={() => handleDownload(document.file_url || document.pdf_url, `${document.title}.pdf`)}
                 className={isRTL ? 'flex-row-reverse' : ''}
               >
                 <Download className={`w-4 h-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />
                 {language === 'ar' ? 'تحميل' : 'Télécharger'}
               </Button>
             )}
-            
-            <Button 
-              variant="outline" 
+
+            <Button
+              variant="outline"
               onClick={() => window.print()}
               className={isRTL ? 'flex-row-reverse' : ''}
             >
               <Printer className={`w-4 h-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />
               {language === 'ar' ? 'طباعة' : 'Imprimer'}
             </Button>
-            
-            <Button 
-              variant="outline" 
-              onClick={() => navigator.share?.({ 
-                title: currentTitle, 
-                url: window.location.href 
+
+            <Button
+              variant="outline"
+              onClick={() => navigator.share?.({
+                title: currentTitle,
+                url: window.location.href
               }).catch(() => navigator.clipboard.writeText(window.location.href))}
               className={isRTL ? 'flex-row-reverse' : ''}
             >
@@ -1010,8 +1041,8 @@ const DocumentDetail = () => {
 
           {/* Comment Section */}
           <div className="mt-12">
-            <CommentSection 
-              documentId={document.id} 
+            <CommentSection
+              documentId={document.id}
               documentTitle={currentTitle}
             />
           </div>
@@ -1031,9 +1062,9 @@ const DocumentDetail = () => {
               <CardContent className="space-y-3">
                 {relatedDocuments.slice(0, 3).map((doc) => (
                   <div key={doc.id} className="border-b pb-3 last:border-b-0">
-                    <Link 
+                    <Link
                       to={doc.categories ? createDocumentPath(
-                        language === 'ar' ? (doc.categories.name_ar || doc.categories.name) : doc.categories.name, 
+                        language === 'ar' ? (doc.categories.name_ar || doc.categories.name) : doc.categories.name,
                         language === 'ar' ? (doc.title_ar || doc.title) : doc.title
                       ) : '#'}
                       className="block hover:text-primary transition-colors"
@@ -1042,7 +1073,7 @@ const DocumentDetail = () => {
                         {language === 'ar' ? (doc.title_ar || doc.title) : doc.title}
                       </h4>
                       <p className="text-xs text-muted-foreground">
-                        {doc.document_type} • {language === 'ar' 
+                        {doc.document_type} • {language === 'ar'
                           ? new Date(doc.created_at).toLocaleDateString('ar-TN', { year: 'numeric', month: 'long', day: 'numeric' })
                           : formatDate(doc.created_at)}
                       </p>
@@ -1068,9 +1099,9 @@ const DocumentDetail = () => {
               <CardContent className="space-y-3">
                 {suggestedDocuments.slice(0, 3).map((doc) => (
                   <div key={doc.id} className="border-b pb-3 last:border-b-0">
-                    <Link 
+                    <Link
                       to={doc.categories ? createDocumentPath(
-                        language === 'ar' ? (doc.categories.name_ar || doc.categories.name) : doc.categories.name, 
+                        language === 'ar' ? (doc.categories.name_ar || doc.categories.name) : doc.categories.name,
                         language === 'ar' ? (doc.title_ar || doc.title) : doc.title
                       ) : '#'}
                       className="block hover:text-primary transition-colors"
@@ -1079,7 +1110,7 @@ const DocumentDetail = () => {
                         {language === 'ar' ? (doc.title_ar || doc.title) : doc.title}
                       </h4>
                       <p className="text-xs text-muted-foreground">
-                        {doc.document_type} • {language === 'ar' 
+                        {doc.document_type} • {language === 'ar'
                           ? new Date(doc.created_at).toLocaleDateString('ar-TN', { year: 'numeric', month: 'long', day: 'numeric' })
                           : formatDate(doc.created_at)}
                       </p>

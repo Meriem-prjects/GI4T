@@ -30,11 +30,18 @@ const CKEditorWrapper: React.FC<CKEditorWrapperProps> = ({
   className = ''
 }) => {
   const [isMounted, setMounted] = useState(false);
+  const editorRef = React.useRef<any>(null);
 
   useEffect(() => {
     setMounted(true);
     return () => setMounted(false);
   }, []);
+
+  useEffect(() => {
+    if (editorRef.current && content !== undefined && content !== editorRef.current.getData()) {
+      editorRef.current.setData(content);
+    }
+  }, [content]);
 
   const isRTL = language === 'ar';
 
@@ -88,6 +95,9 @@ const CKEditorWrapper: React.FC<CKEditorWrapperProps> = ({
         editor={ClassicEditor}
         data={content}
         config={editorConfig}
+        onReady={(editor) => {
+          editorRef.current = editor;
+        }}
         onChange={(event, editor) => {
           const data = editor.getData();
           onChange(data);

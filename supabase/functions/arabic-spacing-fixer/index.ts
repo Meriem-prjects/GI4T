@@ -14,7 +14,7 @@ serve(async (req) => {
 
   try {
     console.log('Arabic spacing fixer function called');
-    
+
     const openaiApiKey = Deno.env.get('OPENAI_API_KEY');
     if (!openaiApiKey) {
       throw new Error('OpenAI API key not configured');
@@ -190,7 +190,7 @@ Sortie: "(كلّية العلوم بتونس)"`
 
     const data = await response.json();
     let correctedText = data.choices[0].message.content.trim();
-    
+
     // Post-process: Apply BiDi fix for parentheses
     correctedText = fixArabicParentheses(correctedText);
 
@@ -209,11 +209,11 @@ Sortie: "(كلّية العلوم بتونس)"`
 
   } catch (error) {
     console.error('Arabic spacing fixer error:', error);
-    
+
     // Last resort fallback
     const { text } = await req.json().catch(() => ({ text: '' }));
     const fallbackResult = text ? sanitizeArabicText(text) : '';
-    
+
     return new Response(JSON.stringify({
       success: false,
       error: error instanceof Error ? error.message : String(error),
