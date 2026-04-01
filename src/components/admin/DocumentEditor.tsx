@@ -2624,8 +2624,203 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
                       </Select>
                     </div>
 
-                    {/* Informations Juridiques / Analyse / Commentaires - Français */}
-                    {!isAnalysisDocument && !isCommentDocument ? (
+                    {/* Informations spécifiques selon le type - Français */}
+                    {isBlogDocument ? (
+                      <div className="mt-4 pt-4 border-t border-border">
+                        <h5 className="text-sm font-semibold mb-3 text-muted-foreground">Informations de l'Article</h5>
+                        <div className="space-y-3">
+                          <div>
+                            <Label className="text-xs font-medium">Auteur</Label>
+                            <Input
+                              value={editedData.author || ''}
+                              onChange={(e) => setEditedData(prev => ({ ...prev, author: e.target.value }))}
+                              placeholder="Nom de l'auteur"
+                              className="mt-1 h-8"
+                            />
+                          </div>
+                        </div>
+                      </div>
+                    ) : isAnalysisDocument ? (
+                      /* Section pour Analyses juridiques */
+                      <div className="mt-4 pt-4 border-t border-border">
+                        <h5 className="text-sm font-semibold mb-3 text-muted-foreground">Informations de l'Analyse</h5>
+                        <div className="space-y-3">
+                          <div>
+                            <Label className="text-xs font-medium">Auteur <span className="text-red-500">*</span></Label>
+                            <Input
+                              value={editedData.author || ''}
+                              onChange={(e) => setEditedData(prev => ({ ...prev, author: e.target.value }))}
+                              placeholder="Nom de l'auteur"
+                              className="mt-1 h-8"
+                              required
+                            />
+                          </div>
+
+                          <div>
+                            <Label className="text-xs font-medium">Date de validation</Label>
+                            <Input
+                              type="date"
+                              value={editedData.validation_date || ''}
+                              onChange={(e) => setEditedData(prev => ({ ...prev, validation_date: e.target.value }))}
+                              className="mt-1 h-8"
+                            />
+                          </div>
+
+                          <div>
+                            <Label className="text-xs font-medium">Références légales</Label>
+                            <div className="mt-1 space-y-2">
+                              <div className="flex flex-wrap gap-2 min-h-[32px] p-2 border rounded-md bg-background">
+                                {(editedData.legal_references || []).map((ref, index) => (
+                                  <Badge
+                                    key={index}
+                                    variant="secondary"
+                                    className="flex items-center gap-1 px-2 py-1"
+                                  >
+                                    {ref}
+                                    <X
+                                      className="h-3 w-3 cursor-pointer hover:text-destructive"
+                                      onClick={() => {
+                                        const newRefs = [...(editedData.legal_references || [])];
+                                        newRefs.splice(index, 1);
+                                        setEditedData(prev => ({ ...prev, legal_references: newRefs }));
+                                        setHasChanges(true);
+                                      }}
+                                    />
+                                  </Badge>
+                                ))}
+                              </div>
+                              <div className="flex gap-2">
+                                <Input
+                                  value={newReference}
+                                  onChange={(e) => setNewReference(e.target.value)}
+                                  onKeyPress={(e) => {
+                                    if (e.key === 'Enter' && newReference.trim()) {
+                                      e.preventDefault();
+                                      const refs = editedData.legal_references || [];
+                                      setEditedData(prev => ({ ...prev, legal_references: [...refs, newReference.trim()] }));
+                                      setNewReference('');
+                                      setHasChanges(true);
+                                    }
+                                  }}
+                                  placeholder="Ajouter une référence"
+                                  className="h-8 flex-1"
+                                />
+                                <Button
+                                  type="button"
+                                  size="sm"
+                                  variant="outline"
+                                  onClick={() => {
+                                    if (newReference.trim()) {
+                                      const refs = editedData.legal_references || [];
+                                      setEditedData(prev => ({ ...prev, legal_references: [...refs, newReference.trim()] }));
+                                      setNewReference('');
+                                      setHasChanges(true);
+                                    }
+                                  }}
+                                  className="h-8"
+                                >
+                                  Ajouter
+                                </Button>
+                              </div>
+                            </div>
+                          </div>
+
+                          <div>
+                            <Label className="text-xs font-medium">Bibliographie</Label>
+                            <CKEditorMini
+                              content={editedData.bibliography || ''}
+                              onChange={(value) => setEditedData(prev => ({ ...prev, bibliography: value }))}
+                              language="fr"
+                              placeholder="Liste des sources et références bibliographiques..."
+                              className="mt-1"
+                            />
+                          </div>
+                        </div>
+                      </div>
+                    ) : isCommentDocument ? (
+                      /* Section spécifique pour les Commentaires */
+                      <div className="mt-4 pt-4 border-t border-border">
+                        <h5 className="text-sm font-semibold mb-3 text-muted-foreground">💬 Informations du Commentaire</h5>
+                        <div className="space-y-3">
+                          <div>
+                            <Label className="text-xs font-medium">Auteur <span className="text-red-500">*</span></Label>
+                            <Input
+                              value={editedData.author || ''}
+                              onChange={(e) => setEditedData(prev => ({ ...prev, author: e.target.value }))}
+                              placeholder="Nom de l'auteur avec titre/fonction"
+                              className="mt-1 h-8"
+                              required
+                            />
+                          </div>
+
+                          <div>
+                            <Label className="text-xs font-medium">Tribunal du jugement commenté</Label>
+                            <Input
+                              value={editedData.court || ''}
+                              onChange={(e) => setEditedData(prev => ({ ...prev, court: e.target.value }))}
+                              placeholder="Ex: محكمة التعقيب, المحكمة العسكرية"
+                              className="mt-1 h-8"
+                            />
+                          </div>
+
+                          <div>
+                            <Label className="text-xs font-medium">Numéro d'affaire du jugement</Label>
+                            <Input
+                              value={editedData.case_number || ''}
+                              onChange={(e) => setEditedData(prev => ({ ...prev, case_number: e.target.value }))}
+                              placeholder="Ex: عدد 21261"
+                              className="mt-1 h-8"
+                            />
+                          </div>
+
+                          <div>
+                            <Label className="text-xs font-medium">Date de validation</Label>
+                            <Input
+                              type="date"
+                              value={editedData.validation_date || ''}
+                              onChange={(e) => setEditedData(prev => ({ ...prev, validation_date: e.target.value }))}
+                              className="mt-1 h-8"
+                            />
+                          </div>
+                        </div>
+                      </div>
+                    ) : isFicheJurisprudence ? (
+                      /* Section spécifique pour Fiche de Jurisprudence */
+                      <div className="mt-4 pt-4 border-t border-border">
+                        <h5 className="text-sm font-semibold mb-3 text-muted-foreground">Informations de la Jurisprudence</h5>
+                        <div className="space-y-3">
+                          <div>
+                            <Label className="text-xs font-medium">Numéro de la fiche / Affaire</Label>
+                            <Input
+                              value={editedData.case_number || ''}
+                              onChange={(e) => setEditedData(prev => ({ ...prev, case_number: e.target.value }))}
+                              placeholder="Ex: Fiche n° 233"
+                              className="mt-1 h-8"
+                            />
+                          </div>
+                          <div>
+                            <Label className="text-xs font-medium">Nom de la Cour</Label>
+                            <Input
+                              value={editedData.court || ''}
+                              onChange={(e) => setEditedData(prev => ({ ...prev, court: e.target.value }))}
+                              placeholder="Tribunal ou Cour ayant rendu la décision"
+                              className="mt-1 h-8"
+                            />
+                          </div>
+                          <div>
+                            <Label className="text-xs font-medium">Année</Label>
+                            <Input
+                              type="number"
+                              value={editedData.year?.toString() || ''}
+                              onChange={(e) => setEditedData(prev => ({ ...prev, year: e.target.value ? parseInt(e.target.value) : undefined }))}
+                              placeholder="2024"
+                              className="mt-1 h-8"
+                            />
+                          </div>
+                        </div>
+                      </div>
+                    ) : (
+                      /* Default Fallback (Informations Juridiques générales) */
                       <div className="mt-4 pt-4 border-t border-border">
                         <h5 className="text-sm font-semibold mb-3 text-muted-foreground">Informations Juridiques</h5>
                         <div className="space-y-3">
@@ -2743,150 +2938,6 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
                           </div>
                         </div>
                       </div>
-                    ) : isCommentDocument ? (
-                      /* Section spécifique pour les Commentaires */
-                      <div className="mt-4 pt-4 border-t border-border">
-                        <h5 className="text-sm font-semibold mb-3 text-muted-foreground">💬 Informations du Commentaire</h5>
-                        <div className="space-y-3">
-                          <div>
-                            <Label className="text-xs font-medium">Auteur <span className="text-red-500">*</span></Label>
-                            <Input
-                              value={editedData.author || ''}
-                              onChange={(e) => setEditedData(prev => ({ ...prev, author: e.target.value }))}
-                              placeholder="Nom de l'auteur avec titre/fonction"
-                              className="mt-1 h-8"
-                              required
-                            />
-                          </div>
-
-                          <div>
-                            <Label className="text-xs font-medium">Tribunal du jugement commenté</Label>
-                            <Input
-                              value={editedData.court || ''}
-                              onChange={(e) => setEditedData(prev => ({ ...prev, court: e.target.value }))}
-                              placeholder="Ex: محكمة التعقيب, المحكمة العسكرية"
-                              className="mt-1 h-8"
-                            />
-                          </div>
-
-                          <div>
-                            <Label className="text-xs font-medium">Numéro d'affaire du jugement</Label>
-                            <Input
-                              value={editedData.case_number || ''}
-                              onChange={(e) => setEditedData(prev => ({ ...prev, case_number: e.target.value }))}
-                              placeholder="Ex: عدد 21261"
-                              className="mt-1 h-8"
-                            />
-                          </div>
-
-                          <div>
-                            <Label className="text-xs font-medium">Date de validation</Label>
-                            <Input
-                              type="date"
-                              value={editedData.validation_date || ''}
-                              onChange={(e) => setEditedData(prev => ({ ...prev, validation_date: e.target.value }))}
-                              className="mt-1 h-8"
-                            />
-                          </div>
-                        </div>
-                      </div>
-                    ) : (
-                      /* Section pour Analyses juridiques */
-                      <div className="mt-4 pt-4 border-t border-border">
-                        <h5 className="text-sm font-semibold mb-3 text-muted-foreground">Informations de l'Analyse</h5>
-                        <div className="space-y-3">
-                          <div>
-                            <Label className="text-xs font-medium">Auteur <span className="text-red-500">*</span></Label>
-                            <Input
-                              value={editedData.author || ''}
-                              onChange={(e) => setEditedData(prev => ({ ...prev, author: e.target.value }))}
-                              placeholder="Nom de l'auteur"
-                              className="mt-1 h-8"
-                              required
-                            />
-                          </div>
-
-                          <div>
-                            <Label className="text-xs font-medium">Date de validation</Label>
-                            <Input
-                              type="date"
-                              value={editedData.validation_date || ''}
-                              onChange={(e) => setEditedData(prev => ({ ...prev, validation_date: e.target.value }))}
-                              className="mt-1 h-8"
-                            />
-                          </div>
-
-                          <div>
-                            <Label className="text-xs font-medium">Références légales</Label>
-                            <div className="mt-1 space-y-2">
-                              <div className="flex flex-wrap gap-2 min-h-[32px] p-2 border rounded-md bg-background">
-                                {(editedData.legal_references || []).map((ref, index) => (
-                                  <Badge
-                                    key={index}
-                                    variant="secondary"
-                                    className="flex items-center gap-1 px-2 py-1"
-                                  >
-                                    {ref}
-                                    <X
-                                      className="h-3 w-3 cursor-pointer hover:text-destructive"
-                                      onClick={() => {
-                                        const newRefs = [...(editedData.legal_references || [])];
-                                        newRefs.splice(index, 1);
-                                        setEditedData(prev => ({ ...prev, legal_references: newRefs }));
-                                        setHasChanges(true);
-                                      }}
-                                    />
-                                  </Badge>
-                                ))}
-                              </div>
-                              <div className="flex gap-2">
-                                <Input
-                                  value={newReference}
-                                  onChange={(e) => setNewReference(e.target.value)}
-                                  onKeyPress={(e) => {
-                                    if (e.key === 'Enter' && newReference.trim()) {
-                                      e.preventDefault();
-                                      const refs = editedData.legal_references || [];
-                                      setEditedData(prev => ({ ...prev, legal_references: [...refs, newReference.trim()] }));
-                                      setNewReference('');
-                                      setHasChanges(true);
-                                    }
-                                  }}
-                                  placeholder="Ajouter une référence"
-                                  className="h-8 flex-1"
-                                />
-                                <Button
-                                  type="button"
-                                  size="sm"
-                                  variant="outline"
-                                  onClick={() => {
-                                    if (newReference.trim()) {
-                                      const refs = editedData.legal_references || [];
-                                      setEditedData(prev => ({ ...prev, legal_references: [...refs, newReference.trim()] }));
-                                      setNewReference('');
-                                      setHasChanges(true);
-                                    }
-                                  }}
-                                  className="h-8"
-                                >
-                                  Ajouter
-                                </Button>
-                              </div>
-                            </div>
-                          </div>
-
-                          <div>
-                            <Label className="text-xs font-medium">Bibliographie</Label>
-                            <CKEditorMini
-                              content={editedData.bibliography || ''}
-                              onChange={(value) => setEditedData(prev => ({ ...prev, bibliography: value }))}
-                              language="fr"
-                              placeholder="Liste des sources et références bibliographiques..."
-                              className="mt-1"
-                            />
-                          </div>
-                        </div>
-                      </div>
                     )}
 
                   </TabsContent>
@@ -2960,8 +3011,225 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
                       </Select>
                     </div>
 
-                    {/* Informations Juridiques / Analyse / Commentaires - Arabe */}
-                    {!isAnalysisDocument && !isCommentDocument ? (
+                    {/* Informations spécifiques selon le type - Arabe */}
+                    {isBlogDocument ? (
+                      <div className="mt-4 pt-4 border-t border-border">
+                        <h5 className="text-sm font-semibold mb-3 text-muted-foreground" dir="rtl">معلومات المقال</h5>
+                        <div className="space-y-3">
+                          <div>
+                            <Label className="text-xs font-medium">المؤلف</Label>
+                            <Input
+                              value={editedData.author_ar || ''}
+                              onChange={(e) => {
+                                const cleaned = handleArabicInput(e.target.value);
+                                setEditedData(prev => ({ ...prev, author_ar: cleaned }));
+                              }}
+                              placeholder="اسم المؤلف"
+                              dir="rtl"
+                              className="mt-1 h-8"
+                            />
+                          </div>
+                        </div>
+                      </div>
+                    ) : isAnalysisDocument ? (
+                      <div className="mt-4 pt-4 border-t border-border">
+                        <h5 className="text-sm font-semibold mb-3 text-muted-foreground" dir="rtl">معلومات التحليل</h5>
+                        <div className="space-y-3">
+                          <div>
+                            <Label className="text-xs font-medium">المؤلف <span className="text-red-500">*</span></Label>
+                            <Input
+                              value={editedData.author_ar || ''}
+                              onChange={(e) => {
+                                const cleaned = handleArabicInput(e.target.value);
+                                setEditedData(prev => ({ ...prev, author_ar: cleaned }));
+                              }}
+                              placeholder="اسم المؤلف"
+                              dir="rtl"
+                              className="mt-1 h-8"
+                              required
+                            />
+                          </div>
+
+                          <div>
+                            <Label className="text-xs font-medium">تاريخ المصادقة</Label>
+                            <Input
+                              type="date"
+                              value={editedData.validation_date || ''}
+                              onChange={(e) => setEditedData(prev => ({ ...prev, validation_date: e.target.value }))}
+                              dir="rtl"
+                              className="mt-1 h-8"
+                            />
+                          </div>
+
+                          <div>
+                            <Label className="text-xs font-medium">المراجع القانونية</Label>
+                            <div className="mt-1 space-y-2">
+                              <div className="flex flex-wrap gap-2 min-h-[32px] p-2 border rounded-md bg-background" dir="rtl">
+                                {(editedData.legal_references_ar || []).map((ref, index) => (
+                                  <Badge
+                                    key={index}
+                                    variant="secondary"
+                                    className="flex items-center gap-1 px-2 py-1"
+                                  >
+                                    {ref}
+                                    <X
+                                      className="h-3 w-3 cursor-pointer hover:text-destructive"
+                                      onClick={() => {
+                                        const newRefs = [...(editedData.legal_references_ar || [])];
+                                        newRefs.splice(index, 1);
+                                        setEditedData(prev => ({ ...prev, legal_references_ar: newRefs }));
+                                        setHasChanges(true);
+                                      }}
+                                    />
+                                  </Badge>
+                                ))}
+                              </div>
+                              <div className="flex gap-2">
+                                <Input
+                                  value={newReferenceAr}
+                                  onChange={(e) => setNewReferenceAr(handleArabicInput(e.target.value))}
+                                  onKeyPress={(e) => {
+                                    if (e.key === 'Enter' && newReferenceAr.trim()) {
+                                      e.preventDefault();
+                                      const refs = editedData.legal_references_ar || [];
+                                      setEditedData(prev => ({ ...prev, legal_references_ar: [...refs, newReferenceAr.trim()] }));
+                                      setNewReferenceAr('');
+                                      setHasChanges(true);
+                                    }
+                                  }}
+                                  placeholder="إضافة مرجع"
+                                  dir="rtl"
+                                  className="h-8 flex-1"
+                                />
+                                <Button
+                                  type="button"
+                                  size="sm"
+                                  variant="outline"
+                                  onClick={() => {
+                                    if (newReferenceAr.trim()) {
+                                      const refs = editedData.legal_references_ar || [];
+                                      setEditedData(prev => ({ ...prev, legal_references_ar: [...refs, newReferenceAr.trim()] }));
+                                      setNewReferenceAr('');
+                                      setHasChanges(true);
+                                    }
+                                  }}
+                                  className="h-8"
+                                >
+                                  إضافة
+                                </Button>
+                              </div>
+                            </div>
+                          </div>
+
+                          <div>
+                            <Label className="text-xs font-medium">قائمة المراجع</Label>
+                            <CKEditorMini
+                              content={editedData.bibliography_ar || ''}
+                              onChange={(value) => setEditedData(prev => ({ ...prev, bibliography_ar: value }))}
+                              language="ar"
+                              placeholder="قائمة المصادر والمراجع..."
+                              className="mt-1"
+                            />
+                          </div>
+                        </div>
+                      </div>
+                    ) : isCommentDocument ? (
+                      <div className="mt-4 pt-4 border-t border-border">
+                        <h5 className="text-sm font-semibold mb-3 text-muted-foreground" dir="rtl">💬 معلومات التعليق</h5>
+                        <div className="space-y-3">
+                          <div>
+                            <Label className="text-xs font-medium">المؤلف <span className="text-red-500">*</span></Label>
+                            <Input
+                              value={editedData.author_ar || ''}
+                              onChange={(e) => {
+                                const cleaned = handleArabicInput(e.target.value);
+                                setEditedData(prev => ({ ...prev, author_ar: cleaned }));
+                              }}
+                              placeholder="اسم المؤلف مع لقبه/وظيفته"
+                              dir="rtl"
+                              className="mt-1 h-8"
+                              required
+                            />
+                          </div>
+
+                          <div>
+                            <Label className="text-xs font-medium">المحكمة المصدرة للحكم</Label>
+                            <Input
+                              value={editedData.court_ar || ''}
+                              onChange={(e) => {
+                                const cleaned = handleArabicInput(e.target.value);
+                                setEditedData(prev => ({ ...prev, court_ar: cleaned }));
+                              }}
+                              placeholder="مثال: محكمة التعقيب، المحكمة العسكرية"
+                              dir="rtl"
+                              className="mt-1 h-8"
+                            />
+                          </div>
+
+                          <div>
+                            <Label className="text-xs font-medium">رقم القضية</Label>
+                            <Input
+                              value={editedData.case_number || ''}
+                              onChange={(e) => setEditedData(prev => ({ ...prev, case_number: e.target.value }))}
+                              placeholder="رقم القضية"
+                              dir="rtl"
+                              className="mt-1 h-8"
+                            />
+                          </div>
+
+                          <div>
+                            <Label className="text-xs font-medium">تاريخ المصادقة</Label>
+                            <Input
+                              type="date"
+                              value={editedData.validation_date || ''}
+                              onChange={(e) => setEditedData(prev => ({ ...prev, validation_date: e.target.value }))}
+                              dir="rtl"
+                              className="mt-1 h-8"
+                            />
+                          </div>
+                        </div>
+                      </div>
+                    ) : isFicheJurisprudence ? (
+                      <div className="mt-4 pt-4 border-t border-border">
+                        <h5 className="text-sm font-semibold mb-3 text-muted-foreground" dir="rtl">معلومات جذاذة فقه القضاء</h5>
+                        <div className="space-y-3">
+                          <div>
+                            <Label className="text-xs font-medium">رقم الجذاذة / القضية</Label>
+                            <Input
+                              value={editedData.case_number || ''}
+                              onChange={(e) => setEditedData(prev => ({ ...prev, case_number: e.target.value }))}
+                              placeholder="مثال: جذاذة عدد 233"
+                              dir="rtl"
+                              className="mt-1 h-8"
+                            />
+                          </div>
+                          <div>
+                            <Label className="text-xs font-medium">اسم المحكمة</Label>
+                            <Input
+                              value={editedData.court_ar || ''}
+                              onChange={(e) => {
+                                const cleaned = handleArabicInput(e.target.value);
+                                setEditedData(prev => ({ ...prev, court_ar: cleaned }));
+                              }}
+                              placeholder="اسم المحكمة"
+                              dir="rtl"
+                              className="mt-1 h-8"
+                            />
+                          </div>
+                          <div>
+                            <Label className="text-xs font-medium">السنة</Label>
+                            <Input
+                              type="number"
+                              value={editedData.year?.toString() || ''}
+                              onChange={(e) => setEditedData(prev => ({ ...prev, year: e.target.value ? parseInt(e.target.value) : undefined }))}
+                              placeholder="2024"
+                              dir="rtl"
+                              className="mt-1 h-8"
+                            />
+                          </div>
+                        </div>
+                      </div>
+                    ) : (
                       <div className="mt-4 pt-4 border-t border-border">
                         <h5 className="text-sm font-semibold mb-3 text-muted-foreground" dir="rtl">المعلومات القانونية</h5>
                         <div className="space-y-3">
@@ -3097,108 +3365,6 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
                           </div>
                         </div>
                       </div>
-                    ) : (
-                      <div className="mt-4 pt-4 border-t border-border">
-                        <h5 className="text-sm font-semibold mb-3 text-muted-foreground" dir="rtl">معلومات التحليل</h5>
-                        <div className="space-y-3">
-                          <div>
-                            <Label className="text-xs font-medium">المؤلف <span className="text-red-500">*</span></Label>
-                            <Input
-                              value={editedData.author_ar || ''}
-                              onChange={(e) => {
-                                const cleaned = handleArabicInput(e.target.value);
-                                setEditedData(prev => ({ ...prev, author_ar: cleaned }));
-                              }}
-                              placeholder="اسم المؤلف"
-                              dir="rtl"
-                              className="mt-1 h-8"
-                              required
-                            />
-                          </div>
-
-                          <div>
-                            <Label className="text-xs font-medium">تاريخ المصادقة</Label>
-                            <Input
-                              type="date"
-                              value={editedData.validation_date || ''}
-                              onChange={(e) => setEditedData(prev => ({ ...prev, validation_date: e.target.value }))}
-                              dir="rtl"
-                              className="mt-1 h-8"
-                            />
-                          </div>
-
-                          <div>
-                            <Label className="text-xs font-medium">المراجع القانونية</Label>
-                            <div className="mt-1 space-y-2">
-                              <div className="flex flex-wrap gap-2 min-h-[32px] p-2 border rounded-md bg-background" dir="rtl">
-                                {(editedData.legal_references_ar || []).map((ref, index) => (
-                                  <Badge
-                                    key={index}
-                                    variant="secondary"
-                                    className="flex items-center gap-1 px-2 py-1"
-                                  >
-                                    {ref}
-                                    <X
-                                      className="h-3 w-3 cursor-pointer hover:text-destructive"
-                                      onClick={() => {
-                                        const newRefs = [...(editedData.legal_references_ar || [])];
-                                        newRefs.splice(index, 1);
-                                        setEditedData(prev => ({ ...prev, legal_references_ar: newRefs }));
-                                        setHasChanges(true);
-                                      }}
-                                    />
-                                  </Badge>
-                                ))}
-                              </div>
-                              <div className="flex gap-2">
-                                <Input
-                                  value={newReferenceAr}
-                                  onChange={(e) => setNewReferenceAr(handleArabicInput(e.target.value))}
-                                  onKeyPress={(e) => {
-                                    if (e.key === 'Enter' && newReferenceAr.trim()) {
-                                      e.preventDefault();
-                                      const refs = editedData.legal_references_ar || [];
-                                      setEditedData(prev => ({ ...prev, legal_references_ar: [...refs, newReferenceAr.trim()] }));
-                                      setNewReferenceAr('');
-                                      setHasChanges(true);
-                                    }
-                                  }}
-                                  placeholder="إضافة مرجع"
-                                  dir="rtl"
-                                  className="h-8 flex-1"
-                                />
-                                <Button
-                                  type="button"
-                                  size="sm"
-                                  variant="outline"
-                                  onClick={() => {
-                                    if (newReferenceAr.trim()) {
-                                      const refs = editedData.legal_references_ar || [];
-                                      setEditedData(prev => ({ ...prev, legal_references_ar: [...refs, newReferenceAr.trim()] }));
-                                      setNewReferenceAr('');
-                                      setHasChanges(true);
-                                    }
-                                  }}
-                                  className="h-8"
-                                >
-                                  إضافة
-                                </Button>
-                              </div>
-                            </div>
-                          </div>
-
-                          <div>
-                            <Label className="text-xs font-medium">قائمة المراجع</Label>
-                            <CKEditorMini
-                              content={editedData.bibliography_ar || ''}
-                              onChange={(value) => setEditedData(prev => ({ ...prev, bibliography_ar: value }))}
-                              language="ar"
-                              placeholder="قائمة المصادر والمراجع..."
-                              className="mt-1"
-                            />
-                          </div>
-                        </div>
-                      </div>
                     )}
 
                   </TabsContent>
@@ -3232,7 +3398,9 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
               <Card className="p-4 lg:col-span-7">
                 <div className="space-y-3">
                   <Label className="text-sm font-medium">
-                    {currentLanguage === 'ar' ? 'الملخص' : 'Résumé'}
+                    {isFicheJurisprudence
+                      ? (currentLanguage === 'ar' ? 'المشكل القانوني' : 'Problème juridique')
+                      : (currentLanguage === 'ar' ? 'الملخص' : 'Résumé')}
                     {editedData.language === currentLanguage && <span className="text-red-500 ml-1">*</span>}
                     {editedData.language !== currentLanguage && (
                       <span className="text-xs text-muted-foreground ml-2">
@@ -3255,7 +3423,9 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
                       }));
                     }}
                     language={currentLanguage as 'fr' | 'ar'}
-                    placeholder={currentLanguage === 'ar' ? 'ملخص الوثيقة' : 'Résumé du document'}
+                    placeholder={isFicheJurisprudence
+                      ? (currentLanguage === 'ar' ? 'وصف المشكل القانوني...' : 'Description du problème juridique...')
+                      : (currentLanguage === 'ar' ? 'ملخص الوثيقة' : 'Résumé du document')}
                     className="w-full"
                   />
                 </div>
@@ -3323,82 +3493,90 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
               </Card>
 
               {/* Textual Metadata section */}
-              <Card className="p-4 lg:col-span-full">
-                <div className="space-y-3">
-                  <div className="flex items-center justify-between">
-                    <Label className="text-sm font-medium flex items-center gap-2">
-                      <FileText className="h-4 w-4" />
-                      {currentLanguage === 'ar' ? 'المعطيات النصية' : 'Métadonnées textuelles'}
-                    </Label>
-                    {isReprocessing && (
-                      <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                        <Loader2 className="h-4 w-4 animate-spin" />
-                        {currentLanguage === 'ar' ? 'جاري الاستخراج...' : 'Extraction automatique...'}
-                      </div>
-                    )}
+              {!isBlogDocument && (
+                <Card className="p-4 lg:col-span-full">
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between">
+                      <Label className="text-sm font-medium flex items-center gap-2">
+                        <FileText className="h-4 w-4" />
+                        {currentLanguage === 'ar' ? 'المعطيات النصية' : 'Métadonnées textuelles'}
+                      </Label>
+                      {isReprocessing && (
+                        <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                          {currentLanguage === 'ar' ? 'جاري الاستخراج...' : 'Extraction automatique...'}
+                        </div>
+                      )}
+                    </div>
+                    <Textarea
+                      value={currentLanguage === editedData.language ? (editedData.textual_metadata || '') : (translatedTextualMetadata || '')}
+                      onChange={(e) => {
+                        if (currentLanguage === editedData.language) {
+                          const value = currentLanguage === 'ar' ? handleArabicInput(e.target.value) : e.target.value;
+                          setEditedData(prev => ({
+                            ...prev,
+                            textual_metadata: value
+                          }));
+                        }
+                      }}
+                      placeholder={
+                        currentLanguage === editedData.language
+                          ? (
+                            editedData.textual_metadata
+                              ? (currentLanguage === 'ar' ? 'معطيات نصية إضافية...' : 'Métadonnées textuelles extraites du document...')
+                              : (currentLanguage === 'ar'
+                                ? 'لا توجد معطيات نصية مستخرجة. جاري المعالجة التلقائية...'
+                                : 'Aucune métadonnée extraite. Traitement automatique en cours...'
+                              )
+                          )
+                          : (
+                            translatedTextualMetadata
+                              ? (currentLanguage === 'ar' ? 'ترجمة المعطيات النصية' : 'Traduction des métadonnées textuelles')
+                              : (currentLanguage === 'ar' ? 'لا توجد ترجمة بعد. شغّل التحليل بالذكاء الاصطناعي...' : 'Pas encore de traduction. Lancez l’analyse IA...')
+                          )
+                      }
+                      className={`min-h-[100px] text-sm resize-vertical ${(currentLanguage === editedData.language ? editedData.textual_metadata : translatedTextualMetadata)
+                        ? 'bg-background border-input'
+                        : 'bg-muted/30 border-muted-foreground/30 text-muted-foreground'
+                        }`}
+                      dir={currentLanguage === 'ar' ? 'rtl' : 'ltr'}
+                      readOnly={currentLanguage !== editedData.language}
+                    />
+                    <div className="flex items-center justify-between text-xs">
+                      <span className="text-muted-foreground">
+                        {currentLanguage !== editedData.language
+                          ? (currentLanguage === 'ar'
+                            ? 'الترجمة الآلية للمعطيات النصية - للقراءة فقط'
+                            : 'Traduction automatique des métadonnées textuelles - lecture seule'
+                          )
+                          : (currentLanguage === 'ar'
+                            ? 'يفصل النظام تلقائياً بين المعطيات النصية والمحتوى عند كلمة "المشكل" أو مرادفاتها'
+                            : 'Le système sépare automatiquement les métadonnées du contenu au mot "المشكل" ou ses variantes'
+                          )
+                        }
+                      </span>
+                      <span className={`font-medium ${(currentLanguage === editedData.language ? editedData.textual_metadata : translatedTextualMetadata) ? 'text-primary' : 'text-muted-foreground'}`}>
+                        {(currentLanguage === editedData.language ? editedData.textual_metadata : translatedTextualMetadata)
+                          ? `${(currentLanguage === editedData.language ? editedData.textual_metadata!.length : translatedTextualMetadata.length)} caractères`
+                          : (currentLanguage !== editedData.language ? 'Non disponible' : 'Non extraites')
+                        }
+                      </span>
+                    </div>
                   </div>
-                  <Textarea
-                    value={currentLanguage === editedData.language ? (editedData.textual_metadata || '') : (translatedTextualMetadata || '')}
-                    onChange={(e) => {
-                      if (currentLanguage === editedData.language) {
-                        const value = currentLanguage === 'ar' ? handleArabicInput(e.target.value) : e.target.value;
-                        setEditedData(prev => ({
-                          ...prev,
-                          textual_metadata: value
-                        }));
-                      }
-                    }}
-                    placeholder={
-                      currentLanguage === editedData.language
-                        ? (
-                          editedData.textual_metadata
-                            ? (currentLanguage === 'ar' ? 'معطيات نصية إضافية...' : 'Métadonnées textuelles extraites du document...')
-                            : (currentLanguage === 'ar'
-                              ? 'لا توجد معطيات نصية مستخرجة. جاري المعالجة التلقائية...'
-                              : 'Aucune métadonnée extraite. Traitement automatique en cours...'
-                            )
-                        )
-                        : (
-                          translatedTextualMetadata
-                            ? (currentLanguage === 'ar' ? 'ترجمة المعطيات النصية' : 'Traduction des métadonnées textuelles')
-                            : (currentLanguage === 'ar' ? 'لا توجد ترجمة بعد. شغّل التحليل بالذكاء الاصطناعي...' : 'Pas encore de traduction. Lancez l’analyse IA...')
-                        )
-                    }
-                    className={`min-h-[100px] text-sm resize-vertical ${(currentLanguage === editedData.language ? editedData.textual_metadata : translatedTextualMetadata)
-                      ? 'bg-background border-input'
-                      : 'bg-muted/30 border-muted-foreground/30 text-muted-foreground'
-                      }`}
-                    dir={currentLanguage === 'ar' ? 'rtl' : 'ltr'}
-                    readOnly={currentLanguage !== editedData.language}
-                  />
-                  <div className="flex items-center justify-between text-xs">
-                    <span className="text-muted-foreground">
-                      {currentLanguage !== editedData.language
-                        ? (currentLanguage === 'ar'
-                          ? 'الترجمة الآلية للمعطيات النصية - للقراءة فقط'
-                          : 'Traduction automatique des métadonnées textuelles - lecture seule'
-                        )
-                        : (currentLanguage === 'ar'
-                          ? 'يفصل النظام تلقائياً بين المعطيات النصية والمحتوى عند كلمة "المشكل" أو مرادفاتها'
-                          : 'Le système sépare automatiquement les métadonnées du contenu au mot "المشكل" ou ses variantes'
-                        )
-                      }
-                    </span>
-                    <span className={`font-medium ${(currentLanguage === editedData.language ? editedData.textual_metadata : translatedTextualMetadata) ? 'text-primary' : 'text-muted-foreground'}`}>
-                      {(currentLanguage === editedData.language ? editedData.textual_metadata : translatedTextualMetadata)
-                        ? `${(currentLanguage === editedData.language ? editedData.textual_metadata!.length : translatedTextualMetadata.length)} caractères`
-                        : (currentLanguage !== editedData.language ? 'Non disponible' : 'Non extraites')
-                      }
-                    </span>
-                  </div>
-                </div>
-              </Card>
+                </Card>
+              )}
 
             </div>
 
             <Card className="p-6">
               <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg font-semibold">Contenu du document</h3>
+                <h3 className="text-lg font-semibold">
+                  {isFicheJurisprudence
+                    ? (currentLanguage === 'ar' ? 'الحل المقدّم' : 'Solution proposée')
+                    : isCommentDocument
+                      ? (currentLanguage === 'ar' ? 'القرار' : 'La Décision')
+                      : 'Contenu du document'}
+                </h3>
                 <div className="flex items-center gap-2">
                   {editedData.language === 'ar' && (
                     <Button
@@ -3546,9 +3724,12 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
                     }
                   }}
                   language={currentLanguage as 'fr' | 'ar'}
-                  placeholder={currentLanguage === editedData.language ?
-                    "Contenu du document..." :
-                    "Contenu traduit..."
+                  placeholder={
+                    isFicheJurisprudence
+                      ? (currentLanguage === editedData.language ? "Solution proposée..." : "Solution traduite...")
+                      : isCommentDocument
+                        ? (currentLanguage === editedData.language ? "Texte de la décision..." : "Décision traduite...")
+                        : (currentLanguage === editedData.language ? "Contenu du document..." : "Contenu traduit...")
                   }
                   className="min-h-[600px]"
                 />
