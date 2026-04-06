@@ -50,11 +50,36 @@ export const GovernorateMap = ({ governorates, events }: GovernorateMapProps) =>
     });
 
     // Add event markers
-    events.forEach((event) => {
-      if (event.latitude && event.longitude) {
+    events.forEach((event, index) => {
+      let lat = event.latitude;
+      let lng = event.longitude;
+
+      // Fallback to governorate center if coordinates are missing
+      if (!lat || !lng) {
+        if (event.governorate?.geojson) {
+          const geometry = event.governorate.geojson.geometry as any;
+          if (geometry.type === 'Polygon') {
+            const coords = geometry.coordinates[0];
+            let sumLat = 0, sumLng = 0;
+            coords.forEach((c: any) => {
+              sumLng += c[0];
+              sumLat += c[1];
+            });
+            lat = sumLat / coords.length;
+            lng = sumLng / coords.length;
+
+            // Add a small jitter to avoid perfect overlap if multiple events use the fallback center
+            const jitter = 0.02;
+            lat += (Math.random() - 0.5) * jitter;
+            lng += (Math.random() - 0.5) * jitter;
+          }
+        }
+      }
+
+      if (lat && lng) {
         const markerColor = event.type === 'action_realisee' ? '#10b981' : '#3b82f6';
         const imageUrl = event.images?.[0] || null;
-        
+
         const markerIcon = L.divIcon({
           className: 'custom-event-marker',
           html: `
@@ -99,7 +124,7 @@ export const GovernorateMap = ({ governorates, events }: GovernorateMapProps) =>
           popupAnchor: [0, 30]
         });
 
-        const marker = L.marker([event.latitude, event.longitude], {
+        const marker = L.marker([lat, lng], {
           icon: markerIcon
         });
 

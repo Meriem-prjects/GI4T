@@ -7,6 +7,8 @@ import AdminAccesDroitsUsersManagement from "./AdminAccesDroitsUsersManagement";
 import AdminAdressesUtiles from "./AdminAdressesUtiles";
 import AdminChatbotConfig from "./AdminChatbotConfig";
 import AdminFAQQuestions from "./AdminFAQQuestions";
+import AdminAlbumsPhotos from "./AdminAlbumsPhotos";
+import AdminMediatheque from "./AdminMediatheque";
 import { cn } from "@/lib/utils";
 
 const AdminAccesAuxDroits = () => {
@@ -14,12 +16,12 @@ const AdminAccesAuxDroits = () => {
 
   return (
     <div className="min-h-screen bg-slate-50 flex" dir="ltr">
-      <AdminSidebar 
+      <AdminSidebar
         type="acces-aux-droits"
         isCollapsed={sidebarCollapsed}
         onToggle={() => setSidebarCollapsed(!sidebarCollapsed)}
       />
-      
+
       <main className={cn(
         "flex-1 overflow-y-scroll transition-all duration-300",
         sidebarCollapsed ? "ml-0" : "ml-0"
@@ -33,27 +35,27 @@ const AdminAccesAuxDroits = () => {
             </div>
           </div>
         </div>
-        
+
         <div className="bg-slate-50">
           <Routes>
             <Route index element={<AdminDashboard type="acces-aux-droits" />} />
             <Route path="utilisateurs" element={<AdminAccesDroitsUsersManagement />} />
             <Route path="parametres" element={<div className="p-6">Paramètres - En développement</div>} />
-            
+
             {/* Médiathèque */}
-            <Route path="mediatheque" element={<div className="p-6">Médiathèque - Vidéos et témoignages - En développement</div>} />
-            <Route path="albums-photos" element={<div className="p-6">Albums photos - Galerie événements - En développement</div>} />
-            
+            <Route path="mediatheque" element={<AdminMediatheque />} />
+            <Route path="albums-photos" element={<AdminAlbumsPhotos />} />
+
             {/* Actualités */}
             <Route path="actualites" element={<div className="p-6">Actualités - Dernières nouvelles - En développement</div>} />
             <Route path="ressources-pratiques" element={<div className="p-6">Ressources pratiques - Modèles et formulaires - En développement</div>} />
             <Route path="liens-utiles" element={<div className="p-6">Liens utiles - Sites externes - En développement</div>} />
             <Route path="guides-pratiques" element={<div className="p-6">Guides pratiques - Guides step-by-step - En développement</div>} />
-            
+
             {/* FAQ & Chatbot */}
             <Route path="faq-chatbot" element={<AdminChatbotConfig />} />
             <Route path="faq-questions" element={<AdminFAQQuestions />} />
-            
+
             {/* Carte interactive */}
             <Route path="carte-interactive" element={<AdminCarteInteractive />} />
             <Route path="adresses-utiles" element={<AdminAdressesUtiles />} />
