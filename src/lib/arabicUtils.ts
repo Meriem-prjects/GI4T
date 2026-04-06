@@ -124,12 +124,31 @@ const linguisticRepairHammer = (text: string): string => {
   // [Word]ال[Word] -> [Word] ال[Word]
   result = result.replace(new RegExp(`(${ARABIC_CHAR}{2,})(ال)(${ARABIC_CHAR}{2,})`, 'g'), '$1 $2$3');
 
-  // High frequency legal fusions
+  // High frequency legal fusions — prepositions and conjunctions
   result = result.replace(new RegExp(`(${ARABIC_CHAR}{2,})(لوضع)`, 'g'), '$1 $2');
   result = result.replace(new RegExp(`(${ARABIC_CHAR}{2,})(مخالف)`, 'g'), '$1 $2');
   result = result.replace(new RegExp(`(${ARABIC_CHAR}{2,})(قابل)`, 'g'), '$1 $2');
   result = result.replace(new RegExp(`(${ARABIC_CHAR}{2,})(بمشمولات)`, 'g'), '$1 $2');
   result = result.replace(new RegExp(`(${ARABIC_CHAR}{2,})(بالنظر)`, 'g'), '$1 $2');
+
+  // Fusions with common prepositions (في، من، على، إلى، عن، بين)
+  result = result.replace(new RegExp(`(${ARABIC_CHAR}{3,})(في)(${ARABIC_CHAR}{3,})`, 'g'), '$1 $2 $3');
+  result = result.replace(new RegExp(`(${ARABIC_CHAR}{3,})(من)(${ARABIC_CHAR}{3,})`, 'g'), '$1 $2 $3');
+  result = result.replace(new RegExp(`(${ARABIC_CHAR}{3,})(على)(${ARABIC_CHAR}{3,})`, 'g'), '$1 $2 $3');
+  result = result.replace(new RegExp(`(${ARABIC_CHAR}{3,})(إلى)(${ARABIC_CHAR}{3,})`, 'g'), '$1 $2 $3');
+  result = result.replace(new RegExp(`(${ARABIC_CHAR}{3,})(عن)(${ARABIC_CHAR}{3,})`, 'g'), '$1 $2 $3');
+  result = result.replace(new RegExp(`(${ARABIC_CHAR}{3,})(بين)(${ARABIC_CHAR}{3,})`, 'g'), '$1 $2 $3');
+
+  // Fusions with conjunctions (و، أو، ثم، أن، إن)
+  result = result.replace(new RegExp(`(${ARABIC_CHAR}{3,})(و)(ال${ARABIC_CHAR}{2,})`, 'g'), '$1 $2$3');
+  result = result.replace(new RegExp(`(${ARABIC_CHAR}{3,})(أو)(${ARABIC_CHAR}{3,})`, 'g'), '$1 $2 $3');
+  result = result.replace(new RegExp(`(${ARABIC_CHAR}{3,})(ثم)(${ARABIC_CHAR}{3,})`, 'g'), '$1 $2 $3');
+
+  // Fusions after ta marbuta (ة) — very common OCR fusion
+  result = result.replace(new RegExp(`(ة)(${ARABIC_CHAR}{3,})`, 'g'), '$1 $2');
+
+  // Fusions after hamza (ء)
+  result = result.replace(new RegExp(`(ء)([^ال]${ARABIC_CHAR}{2,})`, 'g'), '$1 $2');
 
   // 3. Contextual Rejoiner (Anti-splitting)
   result = result.replace(/بالت\s+الي/g, 'بالتالي');
@@ -137,7 +156,23 @@ const linguisticRepairHammer = (text: string): string => {
   result = result.replace(/ال\s+تدخل/g, 'التدخل');
   result = result.replace(/ال\s+إدارية/g, 'الإدارية');
   result = result.replace(/ال\s+محكمة/g, 'المحكمة');
+  result = result.replace(/ال\s+قضاء/g, 'القضاء');
+  result = result.replace(/ال\s+دستور/g, 'الدستور');
+  result = result.replace(/ال\s+حكومة/g, 'الحكومة');
+  result = result.replace(/ال\s+قانون/g, 'القانون');
   result = result.replace(/بناء\s+على/g, 'بناء على');
+
+  // 4. Ta marbuta / Ha correction at end of common legal words
+  // المحكمه → المحكمة
+  result = result.replace(/المحكمه(?=\s|$|[.،؛:؟!])/g, 'المحكمة');
+  result = result.replace(/الحكومه(?=\s|$|[.،؛:؟!])/g, 'الحكومة');
+  result = result.replace(/الإداريه(?=\s|$|[.،؛:؟!])/g, 'الإدارية');
+  result = result.replace(/القانونيه(?=\s|$|[.،؛:؟!])/g, 'القانونية');
+  result = result.replace(/الدستوريه(?=\s|$|[.،؛:؟!])/g, 'الدستورية');
+  result = result.replace(/المنظومه(?=\s|$|[.،؛:؟!])/g, 'المنظومة');
+  result = result.replace(/الشرعيه(?=\s|$|[.،؛:؟!])/g, 'الشرعية');
+  result = result.replace(/العامه(?=\s|$|[.،؛:؟!])/g, 'العامة');
+  result = result.replace(/الخاصه(?=\s|$|[.،؛:؟!])/g, 'الخاصة');
 
   return result;
 };
@@ -168,23 +203,52 @@ const separateGluedArabicWordsFrontend = (text: string): string => {
   result = result.replace(new RegExp(`(${ARABIC_RANGE})(\\d+)`, 'g'), '$1 $2');
   result = result.replace(new RegExp(`(\\d+)(${ARABIC_RANGE})`, 'g'), '$1 $2');
   result = result.replace(new RegExp(`(${ARABIC_RANGE})([(){}\\[\\]«»"""',،:;؛\\-–—])`, 'g'), '$1 $2');
-  result = result.replace(new RegExp(`([(){}\\[\\]«»"""',،:;؛\\-–—])(${ARABIC_RANGE})`, 'g'), '$1 $2');
+  result = result.replace(new RegExp(`([(){}\\[\\]«»"""',.,:;؛\\-–—])(${ARABIC_RANGE})`, 'g'), '$1 $2');
 
   const whitelist = [
+    // Court and institution fusions
     { from: /المحكمةالإدارية/g, to: 'المحكمة الإدارية' },
     { from: /بالمحكمةالإدارية/g, to: 'بالمحكمة الإدارية' },
+    { from: /المحكمةالابتدائية/g, to: 'المحكمة الابتدائية' },
+    { from: /محكمةالتعقيب/g, to: 'محكمة التعقيب' },
+    { from: /محكمةالاستئناف/g, to: 'محكمة الاستئناف' },
     { from: /وزارةالداخلية/g, to: 'وزارة الداخلية' },
     { from: /بمشمولاتوزارةالداخلية/g, to: 'بمشمولات وزارة الداخلية' },
+    { from: /وزارةالعدل/g, to: 'وزارة العدل' },
+    { from: /المجلسالدستوري/g, to: 'المجلس الدستوري' },
+    { from: /المحكمةالدستورية/g, to: 'المحكمة الدستورية' },
+    // Legal concept fusions
     { from: /الإقامةالجبرية/g, to: 'الإقامة الجبرية' },
-    { from: /تونسّالحقّ/g, to: 'تونسّ الحقّ' },
-    { from: /تونسالحق/g, to: 'تونس الحق' },
     { from: /الدستورالتونسي/g, to: 'الدستور التونسي' },
     { from: /التدخللوضع/g, to: 'التدخل لوضع' },
     { from: /قابلللنقاش/g, to: 'قابل للنقاش' },
     { from: /مخالفللدستور/g, to: 'مخالف للدستور' },
+    { from: /القضاءالإداري/g, to: 'القضاء الإداري' },
+    { from: /القانونالإداري/g, to: 'القانون الإداري' },
+    { from: /القانونالدستوري/g, to: 'القانون الدستوري' },
+    { from: /الحقوقالأساسية/g, to: 'الحقوق الأساسية' },
+    { from: /حقوقالإنسان/g, to: 'حقوق الإنسان' },
+    { from: /لحقوقالإنسان/g, to: 'لحقوق الإنسان' },
+    { from: /الحريةالشخصية/g, to: 'الحرية الشخصية' },
+    { from: /حريةالتنقل/g, to: 'حرية التنقل' },
+    { from: /حريةالتعبير/g, to: 'حرية التعبير' },
+    { from: /الإعلانالعالمي/g, to: 'الإعلان العالمي' },
+    { from: /العهدالدولي/g, to: 'العهد الدولي' },
+    { from: /الميثاقالإفريقي/g, to: 'الميثاق الإفريقي' },
+    // Common verb/noun + preposition fusions
+    { from: /قرارصادر/g, to: 'قرار صادر' },
+    { from: /حكمصادر/g, to: 'حكم صادر' },
+    { from: /طعنبالاستئناف/g, to: 'طعن بالاستئناف' },
+    { from: /طعنبالتعقيب/g, to: 'طعن بالتعقيب' },
+    // Numeric patterns
     { from: /لسنة(\d+)/g, to: 'لسنة $1' },
     { from: /الفصل(\d+)/g, to: 'الفصل $1' },
-    { from: /بالإضافة/g, to: 'بالإضافة' },
+    { from: /المادة(\d+)/g, to: 'المادة $1' },
+    { from: /العدد(\d+)/g, to: 'العدد $1' },
+    // Country/place fusions
+    { from: /تونسّالحقّ/g, to: 'تونسّ الحقّ' },
+    { from: /تونسالحق/g, to: 'تونس الحق' },
+    // Common correction
     { from: /بالإصافة/g, to: 'بالإضافة' },
   ];
 

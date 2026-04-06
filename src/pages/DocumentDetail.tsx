@@ -437,14 +437,14 @@ const DocumentDetail = () => {
       }
     }
 
-    // 2. Remove the entire keywords paragraph (captures all content including <br/> tags until </p>)
+    // 2. Remove the entire keywords paragraph (captures keywords if the paragraph is short)
     const keywordsPatterns = [
-      // Arabic keywords patterns - STOP at any tag to avoid matching across <br/> or nested tags
-      /<p[^>]*>\s*(?:الكلمات المفاتيح|اﻟﻜﻠﻤﺎت اﻟﻤﻔﺎﺗﯿﺢ|الكلمات المفتاحية|الكلمات الدالة)\s*[:：]?[^<]*<\/p>/gi,
+      // Arabic keywords patterns - limit to 200 chars to avoid matching entire body paragraphs
+      /<p[^>]*>\s*(?:الكلمات المفاتيح|اﻟﻜﻠﻤﺎت اﻟﻤﻔﺎﺗﯿﺢ|الكلمات المفتاحية|الكلمات الدالة)\s*[:：]?[^<]{1,200}<\/p>/gi,
       // French keywords patterns
-      /<p[^>]*>\s*Mots[- ]?cl[ée]s\s*[:：]?[^<]*<\/p>/gi,
+      /<p[^>]*>\s*Mots[- ]?cl[ée]s\s*[:：]?[^<]{1,200}<\/p>/gi,
       // English keywords patterns
-      /<p[^>]*>\s*Keywords\s*[:：]?[^<]*<\/p>/gi,
+      /<p[^>]*>\s*Keywords\s*[:：]?[^<]{1,200}<\/p>/gi,
     ];
 
     keywordsPatterns.forEach(pattern => {
@@ -452,11 +452,11 @@ const DocumentDetail = () => {
     });
 
     // 3. Also handle cases where keywords appear without <p> wrapper but with line breaks
-    // CONSERVATIVE: Only match keywords on the SAME line/paragraph. Never match across <br/> or tags.
+    // CONSERVATIVE: Only match keywords on the SAME line/paragraph with a strict length limit.
     const inlineKeywordsPatterns = [
-      /(?:الكلمات المفاتيح|اﻟﻜﻠﻤﺎت اﻟﻤﻔﺎﺗﯿﺢ|الكلمات المفتاحية|الكلمات الدالة)\s*[:：]?[^\n\r\u2028\u2029<]*/gi,
-      /Mots[- ]?cl[ée]s\s*[:：]?[^\n\r\u2028\u2029<]*/gi,
-      /Keywords\s*[:：]?[^\n\r\u2028\u2029<]*/gi,
+      /(?:الكلمات المفاتيح|اﻟﻜﻠﻤﺎت اﻟﻤﻔﺎﺗﯿﺢ|الكلمات المفتاحية|الكلمات الدالة)\s*[:：]?[^\n\r\u2028\u2029<]{1,150}/gi,
+      /Mots[- ]?cl[ée]s\s*[:：]?[^\n\r\u2028\u2029<]{1,150}/gi,
+      /Keywords\s*[:：]?[^\n\r\u2028\u2029<]{1,150}/gi,
     ];
 
     inlineKeywordsPatterns.forEach(pattern => {
@@ -489,19 +489,30 @@ const DocumentDetail = () => {
   const buildPaginatedContent = (): string => {
     const rawPageContents = document.page_contents;
 
+    // Detect document type early for conditional logic
+    const docTypeName = document.document_types?.name || '';
+    const isStrictAnalysis = docTypeName === 'Analyses juridiques';
+
     // Get the textual metadata based on current language
+    // Metadata (author, bibliography, court…) is already shown in the page header,
+    // so we skip the inline textual_metadata block for ALL document types.
     const getTextualMetadata = () => {
-      if (!document) return null;
-      if (language === 'ar') {
-        return document.translated_textual_metadata || document.textual_metadata;
-      }
-      return document.textual_metadata;
+      return null; // Suppressed — metadata is displayed in the header section above
     };
 
     const textualMetadata = getTextualMetadata();
     const metadataHtml = textualMetadata
       ? `<div class="textual-metadata mb-8 p-6 bg-muted/30 border-y border-border/50 text-center italic whitespace-pre-wrap font-serif leading-relaxed text-muted-foreground uppercase tracking-wider">${textualMetadata}</div>`
       : '';
+
+    // Strip مقدمة / ملخص intro blocks from the beginning of analysis content
+    // These are redundant with the summary shown in the header.
+    const cleanAnalysisIntroBlock = (html: string): string => {
+      if (!isStrictAnalysis) return html;
+      // Remove any leading paragraph that starts with مقدمة or ملخص (and is a short header-like block)
+      const introPattern = /<p[^>]*>\s*(?:مقدمة|ملخص|مقدّمة)[^<]{0,300}<\/p>/gi;
+      return html.replace(introPattern, '').replace(/^(\s*<br\s*\/?>\s*)+/i, '').trim();
+    };
 
     // Validate and parse page_contents from JSON
     if (!rawPageContents || !Array.isArray(rawPageContents) || rawPageContents.length <= 1) {
@@ -514,7 +525,8 @@ const DocumentDetail = () => {
         content = document.content || '';
       }
       // Clean metadata from first page content and prepend textual metadata
-      const cleaned = cleanContentFromMetadata(content, currentTitle, currentKeywords || []);
+      let cleaned = cleanContentFromMetadata(content, currentTitle, currentKeywords || []);
+      cleaned = cleanAnalysisIntroBlock(cleaned);
       return metadataHtml + cleaned;
     }
 
@@ -542,8 +554,10 @@ const DocumentDetail = () => {
       // Clean metadata only from the first page (where title and keywords typically appear)
       if (index === 0) {
         pageContent = cleanContentFromMetadata(pageContent, currentTitle, currentKeywords || []);
+        pageContent = cleanAnalysisIntroBlock(pageContent);
 
         // Prepend textual metadata to the first page so it appears in the carousel
+        // (skipped for Analyses juridiques — already shown in header)
         pageContent = metadataHtml + pageContent;
       }
 

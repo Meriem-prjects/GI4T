@@ -17,7 +17,7 @@ const corsHeaders = {
 // Helper function to parse keywords that might come as a single string or array
 function parseKeywordsArray(keywords: any): string[] {
   if (!keywords) return [];
-  
+
   // If it's already an array, process each element
   if (Array.isArray(keywords)) {
     return keywords.flatMap(k => {
@@ -31,30 +31,30 @@ function parseKeywordsArray(keywords: any): string[] {
       return [];
     });
   }
-  
+
   // If it's a string, split it
   if (typeof keywords === 'string') {
     return keywords.split(/[,;|]/).map(item => item.trim()).filter(item => item);
   }
-  
+
   return [];
 }
 
 // Helper to extract content including bibliography (at the end of documents)
 function extractContentWithBibliography(content: string, isAnalysis: boolean, limit: number = 12000): string {
   if (content.length <= limit) return content;
-  
+
   if (isAnalysis) {
     // For analysis documents: include 60% from start + 40% from end (for bibliography)
     const startChars = Math.floor(limit * 0.6);
     const endChars = Math.floor(limit * 0.4);
-    
+
     const start = content.slice(0, startChars);
     const end = content.slice(-endChars);
-    
+
     return `${start}\n\n[... contenu intermédiaire omis pour limiter la taille ...]\n\n${end}`;
   }
-  
+
   // For other documents, keep current behavior
   return content.slice(0, limit);
 }
@@ -62,13 +62,13 @@ function extractContentWithBibliography(content: string, isAnalysis: boolean, li
 // Helper function to call arabic-spacing-fixer for AI-powered Arabic correction
 async function correctArabicFieldWithAI(text: string | null | undefined): Promise<string> {
   if (!text || text.trim() === '') return '';
-  
+
   // Only call AI for texts under the limit (12000 chars)
   if (text.length > 12000) {
     console.log(`⚠️ Text too long for AI correction (${text.length} chars), using minimal sanitization`);
     return sanitizeArabicTextRaw(text);
   }
-  
+
   try {
     const response = await fetch(`${supabaseUrl}/functions/v1/arabic-spacing-fixer`, {
       method: 'POST',
@@ -78,7 +78,7 @@ async function correctArabicFieldWithAI(text: string | null | undefined): Promis
       },
       body: JSON.stringify({ text })
     });
-    
+
     if (response.ok) {
       const data = await response.json();
       return data.correctedText || sanitizeArabicTextRaw(text);
@@ -87,7 +87,7 @@ async function correctArabicFieldWithAI(text: string | null | undefined): Promis
   } catch (error) {
     console.error('Arabic correction API error:', error);
   }
-  
+
   // Fallback to minimal sanitization if AI fails
   return sanitizeArabicTextRaw(text);
 }
@@ -119,31 +119,31 @@ serve(async (req) => {
     }
 
     const isAnalysisDocument = documentType === 'Analyses juridiques';
-    const isCommentDocument = documentType === 'Commentaires';
+    const isCommentDocument = documentType === 'Commentaires' || documentType === 'Blogs';
 
     // Start exhaustive translation in parallel for long documents
     let translatedContentFull = '';
     const isPrimaryArabic = currentLanguage === 'ar';
     const targetLanguage = isPrimaryArabic ? 'français' : 'arabe';
     const sourceLanguage = isPrimaryArabic ? 'arabe' : 'français';
-    
+
     // Mode 'quick': skip exhaustive translation, limit content for AI
     // Mode 'full': use exhaustive translation for smaller documents only
     const MAX_CONTENT_LENGTH_FOR_FULL = 15000; // ~12-15k characters max for full sync translation
-    
+
     if (mode === 'full' && content.length > MAX_CONTENT_LENGTH_FOR_FULL) {
       console.log(`📋 Document too long for sync translation (${content.length} chars), launching async job...`);
-      
+
       // Diviser en chunks de 5000 caractères
       const CHUNK_SIZE = 5000;
       const chunks: string[] = [];
-      
+
       for (let i = 0; i < content.length; i += CHUNK_SIZE) {
         chunks.push(content.slice(i, i + CHUNK_SIZE));
       }
 
       console.log(`📦 Created ${chunks.length} chunks for async translation`);
-      
+
       // Créer un job de traduction asynchrone avec tous les chunks stockés
       const { data: job, error: jobError } = await supabase
         .from('processing_jobs')
@@ -163,26 +163,26 @@ serve(async (req) => {
         })
         .select()
         .single();
-      
+
       if (jobError) {
         console.error('Failed to create translation job:', jobError);
         throw new Error('Failed to create translation job');
       }
-      
+
       console.log(`✅ Created job ${job.id} for document ${documentId} with ${chunks.length} chunks`);
-      
+
       // Lier le job au document si documentId fourni
       if (documentId) {
         const { error: linkError } = await supabase
           .from('documents')
           .update({ processing_job_id: job.id })
           .eq('id', documentId);
-        
+
         if (linkError) {
           console.warn('Failed to link job to document:', linkError);
         }
       }
-      
+
       // Déclencher le premier chunk en arrière-plan
       console.log('🚀 Triggering first chunk translation...');
       fetch(`${supabaseUrl}/functions/v1/async-full-translation`, {
@@ -200,10 +200,10 @@ serve(async (req) => {
           target_language: targetLanguage
         })
       }).catch(err => console.error('❌ Error triggering first chunk:', err));
-      
+
       // Retourner immédiatement
       return new Response(
-        JSON.stringify({ 
+        JSON.stringify({
           success: true,
           mode: 'full_async',
           job_id: job.id,
@@ -214,7 +214,7 @@ serve(async (req) => {
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
-    
+
     if (mode === 'full' && content.length > 2000) {
       console.log('📖 Starting exhaustive translation by chunks (full mode)...');
       translatedContentFull = await translateInChunks(content, targetLanguage);
@@ -248,7 +248,7 @@ serve(async (req) => {
 
     // For analysis and comment documents with translated content, combine both for comprehensive analysis
     let fullContentForAnalysis = content;
-    
+
     if ((isAnalysisDocument || isCommentDocument) && translatedContent && translatedContent.trim() !== '') {
       // Combine original + translated to ensure AI has access to full content
       fullContentForAnalysis = `
@@ -263,16 +263,16 @@ ${translatedContent}
     }
 
     // Use intelligent extraction that includes the end of document (for bibliography)
-    const contentForAI = mode === 'quick' 
+    const contentForAI = mode === 'quick'
       ? extractContentWithBibliography(fullContentForAnalysis, isAnalysisDocument, 18000)
       : fullContentForAnalysis;
-    
+
     const contentTruncated = mode === 'quick' && fullContentForAnalysis.length > 18000;
-    
+
     if (contentTruncated) {
       console.log(`⚡ Quick mode: analyzing ${contentForAI.length} characters (with bibliography) of ${fullContentForAnalysis.length} total`);
     }
-    
+
     const systemPrompt = isCommentDocument
       ? `Tu es un expert en analyse de documents juridiques tunisiens. Analyse le contenu suivant (TYPE: COMMENTAIRE D'ARRÊT / BLOG JURIDIQUE) et extrait les informations demandées en JSON.
 
@@ -309,9 +309,9 @@ COMMENTAIRE D'ARRÊT - CHAMPS SPÉCIFIQUES À EXTRAIRE:
 Catégories disponibles:
 ${categories.map(cat => `- ${cat.name} (${cat.name_ar})`).join('\n')}
 
-${mode === 'quick' 
-  ? `⚠️ MODE RAPIDE: Pour "translatedContent", fournis UNIQUEMENT un court extrait traduit (200-300 mots max) du début du document.` 
-  : `Pour "translatedContent", traduis le contenu complet du document en ${targetLanguage}.`}
+${mode === 'quick'
+        ? `⚠️ MODE RAPIDE: Pour "translatedContent", fournis UNIQUEMENT un court extrait traduit (200-300 mots max) du début du document.`
+        : `Pour "translatedContent", traduis le contenu complet du document en ${targetLanguage}.`}
 
 Réponds uniquement en JSON valide avec cette structure exacte :
 {
@@ -347,8 +347,8 @@ Réponds uniquement en JSON valide avec cette structure exacte :
     "suggestedDocumentType": "Commentaires"
   }
 }`
-      : isAnalysisDocument 
-      ? `Tu es un expert en analyse de documents juridiques tunisiens. Analyse le contenu suivant (TYPE: FICHE D'ANALYSE) et extrait les informations demandées en JSON.
+      : isAnalysisDocument
+        ? `Tu es un expert en analyse de documents juridiques tunisiens. Analyse le contenu suivant (TYPE: FICHE D'ANALYSE) et extrait les informations demandées en JSON.
 
 LANGUE DU DOCUMENT SOURCE: ${sourceLanguage}
 LANGUE CIBLE POUR LES TRADUCTIONS: ${targetLanguage}
@@ -372,7 +372,7 @@ FICHE D'ANALYSE - CHAMPS SPÉCIFIQUES À EXTRAIRE:
    ✅ Exemples corrects: "دراسة مقارنة", "تحليل نقدي للقرار", "قراءة في الاجتهاد القضائي", "Étude comparative"
    ❌ Exemples INCORRECTS: "أستاذة تعليم عال في القانون العام", "Professeur de droit public"
    Si aucun sous-titre thématique n'est trouvé, laisse le champ VIDE.
-3. AUTEUR: Nom de l'auteur de l'analyse (OBLIGATOIRE - privilégier "مرصد الحقوق الأساسية" si présent)
+3. AUTEUR: Nom de la PERSONNE auteur de l'analyse (OBLIGATOIRE). NE PAS utiliser "مرصد الحقوق الأساسية" (c'est l'organisation éditrice, pas l'auteur). Cherche le nom propre de la personne qui a rédigé la fiche.
 3. DATE DE VALIDATION: Date de validation du document (si présente)
 4. RÉFÉRENCES LÉGALES: Liste des textes juridiques, lois, articles cités (Constitution, codes, conventions internationales, etc.)
 5. BIBLIOGRAPHIE: Sources et références bibliographiques citées à la fin du document
@@ -395,9 +395,9 @@ FICHE D'ANALYSE - CHAMPS SPÉCIFIQUES À EXTRAIRE:
 Catégories disponibles:
 ${categories.map(cat => `- ${cat.name} (${cat.name_ar})`).join('\n')}
 
-${mode === 'quick' 
-  ? `⚠️ MODE RAPIDE: Pour "translatedContent", fournis UNIQUEMENT un court extrait traduit (200-300 mots max) du début du document.` 
-  : `Pour "translatedContent", traduis le contenu complet du document en ${targetLanguage}.`}
+${mode === 'quick'
+          ? `⚠️ MODE RAPIDE: Pour "translatedContent", fournis UNIQUEMENT un court extrait traduit (200-300 mots max) du début du document.`
+          : `Pour "translatedContent", traduis le contenu complet du document en ${targetLanguage}.`}
 
 Réponds uniquement en JSON valide avec cette structure exacte :
 {
@@ -430,7 +430,7 @@ Réponds uniquement en JSON valide avec cette structure exacte :
     "suggestedDocumentType": "Fiche d'analyse"
   }
 }`
-      : `Tu es un expert en analyse de documents juridiques tunisiens. Analyse le contenu suivant (TYPE: FICHE DE JURISPRUDENCE) et extrait les informations demandées en JSON.
+        : `Tu es un expert en analyse de documents juridiques tunisiens. Analyse le contenu suivant (TYPE: FICHE DE JURISPRUDENCE) et extrait les informations demandées en JSON.
 
 LANGUE DU DOCUMENT SOURCE: ${sourceLanguage}
 LANGUE CIBLE POUR LES TRADUCTIONS: ${targetLanguage}
@@ -458,7 +458,7 @@ RÈGLES D'EXTRACTION SPÉCIFIQUES:
 EXTRACTION DEPUIS LES MÉTADONNÉES TEXTUELLES:
 3. TITRE: Extrais le titre principal depuis les métadonnées textuelles (généralement après "المشكل القانوني" ou "المشكل" ou dans la première ligne significative)
 4. SOUS-TITRE: Extrais le sous-titre depuis les métadonnées textuelles (généralement la ligne qui suit le titre principal ou après "الحل المقدم")  
-5. AUTEUR: Cherche le premier nom propre qui apparaît dans les métadonnées textuelles. Si "مرصد الحقوق الأساسية" est présent, utilise-le. Sinon, utilise le premier nom de personne trouvé.
+5. AUTEUR: Cherche le nom propre de la PERSONNE qui a rédigé la fiche dans les métadonnées textuelles. NE PAS utiliser "مرصد الحقوق الأساسية" comme auteur (c'est l'organisation éditrice, pas l'auteur personnel). Utilise le premier nom de personne trouvé (ex: وسيم بن يعقوب, مالك الغزواني, etc.).
 6. TRIBUNAL: Extrais depuis les métadonnées textuelles
 7. CASE_NUMBER: Extrais depuis les métadonnées textuelles  
 8. YEAR: Extrais depuis les métadonnées textuelles
@@ -499,9 +499,9 @@ STRATÉGIE POUR TITRE ET SOUS-TITRE:
 
 IMPORTANT: Les champs "textualMetadataTranslated" et "translatedContent" doivent contenir les VRAIES TRADUCTIONS, pas des descriptions !
 
-${mode === 'quick' 
-  ? `⚠️ MODE RAPIDE: Pour "translatedContent", fournis UNIQUEMENT un court extrait traduit (200-300 mots max) du début du document, pas la traduction complète.` 
-  : `Pour "translatedContent", traduis le contenu complet du document en ${targetLanguage}.`}
+${mode === 'quick'
+          ? `⚠️ MODE RAPIDE: Pour "translatedContent", fournis UNIQUEMENT un court extrait traduit (200-300 mots max) du début du document, pas la traduction complète.`
+          : `Pour "translatedContent", traduis le contenu complet du document en ${targetLanguage}.`}
 
 Réponds uniquement en JSON valide avec cette structure exacte :
 {
@@ -515,7 +515,7 @@ Réponds uniquement en JSON valide avec cette structure exacte :
   "suggestedKeywords": ["nouveaux mots-clés pertinents"],
   "translatedKeywords": ["traduction complète des mots-clés en ${targetLanguage}"],
   "metadata": {
-    "author": "premier nom propre trouvé dans les métadonnées textuelles (privilégier 'مرصد الحقوق الأساسية' si présent)",
+    "author": "nom de la PERSONNE auteur de la fiche (NE PAS utiliser 'مرصد الحقوق الأساسية' qui est l'organisation éditrice)",
     "court": "tribunal mentionné dans le document",
     "case_number": "numéro d'affaire trouvé",
      "plaintiff": "demandeur mentionné dans les métadonnées textuelles",
@@ -551,13 +551,15 @@ Réponds uniquement en JSON valide avec cette structure exacte :
         model: 'gpt-4o',
         messages: [
           { role: 'system', content: systemPrompt },
-          { role: 'user', content: `Analyse ce document en respectant les règles d'extraction:
+          {
+            role: 'user', content: `Analyse ce document en respectant les règles d'extraction:
 
 MÉTADONNÉES TEXTUELLES (extraire titre, sous-titre, auteur, tribunal, case_number, year, court_level, mots-clés après "اﻟﻜﻠﻤﺎت اﻟﻤﻔﺎﺗﯿﺢ", demandeur, défendeur):
 ${textualMetadata}
 
 CONTENU PRINCIPAL (extraire résumé):
-${contentForAI}${contentTruncated ? '\n\n[Note: Contenu tronqué pour analyse rapide]' : ''}` }
+${contentForAI}${contentTruncated ? '\n\n[Note: Contenu tronqué pour analyse rapide]' : ''}`
+          }
         ],
         response_format: { type: "json_object" },
         temperature: 0.3,
@@ -585,7 +587,7 @@ ${contentForAI}${contentTruncated ? '\n\n[Note: Contenu tronqué pour analyse ra
         console.error('Last 100 chars:', trimmedResponse.slice(-100));
         throw new Error('AI response was truncated - increase max_tokens or reduce content size');
       }
-      
+
       // Parse the JSON response directly (since we forced json_object format)
       analysisResult = JSON.parse(aiResponse);
     } catch (parseError) {
@@ -599,19 +601,19 @@ ${contentForAI}${contentTruncated ? '\n\n[Note: Contenu tronqué pour analyse ra
       if (!text) return false;
       return /[\u0600-\u06FF]/.test(text);
     };
-    
+
     const containsFrench = (text: string | null | undefined): boolean => {
       if (!text) return false;
       return /[a-zA-ZÀ-ÿ]/.test(text);
     };
-    
+
     const isMainlyArabic = (text: string | null | undefined): boolean => {
       if (!text) return false;
       const arabicMatches = (text.match(/[\u0600-\u06FF]/g) || []).length;
       const latinMatches = (text.match(/[a-zA-ZÀ-ÿ]/g) || []).length;
       return arabicMatches > latinMatches;
     };
-    
+
     // Validate and fix language assignments - the AI sometimes swaps languages
     console.log('🔍 Validating language assignments...');
     console.log('Source language:', sourceLanguage, 'Target language:', targetLanguage);
@@ -619,27 +621,27 @@ ${contentForAI}${contentTruncated ? '\n\n[Note: Contenu tronqué pour analyse ra
     console.log('translatedTitle contains Arabic:', containsArabic(analysisResult.translatedTitle), 'mainly Arabic:', isMainlyArabic(analysisResult.translatedTitle));
     console.log('summary contains Arabic:', containsArabic(analysisResult.summary), 'mainly Arabic:', isMainlyArabic(analysisResult.summary));
     console.log('translatedSummary contains Arabic:', containsArabic(analysisResult.translatedSummary), 'mainly Arabic:', isMainlyArabic(analysisResult.translatedSummary));
-    
+
     if (targetLanguage === 'arabe') {
       // Source is French, target is Arabic
       // title/summary should be French, translatedTitle/translatedSummary should be Arabic
-      
+
       // Check if languages are swapped (title is Arabic when it should be French)
       if (isMainlyArabic(analysisResult.title) && !isMainlyArabic(analysisResult.translatedTitle)) {
         console.warn('⚠️ Languages appear swapped (FR source, AR target) - swapping fields');
         const tempTitle = analysisResult.title;
         const tempSubtitle = analysisResult.subtitle;
         const tempSummary = analysisResult.summary;
-        
+
         analysisResult.title = analysisResult.translatedTitle;
         analysisResult.subtitle = analysisResult.translatedSubtitle;
         analysisResult.summary = analysisResult.translatedSummary;
-        
+
         analysisResult.translatedTitle = tempTitle;
         analysisResult.translatedSubtitle = tempSubtitle;
         analysisResult.translatedSummary = tempSummary;
       }
-      
+
       // Final validation - translatedTitle should contain Arabic
       if (analysisResult.translatedTitle && !containsArabic(analysisResult.translatedTitle)) {
         console.warn('translatedTitle does not contain Arabic characters after validation');
@@ -647,29 +649,29 @@ ${contentForAI}${contentTruncated ? '\n\n[Note: Contenu tronqué pour analyse ra
     } else if (targetLanguage === 'français') {
       // Source is Arabic, target is French
       // title/summary should be Arabic, translatedTitle/translatedSummary should be French
-      
+
       // Check if languages are swapped (title is French when it should be Arabic)
       if (!isMainlyArabic(analysisResult.title) && isMainlyArabic(analysisResult.translatedTitle)) {
         console.warn('⚠️ Languages appear swapped (AR source, FR target) - swapping fields');
         const tempTitle = analysisResult.title;
         const tempSubtitle = analysisResult.subtitle;
         const tempSummary = analysisResult.summary;
-        
+
         analysisResult.title = analysisResult.translatedTitle;
         analysisResult.subtitle = analysisResult.translatedSubtitle;
         analysisResult.summary = analysisResult.translatedSummary;
-        
+
         analysisResult.translatedTitle = tempTitle;
         analysisResult.translatedSubtitle = tempSubtitle;
         analysisResult.translatedSummary = tempSummary;
-        
+
         // Also swap metadata if needed
         if (analysisResult.metadata && analysisResult.metadataTranslated) {
           const tempMetadata = { ...analysisResult.metadata };
           analysisResult.metadata = { ...analysisResult.metadataTranslated };
           analysisResult.metadataTranslated = tempMetadata;
         }
-        
+
         // Swap keywords too
         if (analysisResult.existingKeywords && analysisResult.translatedKeywords) {
           const tempKeywords = analysisResult.existingKeywords;
@@ -677,7 +679,7 @@ ${contentForAI}${contentTruncated ? '\n\n[Note: Contenu tronqué pour analyse ra
           analysisResult.translatedKeywords = tempKeywords;
         }
       }
-      
+
       // Final validation - title should contain Arabic, translatedTitle should contain French
       if (analysisResult.title && !containsArabic(analysisResult.title)) {
         console.warn('title does not contain Arabic characters for Arabic source document');
@@ -686,7 +688,7 @@ ${contentForAI}${contentTruncated ? '\n\n[Note: Contenu tronqué pour analyse ra
         console.warn('translatedTitle does not contain French characters for French target');
       }
     }
-    
+
     console.log('✅ Language validation complete');
 
     // Inject exhaustive translation if available
@@ -721,25 +723,25 @@ ${contentForAI}${contentTruncated ? '\n\n[Note: Contenu tronqué pour analyse ra
     // Intelligent matching logic to find best matches by ID
     const findBestMatch = (suggestions: any, options: any[], field: string) => {
       if (!suggestions || !suggestions[field]) return null;
-      
+
       const suggestionText = suggestions[field].toLowerCase();
-      
+
       // Try exact match first
-      let match = options.find(option => 
+      let match = options.find(option =>
         option.name.toLowerCase() === suggestionText ||
         (option.name_ar && option.name_ar.toLowerCase() === suggestionText)
       );
-      
+
       // If no exact match, try partial match
       if (!match) {
-        match = options.find(option => 
+        match = options.find(option =>
           option.name.toLowerCase().includes(suggestionText) ||
           (option.name_ar && option.name_ar.toLowerCase().includes(suggestionText)) ||
           suggestionText.includes(option.name.toLowerCase()) ||
           (option.name_ar && suggestionText.includes(option.name_ar.toLowerCase()))
         );
       }
-      
+
       return match ? match.id : null;
     };
 
@@ -756,7 +758,7 @@ ${contentForAI}${contentTruncated ? '\n\n[Note: Contenu tronqué pour analyse ra
 
     // Apply AI-powered Arabic correction to key metadata fields
     console.log('🔤 Applying AI-powered Arabic correction to metadata...');
-    
+
     // Correct Arabic fields when source is Arabic
     if (currentLanguage === 'ar' || analysisResult.language === 'ar') {
       // Use AI for key fields (title, subtitle, summary, bibliography)
@@ -767,16 +769,16 @@ ${contentForAI}${contentTruncated ? '\n\n[Note: Contenu tronqué pour analyse ra
         analysisResult.metadata?.bibliography ? correctArabicFieldWithAI(analysisResult.metadata.bibliography) : Promise.resolve(''),
         analysisResult.metadata?.author ? correctArabicFieldWithAI(analysisResult.metadata.author) : Promise.resolve('')
       ]);
-      
+
       analysisResult.title = correctedTitle;
       if (analysisResult.subtitle) analysisResult.subtitle = correctedSubtitle;
       analysisResult.summary = correctedSummary;
       if (analysisResult.metadata?.bibliography) analysisResult.metadata.bibliography = correctedBiblio;
       if (analysisResult.metadata?.author) analysisResult.metadata.author = correctedAuthor;
-      
+
       // Use heuristic for content (too long for AI)
       analysisResult.content = sanitizeArabicText(analysisResult.content);
-      
+
       // Use AI correction for keywords - they are short and benefit from AI
       if (analysisResult.existingKeywords && analysisResult.existingKeywords.length > 0) {
         console.log('🔤 Correcting existing keywords with AI...');
@@ -803,12 +805,12 @@ ${contentForAI}${contentTruncated ? '\n\n[Note: Contenu tronqué pour analyse ra
         analysisResult.translatedSummary ? correctArabicFieldWithAI(analysisResult.translatedSummary) : Promise.resolve(''),
         analysisResult.metadataTranslated?.bibliography ? correctArabicFieldWithAI(analysisResult.metadataTranslated.bibliography) : Promise.resolve('')
       ]);
-      
+
       if (analysisResult.translatedTitle) analysisResult.translatedTitle = correctedTranslatedTitle;
       if (analysisResult.translatedSubtitle) analysisResult.translatedSubtitle = correctedTranslatedSubtitle;
       if (analysisResult.translatedSummary) analysisResult.translatedSummary = correctedTranslatedSummary;
       if (analysisResult.metadataTranslated?.bibliography) analysisResult.metadataTranslated.bibliography = correctedTranslatedBiblio;
-      
+
       // Use AI correction for translated keywords - they are short and benefit from AI
       if (analysisResult.translatedKeywords && analysisResult.translatedKeywords.length > 0) {
         console.log('🔤 Correcting translated keywords with AI...');
@@ -831,7 +833,7 @@ ${contentForAI}${contentTruncated ? '\n\n[Note: Contenu tronqué pour analyse ra
         analysisResult.translatedContent = sanitizeArabicText(analysisResult.translatedContent);
       }
     }
-    
+
     console.log('✅ AI-powered Arabic correction completed');
 
     return new Response(JSON.stringify({
@@ -850,7 +852,7 @@ ${contentForAI}${contentTruncated ? '\n\n[Note: Contenu tronqué pour analyse ra
 
   } catch (error) {
     console.error('Error in smart-document-analysis function:', error);
-    return new Response(JSON.stringify({ 
+    return new Response(JSON.stringify({
       success: false,
       error: error instanceof Error ? error.message : String(error),
       timestamp: new Date().toISOString()

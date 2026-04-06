@@ -46,9 +46,6 @@ export const MultiCategorySelector: React.FC<MultiCategorySelectorProps> = ({
 
   return (
     <div className="space-y-3">
-      <Label className="text-sm font-medium">
-        Catégories ({selectedCategoryIds.length}/{maxCategories})
-      </Label>
 
       {/* Add new category */}
       {selectedCategoryIds.length < maxCategories && availableCategories.length > 0 && (
@@ -106,7 +103,7 @@ export const MultiCategorySelector: React.FC<MultiCategorySelectorProps> = ({
       <div className="text-xs text-muted-foreground">
         {selectedCategoryIds.length === 0 && 'Aucune catégorie sélectionnée'}
         {selectedCategoryIds.length >= maxCategories && 'Limite maximum atteinte'}
-        {selectedCategoryIds.length > 0 && selectedCategoryIds.length < maxCategories && 
+        {selectedCategoryIds.length > 0 && selectedCategoryIds.length < maxCategories &&
           `${maxCategories - selectedCategoryIds.length} catégorie(s) supplémentaire(s) possible(s)`}
       </div>
     </div>

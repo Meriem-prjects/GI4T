@@ -28,8 +28,8 @@ serve(async (req) => {
 
     console.log(`Processing Arabic text: ${text.length} characters`);
 
-    // Length threshold: only use AI for texts <= 12k characters
-    if (text.length > 12000) {
+    // Length threshold: only use AI for texts <= 15k characters
+    if (text.length > 15000) {
       console.log('Text too long for AI processing, using heuristic fallback only');
       const fallbackResult = sanitizeArabicText(text);
       return new Response(JSON.stringify({
@@ -59,17 +59,22 @@ serve(async (req) => {
         messages: [
           {
             role: 'system',
-            content: `Tu es un expert en correction typographique de textes arabes. Ta tâche est UNIQUEMENT de corriger les espaces et les mots collés dans le texte arabe.
+            content: `Tu es un expert en correction de textes juridiques arabes issus d'OCR. Ta tâche est de corriger les espaces, les mots collés, et les erreurs de caractères OCR dans le texte arabe.
 
 RÈGLES STRICTES:
-1. Ne modifie JAMAIS le contenu des mots - garde exactement les mêmes mots
-2. Corrige UNIQUEMENT les espaces: ajoute des espaces entre mots collés, supprime les espaces à l'intérieur des mots
-3. Ne corrige PAS l'orthographe, la grammaire, ou toute autre chose
+1. Corrige les espaces: ajoute des espaces entre mots collés, supprime les espaces à l'intérieur des mots
+2. Corrige les erreurs OCR de caractères COURANTES:
+   - Confusion de points: ب↔ت↔ث↔ن, ج↔ح↔خ, د↔ذ, ر↔ز, س↔ش, ص↔ض, ط↔ظ, ع↔غ, ف↔ق
+   - Confusion ta marbuta/ha: ة↔ه en fin de mot (utilise le contexte pour choisir)
+   - Hamza mal placée: أ, إ, ؤ, ئ, ء
+   - Alef avec/sans hamza: ا↔أ↔إ↔آ selon le contexte
+3. Ne modifie PAS le sens du texte — corrige uniquement les erreurs évidentes d'OCR
 4. Préserve la ponctuation et les nombres tels quels
 5. Réponds UNIQUEMENT avec le texte corrigé, sans explication
 6. Recolle TOUJOURS les signes diacritiques (Chadda ّ, Fatha َ, Damma ُ, Kasra ِ, etc.) à leur lettre - PAS D'ESPACE AVANT NI APRÈS
 7. Normalise les variantes de "Hé" (ﮫ ﮪ ﮬ ﮭ) vers la forme standard (ه) en fin de mot
-8. Sépare les mots collés: ajoute des espaces entre différents mots qui se touchent (ةجيرة → ة جيرة, ءحدودي → ء حدودي)
+8. Sépare les mots collés: ajoute des espaces entre différents mots qui se touchent
+9. Corrige les mots juridiques courants mal orthographiés par l'OCR (ex: المحكمه→المحكمة, الحكومه→الحكومة, القانو→القانون, الدستو→الدستور)
 
 EXEMPLES:
 Entrée: "القضاءالإداريلسنة2007"
@@ -167,7 +172,7 @@ Sortie: "(كلّية العلوم بتونس)"`
             content: preprocessed
           }
         ],
-        max_tokens: 4000,
+        max_tokens: 8000,
         temperature: 0
       }),
     });

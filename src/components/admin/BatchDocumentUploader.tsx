@@ -62,7 +62,7 @@ const BatchDocumentUploader: React.FC<BatchDocumentUploaderProps> = ({ onDocumen
       .from('categories')
       .select('*')
       .order('name');
-    
+
     if (error) {
       console.error('Error loading categories:', error);
       toast({
@@ -81,7 +81,7 @@ const BatchDocumentUploader: React.FC<BatchDocumentUploaderProps> = ({ onDocumen
       .from('document_types')
       .select('*')
       .order('name');
-    
+
     if (error) {
       console.error('Error loading document types:', error);
       toast({
@@ -109,7 +109,7 @@ const BatchDocumentUploader: React.FC<BatchDocumentUploaderProps> = ({ onDocumen
     e.preventDefault();
     e.stopPropagation();
     setDragActive(false);
-    
+
     if (e.dataTransfer.files && e.dataTransfer.files[0]) {
       handleFiles(e.dataTransfer.files);
     }
@@ -132,7 +132,7 @@ const BatchDocumentUploader: React.FC<BatchDocumentUploaderProps> = ({ onDocumen
 
   const processFile = async (uploadFile: UploadFile, categoryIds: string[], documentTypeId: string, processedDocuments: any[]) => {
     // Update status to processing - start at 0%
-    setUploadFiles(prev => prev.map(f => 
+    setUploadFiles(prev => prev.map(f =>
       f.id === uploadFile.id ? { ...f, status: 'processing', progress: 0 } : f
     ));
 
@@ -140,12 +140,15 @@ const BatchDocumentUploader: React.FC<BatchDocumentUploaderProps> = ({ onDocumen
     const formData = new FormData();
     formData.append('file', uploadFile.file);
     // Send first category for backwards compatibility, we'll handle multiple categories after upload
-    formData.append('categoryId', categoryIds[0]);
+    if (categoryIds && categoryIds.length > 0 && categoryIds[0]) {
+      formData.append('categoryId', categoryIds[0]);
+    }
+
     formData.append('documentTypeId', documentTypeId);
     formData.append('language', selectedLanguage);
 
     // Update progress to show uploading
-    setUploadFiles(prev => prev.map(f => 
+    setUploadFiles(prev => prev.map(f =>
       f.id === uploadFile.id ? { ...f, progress: 10 } : f
     ));
 
@@ -164,7 +167,7 @@ const BatchDocumentUploader: React.FC<BatchDocumentUploaderProps> = ({ onDocumen
     // Extract job ID from response
     const jobId = uploadResult.jobId;
     const documentId = uploadResult.document?.id;
-    
+
     // Handle multiple categories if document was created
     if (documentId && categoryIds.length > 1) {
       try {
@@ -186,12 +189,12 @@ const BatchDocumentUploader: React.FC<BatchDocumentUploaderProps> = ({ onDocumen
         console.error('Error updating document categories:', error);
       }
     }
-    
+
     if (jobId) {
       // Update file with job ID for progress tracking
-      setUploadFiles(prev => prev.map(f => 
-        f.id === uploadFile.id ? { 
-          ...f, 
+      setUploadFiles(prev => prev.map(f =>
+        f.id === uploadFile.id ? {
+          ...f,
           jobId: jobId,
           progress: 20,
           status: 'processing'
@@ -199,24 +202,25 @@ const BatchDocumentUploader: React.FC<BatchDocumentUploaderProps> = ({ onDocumen
       ));
     } else {
       // No job ID - mark as completed immediately
-      setUploadFiles(prev => prev.map(f => 
-        f.id === uploadFile.id ? { 
-          ...f, 
-          status: 'completed', 
-          progress: 100, 
+      setUploadFiles(prev => prev.map(f =>
+        f.id === uploadFile.id ? {
+          ...f,
+          status: 'completed',
+          progress: 100,
           result: uploadResult.document
         } : f
       ));
-      
+
       processedDocuments.push(uploadResult.document);
     }
   };
 
   const handleFiles = (files: FileList) => {
+    console.log(`Sélection de ${files.length} fichiers`);
     const acceptedTypes = [
-      'application/pdf', 
-      'application/vnd.openxmlformats-officedocument.wordprocessingml.document', 
-      'application/msword', 
+      'application/pdf',
+      'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+      'application/msword',
       'text/plain',
       'image/jpeg',
       'image/png',
@@ -225,13 +229,18 @@ const BatchDocumentUploader: React.FC<BatchDocumentUploaderProps> = ({ onDocumen
       'image/bmp',
       'image/tiff'
     ];
-    
+
+    const acceptedExtensions = ['.pdf', '.docx', '.doc', '.txt', '.jpg', '.jpeg', '.png', '.webp'];
+
     const newFiles: UploadFile[] = [];
-    
+
     for (let i = 0; i < files.length; i++) {
       const file = files[i];
-      
-      if (!acceptedTypes.includes(file.type)) {
+      const extension = file.name.substring(file.name.lastIndexOf('.')).toLowerCase();
+
+      // Check MIME type or Extension as a fallback
+      if (!acceptedTypes.includes(file.type) && !acceptedExtensions.includes(extension)) {
+        console.warn(`Fichier rejeté (type non supporté): ${file.name} [${file.type}]`);
         toast({
           title: "Type de fichier non supporté",
           description: `${file.name} n'est pas un type de fichier supporté.`,
@@ -259,15 +268,22 @@ const BatchDocumentUploader: React.FC<BatchDocumentUploaderProps> = ({ onDocumen
 
     setUploadFiles(prev => {
       const updated = [...prev, ...newFiles];
-      // Auto-process when configuration is already selected
-      if (selectedCategories.length > 0 && selectedDocumentType && selectedLanguage && newFiles.length > 0) {
+
+      // Smart Auto-process Check
+      const typeRef = selectedDocumentType ? documentTypes.find(t => t.id === selectedDocumentType) : null;
+      const isCatRequired = typeRef?.name.includes('Jurisprudence');
+      const isConfigComplete = selectedDocumentType && selectedLanguage && (!isCatRequired || selectedCategories.length > 0);
+
+      if (isConfigComplete && newFiles.length > 0) {
         const processedDocs: any[] = [];
         (async () => {
           setIsProcessing(true);
           try {
             for (const nf of newFiles) {
-              await processFile(nf, selectedCategories, selectedDocumentType, processedDocs);
+              await processFile(nf, selectedCategories, selectedDocumentType!, processedDocs);
             }
+          } catch (err) {
+            console.error("Erreur d'auto-traitement:", err);
           } finally {
             setIsProcessing(false);
           }
@@ -282,10 +298,16 @@ const BatchDocumentUploader: React.FC<BatchDocumentUploaderProps> = ({ onDocumen
   };
 
   const processAllFiles = async () => {
-    if (selectedCategories.length === 0 || !selectedDocumentType || !selectedLanguage) {
+    const typeRef = selectedDocumentType ? documentTypes.find(t => t.id === selectedDocumentType) : null;
+    const isCatRequired = typeRef?.name.includes('Jurisprudence');
+    const isConfigComplete = selectedDocumentType && selectedLanguage && (!isCatRequired || selectedCategories.length > 0);
+
+    if (!isConfigComplete) {
       toast({
         title: "Configuration manquante",
-        description: "Veuillez sélectionner une langue, au moins une catégorie et un type de document.",
+        description: isCatRequired
+          ? "Veuillez sélectionner une langue, au moins une catégorie et un type de document."
+          : "Veuillez sélectionner une langue et un type de document.",
         variant: "destructive",
       });
       return;
@@ -302,10 +324,10 @@ const BatchDocumentUploader: React.FC<BatchDocumentUploaderProps> = ({ onDocumen
           await processFile(uploadFile, selectedCategories, selectedDocumentType, processedDocuments);
         } catch (error) {
           console.error(`Error processing ${uploadFile.file.name}:`, error);
-          setUploadFiles(prev => prev.map(f => 
-            f.id === uploadFile.id ? { 
-              ...f, 
-              status: 'error', 
+          setUploadFiles(prev => prev.map(f =>
+            f.id === uploadFile.id ? {
+              ...f,
+              status: 'error',
               error: error instanceof Error ? error.message : 'Unknown error'
             } : f
           ));
@@ -314,12 +336,12 @@ const BatchDocumentUploader: React.FC<BatchDocumentUploaderProps> = ({ onDocumen
 
       // Check if all files are processed (completed or have errors)
       const allProcessed = uploadFiles.every(f => f.status === 'completed' || f.status === 'error');
-      
+
       // Only call onDocumentsProcessed for files that completed successfully
       const completedDocuments = uploadFiles
         .filter(f => f.status === 'completed' && f.result)
         .map(f => f.result);
-      
+
       if (completedDocuments.length > 0) {
         onDocumentsProcessed(completedDocuments);
         toast({
@@ -336,13 +358,13 @@ const BatchDocumentUploader: React.FC<BatchDocumentUploaderProps> = ({ onDocumen
   // Callback to handle completion from ProgressTracker
   const handleFileCompletion = (uploadFileId: string, result: any) => {
     console.log('File completed via progress tracker:', uploadFileId);
-    
+
     // Update the upload file status
-    setUploadFiles(prev => prev.map(f => 
-      f.id === uploadFileId ? { 
-        ...f, 
-        status: 'completed', 
-        progress: 100, 
+    setUploadFiles(prev => prev.map(f =>
+      f.id === uploadFileId ? {
+        ...f,
+        status: 'completed',
+        progress: 100,
         result: result
       } : f
     ));
@@ -355,7 +377,7 @@ const BatchDocumentUploader: React.FC<BatchDocumentUploaderProps> = ({ onDocumen
         const completedDocuments = uploadFiles
           .filter(f => f.status === 'completed' && f.result)
           .map(f => f.result);
-        
+
         if (allCompleted && completedDocuments.length > 0) {
           onDocumentsProcessed(completedDocuments);
           toast({
@@ -399,12 +421,11 @@ const BatchDocumentUploader: React.FC<BatchDocumentUploaderProps> = ({ onDocumen
       {/* Fichiers à traiter Section - Now First */}
       <Card className="p-6">
         <h3 className="text-lg font-semibold mb-4">Fichiers à traiter ({uploadFiles.length})</h3>
-        
+
         {/* File Upload Area */}
         <div
-          className={`relative border-2 border-dashed rounded-lg p-8 text-center transition-colors ${
-            dragActive ? 'border-primary bg-primary/5' : 'border-gray-300 hover:border-gray-400'
-          }`}
+          className={`relative border-2 border-dashed rounded-lg p-8 text-center transition-colors ${dragActive ? 'border-primary bg-primary/5' : 'border-gray-300 hover:border-gray-400'
+            }`}
           onDragEnter={handleDrag}
           onDragLeave={handleDrag}
           onDragOver={handleDrag}
@@ -454,7 +475,7 @@ const BatchDocumentUploader: React.FC<BatchDocumentUploaderProps> = ({ onDocumen
                     <X className="h-4 w-4" />
                   </Button>
                 </div>
-                
+
                 {uploadFile.status === 'processing' && !uploadFile.jobId && (
                   <div className="space-y-2">
                     <Progress value={uploadFile.progress} className="h-2" />
@@ -468,15 +489,15 @@ const BatchDocumentUploader: React.FC<BatchDocumentUploaderProps> = ({ onDocumen
                 {/* Progress Tracker for files with job ID */}
                 {uploadFile.jobId && uploadFile.status === 'processing' && (
                   <div className="mt-3">
-                     <ProgressTracker 
-                       jobId={uploadFile.jobId}
-                       fileName={uploadFile.file.name}
-                       pdfUrl={uploadFile.result?.pdf_url || uploadFile.result?.file_url}
-                       onComplete={(result) => handleFileCompletion(uploadFile.id, result)}
-                       onError={(error) => setUploadFiles(prev => prev.map(f => 
-                         f.id === uploadFile.id ? { ...f, status: 'error', error } : f
-                       ))}
-                     />
+                    <ProgressTracker
+                      jobId={uploadFile.jobId}
+                      fileName={uploadFile.file.name}
+                      pdfUrl={uploadFile.result?.pdf_url || uploadFile.result?.file_url}
+                      onComplete={(result) => handleFileCompletion(uploadFile.id, result)}
+                      onError={(error) => setUploadFiles(prev => prev.map(f =>
+                        f.id === uploadFile.id ? { ...f, status: 'error', error } : f
+                      ))}
+                    />
                   </div>
                 )}
               </div>
@@ -489,7 +510,7 @@ const BatchDocumentUploader: React.FC<BatchDocumentUploaderProps> = ({ onDocumen
       {/* Configuration Section - Now Second */}
       <Card className="p-6">
         <h3 className="text-lg font-semibold mb-4">Configuration des documents</h3>
-        
+
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
           <div className="space-y-2">
             <Label htmlFor="document-language">Langue du document</Label>
@@ -504,7 +525,7 @@ const BatchDocumentUploader: React.FC<BatchDocumentUploaderProps> = ({ onDocumen
               </SelectContent>
             </Select>
           </div>
-          
+
           <div className="space-y-2">
             <Label htmlFor="document-type">Type de document</Label>
             <Select value={selectedDocumentType} onValueChange={setSelectedDocumentType}>
@@ -514,8 +535,8 @@ const BatchDocumentUploader: React.FC<BatchDocumentUploaderProps> = ({ onDocumen
               <SelectContent>
                 {documentTypes.map((type) => (
                   <SelectItem key={type.id} value={type.id}>
-                    {selectedLanguage === 'ar' && type.name_ar 
-                      ? type.name_ar 
+                    {selectedLanguage === 'ar' && type.name_ar
+                      ? type.name_ar
                       : type.name
                     }
                     {selectedLanguage === 'ar' && type.name_ar && type.name && ` / ${type.name}`}
@@ -526,15 +547,28 @@ const BatchDocumentUploader: React.FC<BatchDocumentUploaderProps> = ({ onDocumen
             </Select>
           </div>
 
-          <div className="space-y-2">
-            <MultiCategorySelector
-              categories={categories}
-              selectedCategoryIds={selectedCategories}
-              onCategoryIdsChange={setSelectedCategories}
-              showArabic={selectedLanguage === 'ar'}
-              maxCategories={5}
-            />
-          </div>
+          {!selectedDocumentType ||
+            !documentTypes.find(t => t.id === selectedDocumentType)?.name.match(/Blog|Commentaires|Analyses/) ? (
+            <div className="space-y-2">
+              <Label>
+                {selectedDocumentType &&
+                  documentTypes.find(t => t.id === selectedDocumentType)?.name.includes('Jurisprudence')
+                  ? (selectedLanguage === 'ar' ? 'فئة الحق الأساسي' : 'Catégorie de droit fondamental')
+                  : 'Catégories'
+                }
+                {selectedDocumentType && documentTypes.find(t => t.id === selectedDocumentType)?.name.includes('Jurisprudence') && (
+                  <span className="text-red-500 ml-1">*</span>
+                )}
+              </Label>
+              <MultiCategorySelector
+                categories={categories}
+                selectedCategoryIds={selectedCategories}
+                onCategoryIdsChange={setSelectedCategories}
+                showArabic={selectedLanguage === 'ar'}
+                maxCategories={5}
+              />
+            </div>
+          ) : null}
         </div>
 
         {/* Process Button - placed after configuration */}
@@ -542,7 +576,12 @@ const BatchDocumentUploader: React.FC<BatchDocumentUploaderProps> = ({ onDocumen
           <div className="mt-6 flex justify-center">
             <Button
               onClick={processAllFiles}
-              disabled={isProcessing || selectedCategories.length === 0 || !selectedDocumentType || !selectedLanguage}
+              disabled={
+                isProcessing ||
+                !selectedDocumentType ||
+                !selectedLanguage ||
+                (documentTypes.find(t => t.id === selectedDocumentType)?.name.includes('Jurisprudence') && selectedCategories.length === 0)
+              }
               className="w-full max-w-md"
             >
               {isProcessing ? (
