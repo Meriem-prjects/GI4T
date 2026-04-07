@@ -107,7 +107,7 @@ const AccesAuxDroitsLayout = () => {
             <Link to="/acces-aux-droits" className={`flex items-center gap-2 sm:gap-4 hover:opacity-80 transition-opacity ${isRTL ? 'ml-auto' : ''}`}>
               {isRTL ? (
                 <>
-                  <img src="/Feelinx_upload/logo-acces-aux-droits.png" alt={t('accessToRights')} className="h-6 sm:h-8 md:h-12 flex-shrink-0" />
+                  <img src="/Feelinx_upload/logo-acces-aux-droits.png" alt={t('accessToRights')} className="h-8 sm:h-10 md:h-14 flex-shrink-0" />
                   <div className="text-right">
                     <h1 className="text-sm sm:text-base md:text-2xl font-bold text-foreground font-almarai">{t('accessToRights')}</h1>
                     <p className="text-xs sm:text-sm text-muted-foreground hidden sm:block font-almarai">{t('citizenSpace')}</p>

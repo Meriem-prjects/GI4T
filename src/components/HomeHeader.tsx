@@ -19,24 +19,24 @@ const HomeHeader = () => {
           {/* Logo */}
           <div className="flex items-center">
             <img
-              src="/Feelinx_upload/justclic-logo.png" 
-              alt="JustClic.tn" 
-              className="h-8 sm:h-10 md:h-12 w-auto object-contain"
+              src="/Feelinx_upload/justclic-logo.png"
+              alt="JustClic.tn"
+              className={`${isRTL ? 'h-10 sm:h-12 md:h-14' : 'h-8 sm:h-10 md:h-12'} w-auto object-contain`}
             />
           </div>
-          
+
           {/* Controls - Always visible */}
           <div className={`flex items-center gap-1.5 sm:gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
             {/* Language Switcher - Always visible */}
             <div className="flex items-center bg-gradient-to-r from-primary/10 to-primary/5 rounded-full p-0.5 sm:p-1 shadow-sm border border-primary/20">
-              <Button 
-                size="sm" 
+              <Button
+                size="sm"
                 onClick={() => setLanguage('fr')}
                 className={`${language === 'fr' ? 'bg-primary text-primary-foreground shadow-md' : 'bg-transparent text-muted-foreground hover:text-primary'} rounded-full px-2 sm:px-3 md:px-4 py-1 sm:py-1.5 text-xs sm:text-sm font-semibold transition-all duration-200`}
               >
                 FR
               </Button>
-              <Button 
+              <Button
                 size="sm"
                 onClick={() => setLanguage('ar')}
                 className={`${language === 'ar' ? 'bg-primary text-primary-foreground shadow-md' : 'bg-transparent text-muted-foreground hover:text-primary'} rounded-full px-2 sm:px-3 md:px-4 py-1 sm:py-1.5 text-xs sm:text-sm font-semibold transition-all duration-200`}

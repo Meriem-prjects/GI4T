@@ -33,7 +33,7 @@ const AccesAuxDroitsSection = () => {
           <img
             src={language === 'ar' ? logoAccesDroitsAr : logoAccesDroitsFr}
             alt="Accès aux Droits"
-            className="h-40 sm:h-48 md:h-56 w-auto object-contain"
+            className={`${language === 'ar' ? 'h-32 sm:h-40 md:h-48' : 'h-40 sm:h-48 md:h-56'} w-auto object-contain`}
           />
         </div>
 
