@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Link, Outlet, useLocation } from "react-router-dom";
-import { Home, Menu, ChevronDown, ChevronRight, Map, Image, Newspaper, MessageCircle } from "lucide-react";
+import { Home, Menu, ChevronDown, ChevronRight, Map, Image, Newspaper, MessageCircle, FileText, BookOpen, ExternalLink } from "lucide-react";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import CarteInteractiveNav from "@/components/CarteInteractiveNav";
@@ -9,6 +9,12 @@ import MediathequeNav from "@/components/MediathequeNav";
 import ActualitesNav from "@/components/ActualitesNav";
 import FAQNav from "@/components/FAQNav";
 import Footer from "@/components/Footer";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger
+} from "@/components/ui/dropdown-menu";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useTranslation } from "@/hooks/useTranslation";
 
@@ -20,8 +26,8 @@ const AccesAuxDroitsLayout = () => {
   const { t } = useTranslation();
 
   const toggleSection = (section: string) => {
-    setOpenSections(prev => 
-      prev.includes(section) 
+    setOpenSections(prev =>
+      prev.includes(section)
         ? prev.filter(s => s !== section)
         : [...prev, section]
     );
@@ -33,8 +39,9 @@ const AccesAuxDroitsLayout = () => {
       return <CarteInteractiveNav />;
     } else if (location.pathname.includes('/mediatheque') || location.pathname.includes('/albums-photos')) {
       return <MediathequeNav />;
-    } else if (location.pathname.includes('/actualites') || location.pathname.includes('/ressources-pratiques') || 
-               location.pathname.includes('/liens-utiles') || location.pathname.includes('/guides-pratiques')) {
+    } else if (location.pathname.includes('/actualites') || location.pathname.includes('/ressources-pratiques') ||
+      location.pathname.includes('/liens-utiles') || location.pathname.includes('/guides-pratiques') ||
+      location.pathname.includes('/publications')) {
       return <ActualitesNav />;
     } else if (location.pathname.includes('/foire-aux-questions') || location.pathname.includes('/assistant-virtuel')) {
       return <FAQNav />;
@@ -67,10 +74,17 @@ const AccesAuxDroitsLayout = () => {
       label: t('actualites'),
       icon: Newspaper,
       link: '/acces-aux-droits/actualites',
+      children: []
+    },
+    {
+      id: 'ressources',
+      label: t('practicalResources'),
+      icon: FileText,
+      link: '/acces-aux-droits/ressources-pratiques',
       children: [
-        { label: t('practicalResources'), link: '/acces-aux-droits/ressources-pratiques' },
-        { label: t('usefulLinks'), link: '/acces-aux-droits/liens-utiles' },
-        { label: t('practicalGuides'), link: '/acces-aux-droits/guides-pratiques' }
+        { label: t('practicalGuides'), link: '/acces-aux-droits/guides-pratiques' },
+        { label: t('publications'), link: '/acces-aux-droits/publications' },
+        { label: t('usefulLinks'), link: '/acces-aux-droits/liens-utiles' }
       ]
     },
     {
@@ -93,7 +107,7 @@ const AccesAuxDroitsLayout = () => {
             <Link to="/acces-aux-droits" className={`flex items-center gap-2 sm:gap-4 hover:opacity-80 transition-opacity ${isRTL ? 'ml-auto' : ''}`}>
               {isRTL ? (
                 <>
-                  <img src="/Feelinx_upload/logo-acces-aux-droits.png" alt={t('accessToRights')} className="h-4 sm:h-6 md:h-8 flex-shrink-0" />
+                  <img src="/Feelinx_upload/logo-acces-aux-droits.png" alt={t('accessToRights')} className="h-6 sm:h-8 md:h-12 flex-shrink-0" />
                   <div className="text-right">
                     <h1 className="text-sm sm:text-base md:text-2xl font-bold text-foreground font-almarai">{t('accessToRights')}</h1>
                     <p className="text-xs sm:text-sm text-muted-foreground hidden sm:block font-almarai">{t('citizenSpace')}</p>
@@ -101,7 +115,7 @@ const AccesAuxDroitsLayout = () => {
                 </>
               ) : (
                 <>
-                  <img src="/Feelinx_upload/logo-acces-aux-droits.png" alt={t('accessToRights')} className="h-4 sm:h-6 md:h-8 flex-shrink-0" />
+                  <img src="/Feelinx_upload/logo-acces-aux-droits.png" alt={t('accessToRights')} className="h-6 sm:h-8 md:h-12 flex-shrink-0" />
                   <div>
                     <h1 className="text-sm sm:text-base md:text-2xl font-bold text-foreground">{t('accessToRights')}</h1>
                     <p className="text-xs sm:text-sm text-muted-foreground hidden sm:block">{t('citizenSpace')}</p>
@@ -109,7 +123,7 @@ const AccesAuxDroitsLayout = () => {
                 </>
               )}
             </Link>
-            
+
             <nav className={`hidden md:flex items-center absolute ${isRTL ? 'right-1/2 translate-x-1/2' : 'left-1/2 -translate-x-1/2'} gap-6`}>
               <Link to="/acces-aux-droits/carte-interactive" className={`text-sm font-medium text-foreground hover:text-primary transition-colors duration-200 ${isRTL ? 'font-almarai' : ''}`}>
                 {t('interactiveMap')}
@@ -120,6 +134,34 @@ const AccesAuxDroitsLayout = () => {
               <Link to="/acces-aux-droits/actualites" className={`text-sm font-medium text-foreground hover:text-primary transition-colors duration-200 ${isRTL ? 'font-almarai' : ''}`}>
                 {t('actualites')}
               </Link>
+
+              <DropdownMenu>
+                <DropdownMenuTrigger className={`flex items-center gap-1 text-sm font-medium text-foreground hover:text-primary transition-colors duration-200 outline-none ${isRTL ? 'font-almarai flex-row-reverse' : ''}`}>
+                  {t('practicalResources')}
+                  <ChevronDown className="h-4 w-4" />
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align={isRTL ? "end" : "start"} className="w-56">
+                  <DropdownMenuItem asChild>
+                    <Link to="/acces-aux-droits/guides-pratiques" className={`w-full cursor-pointer flex items-center gap-2 ${isRTL ? 'font-almarai flex-row-reverse text-right' : ''}`}>
+                      <BookOpen className="h-4 w-4" />
+                      {t('practicalGuides')}
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <Link to="/acces-aux-droits/publications" className={`w-full cursor-pointer flex items-center gap-2 ${isRTL ? 'font-almarai flex-row-reverse text-right' : ''}`}>
+                      <Newspaper className="h-4 w-4" />
+                      {t('publications')}
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <Link to="/acces-aux-droits/liens-utiles" className={`w-full cursor-pointer flex items-center gap-2 ${isRTL ? 'font-almarai flex-row-reverse text-right' : ''}`}>
+                      <ExternalLink className="h-4 w-4" />
+                      {t('usefulLinks')}
+                    </Link>
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+
               <Link to="/acces-aux-droits/assistant-virtuel" className={`text-sm font-medium text-foreground hover:text-primary transition-colors duration-200 ${isRTL ? 'font-almarai' : ''}`}>
                 {t('faqChatbot')}
               </Link>
@@ -128,25 +170,25 @@ const AccesAuxDroitsLayout = () => {
             <div className={`flex items-center gap-1.5 sm:gap-2 ${isRTL ? 'mr-auto' : 'ml-auto'}`}>
               {/* Home Button - Always visible */}
               <Link to="/acces-aux-droits">
-                <Button 
-                  variant="outline" 
-                  size="sm" 
+                <Button
+                  variant="outline"
+                  size="sm"
                   className="h-8 w-8 sm:h-9 sm:w-9 p-0 rounded-full border-primary/30 hover:bg-primary hover:text-primary-foreground hover:border-primary transition-all duration-200 shadow-sm"
                 >
                   <Home className="h-4 w-4" />
                 </Button>
               </Link>
-              
+
               {/* Language Switcher - Always visible */}
               <div className="flex items-center bg-gradient-to-r from-primary/10 to-primary/5 rounded-full p-0.5 sm:p-1 shadow-sm border border-primary/20">
-                <Button 
-                  size="sm" 
+                <Button
+                  size="sm"
                   onClick={() => setLanguage('fr')}
                   className={`${language === 'fr' ? 'bg-primary text-primary-foreground shadow-md' : 'bg-transparent text-muted-foreground hover:text-primary'} rounded-full px-2 sm:px-3 py-1 sm:py-1.5 text-xs font-semibold transition-all duration-200`}
                 >
                   FR
                 </Button>
-                <Button 
+                <Button
                   size="sm"
                   onClick={() => setLanguage('ar')}
                   className={`${language === 'ar' ? 'bg-primary text-primary-foreground shadow-md' : 'bg-transparent text-muted-foreground hover:text-primary'} rounded-full px-2 sm:px-3 py-1 sm:py-1.5 text-xs font-semibold transition-all duration-200`}
@@ -154,18 +196,18 @@ const AccesAuxDroitsLayout = () => {
                   AR
                 </Button>
               </div>
-              
+
               {/* JustClic Button - Hidden on very small screens */}
               <Link to="/" className="hidden xs:block sm:block">
-                <Button 
-                  variant="outline" 
-                  size="sm" 
+                <Button
+                  variant="outline"
+                  size="sm"
                   className="px-2 sm:px-3 h-8 sm:h-9 rounded-full border-primary/30 hover:bg-primary/10 hover:border-primary transition-all duration-200 shadow-sm"
                 >
                   <img src="/Feelinx_upload/justclic-logo.png" alt="JustClic" className="h-4 sm:h-5" />
                 </Button>
               </Link>
-              
+
               {/* Mobile Menu - In flow, not absolute */}
               <Sheet open={isMobileMenuOpen} onOpenChange={setIsMobileMenuOpen}>
                 <SheetTrigger asChild>
@@ -179,44 +221,43 @@ const AccesAuxDroitsLayout = () => {
                       <img src="/Feelinx_upload/logo-acces-aux-droits.png" alt={t('accessToRights')} className="h-6 sm:h-8 w-auto" />
                       <h2 className={`font-bold text-primary ${isRTL ? 'font-almarai' : ''}`}>{t('accessToRights')}</h2>
                     </div>
-                    
+
                     <nav className="flex flex-col mt-4 px-2">
                       {/* Home Link */}
-                      <Link 
-                        to="/acces-aux-droits" 
-                        onClick={() => setIsMobileMenuOpen(false)} 
+                      <Link
+                        to="/acces-aux-droits"
+                        onClick={() => setIsMobileMenuOpen(false)}
                         className={`text-base font-medium hover:text-primary p-3 rounded-lg hover:bg-muted flex items-center gap-3 ${isRTL ? 'font-almarai flex-row-reverse text-right' : ''}`}
                       >
                         <Home className="h-5 w-5 text-primary" />
                         {t('home')}
                       </Link>
-                      
+
                       <div className="h-px bg-border my-2" />
-                      
+
                       {/* Hierarchical Menu Sections */}
                       {menuSections.map((section) => {
                         const Icon = section.icon;
                         const isOpen = openSections.includes(section.id);
                         const isCurrentSection = location.pathname.includes(section.link.split('/').pop() || '');
-                        
+
                         return (
                           <div key={section.id} className="mb-1">
                             <Collapsible open={isOpen} onOpenChange={() => toggleSection(section.id)}>
                               <div className={`flex items-center ${isRTL ? 'flex-row-reverse' : ''}`}>
-                                <Link 
+                                <Link
                                   to={section.link}
                                   onClick={() => setIsMobileMenuOpen(false)}
-                                  className={`flex-1 text-base font-medium p-3 rounded-lg hover:bg-muted flex items-center gap-3 ${
-                                    isCurrentSection ? 'text-primary bg-primary/5' : 'hover:text-primary'
-                                  } ${isRTL ? 'font-almarai flex-row-reverse text-right' : ''}`}
+                                  className={`flex-1 text-base font-medium p-3 rounded-lg hover:bg-muted flex items-center gap-3 ${isCurrentSection ? 'text-primary bg-primary/5' : 'hover:text-primary'
+                                    } ${isRTL ? 'font-almarai flex-row-reverse text-right' : ''}`}
                                 >
                                   <Icon className={`h-5 w-5 ${isCurrentSection ? 'text-primary' : 'text-muted-foreground'}`} />
                                   {section.label}
                                 </Link>
                                 <CollapsibleTrigger asChild>
-                                  <Button 
-                                    variant="ghost" 
-                                    size="sm" 
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
                                     className="h-10 w-10 p-0 hover:bg-muted"
                                   >
                                     {isOpen ? (
@@ -227,7 +268,7 @@ const AccesAuxDroitsLayout = () => {
                                   </Button>
                                 </CollapsibleTrigger>
                               </div>
-                              
+
                               <CollapsibleContent>
                                 <div className={`${isRTL ? 'pr-6 border-r-2' : 'pl-6 border-l-2'} border-muted ml-5 mr-5 mt-1 mb-2`}>
                                   {section.children.map((child, idx) => {
@@ -237,9 +278,8 @@ const AccesAuxDroitsLayout = () => {
                                         key={idx}
                                         to={child.link}
                                         onClick={() => setIsMobileMenuOpen(false)}
-                                        className={`block text-sm p-2.5 rounded-lg hover:bg-muted ${
-                                          isChildCurrent ? 'text-primary font-medium bg-primary/5' : 'text-muted-foreground hover:text-foreground'
-                                        } ${isRTL ? 'font-almarai text-right' : ''}`}
+                                        className={`block text-sm p-2.5 rounded-lg hover:bg-muted ${isChildCurrent ? 'text-primary font-medium bg-primary/5' : 'text-muted-foreground hover:text-foreground'
+                                          } ${isRTL ? 'font-almarai text-right' : ''}`}
                                       >
                                         {child.label}
                                       </Link>
@@ -251,13 +291,13 @@ const AccesAuxDroitsLayout = () => {
                           </div>
                         );
                       })}
-                      
+
                       <div className="h-px bg-border my-3" />
-                      
+
                       {/* Footer Link */}
-                      <Link 
-                        to="/" 
-                        onClick={() => setIsMobileMenuOpen(false)} 
+                      <Link
+                        to="/"
+                        onClick={() => setIsMobileMenuOpen(false)}
                         className={`text-sm text-muted-foreground hover:text-primary p-3 rounded-lg hover:bg-muted flex items-center gap-2 ${isRTL ? 'flex-row-reverse font-almarai' : ''}`}
                       >
                         <span>{isRTL ? '←' : '→'}</span>

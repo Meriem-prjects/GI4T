@@ -1,6 +1,6 @@
 import { useLanguage } from '@/contexts/LanguageContext';
 
-type TranslationKey = 
+type TranslationKey =
   // Homepage
   | 'tagline'
   | 'whoWeAre'
@@ -557,7 +557,7 @@ const translations: Record<'fr' | 'ar', Record<TranslationKey, string>> = {
     suggestLinkDesc: 'Vous connaissez un site ou une ressource utile ? Aidez-nous à enrichir notre liste',
     // Publications
     publicationsTitle: 'Publications',
-    publicationsDesc: 'Rapports, guides et analyses sur l\'accès aux droits',
+    publicationsDesc: 'Rapports et analyses',
     // Albums Photos
     photoAlbumsTitle: 'Albums Photos',
     photoAlbumsDesc: 'Découvrez nos actions en images',
@@ -971,7 +971,7 @@ const translations: Record<'fr' | 'ar', Record<TranslationKey, string>> = {
     suggestLinkDesc: 'هل تعرف موردًا مفيدًا؟',
     // Publications
     publicationsTitle: 'المنشورات',
-    publicationsDesc: 'تقارير وأدلة وتحليلات حول الوصول إلى الحقوق',
+    publicationsDesc: 'تقارير وتحليلات',
     // Albums Photos
     photoAlbumsTitle: 'ألبومات الصور',
     photoAlbumsDesc: 'اكتشف أعمالنا من خلال الصور',
@@ -1174,7 +1174,7 @@ const translations: Record<'fr' | 'ar', Record<TranslationKey, string>> = {
     odf: 'المرصد',
     event: 'حدث',
     publication: 'منشور',
-    
+
     // Guide content
     guideJobSeeker: 'دليل الباحث عن عمل',
     guideJobSeekerDesc: 'كل ما تحتاج معرفته عن حقوقك كباحث عن عمل: التسجيل، الإعانة، المرافقة.',
@@ -1188,7 +1188,7 @@ const translations: Record<'fr' | 'ar', Record<TranslationKey, string>> = {
     guideLegalAidDesc: 'كيفية الاستفادة من المساعدة القضائية، الشروط والإجراءات.',
     guideForeigners: 'الأجانب في فرنسا',
     guideForeignersDesc: 'تصريح الإقامة، التجنيس، لم شمل الأسرة والحقوق الاجتماعية.',
-    
+
     // Resource content
     resourceOverdebtFile: 'ملف فرط المديونية',
     resourceOverdebtFileDesc: 'مجموعة كاملة لتكوين ملف فرط المديونية',
@@ -1205,7 +1205,7 @@ const translations: Record<'fr' | 'ar', Record<TranslationKey, string>> = {
     letterType: 'نموذج خطاب',
     formType: 'استمارة',
     dossierType: 'ملف',
-    
+
     // Tags
     tagPoleEmploi: 'مركز التوظيف',
     tagAllocation: 'إعانة',

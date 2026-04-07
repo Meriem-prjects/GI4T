@@ -22,7 +22,7 @@ const ObservatoireSection = () => {
   };
 
   return (
-    <Card 
+    <Card
       role="button"
       tabIndex={0}
       aria-label="Accéder à l'Observatoire des Droits"
@@ -35,20 +35,22 @@ const ObservatoireSection = () => {
       }}
       className="bg-gradient-to-br from-[#4164D7] to-[#5574E0] border-0 shadow-2xl hover:shadow-3xl transition-all cursor-pointer hover:scale-[1.02] duration-300"
     >
-      <CardContent className="p-5 sm:p-8 md:p-12 flex flex-col items-center justify-center space-y-5 sm:space-y-8 min-h-[350px] sm:min-h-[450px] md:min-h-[500px]">
+      <CardContent className="p-5 sm:p-8 md:p-10 flex flex-col items-center justify-center space-y-4 sm:space-y-6 min-h-[350px] sm:min-h-[450px] md:min-h-[500px]">
         {/* Logo */}
-        <div className="flex-shrink-0">
+        <div className="flex-shrink-0 h-40 sm:h-48 md:h-56 flex items-center justify-center">
           <img
             src={language === 'ar' ? logoOdfAr : logoOdfFr}
-            alt="Observatoire des Droits Fondamentaux" 
-            className="h-32 sm:h-40 md:h-48 w-auto object-contain"
+            alt="Observatoire des Droits Fondamentaux"
+            className="h-28 sm:h-36 md:h-44 w-auto object-contain"
           />
         </div>
 
         {/* Description */}
-        <p className={`text-white text-center text-base sm:text-lg max-w-md leading-relaxed ${isRTL ? 'font-almarai' : ''}`}>
-          {t('observatoryDescription')}
-        </p>
+        <div className="min-h-[3.5rem] sm:min-h-[4.5rem] md:min-h-[5.5rem] flex items-center justify-center">
+          <p className={`text-white text-center text-base sm:text-lg max-w-md leading-relaxed ${isRTL ? 'font-almarai' : ''}`}>
+            {t('observatoryDescription')}
+          </p>
+        </div>
 
         {/* Search Input */}
         <div
