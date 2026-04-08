@@ -30,10 +30,11 @@ jobs:
           host: ${{ secrets.VPS_HOST }}
           username: ${{ secrets.VPS_USER }}
           password: ${{ secrets.VPS_PASSWORD }}
-          source: "dist/"
-          target: "/var/www/app/"
-          strip_components: 0
+          source: "dist/*"
+          target: "/var/www/app/dist"
+          strip_components: 1
           overwrite: true
+          rm: true
 
       - name: Restart Nginx
         uses: appleboy/ssh-action@v1.0.3
@@ -42,7 +43,5 @@ jobs:
           username: ${{ secrets.VPS_USER }}
           password: ${{ secrets.VPS_PASSWORD }}
           script: |
-            rm -rf /var/www/app/dist.bak
-            mv /var/www/app/dist /var/www/app/dist.bak 2>/dev/null || true
-            mv /var/www/app/dist /var/www/app/dist
-            systemctl restart nginx
+            ls -la /var/www/app/dist/
+            nginx -t && systemctl restart nginx
