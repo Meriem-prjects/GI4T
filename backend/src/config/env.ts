@@ -28,7 +28,13 @@ const schema = z.object({
   SEED_ADMIN_PASSWORD: z.string().min(8).default("changeme-immediately"),
 });
 
-const parsed = schema.safeParse(process.env);
+// Treat empty strings as unset so .default() kicks in for optional vars.
+const rawEnv: Record<string, string | undefined> = {};
+for (const [key, value] of Object.entries(process.env)) {
+  rawEnv[key] = value === "" ? undefined : value;
+}
+
+const parsed = schema.safeParse(rawEnv);
 if (!parsed.success) {
   console.error("Invalid environment variables:", parsed.error.flatten().fieldErrors);
   process.exit(1);
