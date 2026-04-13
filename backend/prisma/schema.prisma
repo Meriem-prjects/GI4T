@@ -1,0 +1,568 @@
+// Prisma schema for just-click-feelinx-connect
+// Replaces Supabase. Keeps the same UUIDs so existing data can be imported.
+
+generator client {
+  provider        = "prisma-client-js"
+  previewFeatures = ["postgresqlExtensions"]
+}
+
+datasource db {
+  provider   = "postgresql"
+  url        = env("DATABASE_URL")
+  extensions = [pgcrypto, vector]
+}
+
+// ============================================================================
+// ENUMS
+// ============================================================================
+
+enum EventType {
+  action_realisee
+  evenement_a_venir
+
+  @@map("event_type")
+}
+
+enum UserRoleType {
+  admin
+  editor
+  validator
+  admin_observatoire
+  admin_acces_droits
+  editor_acces_droits
+
+  @@map("user_role")
+}
+
+// ============================================================================
+// AUTH (replaces Supabase auth.users)
+// ============================================================================
+
+model User {
+  id           String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  email        String   @unique
+  passwordHash String   @map("password_hash")
+  createdAt    DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt    DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  profile                 Profile?
+  roles                   UserRole[]
+  accesDroitsPermissions  AccesDroitsPermission[]
+  documents               Document[]
+  activityLogs            ActivityLog[]
+
+  @@map("users")
+}
+
+// ============================================================================
+// CORE REFERENCE TABLES
+// ============================================================================
+
+model Category {
+  id             String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name           String
+  nameAr         String?   @map("name_ar")
+  parentId       String?   @map("parent_id") @db.Uuid
+  description    String?
+  descriptionAr  String?   @map("description_ar")
+  color          String?   @default("#3B82F6")
+  createdAt      DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt      DateTime  @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  parent             Category?           @relation("CategoryHierarchy", fields: [parentId], references: [id])
+  children           Category[]           @relation("CategoryHierarchy")
+  documents          Document[]
+  documentCategories DocumentCategory[]
+
+  @@map("categories")
+}
+
+model DocumentType {
+  id            String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name          String
+  nameAr        String?   @map("name_ar")
+  description   String?
+  descriptionAr String?   @map("description_ar")
+  createdAt     DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  documents Document[]
+
+  @@map("document_types")
+}
+
+model CourtType {
+  id            String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name          String
+  nameAr        String?  @map("name_ar")
+  description   String?
+  descriptionAr String?  @map("description_ar")
+  createdAt     DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt     DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  @@map("court_types")
+}
+
+model JurisdictionLevel {
+  id            String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name          String
+  nameAr        String?  @map("name_ar")
+  description   String?
+  descriptionAr String?  @map("description_ar")
+  levelOrder    Int      @default(1) @map("level_order")
+  createdAt     DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt     DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  @@map("jurisdiction_levels")
+}
+
+model Language {
+  id         String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  code       String   @unique
+  name       String
+  nameNative String   @map("name_native")
+  isDefault  Boolean? @default(false) @map("is_default")
+  isActive   Boolean? @default(true) @map("is_active")
+  createdAt  DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  @@map("languages")
+}
+
+model Governorate {
+  id         String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name       String
+  nameAr     String?  @map("name_ar")
+  code       String   @unique
+  geojson    Json
+  population Int?
+  areaKm2    Decimal? @map("area_km2") @db.Decimal
+  createdAt  DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt  DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  events          Event[]
+  usefulAddresses UsefulAddress[]
+
+  @@map("governorates")
+}
+
+// ============================================================================
+// USER PROFILES & ROLES
+// ============================================================================
+
+model Profile {
+  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId    String   @unique @map("user_id") @db.Uuid
+  firstName String?  @map("first_name")
+  lastName  String?  @map("last_name")
+  email     String?
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("profiles")
+}
+
+model UserRole {
+  id        String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId    String       @map("user_id") @db.Uuid
+  role      UserRoleType
+  createdAt DateTime     @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt DateTime     @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, role])
+  @@map("user_roles")
+}
+
+model AccesDroitsPermission {
+  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId    String   @map("user_id") @db.Uuid
+  section   String
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, section])
+  @@map("acces_droits_permissions")
+}
+
+// ============================================================================
+// DOCUMENTS
+// ============================================================================
+
+model Document {
+  id                     String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId                 String?  @map("user_id") @db.Uuid
+  title                  String
+  titleAr                String?  @map("title_ar")
+  subtitle               String?
+  subtitleAr             String?  @map("subtitle_ar")
+  summary                String?
+  summaryAr              String?  @map("summary_ar")
+  content                String
+  translatedContent      String?  @map("translated_content")
+  author                 String?
+  authorAr               String?  @map("author_ar")
+  keywords               String[] @default([])
+  keywordsAr             String[] @default([]) @map("keywords_ar")
+  language               String?  @default("fr")
+  categoryId             String?  @map("category_id") @db.Uuid
+  documentTypeId         String?  @map("document_type_id") @db.Uuid
+  originalFilename       String   @map("original_filename")
+  fileUrl                String?  @map("file_url")
+  pdfUrl                 String?  @map("pdf_url")
+  fileSize               Int?     @map("file_size")
+  pageCount              Int?     @default(1) @map("page_count")
+  pageContents           Json?    @map("page_contents")
+  processedPages         Int?     @map("processed_pages")
+  totalPages             Int?     @map("total_pages")
+  status                 String?  @default("processed")
+  published              Boolean? @default(false)
+  processingJobId        String?  @map("processing_job_id") @db.Uuid
+  pdfaCompliance         Boolean? @default(false) @map("pdfa_compliance")
+  pdfaVersion            String?  @map("pdfa_version")
+  pdfaConformanceLevel   String?  @map("pdfa_conformance_level")
+  archivalMetadata       Json?    @map("archival_metadata")
+  archivalFeatures       Json?    @map("archival_features")
+  caseNumber             String?  @map("case_number")
+  caseNumbers            String[] @default([]) @map("case_numbers")
+  year                   Int?
+  court                  String?
+  courtAr                String?  @map("court_ar")
+  courtCategory          String?  @map("court_category")
+  courtCategoryAr        String?  @map("court_category_ar")
+  courtCategoryType      String?  @map("court_category_type")
+  courtCategoryTypeAr    String?  @map("court_category_type_ar")
+  courtLevel             String?  @map("court_level")
+  courtLevelAr           String?  @map("court_level_ar")
+  plaintiff              String?
+  plaintiffAr            String?  @map("plaintiff_ar")
+  defendant              String?
+  defendantAr            String?  @map("defendant_ar")
+  jurisdiction           String?
+  legalReferences        String[] @default([]) @map("legal_references")
+  legalReferencesAr      String[] @default([]) @map("legal_references_ar")
+  bibliography           String?
+  bibliographyAr         String?  @map("bibliography_ar")
+  validationDate         DateTime? @map("validation_date") @db.Date
+  legalDomains           String[] @default([]) @map("legal_domains")
+  mainTopics             String[] @default([]) @map("main_topics")
+  entities               String[] @default([])
+  dates                  String[] @default([])
+  documentType           String?  @map("document_type")
+  textualMetadata        String?  @map("textual_metadata")
+  // embedding vector(1536) — added via raw SQL migration, not typed in Prisma
+  // Use prisma.$queryRaw for semantic search
+  createdAt              DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt              DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  user              User?              @relation(fields: [userId], references: [id], onDelete: SetNull)
+  category          Category?          @relation(fields: [categoryId], references: [id])
+  documentTypeRel   DocumentType?      @relation(fields: [documentTypeId], references: [id])
+  processingJob     ProcessingJob?     @relation(fields: [processingJobId], references: [id], onDelete: SetNull)
+  documentCategories DocumentCategory[]
+  comments          DocumentComment[]
+  views             DocumentView[]
+
+  @@index([status])
+  @@index([published])
+  @@index([categoryId])
+  @@index([documentTypeId])
+  @@map("documents")
+}
+
+model DocumentCategory {
+  id         String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  documentId String   @map("document_id") @db.Uuid
+  categoryId String   @map("category_id") @db.Uuid
+  createdAt  DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  document Document @relation(fields: [documentId], references: [id], onDelete: Cascade)
+  category Category @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+
+  @@unique([documentId, categoryId])
+  @@index([documentId])
+  @@index([categoryId])
+  @@map("document_categories")
+}
+
+model DocumentComment {
+  id              String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  documentId      String   @map("document_id") @db.Uuid
+  parentCommentId String?  @map("parent_comment_id") @db.Uuid
+  authorName      String   @map("author_name")
+  authorEmail     String   @map("author_email")
+  content         String
+  isAdminReply    Boolean? @default(false) @map("is_admin_reply")
+  adminUserId     String?  @map("admin_user_id") @db.Uuid
+  status          String?  @default("pending")
+  createdAt       DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt       DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  document      Document          @relation(fields: [documentId], references: [id], onDelete: Cascade)
+  parentComment DocumentComment?  @relation("CommentThread", fields: [parentCommentId], references: [id], onDelete: Cascade)
+  replies       DocumentComment[] @relation("CommentThread")
+
+  @@index([documentId])
+  @@index([parentCommentId])
+  @@index([status])
+  @@index([createdAt])
+  @@map("document_comments")
+}
+
+model DocumentView {
+  id           String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  documentId   String   @map("document_id") @db.Uuid
+  sessionId    String   @map("session_id")
+  ipAddress    String?  @map("ip_address")
+  userAgent    String?  @map("user_agent")
+  readDuration Int?     @default(0) @map("read_duration")
+  viewedAt     DateTime @default(now()) @map("viewed_at") @db.Timestamptz(6)
+  createdAt    DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  document Document @relation(fields: [documentId], references: [id], onDelete: Cascade)
+
+  @@index([documentId])
+  @@index([sessionId])
+  @@index([viewedAt])
+  @@map("document_views")
+}
+
+// ============================================================================
+// PROCESSING / AUDIT
+// ============================================================================
+
+model ProcessingJob {
+  id             String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  fileName       String   @map("file_name")
+  fileSize       Int      @map("file_size")
+  status         String   @default("pending")
+  progress       Int      @default(0)
+  currentStep    String?  @map("current_step")
+  totalPages     Int?     @default(0) @map("total_pages")
+  processedPages Int?     @default(0) @map("processed_pages")
+  errorMessage   String?  @map("error_message")
+  resultData     Json?    @map("result_data")
+  createdAt      DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt      DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  documents Document[]
+
+  @@index([status])
+  @@index([createdAt(sort: Desc)])
+  @@map("processing_jobs")
+}
+
+model ActivityLog {
+  id         String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  entityType String   @map("entity_type")
+  entityId   String   @map("entity_id") @db.Uuid
+  action     String
+  details    Json?
+  userId     String?  @map("user_id") @db.Uuid
+  createdAt  DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  user User? @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([entityType, entityId])
+  @@index([userId])
+  @@index([createdAt])
+  @@map("activity_logs")
+}
+
+// ============================================================================
+// CHATBOT
+// ============================================================================
+
+model ChatbotConfig {
+  id             String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  tone           String   @default("professionnel")
+  primaryColor   String   @default("#3B82F6") @map("primary_color")
+  secondaryColor String   @default("#10B981") @map("secondary_color")
+  fontFamily     String   @default("Inter, sans-serif") @map("font_family")
+  systemPrompt   String   @map("system_prompt")
+  welcomeMessage String   @map("welcome_message")
+  createdAt      DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt      DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  @@map("chatbot_config")
+}
+
+model ChatbotTrainingDocument {
+  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  title     String
+  titleAr   String?  @map("title_ar")
+  content   String
+  fileUrl   String?  @map("file_url")
+  fileName  String?  @map("file_name")
+  isActive  Boolean  @default(true) @map("is_active")
+  category  String?
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  @@map("chatbot_training_documents")
+}
+
+// ============================================================================
+// EVENTS & CONTENT
+// ============================================================================
+
+model Event {
+  id                   String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  title                String
+  titleAr              String?   @map("title_ar")
+  description          String
+  descriptionAr        String?   @map("description_ar")
+  type                 EventType
+  governorateId        String?   @map("governorate_id") @db.Uuid
+  eventDate            DateTime  @map("event_date") @db.Date
+  peopleImpacted       Int?      @map("people_impacted")
+  availablePlaces      Int?      @map("available_places")
+  registrationEnabled  Boolean?  @default(false) @map("registration_enabled")
+  images               String[]  @default([])
+  latitude             Decimal?  @db.Decimal
+  longitude            Decimal?  @db.Decimal
+  status               String?   @default("published")
+  createdBy            String?   @map("created_by") @db.Uuid
+  createdAt            DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt            DateTime  @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  governorate   Governorate?        @relation(fields: [governorateId], references: [id], onDelete: SetNull)
+  registrations EventRegistration[]
+
+  @@index([governorateId])
+  @@index([type])
+  @@index([eventDate])
+  @@map("events")
+}
+
+model EventRegistration {
+  id           String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  eventId      String   @map("event_id") @db.Uuid
+  firstName    String   @map("first_name")
+  lastName     String   @map("last_name")
+  email        String
+  phone        String?
+  registeredAt DateTime @default(now()) @map("registered_at") @db.Timestamptz(6)
+
+  event Event @relation(fields: [eventId], references: [id], onDelete: Cascade)
+
+  @@index([eventId])
+  @@map("event_registrations")
+}
+
+model News {
+  id          String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  title       String
+  titleAr     String?   @map("title_ar")
+  excerpt     String
+  excerptAr   String?   @map("excerpt_ar")
+  content     String?
+  contentAr   String?   @map("content_ar")
+  category    String
+  tags        String[]  @default([])
+  tagsAr      String[]  @default([]) @map("tags_ar")
+  imageUrl    String?   @map("image_url")
+  isPublished Boolean?  @map("is_published")
+  isFeatured  Boolean?  @map("is_featured")
+  readTime    Int?      @map("read_time")
+  views       Int?      @default(0)
+  createdBy   String?   @map("created_by") @db.Uuid
+  createdAt   DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  publishedAt DateTime? @map("published_at") @db.Timestamptz(6)
+  updatedAt   DateTime? @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  @@map("news")
+}
+
+model FaqItem {
+  id           String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  question     String
+  questionAr   String?  @map("question_ar")
+  answer       String
+  answerAr     String?  @map("answer_ar")
+  category     String
+  categoryAr   String?  @map("category_ar")
+  displayOrder Int      @default(0) @map("display_order")
+  isActive     Boolean  @default(true) @map("is_active")
+  createdAt    DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt    DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  @@map("faq_items")
+}
+
+model UsefulAddress {
+  id            String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name          String
+  nameAr        String   @map("name_ar")
+  address       String
+  addressAr     String   @map("address_ar")
+  phone         String
+  email         String?
+  category      String   @default("Chambre des Avocats")
+  categoryAr    String   @default("الدائرة الإبتدائية") @map("category_ar")
+  governorateId String?  @map("governorate_id") @db.Uuid
+  latitude      Decimal? @db.Decimal
+  longitude     Decimal? @db.Decimal
+  hours         String?
+  hoursAr       String?  @map("hours_ar")
+  isPublished   Boolean  @default(true) @map("is_published")
+  createdAt     DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt     DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  governorate Governorate? @relation(fields: [governorateId], references: [id], onDelete: SetNull)
+
+  @@map("useful_addresses")
+}
+
+// ============================================================================
+// MEDIA / ALBUMS
+// ============================================================================
+
+model PhotoAlbum {
+  id             String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  title          String
+  titleAr        String?  @map("title_ar")
+  description    String?
+  descriptionAr  String?  @map("description_ar")
+  date           String?
+  location       String?
+  locationAr     String?  @map("location_ar")
+  governorate    String?
+  category       String   @default("Campagnes")
+  coverImageUrl  String?  @map("cover_image_url")
+  photoUrls      String[] @default([]) @map("photo_urls")
+  photoCount     Int      @default(0) @map("photo_count")
+  views          Int      @default(0)
+  featured       Boolean  @default(false)
+  published      Boolean  @default(true)
+  createdAt      DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt      DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  @@map("photo_albums")
+}
+
+model MediaItem {
+  id            String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  title         String
+  titleAr       String?  @map("title_ar")
+  description   String?
+  descriptionAr String?  @map("description_ar")
+  type          String   @default("Vidéo")
+  category      String   @default("Campagnes terrain")
+  categoryId    String?  @map("category_id")
+  governorate   String?
+  videoUrl      String?  @map("video_url")
+  thumbnailUrl  String?  @map("thumbnail_url")
+  duration      String?
+  views         Int      @default(0)
+  likes         Int      @default(0)
+  featured      Boolean  @default(false)
+  published     Boolean  @default(true)
+  createdAt     DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt     DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  @@map("media_items")
+}

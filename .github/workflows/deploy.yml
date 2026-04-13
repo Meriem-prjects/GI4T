@@ -18,13 +18,30 @@ jobs:
           node-version: 20
           cache: npm
 
-      - name: Install dependencies
+      # ---------- FRONTEND ----------
+      - name: Install frontend dependencies
         run: npm ci
 
-      - name: Build
+      - name: Build frontend
+        env:
+          VITE_API_URL: http://102.204.206.147
         run: npm run build
 
-      - name: Deploy to VPS
+      # ---------- BACKEND ----------
+      - name: Install backend dependencies
+        working-directory: backend
+        run: npm ci
+
+      - name: Generate Prisma client
+        working-directory: backend
+        run: npx prisma generate
+
+      - name: Build backend
+        working-directory: backend
+        run: npm run build
+
+      # ---------- DEPLOY FRONTEND ----------
+      - name: Deploy frontend dist
         uses: appleboy/scp-action@v0.1.7
         with:
           host: ${{ secrets.VPS_HOST }}
@@ -36,12 +53,62 @@ jobs:
           overwrite: true
           rm: true
 
-      - name: Restart Nginx
+      # ---------- DEPLOY BACKEND ----------
+      - name: Deploy backend build
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          password: ${{ secrets.VPS_PASSWORD }}
+          source: "backend/dist/*,backend/package.json,backend/package-lock.json,backend/prisma/*"
+          target: "/var/www/app/backend"
+          strip_components: 1
+          overwrite: true
+
+      - name: Install backend deps & migrate & restart
         uses: appleboy/ssh-action@v1.0.3
         with:
           host: ${{ secrets.VPS_HOST }}
           username: ${{ secrets.VPS_USER }}
           password: ${{ secrets.VPS_PASSWORD }}
           script: |
-            ls -la /var/www/app/dist/
-            nginx -t && systemctl restart nginx
+            set -e
+            cd /var/www/app/backend
+
+            # Write .env from GitHub secrets
+            cat > .env << EOF
+            NODE_ENV=production
+            PORT=4000
+            API_URL=http://102.204.206.147
+            CORS_ORIGIN=http://102.204.206.147
+            DATABASE_URL=${{ secrets.DATABASE_URL }}
+            JWT_SECRET=${{ secrets.JWT_SECRET }}
+            JWT_EXPIRES_IN=7d
+            BCRYPT_SALT_ROUNDS=12
+            STORAGE_DIR=/var/www/app/backend/storage
+            STORAGE_PUBLIC_URL=http://102.204.206.147/api/storage
+            MAX_FILE_SIZE_MB=100
+            OPENAI_API_KEY=${{ secrets.OPENAI_API_KEY }}
+            GOOGLE_VISION_API_KEY=${{ secrets.GOOGLE_VISION_API_KEY }}
+            PDFREST_API_KEY=${{ secrets.PDFREST_API_KEY }}
+            DEEPL_API_KEY=${{ secrets.DEEPL_API_KEY }}
+            SEED_ADMIN_EMAIL=${{ secrets.SEED_ADMIN_EMAIL }}
+            SEED_ADMIN_PASSWORD=${{ secrets.SEED_ADMIN_PASSWORD }}
+            EOF
+
+            mkdir -p storage/documents storage/media
+
+            npm ci --omit=dev
+            npx prisma generate
+            npx prisma migrate deploy
+
+            # Reload via PM2
+            if pm2 describe app-api > /dev/null 2>&1; then
+              pm2 reload app-api
+            else
+              pm2 start dist/index.js --name app-api
+              pm2 save
+            fi
+
+            # Reload nginx
+            nginx -t && systemctl reload nginx

@@ -1,4 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
+import { api } from '@/api/client';
 import { supabase } from '@/integrations/supabase/client';
 import { groupViewsByDay, ViewData } from '@/lib/statisticsUtils';
 
@@ -29,11 +30,10 @@ export function useStatistics(period: string, filters: StatisticsFilters) {
   const { data: globalStats, isLoading: isLoadingGlobal } = useQuery({
     queryKey: ['global-statistics', periodDays],
     queryFn: async () => {
-      const { data, error } = await supabase.rpc('get_global_statistics', {
-        period_days: periodDays
+      const data = await api.get<GlobalStatistics>('/api/statistics/global', {
+        query: { period_days: periodDays },
       });
-      if (error) throw error;
-      return data?.[0] as GlobalStatistics;
+      return data;
     },
     refetchInterval: 60000, // Refresh every minute
   });

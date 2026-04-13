@@ -1,5 +1,5 @@
 import { createContext, useContext, useEffect, useState } from "react";
-import { User, Session } from "@supabase/supabase-js";
+import type { User, Session } from "@/api/types";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
 
@@ -25,83 +25,54 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [isAccesDroitsAdmin, setIsAccesDroitsAdmin] = useState(false);
   const navigate = useNavigate();
 
+  const applyRolesFromSession = (session: Session | null) => {
+    const roles =
+      ((session?.user?.app_metadata as { roles?: string[] } | undefined)?.roles) ?? [];
+    setIsAdmin(roles.includes("admin"));
+    setIsObservatoireAdmin(
+      roles.includes("admin") || roles.includes("admin_observatoire"),
+    );
+    setIsAccesDroitsAdmin(
+      roles.includes("admin") || roles.includes("admin_acces_droits"),
+    );
+  };
+
   useEffect(() => {
-    // Set up auth state listener first
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, session) => {
+      (_event, session) => {
         setSession(session);
         setUser(session?.user ?? null);
-        
-        // Check admin role when session changes
-        if (session?.user) {
-          setTimeout(() => {
-            checkAdminRole(session.user.id);
-          }, 0);
-        } else {
-          setIsAdmin(false);
-        }
-      }
+        applyRolesFromSession(session);
+      },
     );
 
-    // Then check for existing session
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
       setUser(session?.user ?? null);
-      
-      if (session?.user) {
-        checkAdminRole(session.user.id);
-      }
+      applyRolesFromSession(session);
       setLoading(false);
     });
 
     return () => subscription.unsubscribe();
   }, []);
 
-  const checkAdminRole = async (userId: string) => {
-    try {
-      const { data, error } = await supabase
-        .from("user_roles")
-        .select("role")
-        .eq("user_id", userId);
-
-      if (!error && data && data.length > 0) {
-        const roles = data.map(r => r.role);
-        
-        // Super admin
-        setIsAdmin(roles.includes("admin"));
-        
-        // Observatoire admin (admin ou admin_observatoire)
-        setIsObservatoireAdmin(
-          roles.includes("admin") || roles.includes("admin_observatoire")
-        );
-        
-        // Accès aux droits admin (admin ou admin_acces_droits)
-        setIsAccesDroitsAdmin(
-          roles.includes("admin") || roles.includes("admin_acces_droits")
-        );
-      } else {
-        setIsAdmin(false);
-        setIsObservatoireAdmin(false);
-        setIsAccesDroitsAdmin(false);
-      }
-    } catch (error) {
-      console.error("Error checking admin role:", error);
-      setIsAdmin(false);
-      setIsObservatoireAdmin(false);
-      setIsAccesDroitsAdmin(false);
-    }
-  };
-
   const signIn = async (email: string, password: string) => {
-    const { error } = await supabase.auth.signInWithPassword({
+    const { data, error } = await supabase.auth.signInWithPassword({
       email,
       password,
     });
+    if (!error && data?.session) {
+      setSession(data.session);
+      setUser(data.user);
+      applyRolesFromSession(data.session);
+    }
     return { error };
   };
 
   const signOut = async () => {
     await supabase.auth.signOut();
+    setSession(null);
+    setUser(null);
     setIsAdmin(false);
     setIsObservatoireAdmin(false);
     setIsAccesDroitsAdmin(false);
