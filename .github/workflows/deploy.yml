@@ -92,8 +92,6 @@ jobs:
             GOOGLE_VISION_API_KEY=${{ secrets.GOOGLE_VISION_API_KEY }}
             PDFREST_API_KEY=${{ secrets.PDFREST_API_KEY }}
             DEEPL_API_KEY=${{ secrets.DEEPL_API_KEY }}
-            SEED_ADMIN_EMAIL=${{ secrets.SEED_ADMIN_EMAIL }}
-            SEED_ADMIN_PASSWORD=${{ secrets.SEED_ADMIN_PASSWORD }}
             EOF
 
             mkdir -p storage/documents storage/media storage/album-photos
@@ -102,15 +100,6 @@ jobs:
             npm ci
             npx prisma generate
             npx prisma migrate deploy
-
-            # Run seed only if no admin user exists yet
-            node -e "
-              const { PrismaClient } = require('@prisma/client');
-              const p = new PrismaClient();
-              p.userRole.findFirst({ where: { role: 'admin' } })
-                .then(r => { process.exit(r ? 1 : 0); })
-                .catch(() => process.exit(1));
-            " && npx tsx prisma/seed.ts || echo "Admin already exists, skipping seed"
 
             # Reload via PM2
             if pm2 describe app-api > /dev/null 2>&1; then
