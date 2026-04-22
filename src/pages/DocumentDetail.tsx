@@ -1028,7 +1028,13 @@ const DocumentDetail = () => {
                 />
               ) : (
                 <div
-                  className={`document-content space-y-6 w-full ${language === 'ar' ? 'text-right' : ''}`}
+                  className={`document-content prose prose-lg max-w-none w-full mx-auto
+                    prose-p:leading-[1.85] prose-p:text-[1.05rem] prose-p:my-4
+                    prose-p:text-justify prose-p:hyphens-auto
+                    prose-headings:font-semibold prose-headings:tracking-tight
+                    prose-h1:text-3xl prose-h2:text-2xl prose-h3:text-xl
+                    ${language === 'ar' ? 'text-right arabic-text font-arabic prose-p:text-right' : ''}`}
+                  style={{ maxWidth: '72ch' }}
                   dir={language === 'ar' ? 'rtl' : 'ltr'}
                   dangerouslySetInnerHTML={{ __html: formattedContent }}
                 />

@@ -81,12 +81,95 @@ export const renderFormattedContent = (content: string): string => {
   return processTextContent(processedContent);
 };
 
+/**
+ * Split a long OCR-extracted block (single line, no paragraphs) into
+ * readable paragraphs using sentence boundaries and section markers.
+ *
+ * Heuristics (applied in order):
+ *  1. Break before roman/arabic section numbers at a word boundary:
+ *     " 1. ", " 2. ", " I. ", " II. ", " A. ", " B. ", " الأول ", " ثانيا "
+ *  2. Break before hard keywords: Introduction, Conclusion, Section, Chapitre, etc.
+ *  3. Group sentences into chunks of ~4 sentences for prose flow.
+ */
+const smartSplitIntoParagraphs = (text: string): string[] => {
+  const trimmed = text.trim();
+  if (!trimmed) return [];
+
+  // Already has paragraph breaks? leave it alone.
+  if (/\n\s*\n/.test(trimmed) || /\n/.test(trimmed)) {
+    return trimmed.split(/\n+/).map((s) => s.trim()).filter(Boolean);
+  }
+
+  // Short enough to fit comfortably in one paragraph
+  if (trimmed.length < 400) return [trimmed];
+
+  // Step 1: Insert paragraph breaks BEFORE section markers and hard keywords
+  let marked = trimmed;
+
+  // French structural keywords
+  const frKeywords = [
+    "Introduction",
+    "Conclusion",
+    "Section \\d",
+    "Chapitre \\d",
+    "Partie \\d",
+    "Titre \\d",
+  ];
+  for (const kw of frKeywords) {
+    marked = marked.replace(new RegExp(`(?<=\\. |\\? |\\! |» |: )(${kw})\\b`, "g"), "\n\n$1");
+  }
+
+  // Section numbers: " 1. " or " A. " or " I. " etc. (word boundary + number + dot + space)
+  marked = marked.replace(
+    /(?<=[a-zA-Zà-ÿ؀-ۿ\.\)»:]\s)(\d{1,2}\.\s+[A-ZÀ-Ÿ؀-ۿ])/g,
+    "\n\n$1",
+  );
+  marked = marked.replace(
+    /(?<=[a-zA-Zà-ÿ؀-ۿ\.\)»:]\s)([IVX]{1,4}\.\s+[A-ZÀ-Ÿ؀-ۿ])/g,
+    "\n\n$1",
+  );
+
+  // Split on explicit double newlines
+  const rough = marked.split(/\n\n+/).map((s) => s.trim()).filter(Boolean);
+
+  // Step 2: For each chunk still too long, split by sentence groups.
+  const paragraphs: string[] = [];
+  const sentenceGroupSize = 4;
+  for (const chunk of rough) {
+    if (chunk.length < 600) {
+      paragraphs.push(chunk);
+      continue;
+    }
+    // Match sentences ending with punctuation + optional quote/paren + space + next capital.
+    // Support Arabic punctuation (؟ ؛ .) as well.
+    const sentences = chunk.match(/[^.!?؟]+[.!?؟]+["»')\]]*\s?/g) ?? [chunk];
+    for (let i = 0; i < sentences.length; i += sentenceGroupSize) {
+      paragraphs.push(
+        sentences
+          .slice(i, i + sentenceGroupSize)
+          .join("")
+          .trim(),
+      );
+    }
+  }
+  return paragraphs.filter(Boolean);
+};
+
 // Helper function to process text content with markdown-like formatting
 const processTextContent = (content: string): string => {
   if (!content) return '';
 
+  // If the whole block has no line breaks, try to split it intelligently.
+  const normalized = content.replace(/\r\n/g, "\n");
+  const hasAnyBreak = /\n/.test(normalized);
+
+  if (!hasAnyBreak && normalized.trim().length > 400) {
+    const paragraphs = smartSplitIntoParagraphs(normalized);
+    return paragraphs.map((p) => `<p>${p}</p>`).join("\n");
+  }
+
   // Split content into lines to process line-by-line
-  const lines = content.split('\n');
+  const lines = normalized.split('\n');
 
   const processedLines = lines.map(line => {
     // Skip HTML tags (divs, etc.)
