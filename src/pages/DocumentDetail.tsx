@@ -695,28 +695,6 @@ const DocumentDetail = () => {
               </h2>
             )}
 
-            {/* Inline byline (author + date) */}
-            <div
-              className={`flex flex-wrap items-center gap-x-4 gap-y-2 text-sm text-muted-foreground mb-6 ${language === 'ar' ? 'justify-end' : 'justify-start'}`}
-            >
-              {currentAuthor && (() => {
-                const hasComma = currentAuthor.includes(',');
-                const authorName = hasComma ? currentAuthor.split(',')[0].trim() : currentAuthor;
-                return (
-                  <span className="inline-flex items-center gap-1.5">
-                    <User className="w-4 h-4" />
-                    <span className="font-medium text-foreground">{authorName}</span>
-                  </span>
-                );
-              })()}
-              {document.created_at && (
-                <span className="inline-flex items-center gap-1.5">
-                  <Calendar className="w-4 h-4" />
-                  {formatDate(document.created_at)}
-                </span>
-              )}
-            </div>
-
             {/* Summary as a pull-quote card */}
             {currentSummary && (
               <div
@@ -730,11 +708,34 @@ const DocumentDetail = () => {
             )}
           </header>
 
+          {/* Keywords — top, in a clean card */}
+          {currentKeywords?.length > 0 && (
+            <Card className={`mb-8 ${language === 'ar' ? 'text-right' : 'text-left'}`} dir={language === 'ar' ? 'rtl' : 'ltr'}>
+              <CardContent className="py-4">
+                <div className="flex items-center gap-2 mb-3 text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+                  <FileText className="w-4 h-4" />
+                  {language === 'ar' ? 'الكلمات المفاتيح' : 'Mots-clés'}
+                </div>
+                <div className={`flex flex-wrap gap-2 ${language === 'ar' ? 'justify-end' : 'justify-start'}`}>
+                  {currentKeywords.map((keyword) => (
+                    <Badge
+                      key={keyword}
+                      variant="secondary"
+                      className={`px-3 py-1 text-sm font-medium ${language === 'ar' ? 'arabic-text font-arabic' : ''}`}
+                    >
+                      {language === 'ar' ? normalizeArabicForDisplay(keyword) : keyword}
+                    </Badge>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
           {/* hidden original centered summary (kept for legacy hooks below) */}
           <div className="hidden">{currentSubtitle}</div>
 
-            {/* Metadata */}
-            <div className={`bg-muted/30 rounded-lg p-6 mb-8 ${language === 'ar' ? 'dir-rtl' : ''}`}>
+            {/* Metadata — moved to bottom of article (see below) */}
+            <div className={`hidden ${language === 'ar' ? 'dir-rtl' : ''}`}>
               {isAnalysisDocument() ? (
                 // Format pour Analyses juridiques, Commentaires, Blogs
                 <>
@@ -1083,18 +1084,110 @@ const DocumentDetail = () => {
             </Button>
           </div>
 
-          {/* Keywords */}
-          {currentKeywords?.length > 0 && (
-            <div className={`mt-12 pt-6 border-t ${language === 'ar' ? 'text-right' : ''}`}>
-              <h3 className="text-lg font-semibold mb-4">{language === 'ar' ? 'الكلمات المفاتيح' : 'Mots-clés'}</h3>
-              <div className={`flex flex-wrap gap-2 ${language === 'ar' ? 'justify-end' : ''}`}>
-                {currentKeywords.map((keyword) => (
-                  <Badge key={keyword} variant="outline" className={language === 'ar' ? 'arabic-text font-arabic' : ''}>
-                    {language === 'ar' ? normalizeArabicForDisplay(keyword) : keyword}
-                  </Badge>
-                ))}
-              </div>
-            </div>
+          {/* Informations document (date, auteur, métadonnées) — en bas */}
+          <section
+            className={`mt-12 pt-8 border-t ${language === 'ar' ? 'text-right' : 'text-left'}`}
+            dir={language === 'ar' ? 'rtl' : 'ltr'}
+          >
+            <h3 className={`text-lg font-semibold mb-4 flex items-center gap-2 ${language === 'ar' ? 'flex-row-reverse justify-end' : ''}`}>
+              <FileText className="w-5 h-5 text-muted-foreground" />
+              {language === 'ar' ? 'معلومات الوثيقة' : 'Informations'}
+            </h3>
+            <Card>
+              <CardContent className="py-5">
+                <dl className={`grid gap-4 sm:grid-cols-2 ${language === 'ar' ? 'text-right' : ''}`}>
+                  {currentAuthor && (
+                    <div>
+                      <dt className="text-xs uppercase tracking-wide text-muted-foreground mb-1">
+                        {language === 'ar' ? 'المؤلف' : 'Auteur'}
+                      </dt>
+                      <dd className="font-medium">{currentAuthor}</dd>
+                    </div>
+                  )}
+                  {document.created_at && (
+                    <div>
+                      <dt className="text-xs uppercase tracking-wide text-muted-foreground mb-1">
+                        {language === 'ar' ? 'تاريخ النشر' : 'Date de publication'}
+                      </dt>
+                      <dd className="font-medium">{formatDate(document.created_at)}</dd>
+                    </div>
+                  )}
+                  {currentCourt && (
+                    <div>
+                      <dt className="text-xs uppercase tracking-wide text-muted-foreground mb-1">
+                        {language === 'ar' ? 'نوع المحكمة' : 'Type de tribunal'}
+                      </dt>
+                      <dd className="font-medium">{currentCourt}</dd>
+                    </div>
+                  )}
+                  {currentCourtLevel && (
+                    <div>
+                      <dt className="text-xs uppercase tracking-wide text-muted-foreground mb-1">
+                        {language === 'ar' ? 'مستوى القضاء' : 'Niveau de juridiction'}
+                      </dt>
+                      <dd className="font-medium">{currentCourtLevel}</dd>
+                    </div>
+                  )}
+                  {document.case_number && (
+                    <div>
+                      <dt className="text-xs uppercase tracking-wide text-muted-foreground mb-1">
+                        {language === 'ar' ? 'رقم القضية' : 'Numéro d\'affaire'}
+                      </dt>
+                      <dd className="font-medium">{document.case_number}</dd>
+                    </div>
+                  )}
+                  {document.year && (
+                    <div>
+                      <dt className="text-xs uppercase tracking-wide text-muted-foreground mb-1">
+                        {language === 'ar' ? 'السنة' : 'Année'}
+                      </dt>
+                      <dd className="font-medium">{document.year}</dd>
+                    </div>
+                  )}
+                  {currentPlaintiff && (
+                    <div>
+                      <dt className="text-xs uppercase tracking-wide text-muted-foreground mb-1">
+                        {language === 'ar' ? 'المدعي' : 'Demandeur'}
+                      </dt>
+                      <dd className="font-medium">{currentPlaintiff}</dd>
+                    </div>
+                  )}
+                  {currentDefendant && (
+                    <div>
+                      <dt className="text-xs uppercase tracking-wide text-muted-foreground mb-1">
+                        {language === 'ar' ? 'المدعى عليه' : 'Défendeur'}
+                      </dt>
+                      <dd className="font-medium">{currentDefendant}</dd>
+                    </div>
+                  )}
+                </dl>
+              </CardContent>
+            </Card>
+          </section>
+
+          {/* Bibliographie — en bas */}
+          {currentBibliography && (
+            <section
+              className={`mt-6 ${language === 'ar' ? 'text-right' : 'text-left'}`}
+              dir={language === 'ar' ? 'rtl' : 'ltr'}
+            >
+              <h3 className={`text-lg font-semibold mb-4 flex items-center gap-2 ${language === 'ar' ? 'flex-row-reverse justify-end' : ''}`}>
+                <BookOpen className="w-5 h-5 text-muted-foreground" />
+                {language === 'ar' ? 'المراجع / الببليوغرافيا' : 'Références / Bibliographie'}
+              </h3>
+              <Card>
+                <CardContent className="py-5">
+                  <div
+                    className={`text-sm leading-relaxed whitespace-pre-wrap ${language === 'ar' ? 'arabic-text font-arabic' : ''}`}
+                    dangerouslySetInnerHTML={{
+                      __html: language === 'ar'
+                        ? normalizeArabicForDisplay(currentBibliography.replace(/<\/?p>/gi, '').trim())
+                        : currentBibliography.replace(/<\/?p>/gi, '').trim()
+                    }}
+                  />
+                </CardContent>
+              </Card>
+            </section>
           )}
 
           {/* Comment Section */}
