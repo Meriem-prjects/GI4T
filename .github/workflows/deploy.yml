@@ -19,7 +19,7 @@ jobs:
 
       - name: Build frontend
         env:
-          VITE_API_URL: http://102.204.206.147
+          VITE_API_URL: https://test.justclic.org
         run: npm run build
 
       - name: Deploy frontend to Nginx root
@@ -59,14 +59,14 @@ jobs:
           cat > /var/www/app/backend/.env << 'EOF'
           NODE_ENV=production
           PORT=4000
-          API_URL=http://102.204.206.147
-          CORS_ORIGIN=http://102.204.206.147
+          API_URL=https://test.justclic.org
+          CORS_ORIGIN=https://test.justclic.org,http://test.justclic.org,http://102.204.206.147
           DATABASE_URL=${{ secrets.DATABASE_URL }}
           JWT_SECRET=${{ secrets.JWT_SECRET }}
           JWT_EXPIRES_IN=7d
           BCRYPT_SALT_ROUNDS=12
           STORAGE_DIR=/var/www/app/backend/storage
-          STORAGE_PUBLIC_URL=http://102.204.206.147/api/storage
+          STORAGE_PUBLIC_URL=https://test.justclic.org/api/storage
           MAX_FILE_SIZE_MB=100
           OPENAI_API_KEY=${{ secrets.OPENAI_API_KEY }}
           GOOGLE_VISION_API_KEY=${{ secrets.GOOGLE_VISION_API_KEY }}
