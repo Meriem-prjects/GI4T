@@ -99,7 +99,6 @@ const PageCarousel: React.FC<PageCarouselProps> = ({ content, language }) => {
 
   const scrollPrev = useCallback(() => emblaApi?.scrollPrev(), [emblaApi]);
   const scrollNext = useCallback(() => emblaApi?.scrollNext(), [emblaApi]);
-  const scrollTo = useCallback((index: number) => emblaApi?.scrollTo(index), [emblaApi]);
 
   const onSelect = useCallback(() => {
     if (!emblaApi) return;
@@ -145,60 +144,26 @@ const PageCarousel: React.FC<PageCarouselProps> = ({ content, language }) => {
 
   return (
     <div className="page-carousel-container">
-      {/* Header with navigation */}
-      <div className={`page-carousel-header flex items-center justify-between mb-4 p-3 bg-muted/50 rounded-lg ${isRTL ? 'flex-row-reverse' : ''}`}>
-        <Button 
-          variant="outline" 
-          size="sm" 
-          onClick={isRTL ? scrollNext : scrollPrev}
-          disabled={isRTL ? !canScrollNext : !canScrollPrev}
-        >
-          <ChevronLeft className="h-4 w-4" />
-          <span className="mx-2">{isRTL ? 'التالي' : 'Précédent'}</span>
-        </Button>
-        
-        <span className="text-sm font-medium text-muted-foreground">
-          {isRTL 
-            ? `${pages[currentIndex]?.pageNumbers.join('-')} من ${individualPages.length} صفحات`
-            : `Pages ${pages[currentIndex]?.pageNumbers.join('-')} / ${individualPages.length}`
-          }
-        </span>
-        
-        <Button 
-          variant="outline" 
-          size="sm" 
-          onClick={isRTL ? scrollPrev : scrollNext}
-          disabled={isRTL ? !canScrollPrev : !canScrollNext}
-        >
-          <span className="mx-2">{isRTL ? 'السابق' : 'Suivant'}</span>
-          <ChevronRight className="h-4 w-4" />
-        </Button>
-      </div>
-
       {/* Carousel viewport */}
       <div className="page-carousel-viewport overflow-hidden" ref={emblaRef} dir={isRTL ? 'rtl' : 'ltr'}>
         <div className="page-carousel-container flex">
           {pages.map((slideGroup, slideIndex) => (
-            <div 
-              key={slideIndex} 
+            <div
+              key={slideIndex}
               className="page-carousel-slide flex-shrink-0 w-full px-1"
             >
-              <div 
+              <div
                 className={`page-frame border border-border rounded-lg p-4 md:p-5 bg-card shadow-sm min-h-[400px] ${isRTL ? 'text-right' : ''}`}
                 dir={isRTL ? 'rtl' : 'ltr'}
               >
-                {/* Render both pages in this slide */}
                 {slideGroup.pages.map((page, pageIdx) => (
                   <div key={page.pageNumber} className={pageIdx > 0 ? 'mt-8 pt-6 border-t-2 border-dashed border-border/50' : ''}>
-                    {/* Page number indicator */}
                     <div className={`page-number-badge mb-4 pb-3 border-b border-border/50 ${isRTL ? 'text-right' : 'text-left'}`}>
                       <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
                         {isRTL ? `صفحة ${page.pageNumber}` : `Page ${page.pageNumber}`}
                       </span>
                     </div>
-                    
-                    {/* Page content */}
-                    <div 
+                    <div
                       className="document-content space-y-4"
                       dangerouslySetInnerHTML={{ __html: page.content }}
                     />
@@ -210,26 +175,42 @@ const PageCarousel: React.FC<PageCarouselProps> = ({ content, language }) => {
         </div>
       </div>
 
-      {/* Pagination dots */}
-      <div className={`page-carousel-dots flex justify-center gap-2 mt-6 ${isRTL ? 'flex-row-reverse' : ''}`}>
-        {pages.map((_, index) => (
-          <button
-            key={index}
-            onClick={() => scrollTo(index)}
-            className={`w-2.5 h-2.5 rounded-full transition-all duration-200 ${
-              index === currentIndex 
-                ? 'bg-primary scale-125' 
-                : 'bg-muted-foreground/30 hover:bg-muted-foreground/50'
-            }`}
-            aria-label={`Go to page ${index + 1}`}
-          />
-        ))}
-      </div>
+      {/* Bottom navigation — under the text block. In RTL the visual order
+          is naturally reversed by dir="rtl" on the parent. Keep DOM order:
+          Previous on the left in LTR, on the right in RTL. */}
+      <nav
+        className="page-carousel-footer mt-6 pt-4 border-t border-border flex items-center justify-between gap-3"
+        dir={isRTL ? 'rtl' : 'ltr'}
+        aria-label={isRTL ? 'تصفح الصفحات' : 'Navigation des pages'}
+      >
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={scrollPrev}
+          disabled={!canScrollPrev}
+          className="gap-1"
+        >
+          {isRTL ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
+          <span>{isRTL ? 'السابق' : 'Précédent'}</span>
+        </Button>
 
-      {/* Swipe hint for mobile */}
-      <p className="text-center text-xs text-muted-foreground mt-4 md:hidden">
-        {isRTL ? '← اسحب للتنقل بين الصفحات →' : '← Faites glisser pour naviguer →'}
-      </p>
+        <span className="text-sm font-medium text-muted-foreground">
+          {isRTL
+            ? `${pages[currentIndex]?.pageNumbers.join('-')} من ${individualPages.length} صفحات`
+            : `Pages ${pages[currentIndex]?.pageNumbers.join('-')} / ${individualPages.length}`}
+        </span>
+
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={scrollNext}
+          disabled={!canScrollNext}
+          className="gap-1"
+        >
+          <span>{isRTL ? 'التالي' : 'Suivant'}</span>
+          {isRTL ? <ChevronLeft className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
+        </Button>
+      </nav>
     </div>
   );
 };

@@ -17,7 +17,6 @@ import { Separator } from "@/components/ui/separator";
 import { createSlug, createCategorySlug, createDocumentPath } from "@/lib/urlUtils";
 import { renderFormattedContent } from "@/utils/contentFormatter";
 import { normalizeArabicForDisplay } from "@/lib/arabicUtils";
-import { ArticleStatistics } from "@/components/ArticleStatistics";
 import { CommentSection } from "@/components/CommentSection";
 import { useDocumentView } from "@/hooks/useDocumentView";
 import { useLanguage } from "@/contexts/LanguageContext";
@@ -1009,14 +1008,6 @@ const DocumentDetail = () => {
                 </>
               )}
             </div>
-
-          {/* Article Statistics */}
-          <div className="w-full my-8">
-            <ArticleStatistics
-              documentId={document.id}
-              contentLength={document.content?.length || 0}
-            />
-          </div>
 
           {/* Document Content */}
           <div className={`w-full ${language === 'ar' ? 'dir-rtl' : ''}`}>
