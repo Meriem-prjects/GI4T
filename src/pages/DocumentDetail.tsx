@@ -604,79 +604,123 @@ const DocumentDetail = () => {
 
   return (
     <div className="container mx-auto px-4 py-6">
-      {/* Breadcrumb */}
-      <div className="mb-6 w-full flex justify-start">
+      {/* Breadcrumb — document order: Home → Observatory → Section → [Category] → Current.
+          In RTL this naturally renders right-to-left (Home on the right). */}
+      <nav
+        className={`mb-6 w-full ${isRTL ? 'text-right' : 'text-left'}`}
+        dir={isRTL ? 'rtl' : 'ltr'}
+        aria-label="Breadcrumb"
+      >
         <Breadcrumb>
-          <BreadcrumbList className={isRTL ? 'flex-row-reverse' : ''}>
+          <BreadcrumbList>
             <BreadcrumbItem>
               <BreadcrumbLink asChild>
                 <Link to="/">{t('home')}</Link>
               </BreadcrumbLink>
             </BreadcrumbItem>
-            <BreadcrumbSeparator />
+            <BreadcrumbSeparator>{isRTL ? '›' : '›'}</BreadcrumbSeparator>
             <BreadcrumbItem>
               <BreadcrumbLink asChild>
                 <Link to="/observatoire">{t('observatory')}</Link>
               </BreadcrumbLink>
             </BreadcrumbItem>
-            <BreadcrumbSeparator />
+            <BreadcrumbSeparator>{isRTL ? '›' : '›'}</BreadcrumbSeparator>
             {documentId ? (
-              // For direct document access (analyses juridiques, commentaires, blogs)
               <>
                 <BreadcrumbItem>
                   <BreadcrumbLink asChild>
                     <Link to="/observatoire/analyses-opinions">{t('analysesOpinions')}</Link>
                   </BreadcrumbLink>
                 </BreadcrumbItem>
-                <BreadcrumbSeparator />
+                <BreadcrumbSeparator>{isRTL ? '›' : '›'}</BreadcrumbSeparator>
               </>
             ) : (
-              // For category-based documents
               <>
                 <BreadcrumbItem>
                   <BreadcrumbLink asChild>
                     <Link to="/observatoire/droits-fondamentaux">{t('fundamentalRights')}</Link>
                   </BreadcrumbLink>
                 </BreadcrumbItem>
-                <BreadcrumbSeparator />
+                <BreadcrumbSeparator>{isRTL ? '›' : '›'}</BreadcrumbSeparator>
               </>
             )}
             {category && !documentId && (
               <>
                 <BreadcrumbItem>
                   <BreadcrumbLink asChild>
-                    <Link to={`/observatoire/droits-fondamentaux/${createCategorySlug(category.name)}`}>{isRTL ? (category.name_ar || category.name) : category.name}</Link>
+                    <Link to={`/observatoire/droits-fondamentaux/${createCategorySlug(category.name)}`}>
+                      {isRTL ? (category.name_ar || category.name) : category.name}
+                    </Link>
                   </BreadcrumbLink>
                 </BreadcrumbItem>
-                <BreadcrumbSeparator />
+                <BreadcrumbSeparator>{isRTL ? '›' : '›'}</BreadcrumbSeparator>
               </>
             )}
             <BreadcrumbItem>
-              <BreadcrumbPage className="max-w-[200px] truncate">{currentTitle}</BreadcrumbPage>
+              <BreadcrumbPage className="max-w-[240px] truncate">{currentTitle}</BreadcrumbPage>
             </BreadcrumbItem>
           </BreadcrumbList>
         </Breadcrumb>
-      </div>
+      </nav>
 
       <div className="grid gap-8 lg:grid-cols-4">
         {/* Main Content */}
-        <div className="lg:col-span-3">
-          {/* Document Header */}
-          <div className={`text-center mb-12`}>
-            <h1 className={`text-3xl md:text-4xl font-bold mb-4 leading-tight ${language === 'ar' ? 'dir-rtl' : ''}`}>
+        <article className="lg:col-span-3">
+          {/* Document Header — Hero */}
+          <header
+            className={`mb-10 pb-8 border-b border-border ${language === 'ar' ? 'text-right' : 'text-left'}`}
+            dir={language === 'ar' ? 'rtl' : 'ltr'}
+          >
+            {/* Category badge at top */}
+            {category && (
+              <div className={`mb-5 ${language === 'ar' ? 'flex justify-end' : 'flex justify-start'}`}>
+                <Badge
+                  className="text-xs font-semibold uppercase tracking-wide px-3 py-1.5"
+                  style={{ backgroundColor: category.color, color: '#ffffff' }}
+                >
+                  {language === 'ar' ? (category.name_ar || category.name) : category.name}
+                </Badge>
+              </div>
+            )}
+
+            {/* Title */}
+            <h1 className={`text-3xl md:text-5xl font-bold mb-4 leading-[1.15] tracking-tight ${language === 'ar' ? 'arabic-text font-arabic' : ''}`}>
               {currentTitle}
             </h1>
 
+            {/* Subtitle */}
             {currentSubtitle && (
-              <h2 className={`text-xl md:text-2xl font-semibold mb-6 text-muted-foreground max-w-4xl mx-auto ${language === 'ar' ? 'dir-rtl' : ''}`}>
+              <h2 className={`text-lg md:text-2xl font-medium mb-6 text-muted-foreground leading-snug ${language === 'ar' ? 'arabic-text font-arabic' : ''}`}>
                 {currentSubtitle}
               </h2>
             )}
 
+            {/* Inline byline (author + date) */}
+            <div
+              className={`flex flex-wrap items-center gap-x-4 gap-y-2 text-sm text-muted-foreground mb-6 ${language === 'ar' ? 'justify-end' : 'justify-start'}`}
+            >
+              {currentAuthor && (() => {
+                const hasComma = currentAuthor.includes(',');
+                const authorName = hasComma ? currentAuthor.split(',')[0].trim() : currentAuthor;
+                return (
+                  <span className="inline-flex items-center gap-1.5">
+                    <User className="w-4 h-4" />
+                    <span className="font-medium text-foreground">{authorName}</span>
+                  </span>
+                );
+              })()}
+              {document.created_at && (
+                <span className="inline-flex items-center gap-1.5">
+                  <Calendar className="w-4 h-4" />
+                  {formatDate(document.created_at)}
+                </span>
+              )}
+            </div>
+
+            {/* Summary as a pull-quote card */}
             {currentSummary && (
               <div
-                className={`text-lg text-muted-foreground mb-8 max-w-4xl mx-auto ${language === 'ar' ? 'dir-rtl arabic-text font-arabic' : ''}`}
-                dir={language === 'ar' ? 'rtl' : 'ltr'}
+                className={`relative bg-muted/40 border-l-4 ${language === 'ar' ? 'border-l-0 border-r-4 pr-5' : 'pl-5'} border-primary rounded-md py-4 text-base md:text-lg leading-relaxed ${language === 'ar' ? 'arabic-text font-arabic' : ''}`}
                 dangerouslySetInnerHTML={{
                   __html: language === 'ar'
                     ? normalizeArabicForDisplay(currentSummary.replace(/<\/?p>/gi, '').trim())
@@ -684,6 +728,10 @@ const DocumentDetail = () => {
                 }}
               />
             )}
+          </header>
+
+          {/* hidden original centered summary (kept for legacy hooks below) */}
+          <div className="hidden">{currentSubtitle}</div>
 
             {/* Metadata */}
             <div className={`bg-muted/30 rounded-lg p-6 mb-8 ${language === 'ar' ? 'dir-rtl' : ''}`}>
@@ -961,17 +1009,13 @@ const DocumentDetail = () => {
               )}
             </div>
 
-            {/* Article Statistics */}
-            <div className="w-full my-8">
-              <ArticleStatistics
-                documentId={document.id}
-                contentLength={document.content?.length || 0}
-              />
-            </div>
-
-
+          {/* Article Statistics */}
+          <div className="w-full my-8">
+            <ArticleStatistics
+              documentId={document.id}
+              contentLength={document.content?.length || 0}
+            />
           </div>
-
 
           {/* Document Content */}
           <div className={`w-full ${language === 'ar' ? 'dir-rtl' : ''}`}>
@@ -1060,10 +1104,10 @@ const DocumentDetail = () => {
               documentTitle={currentTitle}
             />
           </div>
-        </div>
+        </article>
 
         {/* Sidebar */}
-        <div className="lg:col-span-1">
+        <aside className="lg:col-span-1">
           <div className="sticky top-6 space-y-6">
             {/* Documents à consulter */}
             <Card className={isRTL ? 'text-right' : ''}>
@@ -1139,7 +1183,7 @@ const DocumentDetail = () => {
               </CardContent>
             </Card>
           </div>
-        </div>
+        </aside>
       </div>
     </div>
   );
