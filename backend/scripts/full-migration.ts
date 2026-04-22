@@ -330,7 +330,8 @@ async function main() {
   console.log("  ✓ Connected");
 
   try {
-    await local.query("SET session_replication_role = replica");
+    // session_replication_role requires superuser — skip in production.
+    // Triggers will fire but ON CONFLICT DO NOTHING handles idempotency.
 
     await migrateUsers(local);
 
@@ -341,7 +342,7 @@ async function main() {
       summary.push({ table, ...res });
     }
 
-    await local.query("SET session_replication_role = DEFAULT");
+    // (session_replication_role reset not needed)
 
     await migrateStorage();
     await rewriteUrls(local);

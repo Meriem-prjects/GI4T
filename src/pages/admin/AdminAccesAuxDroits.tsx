@@ -50,7 +50,7 @@ const AdminAccesAuxDroits = () => {
             <Route path="actualites" element={<div className="p-6">Actualités - Dernières nouvelles - En développement</div>} />
             <Route path="ressources-pratiques" element={<div className="p-6">Ressources pratiques - Modèles et formulaires - En développement</div>} />
             <Route path="liens-utiles" element={<div className="p-6">Liens utiles - Sites externes - En développement</div>} />
-            <Route path="guides-pratiques" element={<div className="p-6">Guides pratiques - Guides step-by-step - En développement</div>} />
+            <Route path="guides-pratiques" element={<div className="p-6">Guides pratiques - Guides pas à pas - En développement</div>} />
 
             {/* FAQ & Chatbot */}
             <Route path="faq-chatbot" element={<AdminChatbotConfig />} />

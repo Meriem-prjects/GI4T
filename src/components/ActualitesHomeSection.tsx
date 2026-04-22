@@ -21,7 +21,7 @@ const ActualitesHomeSection = () => {
     },
     {
       id: 2,
-      category: t('awarenessСampaign'),
+      category: t('awarenessCampaign'),
       categoryColor: "bg-[#F4D03F] text-gray-900",
       title: isRTL ? "باجة تستضيف قافلة الوصول إلى القانون" : "Béja accueille notre caravane d'accès au droit",
       excerpt: isRTL ? "فضاء الوصول إلى القانون الإداري يقدم محتويات تعليمية لمساعدة كل مواطن على الفهم..." : "espace Accès au droit administratif propose des contenus pédagogiques pour aider chaque citoyen à comprendre...",

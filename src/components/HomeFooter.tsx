@@ -52,7 +52,7 @@ const HomeFooter = () => {
         {/* Bottom section */}
         <div className="border-t border-gray-700 mt-8 pt-6">
           <div className={`text-center text-sm text-gray-400 space-y-2 ${isRTL ? 'font-almarai' : ''}`}>
-            <p>{isRTL ? "© 2025 JustClic.tn. جميع الحقوق محفوظة | سياسة الخصوصية" : "© 2025 JustClic.tn. Tous droits réservés | Privacy Policy"}</p>
+            <p>{isRTL ? "© 2025 JustClic.tn. جميع الحقوق محفوظة | سياسة الخصوصية" : "© 2025 JustClic.tn. Tous droits réservés | Politique de confidentialité"}</p>
             <p>
               {t('developedBy')} <span className="text-blue-400 font-semibold">Feelinx</span>
             </p>

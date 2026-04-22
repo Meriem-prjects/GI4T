@@ -3,20 +3,15 @@ name: Deploy to VPS
 on:
   push:
     branches: [main]
+  workflow_dispatch:
 
 jobs:
   build-and-deploy:
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, linux, justclick-vps]
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: 20
-          cache: npm
 
       # ---------- FRONTEND ----------
       - name: Install frontend dependencies
@@ -27,6 +22,12 @@ jobs:
           VITE_API_URL: http://102.204.206.147
         run: npm run build
 
+      - name: Deploy frontend to Nginx root
+        run: |
+          rm -rf /var/www/app/dist
+          mkdir -p /var/www/app/dist
+          cp -r dist/. /var/www/app/dist/
+
       # ---------- BACKEND ----------
       - name: Install backend dependencies
         working-directory: backend
@@ -36,78 +37,59 @@ jobs:
         working-directory: backend
         run: npx prisma generate
 
-      - name: Build backend
+      - name: Build backend TypeScript
         working-directory: backend
         run: npm run build
 
-      # ---------- DEPLOY FRONTEND ----------
-      - name: Deploy frontend dist
-        uses: appleboy/scp-action@v0.1.7
-        with:
-          host: ${{ secrets.VPS_HOST }}
-          username: ${{ secrets.VPS_USER }}
-          key: ${{ secrets.VPS_SSH_KEY }}
-          source: "dist/*"
-          target: "/var/www/app/dist"
-          strip_components: 1
-          overwrite: true
-          rm: true
-
-      # ---------- DEPLOY BACKEND ----------
       - name: Deploy backend build
-        uses: appleboy/scp-action@v0.1.7
-        with:
-          host: ${{ secrets.VPS_HOST }}
-          username: ${{ secrets.VPS_USER }}
-          key: ${{ secrets.VPS_SSH_KEY }}
-          source: "backend/dist/*,backend/package.json,backend/package-lock.json,backend/prisma/*"
-          target: "/var/www/app/backend"
-          strip_components: 1
-          overwrite: true
+        run: |
+          mkdir -p /var/www/app/backend
+          # Sync code without touching storage folder or node_modules (reinstalled fresh)
+          rsync -a --delete \
+            --exclude='storage' \
+            --exclude='node_modules' \
+            --exclude='.env' \
+            backend/ /var/www/app/backend/
+          mkdir -p /var/www/app/backend/storage/documents \
+                   /var/www/app/backend/storage/media \
+                   /var/www/app/backend/storage/album-photos
 
-      - name: Install backend deps & migrate & restart
-        uses: appleboy/ssh-action@v1.0.3
-        with:
-          host: ${{ secrets.VPS_HOST }}
-          username: ${{ secrets.VPS_USER }}
-          key: ${{ secrets.VPS_SSH_KEY }}
-          script: |
-            set -e
-            cd /var/www/app/backend
+      - name: Write .env with secrets
+        run: |
+          cat > /var/www/app/backend/.env << 'EOF'
+          NODE_ENV=production
+          PORT=4000
+          API_URL=http://102.204.206.147
+          CORS_ORIGIN=http://102.204.206.147
+          DATABASE_URL=${{ secrets.DATABASE_URL }}
+          JWT_SECRET=${{ secrets.JWT_SECRET }}
+          JWT_EXPIRES_IN=7d
+          BCRYPT_SALT_ROUNDS=12
+          STORAGE_DIR=/var/www/app/backend/storage
+          STORAGE_PUBLIC_URL=http://102.204.206.147/api/storage
+          MAX_FILE_SIZE_MB=100
+          OPENAI_API_KEY=${{ secrets.OPENAI_API_KEY }}
+          GOOGLE_VISION_API_KEY=${{ secrets.GOOGLE_VISION_API_KEY }}
+          PDFREST_API_KEY=${{ secrets.PDFREST_API_KEY }}
+          DEEPL_API_KEY=${{ secrets.DEEPL_API_KEY }}
+          EOF
 
-            # Write .env from GitHub secrets
-            cat > .env << EOF
-            NODE_ENV=production
-            PORT=4000
-            API_URL=http://102.204.206.147
-            CORS_ORIGIN=http://102.204.206.147
-            DATABASE_URL=${{ secrets.DATABASE_URL }}
-            JWT_SECRET=${{ secrets.JWT_SECRET }}
-            JWT_EXPIRES_IN=7d
-            BCRYPT_SALT_ROUNDS=12
-            STORAGE_DIR=/var/www/app/backend/storage
-            STORAGE_PUBLIC_URL=http://102.204.206.147/api/storage
-            MAX_FILE_SIZE_MB=100
-            OPENAI_API_KEY=${{ secrets.OPENAI_API_KEY }}
-            GOOGLE_VISION_API_KEY=${{ secrets.GOOGLE_VISION_API_KEY }}
-            PDFREST_API_KEY=${{ secrets.PDFREST_API_KEY }}
-            DEEPL_API_KEY=${{ secrets.DEEPL_API_KEY }}
-            EOF
+      - name: Install production deps and run migrations
+        working-directory: /var/www/app/backend
+        run: |
+          npm ci
+          npx prisma generate
+          npx prisma migrate deploy
 
-            mkdir -p storage/documents storage/media storage/album-photos
+      - name: Reload API via PM2
+        working-directory: /var/www/app/backend
+        run: |
+          if sudo pm2 describe app-api > /dev/null 2>&1; then
+            sudo pm2 reload app-api --update-env
+          else
+            sudo pm2 start dist/index.js --name app-api --update-env
+            sudo pm2 save
+          fi
 
-            # Install all deps (including prisma CLI)
-            npm ci
-            npx prisma generate
-            npx prisma migrate deploy
-
-            # Reload via PM2
-            if pm2 describe app-api > /dev/null 2>&1; then
-              pm2 reload app-api
-            else
-              pm2 start dist/index.js --name app-api --update-env
-              pm2 save
-            fi
-
-            # Reload nginx
-            nginx -t && systemctl reload nginx
+      - name: Reload Nginx
+        run: sudo systemctl reload nginx

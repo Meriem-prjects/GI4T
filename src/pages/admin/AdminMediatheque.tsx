@@ -114,11 +114,11 @@ const AdminMediatheque = () => {
         const path = `${folder}/${Date.now()}-${file.name.replace(/\s+/g, '_')}`;
         const { error } = await supabase.storage.from("media").upload(path, file, { upsert: true });
         if (error) {
-            toast({ title: "Erreur upload", description: error.message, variant: "destructive" });
+            toast({ title: "Erreur d'envoi", description: error.message, variant: "destructive" });
         } else {
             const { data } = supabase.storage.from("media").getPublicUrl(path);
             setEditingItem(p => ({ ...p, video_url: data.publicUrl }));
-            toast({ title: "Upload réussi", description: "Le fichier média a été mis en ligne" });
+            toast({ title: "Envoi réussi", description: "Le fichier média a été mis en ligne" });
         }
         setUploadingVideo(false);
     };

@@ -19,12 +19,28 @@ const RELATION_ALIASES: Record<string, string> = {
   category: "categories",
 };
 
+function isPrismaDecimal(value: unknown): value is { toNumber: () => number } {
+  return (
+    typeof value === "object" &&
+    value !== null &&
+    typeof (value as { toNumber?: unknown }).toNumber === "function"
+  );
+}
+
+function isBigInt(value: unknown): value is bigint {
+  return typeof value === "bigint";
+}
+
 export function transformKeysToSnake<T>(input: T): T {
   if (input === null || input === undefined) return input;
   if (Array.isArray(input)) {
     return input.map(transformKeysToSnake) as unknown as T;
   }
   if (input instanceof Date) return input;
+  if (isBigInt(input)) return Number(input) as unknown as T;
+  if (isPrismaDecimal(input)) {
+    return (input as { toNumber: () => number }).toNumber() as unknown as T;
+  }
   if (typeof input !== "object") return input;
 
   const out: Record<string, unknown> = {};

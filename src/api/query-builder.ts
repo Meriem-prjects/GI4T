@@ -35,7 +35,7 @@ const TABLE_TO_PATH: Record<string, string> = {
 export interface QueryResult<T = unknown> {
   data: T | null;
   error: { message: string; code?: string; details?: unknown } | null;
-  count?: number;
+  count?: number | null;
 }
 
 type Filter =
@@ -63,6 +63,8 @@ export class QueryBuilder<T = unknown> implements PromiseLike<QueryResult<T>> {
   private payload?: unknown;
   private singleResult = false;
   private maybeSingle_flag = false;
+  private countRequested = false;
+  private headOnly = false;
   private rangeFrom?: number;
   private rangeTo?: number;
 
@@ -71,9 +73,15 @@ export class QueryBuilder<T = unknown> implements PromiseLike<QueryResult<T>> {
     private readonly path = TABLE_TO_PATH[table] ?? `/api/${table.replace(/_/g, "-")}`,
   ) {}
 
-  select(columns = "*", _opts?: { count?: "exact"; head?: boolean }): this {
+  select(columns = "*", opts?: { count?: "exact" | "planned" | "estimated"; head?: boolean }): this {
     this.op = "select";
     this.selectStr = columns;
+    if (opts?.count) this.countRequested = true;
+    if (opts?.head) {
+      this.headOnly = true;
+      // Backend requires limit >= 1; we only need the total count, not the rows.
+      this.limitValue = 1;
+    }
     return this;
   }
 
@@ -208,7 +216,7 @@ export class QueryBuilder<T = unknown> implements PromiseLike<QueryResult<T>> {
     return idFilter?.type === "eq" ? String(idFilter.value) : null;
   }
 
-  private wrapResult<R>(data: R | null, error: unknown = null): QueryResult<R> {
+  private wrapResult<R>(data: R | null, error: unknown = null, count: number | null = null): QueryResult<R> {
     if (error) {
       const apiErr = error as ApiError;
       return {
@@ -218,9 +226,10 @@ export class QueryBuilder<T = unknown> implements PromiseLike<QueryResult<T>> {
           code: String(apiErr.status ?? ""),
           details: apiErr.details,
         },
+        count: null,
       };
     }
-    return { data, error: null };
+    return { data, error: null, count };
   }
 
   private async execute(): Promise<QueryResult<T>> {
@@ -239,14 +248,25 @@ export class QueryBuilder<T = unknown> implements PromiseLike<QueryResult<T>> {
         const items: unknown[] = Array.isArray(res)
           ? res
           : (res as { items?: unknown[] }).items ?? [];
+        const total =
+          !Array.isArray(res) && typeof (res as { total?: number }).total === "number"
+            ? (res as { total: number }).total
+            : items.length;
+        if (this.headOnly) {
+          return this.wrapResult<T>([] as unknown as T, null, total);
+        }
         if (this.singleResult) {
           const first = items[0] ?? null;
           if (!first && !this.maybeSingle_flag) {
             return this.wrapResult<T>(null, new ApiError(404, "No rows found"));
           }
-          return this.wrapResult<T>(first as T);
+          return this.wrapResult<T>(first as T, null, this.countRequested ? total : null);
         }
-        return this.wrapResult<T>(items as unknown as T);
+        return this.wrapResult<T>(
+          items as unknown as T,
+          null,
+          this.countRequested ? total : null,
+        );
       }
 
       if (this.op === "insert" || this.op === "upsert") {

@@ -332,7 +332,7 @@ const RessourcesPratiquesContent = () => {
         <div className="bg-muted/50 rounded-lg p-6 text-center animate-fade-in">
           <h3 className="text-xl font-semibold mb-2">{t('stayInformed')}</h3>
           <p className="text-muted-foreground mb-4">
-            {isRTL ? 'اشترك ليصلك جديد الموارد' : 'Recevez les nouvelles ressources par email.'}
+            {isRTL ? 'اشترك ليصلك جديد الموارد' : 'Recevez les nouvelles ressources par courriel.'}
           </p>
           <div className="flex gap-2 max-w-md mx-auto">
             <Input placeholder={`${t('yourEmail')}...`} className="flex-1" />

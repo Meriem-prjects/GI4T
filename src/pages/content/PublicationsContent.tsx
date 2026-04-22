@@ -14,8 +14,8 @@ const PublicationsContent = () => {
   const publications = [
     {
       id: 1,
-      title: "Rapport annuel 2023 - État des droits en France",
-      description: "Analyse complète de la situation des droits fondamentaux en France",
+      title: "Rapport annuel 2023 - État des droits en Tunisie",
+      description: "Analyse complète de la situation des droits fondamentaux en Tunisie",
       category: "Rapport annuel",
       type: "Rapport",
       pages: 156,

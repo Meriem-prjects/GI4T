@@ -186,7 +186,7 @@ const AdminSidebar = ({ type, isCollapsed = false, onToggle }: AdminSidebarProps
         { title: "Actualités", href: `${basePath}/actualites`, icon: Newspaper, description: "Dernières nouvelles" },
         { title: "Ressources pratiques", href: `${basePath}/ressources-pratiques`, icon: FileText, description: "Modèles et formulaires" },
         { title: "Liens utiles", href: `${basePath}/liens-utiles`, icon: ExternalLink, description: "Sites externes" },
-        { title: "Guides pratiques", href: `${basePath}/guides-pratiques`, icon: BookOpen, description: "Guides step-by-step" }
+        { title: "Guides pratiques", href: `${basePath}/guides-pratiques`, icon: BookOpen, description: "Guides pas à pas" }
       ]
     },
     {

@@ -90,7 +90,7 @@ async function main() {
   console.log("Connected to local DB");
 
   try {
-    await local.query("SET session_replication_role = replica");
+    // session_replication_role requires superuser — triggers will fire.
 
     const columnTypes = await getColumnTypes(local);
     console.log(`Local schema has ${columnTypes.size} columns`);
@@ -132,7 +132,7 @@ async function main() {
       }
     }
 
-    await local.query("SET session_replication_role = DEFAULT");
+    // (no reset needed)
     console.log(`\n✓ Done: ${copied} copied, ${failed} failed`);
   } finally {
     await local.end();
