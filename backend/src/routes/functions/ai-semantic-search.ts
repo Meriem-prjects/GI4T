@@ -71,10 +71,12 @@ async function classicSearch(query: string, limit: number, filters?: Record<stri
 
 export async function aiSemanticSearch(req: Request) {
   const { query, threshold, limit, filters } = schema.parse(req.body);
+  console.log(`[ai-semantic-search] query="${query}" threshold=${threshold} limit=${limit}`);
 
   // Try AI semantic search first (requires embeddings + OPENAI_API_KEY).
   try {
     const matches = await searchBySemantics(query, threshold, limit);
+    console.log(`[ai-semantic-search] semantic matches: ${matches.length}`);
     if (matches.length > 0) {
       const docs = await prisma.document.findMany({
         where: { id: { in: matches.map((m) => m.id) } },
@@ -92,10 +94,12 @@ export async function aiSemanticSearch(req: Request) {
       };
     }
   } catch (err) {
-    console.warn("[ai-semantic-search] fallback to classic:", (err as Error).message);
+    console.warn("[ai-semantic-search] embed/search failed:", (err as Error).message);
   }
 
   // Fallback to classic text search.
+  console.log(`[ai-semantic-search] falling back to classic for "${query}"`);
   const classic = await classicSearch(query, limit, filters);
+  console.log(`[ai-semantic-search] classic returned: ${classic.total}`);
   return classic;
 }
