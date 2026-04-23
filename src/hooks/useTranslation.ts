@@ -861,7 +861,7 @@ const translations: Record<'fr' | 'ar', Record<TranslationKey, string>> = {
     practicalGuide: 'دليل عملي',
     // Layout & Navigation
     accessToRights: 'الوصول إلى الحقوق',
-    citizenSpace: 'فضاء المواطن',
+    citizenSpace: 'بوابة المواطن',
     mediaLibrary: 'مكتبة الوسائط',
     actualites: 'الأخبار',
     home: 'الرئيسية',
