@@ -298,117 +298,56 @@ const SearchResults = () => {
         </div>
       </div>
 
-      {/* Hero Search Section */}
-      <div ref={searchBarRef} className="bg-gradient-to-br from-primary/5 via-primary/10 to-accent/5 border-b">
-        <div className="container mx-auto px-3 sm:px-4 py-6 sm:py-10">
+      {/* Hero Search Section — cleaner layout matching the reference */}
+      <div ref={searchBarRef} className="container mx-auto px-3 sm:px-4 pb-4">
+        {/* Small title aligned to the start (left in FR, right in AR) */}
+        <h1 className={`text-sm sm:text-base font-medium text-muted-foreground mb-3 ${isRTL ? 'text-right font-arabic' : ''}`}>
+          {isRTL ? 'بحث قانوني' : 'Recherche Juridique'}
+        </h1>
 
-          {/* Titre et Description centrés */}
-          <div className="text-center mb-6 sm:mb-8">
-            <h1 className={`text-2xl sm:text-3xl md:text-4xl font-bold mb-2 sm:mb-3 ${isRTL ? 'font-arabic' : ''}`}>
-              {isRTL ? 'بحث في الوثائق القانونية' : 'Recherche Juridique'}
-            </h1>
-            <p className={`text-muted-foreground text-sm sm:text-base max-w-2xl mx-auto ${isRTL ? 'font-arabic' : ''}`}>
-              {isRTL 
-                ? 'ابحث في قاعدة بياناتنا الشاملة للوثائق والقرارات والفقه القانوني'
-                : 'Explorez notre base de données complète de documents, décisions et jurisprudence'
-              }
-            </p>
-          </div>
+        {/* Large search bar — clean white card, no yellow border */}
+        <div className="bg-white rounded-xl shadow-sm border border-border/60 p-2 mb-4">
+          <div className={`flex items-center gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
+            <Search className={`w-5 h-5 text-muted-foreground flex-shrink-0 ${isRTL ? 'mr-3' : 'ml-3'}`} />
+            <Input
+              placeholder={useAI
+                ? (isRTL ? 'اطرح سؤالك بالذكاء الاصطناعي...' : 'Posez votre question avec l\'IA...')
+                : (isRTL ? 'أدخل كلمات مفتاحية، رقم قرار أو موضوع...' : "Entrez des mots-clés, numéro d'arrêt ou thématique...")}
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              onKeyDown={(e) => { if (e.key === 'Enter') setCurrentPage(1); }}
+              className={`flex-1 h-12 border-0 shadow-none focus-visible:ring-0 focus-visible:ring-offset-0 bg-transparent text-base ${isRTL ? 'text-right' : ''}`}
+            />
 
-          {/* Barre de recherche stylée - Card blanc avec bordure jaune */}
-          <div className="max-w-3xl mx-auto">
-            <div className="relative bg-white rounded-xl shadow-lg border-2 border-yellow-400 overflow-hidden">
-              <div className="flex items-center">
-                {/* Icône de recherche */}
-                <div className={`flex items-center justify-center w-12 sm:w-14 h-14 sm:h-16 bg-yellow-50 ${isRTL ? 'border-l' : 'border-r'} border-yellow-200`}>
-                  <Search className="text-yellow-600" size={isMobile ? 20 : 24} />
-                </div>
-                
-                {/* Input */}
-                <Input
-                  placeholder={useAI 
-                    ? (isRTL ? 'اطرح سؤالك بالذكاء الاصطناعي...' : 'Posez votre question avec l\'IA...')
-                    : (isRTL ? 'ابحث في الوثائق...' : 'Rechercher dans les documents...')
-                  }
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter') {
-                      setCurrentPage(1);
-                    }
-                  }}
-                  className={`flex-1 h-14 sm:h-16 text-sm sm:text-base border-0 focus-visible:ring-0 focus-visible:ring-offset-0 bg-transparent ${isRTL ? 'text-right pr-4' : 'text-left pl-4'}`}
+            {/* AI toggle pill */}
+            <button
+              type="button"
+              onClick={() => { setUseAI(!useAI); setCurrentPage(1); }}
+              className={`flex items-center gap-2 px-3 h-9 rounded-full text-xs font-semibold transition-all ${
+                useAI
+                  ? 'bg-blue-600 text-white shadow-sm'
+                  : 'bg-gray-100 hover:bg-gray-200 text-gray-700'
+              }`}
+            >
+              <Sparkles className={`h-3.5 w-3.5 ${useAI ? 'animate-pulse' : ''}`} />
+              <span>IA</span>
+              <span
+                className={`ml-1 w-8 h-4 rounded-full transition-colors ${useAI ? 'bg-white/40' : 'bg-gray-300'} relative`}
+              >
+                <span
+                  className={`absolute top-0.5 w-3 h-3 rounded-full bg-white transition-all ${useAI ? 'left-4' : 'left-0.5'}`}
                 />
-                
-                {/* AI Toggle - Élégant */}
-                <div 
-                  className={`flex items-center gap-1.5 sm:gap-2 px-2 sm:px-3 py-1.5 sm:py-2 mx-1 sm:mx-2 rounded-full cursor-pointer transition-all duration-300 ${
-                    useAI 
-                      ? 'bg-gradient-to-r from-purple-500 to-indigo-500 text-white shadow-md' 
-                      : 'bg-gray-100 hover:bg-gray-200 text-gray-600'
-                  }`}
-                  onClick={() => {
-                    setUseAI(!useAI);
-                    setCurrentPage(1);
-                  }}
-                >
-                  <Sparkles className={`h-4 w-4 ${useAI ? 'animate-pulse' : ''}`} />
-                  <span className="hidden sm:inline text-xs font-medium">IA</span>
-                </div>
-                
-                {/* Bouton Rechercher */}
-                <Button 
-                  className={`h-14 sm:h-16 px-4 sm:px-8 ${isRTL ? 'rounded-l-none rounded-r-lg' : 'rounded-r-none rounded-l-lg'} bg-primary hover:bg-primary/90 text-white font-medium shadow-none`}
-                  onClick={() => setCurrentPage(1)}
-                >
-                  <Search className="w-5 h-5 sm:hidden" />
-                  <span className="hidden sm:inline">{isRTL ? 'بحث' : 'Rechercher'}</span>
-                </Button>
-              </div>
-            </div>
-            
-            {/* AI explanation inside the search card */}
-            {useAI && (
-              <div className={`px-4 pb-3 flex items-center gap-2 text-xs text-indigo-600 animate-in fade-in slide-in-from-top-1 duration-300 ${isRTL ? 'flex-row-reverse font-arabic' : ''}`}>
-                <Sparkles className="w-3 h-3 flex-shrink-0" />
-                <span>
-                  {isRTL 
-                    ? 'يحلل الذكاء الاصطناعي معنى بحثك للعثور على الوثائق الأكثر صلة' 
-                    : "L'IA analyse le sens de votre recherche pour trouver les documents les plus pertinents"}
-                </span>
-              </div>
-            )}
-          </div>
+              </span>
+            </button>
 
-          {/* Tags populaires */}
-          {displayTags.length > 0 && (
-            <div className="mt-6 sm:mt-8">
-              <div className="flex items-center justify-center gap-2 mb-3">
-                <Hash className="w-4 h-4 text-muted-foreground" />
-                <span className={`text-sm text-muted-foreground font-medium ${isRTL ? 'font-arabic' : ''}`}>
-                  {isRTL ? 'كلمات مفتاحية شائعة' : 'Mots-clés populaires'}
-                </span>
-              </div>
-              <div className="flex flex-wrap justify-center gap-2 max-w-4xl mx-auto overflow-x-auto hide-scrollbar pb-2">
-                {displayTags.map((tag, index) => (
-                  <Button
-                    key={index}
-                    variant="outline"
-                    size="sm"
-                    onClick={() => handleTagClick(tag.keyword)}
-                    className={`rounded-full text-xs sm:text-sm whitespace-nowrap border-primary/30 hover:bg-primary/10 hover:border-primary transition-all duration-200 ${
-                      searchQuery === tag.keyword ? 'bg-primary/10 border-primary text-primary' : ''
-                    } ${isRTL ? 'font-arabic' : ''}`}
-                  >
-                    {tag.keyword}
-                    <Badge variant="secondary" className="ml-1.5 text-[10px] px-1.5 py-0 h-4 bg-muted">
-                      {tag.count}
-                    </Badge>
-                  </Button>
-                ))}
-              </div>
-            </div>
-          )}
+            {/* Rechercher button */}
+            <Button
+              onClick={() => setCurrentPage(1)}
+              className="h-12 px-6 bg-blue-600 hover:bg-blue-700 text-white font-semibold"
+            >
+              {isRTL ? 'بحث' : 'Rechercher'}
+            </Button>
+          </div>
         </div>
       </div>
 
