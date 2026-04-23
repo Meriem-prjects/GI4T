@@ -200,6 +200,14 @@ export class QueryBuilder<T = unknown> implements PromiseLike<QueryResult<T>> {
       else if (f.type === "gt") q[`${f.col}_gt`] = String(f.value);
       else if (f.type === "lt") q[`${f.col}_lt`] = String(f.value);
       else if (f.type === "neq") q[`${f.col}_neq`] = String(f.value);
+      else if (f.type === "or") {
+        // Supabase .or() syntax like "title.ilike.%x%,summary.ilike.%x%,..."
+        // We extract the first ilike value and send it as a generic search term.
+        const ilikeMatch = f.expr.match(/\.ilike\.%?([^%,)]+)%?/);
+        if (ilikeMatch && ilikeMatch[1]) {
+          q.search = ilikeMatch[1];
+        }
+      }
     }
     if (this.limitValue !== undefined) q.limit = String(this.limitValue);
     if (this.offsetValue !== undefined) q.offset = String(this.offsetValue);
