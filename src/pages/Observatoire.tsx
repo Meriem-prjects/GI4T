@@ -5,8 +5,6 @@ import {
   Megaphone,
   ArrowRight,
   Search,
-  Database,
-  Code,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -470,32 +468,55 @@ const Observatoire = () => {
                 >
                   {isRTL ? "اكتشف المشروع" : "Découvrir le projet"}
                 </Button>
-                <Button
-                  variant="outline"
-                  className="bg-transparent border-white/30 text-white hover:bg-white/10 font-semibold"
-                  onClick={() => window.open("https://github.com/GI4T/just-click-feelinx-connect", "_blank")}
-                >
-                  <Code className={`w-4 h-4 ${isRTL ? "ml-2" : "mr-2"}`} />
-                  {isRTL ? "وثائق API" : "API Documentation"}
-                </Button>
               </div>
             </div>
 
-            {/* Illustration */}
+            {/* Illustration — justice scale filling the half */}
             <div
-              className={`relative flex items-center justify-center ${
+              className={`flex items-center justify-center ${
                 isRTL ? "md:col-start-1" : ""
               }`}
             >
-              <div className="relative w-full max-w-xs aspect-square flex items-center justify-center">
-                <div className="absolute inset-0 bg-gradient-to-br from-blue-500/10 to-indigo-500/20 rounded-full blur-3xl" />
-                <div className="relative bg-slate-700/40 backdrop-blur rounded-2xl p-8 border border-white/10">
-                  <div className="flex items-center justify-center">
-                    <Database className="w-16 h-16 text-blue-400 mr-4" strokeWidth={1.5} />
-                    <Scale className="w-20 h-20 text-white" strokeWidth={1.5} />
-                  </div>
-                </div>
-              </div>
+              <svg
+                viewBox="0 0 200 200"
+                className="w-full max-w-sm h-auto text-white/90"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                aria-hidden="true"
+              >
+                {/* Top hook */}
+                <circle cx="100" cy="18" r="6" fill="currentColor" fillOpacity="0.9" />
+                {/* Vertical pole */}
+                <line x1="100" y1="24" x2="100" y2="170" strokeWidth="6" />
+                {/* Horizontal beam */}
+                <line x1="35" y1="50" x2="165" y2="50" strokeWidth="6" />
+                {/* Beam caps */}
+                <circle cx="35" cy="50" r="5" fill="currentColor" />
+                <circle cx="100" cy="50" r="6" fill="currentColor" />
+                <circle cx="165" cy="50" r="5" fill="currentColor" />
+                {/* Left chains */}
+                <line x1="35" y1="50" x2="20" y2="110" strokeWidth="1.5" />
+                <line x1="35" y1="50" x2="50" y2="110" strokeWidth="1.5" />
+                <line x1="35" y1="55" x2="30" y2="110" strokeWidth="1.5" />
+                <line x1="35" y1="55" x2="40" y2="110" strokeWidth="1.5" />
+                {/* Left pan */}
+                <path d="M 10 110 Q 35 135 60 110 Z" fill="currentColor" fillOpacity="0.85" stroke="none" />
+                <line x1="10" y1="110" x2="60" y2="110" strokeWidth="3" />
+                {/* Right chains */}
+                <line x1="165" y1="50" x2="150" y2="110" strokeWidth="1.5" />
+                <line x1="165" y1="50" x2="180" y2="110" strokeWidth="1.5" />
+                <line x1="165" y1="55" x2="160" y2="110" strokeWidth="1.5" />
+                <line x1="165" y1="55" x2="170" y2="110" strokeWidth="1.5" />
+                {/* Right pan */}
+                <path d="M 140 110 Q 165 135 190 110 Z" fill="currentColor" fillOpacity="0.85" stroke="none" />
+                <line x1="140" y1="110" x2="190" y2="110" strokeWidth="3" />
+                {/* Base */}
+                <rect x="75" y="168" width="50" height="6" fill="currentColor" rx="1" />
+                <rect x="65" y="174" width="70" height="8" fill="currentColor" rx="2" />
+              </svg>
             </div>
           </div>
         </div>
