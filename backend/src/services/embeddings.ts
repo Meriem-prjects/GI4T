@@ -1,13 +1,19 @@
 import { prisma } from "../lib/prisma.js";
 import { generateEmbedding } from "./openai.js";
 
+function toVectorLiteral(embedding: number[]): string {
+  // Force decimal representation (pgvector can't parse scientific notation).
+  return `[${embedding.map((n) => n.toFixed(8)).join(",")}]`;
+}
+
 export async function generateAndStoreEmbedding(documentId: string, text: string): Promise<void> {
   const embedding = await generateEmbedding(text.slice(0, 8000));
-  const vectorLiteral = `[${embedding.map((n) => n.toFixed(8)).join(",")}]`;
+  const vectorLiteral = toVectorLiteral(embedding);
+  // Inline the vector literal — Prisma's $executeRawUnsafe sometimes
+  // fails to cast large numeric strings to ::vector when passed as
+  // a parameter.
   await prisma.$executeRawUnsafe(
-    `UPDATE documents SET embedding = $1::vector WHERE id = $2::uuid`,
-    vectorLiteral,
-    documentId,
+    `UPDATE documents SET embedding = '${vectorLiteral}'::vector WHERE id = '${documentId}'::uuid`,
   );
 }
 
@@ -17,16 +23,14 @@ export async function searchBySemantics(
   count = 10,
 ): Promise<Array<{ id: string; similarity: number }>> {
   const embedding = await generateEmbedding(queryText);
-  const vectorLiteral = `[${embedding.map((n) => n.toFixed(8)).join(",")}]`;
+  const vectorLiteral = toVectorLiteral(embedding);
+  // Inline the vector literal directly into the query.
   return prisma.$queryRawUnsafe<Array<{ id: string; similarity: number }>>(
-    `SELECT id, 1 - (embedding <=> $1::vector) AS similarity
+    `SELECT id, (1 - (embedding <=> '${vectorLiteral}'::vector))::float AS similarity
      FROM documents
      WHERE published = true AND embedding IS NOT NULL
-       AND 1 - (embedding <=> $1::vector) >= $2
-     ORDER BY embedding <=> $1::vector
-     LIMIT $3`,
-    vectorLiteral,
-    threshold,
-    count,
+       AND (1 - (embedding <=> '${vectorLiteral}'::vector)) >= ${threshold}
+     ORDER BY embedding <=> '${vectorLiteral}'::vector
+     LIMIT ${count}`,
   );
 }
