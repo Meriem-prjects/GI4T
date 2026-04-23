@@ -58,7 +58,29 @@ const TextesFondamentaux = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [hoveredCard, setHoveredCard] = useState<string | null>(null);
+  const [globalStats, setGlobalStats] = useState({ totalDocs: 0, totalCategories: 0 });
   const categoriesPerPage = 9;
+
+  // Fetch site-wide totals for the bottom stat cards
+  useEffect(() => {
+    (async () => {
+      const [{ count: docCount }, { count: catCount }] = await Promise.all([
+        supabase.from('documents').select('id', { count: 'exact', head: true }).eq('published', true),
+        supabase.from('categories').select('id', { count: 'exact', head: true }),
+      ]);
+      setGlobalStats({
+        totalDocs: docCount ?? 0,
+        totalCategories: catCount ?? 0,
+      });
+    })();
+  }, []);
+
+  const handleSearchSubmit = (e?: React.FormEvent) => {
+    e?.preventDefault();
+    const q = searchTerm.trim();
+    if (!q) return;
+    navigate(`/observatoire/search-results?query=${encodeURIComponent(q)}&ai=true`);
+  };
 
   useEffect(() => {
     const fetchJurisprudenceCategories = async () => {
@@ -233,23 +255,32 @@ const TextesFondamentaux = () => {
               : "Accédez à une base de données exhaustive regroupant les décisions de justice, les analyses juridiques et les textes normatifs relatifs à la protection des droits de l'homme."}
           </p>
 
-          {/* Search bar */}
-          <div className="w-full max-w-2xl">
+          {/* Search bar — IA-powered, redirects to search-results page */}
+          <form onSubmit={handleSearchSubmit} className="w-full max-w-2xl">
             <div className="flex gap-2 p-2 bg-white rounded-xl shadow-sm border border-border/60">
               <div className="relative flex-1">
                 <Search className={`absolute top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground ${isRTL ? 'right-3' : 'left-3'}`} />
                 <Input
-                  placeholder={isRTL ? 'ابحث عن حق أو قانون أو قرار...' : 'Rechercher un droit, une loi ou une décision...'}
+                  type="search"
+                  placeholder={isRTL ? 'ابحث بالذكاء الاصطناعي عن حق أو قرار...' : 'Recherche IA — un droit, une loi, une décision...'}
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   className={`border-0 shadow-none focus-visible:ring-0 ${isRTL ? 'pr-10 text-right' : 'pl-10'}`}
                 />
               </div>
-              <Button className="bg-blue-600 hover:bg-blue-700 text-white font-semibold px-6">
+              <Button
+                type="submit"
+                className="bg-blue-600 hover:bg-blue-700 text-white font-semibold px-6"
+              >
                 {isRTL ? 'بحث' : 'Rechercher'}
               </Button>
             </div>
-          </div>
+            <p className={`mt-3 text-xs text-muted-foreground ${isRTL ? 'text-right arabic-text font-arabic' : ''}`}>
+              {isRTL
+                ? '✨ بحث ذكي يفهم الأسئلة بلغة طبيعية ويعرض الوثائق ذات الصلة'
+                : '✨ Recherche intelligente — posez votre question en langage naturel, l\'IA trouve les documents pertinents'}
+            </p>
+          </form>
         </div>
       </section>
 
@@ -417,12 +448,10 @@ const TextesFondamentaux = () => {
             <Card className="rounded-xl overflow-hidden bg-gradient-to-br from-blue-600 to-blue-700 text-white border-0">
               <CardContent className={`p-6 ${isRTL ? 'text-right' : ''}`}>
                 <div className="text-3xl md:text-4xl font-bold mb-1">
-                  {categories.length > 0
-                    ? `${Object.values(categoryCounts).reduce((a, b) => a + b, 0).toLocaleString()}+`
-                    : '—'}
+                  {globalStats.totalDocs > 0 ? globalStats.totalDocs.toLocaleString() : '—'}
                 </div>
                 <div className={`text-xs font-semibold uppercase tracking-wider opacity-90 ${isRTL ? 'arabic-text font-arabic' : ''}`}>
-                  {isRTL ? 'قرارات مصنفة' : 'Décisions répertoriées'}
+                  {isRTL ? 'وثائق منشورة' : 'Documents publiés'}
                 </div>
               </CardContent>
             </Card>
@@ -430,7 +459,7 @@ const TextesFondamentaux = () => {
             <Card className="rounded-xl overflow-hidden bg-gradient-to-br from-amber-400 to-orange-500 text-white border-0">
               <CardContent className={`p-6 ${isRTL ? 'text-right' : ''}`}>
                 <div className="text-3xl md:text-4xl font-bold mb-1">
-                  {categories.length}+
+                  {globalStats.totalCategories > 0 ? globalStats.totalCategories : '—'}
                 </div>
                 <div className={`text-xs font-semibold uppercase tracking-wider opacity-95 ${isRTL ? 'arabic-text font-arabic' : ''}`}>
                   {isRTL ? 'فئات الحقوق' : 'Catégories de droits'}

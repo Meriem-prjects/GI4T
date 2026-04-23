@@ -55,11 +55,15 @@ const SearchResults = () => {
   const [jurisdictionOpen, setJurisdictionOpen] = useState(false);
   const searchBarRef = useRef<HTMLDivElement>(null);
 
-  // Get search query from URL params on component mount
+  // Get search query and AI mode from URL params on component mount
   useEffect(() => {
     const queryFromUrl = searchParams.get('query') || searchParams.get('q');
     if (queryFromUrl) {
       setSearchQuery(decodeURIComponent(queryFromUrl));
+    }
+    const aiFromUrl = searchParams.get('ai');
+    if (aiFromUrl === 'true' || aiFromUrl === '1') {
+      setUseAI(true);
     }
   }, [searchParams]);
 
