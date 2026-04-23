@@ -3,7 +3,7 @@ import { generateEmbedding } from "./openai.js";
 
 export async function generateAndStoreEmbedding(documentId: string, text: string): Promise<void> {
   const embedding = await generateEmbedding(text.slice(0, 8000));
-  const vectorLiteral = `[${embedding.join(",")}]`;
+  const vectorLiteral = `[${embedding.map((n) => n.toFixed(8)).join(",")}]`;
   await prisma.$executeRawUnsafe(
     `UPDATE documents SET embedding = $1::vector WHERE id = $2::uuid`,
     vectorLiteral,
@@ -17,7 +17,7 @@ export async function searchBySemantics(
   count = 10,
 ): Promise<Array<{ id: string; similarity: number }>> {
   const embedding = await generateEmbedding(queryText);
-  const vectorLiteral = `[${embedding.join(",")}]`;
+  const vectorLiteral = `[${embedding.map((n) => n.toFixed(8)).join(",")}]`;
   return prisma.$queryRawUnsafe<Array<{ id: string; similarity: number }>>(
     `SELECT id, 1 - (embedding <=> $1::vector) AS similarity
      FROM documents
