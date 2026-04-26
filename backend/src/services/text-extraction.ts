@@ -6,20 +6,19 @@
 // Replaces the PDFRest- and Google-Vision-dependent functions when
 // those API keys are not configured.
 
-import * as pdfParseModule from "pdf-parse";
+import { createRequire } from "node:module";
 import * as mammoth from "mammoth";
 import { getOpenAI } from "./openai.js";
 
-// pdf-parse exports a function as default. Under ESM/NodeNext the
-// shape varies — handle both `pdfParseModule.default` and the
-// callable namespace itself.
+// pdf-parse is a CommonJS module that doesn't expose its default
+// export cleanly under Node's ESM loader. Use createRequire to
+// load it as CJS.
+const requireCjs = createRequire(import.meta.url);
 type PdfParseFn = (
   buffer: Buffer | Uint8Array,
   opts?: object,
 ) => Promise<{ text: string; numpages: number }>;
-const pdfParse: PdfParseFn =
-  (pdfParseModule as unknown as { default?: PdfParseFn }).default ??
-  (pdfParseModule as unknown as PdfParseFn);
+const pdfParse: PdfParseFn = requireCjs("pdf-parse");
 
 export interface ExtractedPage {
   pageNumber: number;
