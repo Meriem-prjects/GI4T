@@ -1,6 +1,12 @@
 import { Router, type Request, type Response } from "express";
 import { requireAuth, requireRole } from "../../middleware/auth.js";
 import { asyncHandler, HttpError } from "../../middleware/error.js";
+import { upload } from "../../middleware/upload.js";
+
+// Function names that need multipart/FormData parsing for an
+// uploaded `file` field. Multer's .single("file") is added before
+// the handler.
+const MULTIPART_FUNCTIONS = new Set(["upload-document"]);
 
 // Admin / user management
 import { createAdminUser } from "./create-admin-user.js";
@@ -112,6 +118,9 @@ for (const fn of functions) {
     case "none":
     default:
       break;
+  }
+  if (MULTIPART_FUNCTIONS.has(fn.name)) {
+    middlewares.push(upload.single("file"));
   }
   functionsRouter.post(
     `/${fn.name}`,

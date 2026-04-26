@@ -200,9 +200,39 @@ async function runProcessingPipeline(args: {
 }
 
 export async function uploadDocument(req: Request) {
-  const args = schema.parse(req.body);
-  const { filename, fileBase64, title, titleAr, language, categoryId, documentTypeId, skipProcessing } = args;
-  const buffer = Buffer.from(fileBase64, "base64");
+  // Support both multipart upload (FormData with `file` field) and
+  // legacy JSON body with fileBase64.
+  let filename: string;
+  let buffer: Buffer;
+  let title: string | undefined;
+  let titleAr: string | undefined;
+  let language = "fr";
+  let categoryId: string | null | undefined;
+  let documentTypeId: string | null | undefined;
+  let skipProcessing: boolean | undefined;
+
+  const reqWithFile = req as Request & { file?: { buffer: Buffer; originalname: string; mimetype: string } };
+  if (reqWithFile.file) {
+    filename = reqWithFile.file.originalname;
+    buffer = reqWithFile.file.buffer;
+    const body = req.body as Record<string, string | undefined>;
+    title = body.title;
+    titleAr = body.titleAr;
+    language = body.language ?? "fr";
+    categoryId = body.categoryId || null;
+    documentTypeId = body.documentTypeId || null;
+    skipProcessing = body.skipProcessing === "true";
+  } else {
+    const args = schema.parse(req.body);
+    filename = args.filename;
+    buffer = Buffer.from(args.fileBase64, "base64");
+    title = args.title;
+    titleAr = args.titleAr;
+    language = args.language;
+    categoryId = args.categoryId;
+    documentTypeId = args.documentTypeId;
+    skipProcessing = args.skipProcessing;
+  }
   const userId = req.user!.userId;
 
   // 1. Save the file
