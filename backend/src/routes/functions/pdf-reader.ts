@@ -1,6 +1,6 @@
 import type { Request } from "express";
 import { z } from "zod";
-import { pdfrestUpload, pdfrestExtractText } from "../../services/pdfrest.js";
+import { extractPdfText } from "../../services/text-extraction.js";
 
 const schema = z.object({
   filename: z.string(),
@@ -8,15 +8,16 @@ const schema = z.object({
 });
 
 export async function pdfReader(req: Request) {
-  const { filename, fileBase64 } = schema.parse(req.body);
+  const { fileBase64 } = schema.parse(req.body);
   const buffer = Buffer.from(fileBase64, "base64");
-  const uploaded = await pdfrestUpload(filename, buffer);
-  const text = await pdfrestExtractText(uploaded.id);
-
-  const pages = text.split(/\f|\n\s*---\s*\n/).filter((p) => p.trim().length > 0);
+  const { text, pageCount, pageTexts } = await extractPdfText(buffer);
   return {
     fullText: text,
-    pageCount: pages.length,
-    pages: pages.map((content, idx) => ({ pageNumber: idx + 1, content, confidence: 0.9 })),
+    pageCount,
+    pages: pageTexts.map((content, idx) => ({
+      pageNumber: idx + 1,
+      content,
+      confidence: 0.95,
+    })),
   };
 }
