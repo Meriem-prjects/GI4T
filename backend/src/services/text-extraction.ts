@@ -10,15 +10,28 @@ import { createRequire } from "node:module";
 import * as mammoth from "mammoth";
 import { getOpenAI } from "./openai.js";
 
-// pdf-parse is a CommonJS module that doesn't expose its default
-// export cleanly under Node's ESM loader. Use createRequire to
-// load it as CJS.
+// pdf-parse@2.x exposes a `PDFParse` class. The package is published
+// as ESM but the CJS build is also there. Use createRequire to load
+// the CJS form so we don't depend on dynamic-import in compiled JS.
 const requireCjs = createRequire(import.meta.url);
-type PdfParseFn = (
-  buffer: Buffer | Uint8Array,
-  opts?: object,
-) => Promise<{ text: string; numpages: number }>;
-const pdfParse: PdfParseFn = requireCjs("pdf-parse");
+interface PageTextResultLike {
+  text: string;
+  pageNumber?: number;
+  num?: number;
+}
+interface TextResultLike {
+  text: string;
+  pages: PageTextResultLike[];
+  numPages?: number;
+}
+interface PDFParseClass {
+  new (options: { data: Uint8Array | Buffer }): {
+    getText(): Promise<TextResultLike>;
+    destroy(): Promise<void>;
+  };
+}
+const pdfParseModule = requireCjs("pdf-parse") as { PDFParse: PDFParseClass };
+const PDFParse = pdfParseModule.PDFParse;
 
 export interface ExtractedPage {
   pageNumber: number;
@@ -43,34 +56,20 @@ export async function extractPdfText(buffer: Buffer): Promise<{
   pageCount: number;
   pageTexts: string[];
 }> {
-  const pageTexts: string[] = [];
-  let currentPage = 1;
-  let currentBuffer = "";
-
-  const data = await pdfParse(buffer, {
-    pagerender: async (pageData: {
-      getTextContent: (opts?: object) => Promise<{ items: Array<{ str: string; transform: number[] }> }>;
-    }) => {
-      const textContent = await pageData.getTextContent({
-        normalizeWhitespace: true,
-        disableCombineTextItems: false,
-      });
-      const text = textContent.items.map((item) => item.str).join(" ");
-      pageTexts.push(text);
-      return text;
-    },
-  } as unknown as Parameters<typeof pdfParse>[1]);
-
-  // pagerender provides per-page text. Fallback to the global text
-  // if individual pages weren't captured.
-  const pages = pageTexts.length > 0 ? pageTexts : [data.text];
-  void currentPage;
-  void currentBuffer;
-  return {
-    text: data.text.trim(),
-    pageCount: data.numpages,
-    pageTexts: pages.map((p) => p.trim()),
-  };
+  const parser = new PDFParse({ data: buffer });
+  try {
+    const result = await parser.getText();
+    const pageTexts = (result.pages ?? []).map((p) => (p.text ?? "").trim());
+    const fullText = (result.text ?? pageTexts.join("\n\n")).trim();
+    const pages = pageTexts.length > 0 ? pageTexts : [fullText];
+    return {
+      text: fullText,
+      pageCount: result.numPages ?? pages.length,
+      pageTexts: pages,
+    };
+  } finally {
+    await parser.destroy().catch(() => {});
+  }
 }
 
 /**
