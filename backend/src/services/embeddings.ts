@@ -7,7 +7,10 @@ function toVectorLiteral(embedding: number[]): string {
 }
 
 export async function generateAndStoreEmbedding(documentId: string, text: string): Promise<void> {
-  const embedding = await generateEmbedding(text.slice(0, 8000));
+  // text-embedding-3-small has a hard limit of 8192 tokens. We keep
+  // a conservative 4 000 character slice (≈ 1 000–4 000 tokens
+  // depending on the language) to never hit the limit.
+  const embedding = await generateEmbedding(text.slice(0, 4000));
   const vectorLiteral = toVectorLiteral(embedding);
   // Inline the vector literal — Prisma's $executeRawUnsafe sometimes
   // fails to cast large numeric strings to ::vector when passed as

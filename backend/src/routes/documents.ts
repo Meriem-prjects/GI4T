@@ -3,7 +3,7 @@ import { z } from "zod";
 import { prisma } from "../lib/prisma.js";
 import { optionalAuth, requireAuth, hasObservatoireRole } from "../middleware/auth.js";
 import { asyncHandler, HttpError } from "../middleware/error.js";
-import { snakeToCamel } from "../lib/case-transform.js";
+import { snakeToCamel, transformKeysToCamel } from "../lib/case-transform.js";
 
 export const documentsRouter = Router();
 
@@ -129,7 +129,10 @@ documentsRouter.patch(
         throw new HttpError(403, "Forbidden");
       }
     }
-    const data = upsertSchema.partial().parse(req.body);
+    // Frontend may send snake_case keys (Supabase legacy). Normalize
+    // to camelCase before passing to Prisma.
+    const camelBody = transformKeysToCamel(req.body as Record<string, unknown>);
+    const data = upsertSchema.partial().parse(camelBody);
     const doc = await prisma.document.update({
       where: { id: req.params.id },
       data: data as never,
