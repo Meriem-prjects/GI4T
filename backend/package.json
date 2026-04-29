@@ -30,6 +30,7 @@
     "multer": "^1.4.5-lts.1",
     "openai": "^4.77.0",
     "pdf-parse": "^2.4.5",
+    "pdf-to-png-converter": "^4.0.0",
     "pg": "^8.13.1",
     "socket.io": "^4.8.1",
     "zod": "^3.24.1"

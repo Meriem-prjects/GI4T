@@ -8,7 +8,10 @@
 
 import { createRequire } from "node:module";
 import * as mammoth from "mammoth";
+import { pdfToPng } from "pdf-to-png-converter";
 import { getOpenAI } from "./openai.js";
+
+const MAX_OCR_PAGES = 15;
 
 // pdf-parse@2.x exposes a `PDFParse` class. The package is published
 // as ESM but the CJS build is also there. Use createRequire to load
@@ -185,16 +188,44 @@ export async function extractTextFromFile(
         method: "pdf-text",
       };
     }
-    // PDF has no text layer (scanned). Mark for OCR — but we can't OCR
-    // a PDF directly with OpenAI vision (it expects images). Caller
-    // can retry by converting pages to PNGs first.
-    return {
-      text: pdf.text,
-      pageCount: pdf.pageCount,
-      pages: pdf.pageTexts.map((content, i) => ({ pageNumber: i + 1, content })),
-      method: "pdf-text",
-      needsOcr: true,
-    };
+    // No text layer (scanned PDF). Render up to MAX_OCR_PAGES pages to
+    // PNG and OCR each with OpenAI vision.
+    try {
+      const totalPages = pdf.pageCount || MAX_OCR_PAGES;
+      const pngs = await pdfToPng(buffer, {
+        viewportScale: 2.0,
+        pagesToProcess: Array.from(
+          { length: Math.min(totalPages, MAX_OCR_PAGES) },
+          (_, i) => i + 1,
+        ),
+      });
+      const ocrPages: ExtractedPage[] = [];
+      for (const png of pngs) {
+        if (!png.content) continue;
+        const ocr = await ocrWithOpenAI(png.content, "image/png", languageHint);
+        ocrPages.push({
+          pageNumber: png.pageNumber,
+          content: ocr.text,
+          confidence: ocr.confidence,
+        });
+      }
+      const fullText = ocrPages.map((p) => p.content).join("\n\n").trim();
+      return {
+        text: fullText,
+        pageCount: pdf.pageCount || ocrPages.length,
+        pages: ocrPages,
+        method: "pdf-vision",
+      };
+    } catch (err) {
+      console.warn("[text-extraction] PDF OCR fallback failed:", (err as Error).message);
+      return {
+        text: pdf.text,
+        pageCount: pdf.pageCount,
+        pages: pdf.pageTexts.map((content, i) => ({ pageNumber: i + 1, content })),
+        method: "pdf-text",
+        needsOcr: true,
+      };
+    }
   }
 
   // Unknown format: best-effort UTF-8 read.
