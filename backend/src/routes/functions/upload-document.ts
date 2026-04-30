@@ -72,7 +72,9 @@ async function runProcessingPipeline(args: {
   try {
     // Step 1 — Text extraction
     await setProgress(10, "extracting_text");
+    console.log(`[upload-document] start docId=${documentId} file=${filename} ${buffer.length}B lang=${language}`);
     const extraction = await extractTextFromFile(buffer, filename, mimeType, language);
+    console.log(`[upload-document] extraction method=${extraction.method} pages=${extraction.pageCount} text=${extraction.text.length}c needsOcr=${extraction.needsOcr ?? false}${extraction.errorMessage ? ` err="${extraction.errorMessage}"` : ""}`);
     const pageContents = extraction.pages.map((p) => ({
       pageNumber: p.pageNumber,
       content: p.content,
@@ -92,18 +94,26 @@ async function runProcessingPipeline(args: {
     // Skip the rest if there's no usable text (probably a scanned PDF
     // or empty file).
     if (!extraction.text || extraction.text.length < 50) {
+      const reason = extraction.errorMessage
+        ? `OCR a échoué : ${extraction.errorMessage}`
+        : extraction.needsOcr
+        ? "PDF scanné — OCR n'a extrait aucun texte."
+        : "Texte trop court ou vide.";
+      console.warn(`[upload-document] no_text docId=${documentId} reason="${reason}"`);
       await prisma.processingJob.update({
         where: { id: jobId },
         data: {
-          status: "completed",
+          status: "failed",
           progress: 100,
           currentStep: "no_text_extracted",
-          errorMessage: extraction.needsOcr
-            ? "PDF semble être une image scannée — texte non extrait."
-            : "Texte trop court ou vide.",
+          errorMessage: reason,
         },
       });
-      publishJobProgress({ jobId, status: "completed", progress: 100, currentStep: "no_text" });
+      await prisma.document.update({
+        where: { id: documentId },
+        data: { status: "extraction_failed" },
+      });
+      publishJobProgress({ jobId, status: "failed", progress: 100, errorMessage: reason });
       return;
     }
 

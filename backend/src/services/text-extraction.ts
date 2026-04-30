@@ -48,6 +48,7 @@ export interface ExtractionResult {
   pages: ExtractedPage[];
   method: "pdf-text" | "pdf-vision" | "docx" | "image-vision" | "txt";
   needsOcr?: boolean;
+  errorMessage?: string;
 }
 
 /**
@@ -81,6 +82,53 @@ export async function extractPdfText(buffer: Buffer): Promise<{
 export async function extractDocxText(buffer: Buffer): Promise<string> {
   const result = await mammoth.extractRawText({ buffer });
   return result.value.trim();
+}
+
+/**
+ * Send a PDF directly to OpenAI Chat Completions (gpt-4o-mini accepts
+ * PDF files via `type: "file"`). Cheaper + much faster than rendering
+ * pages to PNG ourselves.
+ */
+export async function extractPdfWithOpenAI(
+  buffer: Buffer,
+  languageHint: "fr" | "ar" | "auto" = "auto",
+): Promise<string> {
+  const openai = getOpenAI();
+  const dataUrl = `data:application/pdf;base64,${buffer.toString("base64")}`;
+  const langLine =
+    languageHint === "ar"
+      ? "Le document est en arabe. Restitue le texte tel quel, en respectant les diacritiques et la ponctuation arabe."
+      : languageHint === "fr"
+      ? "Le document est en français. Conserve les accents et la ponctuation."
+      : "Détecte automatiquement la langue (français ou arabe).";
+
+  const completion = await openai.chat.completions.create({
+    model: "gpt-4o-mini",
+    temperature: 0,
+    max_tokens: 16000,
+    messages: [
+      {
+        role: "system",
+        content:
+          "Tu es un assistant OCR. Extrait UNIQUEMENT le texte visible du PDF, sans commentaire ni mise en forme. Préserve la structure des paragraphes (sauts de ligne entre paragraphes). Retourne le texte brut, en concaténant toutes les pages.",
+      },
+      {
+        role: "user",
+        // The Chat Completions API accepts `type: "file"` for PDFs since
+        // late 2024 but the SDK union types are still narrow for some
+        // fields, so we cast.
+        content: [
+          { type: "text", text: langLine },
+          {
+            type: "file",
+            file: { filename: "document.pdf", file_data: dataUrl },
+          },
+        ] as never,
+      },
+    ],
+  });
+
+  return completion.choices[0]?.message?.content?.trim() ?? "";
 }
 
 /**
@@ -179,7 +227,9 @@ export async function extractTextFromFile(
   }
 
   if (isPdf) {
+    console.log(`[text-extraction] PDF "${filename}" size=${buffer.length}B lang=${languageHint}`);
     const pdf = await extractPdfText(buffer);
+    console.log(`[text-extraction] pdf-parse: ${pdf.pageCount}pp text=${pdf.text.length}c`);
     if (pdf.text.length >= 100) {
       return {
         text: pdf.text,
@@ -188,9 +238,31 @@ export async function extractTextFromFile(
         method: "pdf-text",
       };
     }
-    // No text layer (scanned PDF). Render up to MAX_OCR_PAGES pages to
-    // PNG and OCR each with OpenAI vision.
+
+    // No text layer (scanned PDF). Try fallbacks in order:
+    //   1. OpenAI direct PDF input (single API call, supports up to ~100 pages)
+    //   2. pdf-to-png + per-page gpt-4o vision (heavier, native deps)
+    let lastError: string | undefined;
+
     try {
+      console.log(`[text-extraction] trying OpenAI direct PDF input`);
+      const text = await extractPdfWithOpenAI(buffer, languageHint);
+      console.log(`[text-extraction] OpenAI direct PDF returned ${text.length}c`);
+      if (text.length >= 50) {
+        return {
+          text,
+          pageCount: pdf.pageCount || 1,
+          pages: [{ pageNumber: 1, content: text, confidence: 0.85 }],
+          method: "pdf-vision",
+        };
+      }
+    } catch (err) {
+      lastError = (err as Error).message;
+      console.warn(`[text-extraction] OpenAI direct PDF failed: ${lastError}`);
+    }
+
+    try {
+      console.log(`[text-extraction] trying pdf-to-png fallback`);
       const totalPages = pdf.pageCount || MAX_OCR_PAGES;
       const pngs = await pdfToPng(buffer, {
         viewportScale: 2.0,
@@ -199,6 +271,7 @@ export async function extractTextFromFile(
           (_, i) => i + 1,
         ),
       });
+      console.log(`[text-extraction] pdf-to-png produced ${pngs.length} pages`);
       const ocrPages: ExtractedPage[] = [];
       for (const png of pngs) {
         if (!png.content) continue;
@@ -210,22 +283,29 @@ export async function extractTextFromFile(
         });
       }
       const fullText = ocrPages.map((p) => p.content).join("\n\n").trim();
-      return {
-        text: fullText,
-        pageCount: pdf.pageCount || ocrPages.length,
-        pages: ocrPages,
-        method: "pdf-vision",
-      };
+      console.log(`[text-extraction] pdf-to-png OCR total ${fullText.length}c`);
+      if (fullText.length >= 50) {
+        return {
+          text: fullText,
+          pageCount: pdf.pageCount || ocrPages.length,
+          pages: ocrPages,
+          method: "pdf-vision",
+        };
+      }
     } catch (err) {
-      console.warn("[text-extraction] PDF OCR fallback failed:", (err as Error).message);
-      return {
-        text: pdf.text,
-        pageCount: pdf.pageCount,
-        pages: pdf.pageTexts.map((content, i) => ({ pageNumber: i + 1, content })),
-        method: "pdf-text",
-        needsOcr: true,
-      };
+      lastError = (err as Error).message;
+      console.warn(`[text-extraction] pdf-to-png fallback failed: ${lastError}`);
     }
+
+    // Both fallbacks failed or produced no text. Surface this to the caller.
+    return {
+      text: pdf.text,
+      pageCount: pdf.pageCount,
+      pages: pdf.pageTexts.map((content, i) => ({ pageNumber: i + 1, content })),
+      method: "pdf-text",
+      needsOcr: true,
+      errorMessage: lastError,
+    };
   }
 
   // Unknown format: best-effort UTF-8 read.
