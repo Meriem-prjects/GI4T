@@ -20,18 +20,19 @@ jobs:
 
       - name: Latest documents
         run: |
-          export PGPASSWORD="$(grep -oP '(?<=password=)[^&"]+' /var/www/app/backend/.env || true)"
-          psql "$(grep '^DATABASE_URL=' /var/www/app/backend/.env | cut -d= -f2- | tr -d '"')" \
-            -c "SELECT id, LEFT(COALESCE(title, original_filename), 50) AS file, LENGTH(content) AS len, status, created_at FROM documents ORDER BY created_at DESC LIMIT 5;" || true
+          DB_URL=$(grep '^DATABASE_URL=' /var/www/app/backend/.env | cut -d= -f2- | tr -d '"' | sed 's/?.*$//')
+          psql "$DB_URL" \
+            -c "SELECT id, LEFT(COALESCE(title, original_filename), 50) AS file, LENGTH(content) AS len, status, processing_job_id, created_at FROM documents ORDER BY created_at DESC LIMIT 6;" || true
 
       - name: Latest processing jobs
         run: |
-          psql "$(grep '^DATABASE_URL=' /var/www/app/backend/.env | cut -d= -f2- | tr -d '"')" \
-            -c "SELECT id, file_name, status, current_step, LEFT(error_message, 300) AS error, created_at FROM processing_jobs ORDER BY created_at DESC LIMIT 5;" || true
+          DB_URL=$(grep '^DATABASE_URL=' /var/www/app/backend/.env | cut -d= -f2- | tr -d '"' | sed 's/?.*$//')
+          psql "$DB_URL" \
+            -c "SELECT id, file_name, status, current_step, LEFT(error_message, 400) AS error, created_at FROM processing_jobs ORDER BY created_at DESC LIMIT 6;" || true
 
       - name: Backend node_modules check
         working-directory: /var/www/app/backend
         run: |
           ls -d node_modules/pdf-to-png-converter 2>/dev/null && echo "pdf-to-png-converter installed" || echo "MISSING pdf-to-png-converter"
           ls -d node_modules/pdf-parse 2>/dev/null && echo "pdf-parse installed" || echo "MISSING pdf-parse"
-          node -e "console.log('openai:', require('openai/package.json').version)"
+          node -e "import('openai/version.js').then(m => console.log('openai version:', m.VERSION)).catch(() => console.log('openai version check skipped'))"
