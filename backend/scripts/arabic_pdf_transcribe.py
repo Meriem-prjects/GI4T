@@ -239,19 +239,26 @@ def transcribe_pdf(pdf_path: str, language: str = "ar") -> str:
 
 if __name__ == "__main__":
     if len(sys.argv) < 2:
-        print("Usage: python arabic_pdf_transcribe.py input.pdf [output.txt] [lang=ar|fr]", file=sys.stderr)
+        print("Usage: arabic_pdf_transcribe.py <input.pdf> [lang=ar|fr|auto] [--out FILE]", file=sys.stderr)
         sys.exit(1)
     src = sys.argv[1]
-    dst = sys.argv[2] if len(sys.argv) > 2 and not sys.argv[2].startswith("lang=") else None
     lang = "ar"
-    for a in sys.argv[2:]:
+    out_file: Optional[str] = None
+    args = sys.argv[2:]
+    i = 0
+    while i < len(args):
+        a = args[i]
         if a in ("ar", "fr", "auto"):
             lang = a
         elif a.startswith("lang="):
             lang = a.split("=", 1)[1]
+        elif a in ("-o", "--out") and i + 1 < len(args):
+            out_file = args[i + 1]
+            i += 1
+        i += 1
     text = transcribe_pdf(src, lang)
-    if dst:
-        Path(dst).write_text(text, encoding="utf-8")
-        print(f"OK {len(text)} chars -> {dst}", file=sys.stderr)
+    if out_file:
+        Path(out_file).write_text(text, encoding="utf-8")
+        print(f"OK {len(text)} chars -> {out_file}", file=sys.stderr)
     else:
         sys.stdout.buffer.write(text.encode("utf-8"))
