@@ -3490,9 +3490,9 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
                     .map((page) => (
                       <div key={page.pageNumber} className="page-break">
                         <CKEditorWrapper
-                          content={currentLanguage === 'ar'
+                          content={renderFormattedContent(currentLanguage === 'ar'
                             ? normalizeArabicForDisplay(currentLanguage === editedData.language ? page.content : (page.translated_content || ''))
-                            : (currentLanguage === editedData.language ? page.content : (page.translated_content || ''))}
+                            : (currentLanguage === editedData.language ? page.content : (page.translated_content || '')))}
                           onChange={(newContent) => {
                             setEditedData(prev => ({
                               ...prev,
@@ -3519,7 +3519,7 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
                 </div>
               ) : (
                 <CKEditorWrapper
-                  content={getCurrentContent()}
+                  content={renderFormattedContent(getCurrentContent())}
                   onChange={(newContent) => {
                     if (currentLanguage === editedData.language) {
                       setEditedData(prev => ({

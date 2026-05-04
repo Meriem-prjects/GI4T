@@ -19,34 +19,79 @@ const schema = z.object({
   skipProcessing: z.boolean().optional(),
 });
 
-const ANALYSIS_SYSTEM_PROMPT = `You are a legal document analyzer for Tunisian law.
-Extract structured metadata from the document and return STRICT JSON only (no markdown, no explanation).
-Schema:
-{
-  "title": "...",
-  "title_ar": "...",
-  "subtitle": "...",
+function buildAnalysisPrompt(documentTypeName: string | null | undefined): string {
+  const t = (documentTypeName ?? "").toLowerCase();
+  const isJurisprudence = t.includes("jurisprudence") || t.includes("جذاذة") || t.includes("فقه");
+  const isBlogOrComment = t.includes("blog") || t.includes("commentaire") || t.includes("تدوين");
+  const isAnalysis = t.includes("analyse") || t.includes("opinion") || t.includes("تحليل");
+
+  const baseFields = `  "title": "...",                  // titre exact (langue source)
+  "title_ar": "...",                // titre en arabe
+  "subtitle": "...",                // sous-titre si présent, sinon null
   "subtitle_ar": "...",
-  "summary": "...",
-  "summary_ar": "...",
-  "author": "...",
+  "summary": "...",                 // 150-300 mots en langue source
+  "summary_ar": "...",              // 150-300 mots en arabe
+  "author": "...",                  // auteur principal (langue source)
   "author_ar": "...",
-  "keywords": ["..."],
-  "keywords_ar": ["..."],
-  "legalDomains": ["..."],
-  "mainTopics": ["..."],
-  "court": "...",
+  "keywords": ["..."],              // 8-15 mots-clés (langue source)
+  "keywords_ar": ["..."],           // 8-15 mots-clés en arabe
+  "legalDomains": ["..."],          // domaines juridiques touchés
+  "mainTopics": ["..."],            // thématiques principales
+  "legalReferences": ["..."],       // textes/articles cités (langue source)
+  "legalReferencesAr": ["..."],     // textes/articles cités en arabe
+  "entities": ["..."],              // personnes/institutions/lois citées
+  "dates": ["..."],                 // dates importantes (format JJ/MM/AAAA si possible)
+  "textualMetadata": "..."          // 1-3 phrases : qui/quand/quoi du document`;
+
+  const jurisprudenceFields = `  "court": "...",                   // nom du tribunal (langue source)
   "court_ar": "...",
-  "caseNumber": "...",
-  "year": 2024,
-  "plaintiff": "...",
-  "defendant": "...",
-  "jurisdiction": "...",
-  "legalReferences": ["..."],
-  "entities": ["..."],
-  "dates": ["..."]
+  "courtLevel": "...",              // niveau (Cassation, Appel, Première instance, ...)
+  "courtLevelAr": "...",
+  "courtCategory": "...",           // ordre judiciaire/administratif/constitutionnel
+  "courtCategoryAr": "...",
+  "caseNumber": "...",              // numéro de la décision/arrêt
+  "year": 2024,                     // année de la décision (entier)
+  "plaintiff": "...",               // demandeur (langue source)
+  "plaintiff_ar": "...",
+  "defendant": "...",               // défendeur (langue source)
+  "defendant_ar": "...",
+  "jurisdiction": "...",            // ressort géographique`;
+
+  const bibliographyFields = `  "bibliography": "...",            // références bibliographiques rédigées (langue source)
+  "bibliography_ar": "..."`;
+
+  let typeHint = "";
+  let extra = "";
+  if (isJurisprudence) {
+    typeHint = `Le document est une FICHE DE JURISPRUDENCE / décision judiciaire. Cherche AGRESSIVEMENT le numéro de décision, la juridiction, l'année, les parties (demandeur/défendeur), le niveau juridictionnel.`;
+    extra = ",\n" + jurisprudenceFields + ",\n" + bibliographyFields;
+  } else if (isBlogOrComment) {
+    typeHint = `Le document est un BILLET DE BLOG ou un COMMENTAIRE de décision. Identifie clairement l'auteur, sa qualité (universitaire, avocat...), et le sujet juridique principal.`;
+    extra = ",\n" + bibliographyFields;
+  } else if (isAnalysis) {
+    typeHint = `Le document est une ANALYSE / NOTE DOCTRINALE. Identifie l'auteur, sa qualité, les domaines de droit traités et la thèse défendue.`;
+    extra = ",\n" + bibliographyFields;
+  } else {
+    typeHint = `Document juridique générique. Remplis tous les champs détectables.`;
+    extra = ",\n" + jurisprudenceFields + ",\n" + bibliographyFields;
+  }
+
+  return `Tu es un analyseur expert de documents juridiques tunisiens (français/arabe).
+${typeHint}
+
+Réponds UNIQUEMENT avec un JSON valide (pas de markdown, pas de commentaire, pas de \`\`\`).
+Schéma attendu :
+{
+${baseFields}${extra}
 }
-If a field is unknown, use null or [].`;
+
+Règles :
+- Si un champ est introuvable, mets null (ou [] pour un tableau).
+- Préserve la casse et la ponctuation arabes (؟ ؛ .).
+- Pour les arrays bilingues, l'ordre français et arabe doit correspondre item par item.
+- Pour year, retourne un entier (pas une chaîne).
+- Si le document est en arabe, remplis prioritairement les *_ar et fais un titre/résumé français de courtoisie.`;
+}
 
 /**
  * Run the full document processing pipeline asynchronously.
@@ -117,15 +162,24 @@ async function runProcessingPipeline(args: {
       return;
     }
 
-    // Step 2 — AI metadata extraction
+    // Step 2 — AI metadata extraction (prompt tailored to document type)
     await setProgress(50, "ai_analysis");
     let analysis: Record<string, unknown> = {};
     try {
+      const docWithType = await prisma.document.findUnique({
+        where: { id: documentId },
+        include: { documentTypeRel: true },
+      });
+      const docTypeName = docWithType?.documentTypeRel?.name ?? null;
+      const systemPrompt = buildAnalysisPrompt(docTypeName);
+      console.log(`[upload-document] AI analysis docType="${docTypeName ?? "unknown"}"`);
+
       const raw = await chatCompletion({
         model: "gpt-4o-mini",
-        system: ANALYSIS_SYSTEM_PROMPT,
+        system: systemPrompt,
         prompt: extraction.text.slice(0, 12000),
         temperature: 0.2,
+        maxTokens: 4000,
       });
       try {
         analysis = JSON.parse(raw);
@@ -134,33 +188,44 @@ async function runProcessingPipeline(args: {
         if (m) analysis = JSON.parse(m[0]);
       }
 
+      const str = (v: unknown) => (typeof v === "string" && v.trim() ? v : undefined);
+      const arr = (v: unknown) => (Array.isArray(v) ? (v as string[]) : undefined);
+
       await prisma.document.update({
         where: { id: documentId },
         data: {
-          title: (analysis.title as string) || undefined,
-          titleAr: (analysis.title_ar as string) || undefined,
-          subtitle: (analysis.subtitle as string) || undefined,
-          subtitleAr: (analysis.subtitle_ar as string) || undefined,
-          summary: (analysis.summary as string) || undefined,
-          summaryAr: (analysis.summary_ar as string) || undefined,
-          author: (analysis.author as string) || undefined,
-          authorAr: (analysis.author_ar as string) || undefined,
-          keywords: Array.isArray(analysis.keywords) ? (analysis.keywords as string[]) : undefined,
-          keywordsAr: Array.isArray(analysis.keywords_ar) ? (analysis.keywords_ar as string[]) : undefined,
-          legalDomains: Array.isArray(analysis.legalDomains) ? (analysis.legalDomains as string[]) : undefined,
-          mainTopics: Array.isArray(analysis.mainTopics) ? (analysis.mainTopics as string[]) : undefined,
-          court: (analysis.court as string) || undefined,
-          courtAr: (analysis.court_ar as string) || undefined,
-          caseNumber: (analysis.caseNumber as string) || undefined,
+          title: str(analysis.title),
+          titleAr: str(analysis.title_ar),
+          subtitle: str(analysis.subtitle),
+          subtitleAr: str(analysis.subtitle_ar),
+          summary: str(analysis.summary),
+          summaryAr: str(analysis.summary_ar),
+          author: str(analysis.author),
+          authorAr: str(analysis.author_ar),
+          keywords: arr(analysis.keywords),
+          keywordsAr: arr(analysis.keywords_ar),
+          legalDomains: arr(analysis.legalDomains),
+          mainTopics: arr(analysis.mainTopics),
+          court: str(analysis.court),
+          courtAr: str(analysis.court_ar),
+          courtLevel: str(analysis.courtLevel),
+          courtLevelAr: str(analysis.courtLevelAr),
+          courtCategory: str(analysis.courtCategory),
+          courtCategoryAr: str(analysis.courtCategoryAr),
+          caseNumber: str(analysis.caseNumber),
           year: typeof analysis.year === "number" ? analysis.year : undefined,
-          plaintiff: (analysis.plaintiff as string) || undefined,
-          defendant: (analysis.defendant as string) || undefined,
-          jurisdiction: (analysis.jurisdiction as string) || undefined,
-          legalReferences: Array.isArray(analysis.legalReferences)
-            ? (analysis.legalReferences as string[])
-            : undefined,
-          entities: Array.isArray(analysis.entities) ? (analysis.entities as string[]) : undefined,
-          dates: Array.isArray(analysis.dates) ? (analysis.dates as string[]) : undefined,
+          plaintiff: str(analysis.plaintiff),
+          plaintiffAr: str(analysis.plaintiff_ar),
+          defendant: str(analysis.defendant),
+          defendantAr: str(analysis.defendant_ar),
+          jurisdiction: str(analysis.jurisdiction),
+          legalReferences: arr(analysis.legalReferences),
+          legalReferencesAr: arr(analysis.legalReferencesAr ?? analysis.legal_references_ar),
+          bibliography: str(analysis.bibliography),
+          bibliographyAr: str(analysis.bibliography_ar),
+          entities: arr(analysis.entities),
+          dates: arr(analysis.dates),
+          textualMetadata: str(analysis.textualMetadata),
         },
       });
     } catch (err) {
