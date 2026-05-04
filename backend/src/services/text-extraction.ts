@@ -40,7 +40,10 @@ async function extractPdfWithPyMuPDF(
       const proc = spawn(
         PYTHON_BIN,
         [SCRIPT_PATH, inPath, languageHint === "fr" ? "fr" : "ar"],
-        { stdio: ["ignore", "pipe", "pipe"] },
+        {
+          stdio: ["ignore", "pipe", "pipe"],
+          env: { ...process.env, PYTHONIOENCODING: "utf-8" },
+        },
       );
       const out: Buffer[] = [];
       const err: Buffer[] = [];

@@ -72,7 +72,8 @@ jobs:
           GOOGLE_VISION_API_KEY=${{ secrets.GOOGLE_VISION_API_KEY }}
           PDFREST_API_KEY=${{ secrets.PDFREST_API_KEY }}
           DEEPL_API_KEY=${{ secrets.DEEPL_API_KEY }}
-          PYTHON_BIN=/var/www/app/backend/.venv/bin/python
+          PYTHON_BIN=python3
+          PYTHONPATH=/var/www/app/backend/python_lib
           EOF
 
       - name: Install production deps and run migrations
@@ -82,18 +83,14 @@ jobs:
           npx prisma generate
           npx prisma migrate deploy
 
-      - name: Install PyMuPDF in venv (idempotent)
+      - name: Install PyMuPDF to shared path (no sudo)
         run: |
-          VENV=/var/www/app/backend/.venv
-          if [ ! -x "$VENV/bin/python" ]; then
-            sudo apt-get update -qq
-            sudo apt-get install -y -qq python3-venv python3-pip
-            python3 -m venv "$VENV"
-            sudo chown -R "$USER" "$VENV" 2>/dev/null || true
-          fi
-          "$VENV/bin/pip" install --quiet --upgrade pip
-          "$VENV/bin/python" -c "import fitz" 2>/dev/null || "$VENV/bin/pip" install --quiet pymupdf
-          "$VENV/bin/python" -c "import fitz; print('pymupdf', fitz.__version__)"
+          PY_LIB=/var/www/app/backend/python_lib
+          mkdir -p "$PY_LIB"
+          PYTHONPATH="$PY_LIB" python3 -c "import fitz" 2>/dev/null \
+            || pip3 install --quiet --target "$PY_LIB" --break-system-packages pymupdf
+          PYTHONPATH="$PY_LIB" python3 -c "import fitz; print('pymupdf', fitz.__version__)"
+        continue-on-error: true
 
       - name: Reload API via PM2
         working-directory: /var/www/app/backend
