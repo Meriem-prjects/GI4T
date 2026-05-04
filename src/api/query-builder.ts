@@ -3,6 +3,24 @@
 
 import { api, ApiError } from "./client.js";
 
+// Prisma returns camelCase; the legacy Supabase code reads snake_case.
+// Recursively convert object keys back to snake_case so consumers keep
+// working without changes.
+function toSnakeCase(s: string): string {
+  return s.replace(/[A-Z]/g, (c) => "_" + c.toLowerCase());
+}
+function snakeCaseKeys<T>(value: T): T {
+  if (Array.isArray(value)) return value.map(snakeCaseKeys) as unknown as T;
+  if (value && typeof value === "object" && value.constructor === Object) {
+    const out: Record<string, unknown> = {};
+    for (const [k, v] of Object.entries(value as Record<string, unknown>)) {
+      out[toSnakeCase(k)] = snakeCaseKeys(v);
+    }
+    return out as T;
+  }
+  return value;
+}
+
 // Convert snake_case / existing table names to kebab-case REST paths.
 const TABLE_TO_PATH: Record<string, string> = {
   documents: "/api/documents",
@@ -246,7 +264,7 @@ export class QueryBuilder<T = unknown> implements PromiseLike<QueryResult<T>> {
         const idFilter = this.getIdFilter();
         if (idFilter && this.singleResult) {
           const data = await api.get(`${this.path}/${idFilter}`);
-          return this.wrapResult<T>(data as T);
+          return this.wrapResult<T>(snakeCaseKeys(data) as T);
         }
         const query = this.buildQuery();
         const res = await api.get<{ items?: unknown[]; total?: number } | unknown[]>(
@@ -268,10 +286,10 @@ export class QueryBuilder<T = unknown> implements PromiseLike<QueryResult<T>> {
           if (!first && !this.maybeSingle_flag) {
             return this.wrapResult<T>(null, new ApiError(404, "No rows found"));
           }
-          return this.wrapResult<T>(first as T, null, this.countRequested ? total : null);
+          return this.wrapResult<T>(snakeCaseKeys(first) as T, null, this.countRequested ? total : null);
         }
         return this.wrapResult<T>(
-          items as unknown as T,
+          snakeCaseKeys(items) as unknown as T,
           null,
           this.countRequested ? total : null,
         );
@@ -280,7 +298,7 @@ export class QueryBuilder<T = unknown> implements PromiseLike<QueryResult<T>> {
       if (this.op === "insert" || this.op === "upsert") {
         const data = await api.post(this.path, this.payload);
         return this.wrapResult<T>(
-          this.singleResult ? (data as T) : ([data] as unknown as T),
+          this.singleResult ? (snakeCaseKeys(data) as T) : ([snakeCaseKeys(data)] as unknown as T),
         );
       }
 
@@ -291,7 +309,7 @@ export class QueryBuilder<T = unknown> implements PromiseLike<QueryResult<T>> {
         }
         const data = await api.patch(`${this.path}/${idFilter}`, this.payload);
         return this.wrapResult<T>(
-          this.singleResult ? (data as T) : ([data] as unknown as T),
+          this.singleResult ? (snakeCaseKeys(data) as T) : ([snakeCaseKeys(data)] as unknown as T),
         );
       }
 
