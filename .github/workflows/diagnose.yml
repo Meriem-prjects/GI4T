@@ -22,7 +22,13 @@ jobs:
         run: |
           DB_URL=$(grep '^DATABASE_URL=' /var/www/app/backend/.env | cut -d= -f2- | tr -d '"' | sed 's/?.*$//')
           psql "$DB_URL" \
-            -c "SELECT id, LEFT(COALESCE(title, original_filename), 50) AS file, LENGTH(content) AS len, status, processing_job_id, created_at FROM documents ORDER BY created_at DESC LIMIT 6;" || true
+            -c "SELECT id, LEFT(title, 30) AS title, LEFT(title_ar, 30) AS title_ar, LENGTH(content) AS len_c, LENGTH(summary) AS len_s, LENGTH(summary_ar) AS len_sar, array_length(keywords,1) AS kw, array_length(keywords_ar,1) AS kw_ar, status, language FROM documents ORDER BY created_at DESC LIMIT 6;" || true
+
+      - name: Sample latest doc full JSON via API
+        run: |
+          DOC_ID=$(psql "$(grep '^DATABASE_URL=' /var/www/app/backend/.env | cut -d= -f2- | tr -d '"' | sed 's/?.*$//')" -t -A -c "SELECT id FROM documents ORDER BY created_at DESC LIMIT 1;")
+          echo "Latest doc ID: $DOC_ID"
+          curl -sS "http://127.0.0.1:4000/api/documents/$DOC_ID" | python3 -c "import sys, json; d=json.load(sys.stdin); print(json.dumps({k:(v if not isinstance(v,str) or len(v)<80 else v[:80]+'...') for k,v in d.items() if not isinstance(v, (list, dict)) or k in ('keywords','keywordsAr')}, ensure_ascii=False, indent=2))" || true
 
       - name: Latest processing jobs
         run: |
