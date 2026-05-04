@@ -87,8 +87,16 @@ jobs:
         run: |
           PY_LIB=/var/www/app/backend/python_lib
           mkdir -p "$PY_LIB"
-          PYTHONPATH="$PY_LIB" python3 -c "import fitz" 2>/dev/null \
-            || pip3 install --quiet --target "$PY_LIB" --break-system-packages pymupdf
+          if PYTHONPATH="$PY_LIB" python3 -c "import fitz" 2>/dev/null; then
+            echo "pymupdf already installed"
+          else
+            # Bootstrap a pip that doesn't require root
+            BOOT=$(mktemp -d)
+            curl -fsSL https://bootstrap.pypa.io/get-pip.py -o "$BOOT/get-pip.py"
+            python3 "$BOOT/get-pip.py" --no-warn-script-location --target "$BOOT/pip-tools" >/dev/null
+            PYTHONPATH="$BOOT/pip-tools" python3 -m pip install --quiet --target "$PY_LIB" pymupdf
+            rm -rf "$BOOT"
+          fi
           PYTHONPATH="$PY_LIB" python3 -c "import fitz; print('pymupdf', fitz.__version__)"
         continue-on-error: true
 
