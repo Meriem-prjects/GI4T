@@ -88,6 +88,8 @@ const AdminEditor = () => {
         .eq('id', documentId)
         .maybeSingle();
 
+      console.log('[AdminEditor] loadExistingDocument', documentId, { document, error });
+
       if (error) {
         console.error('Error loading document:', error);
         toast({
@@ -168,11 +170,23 @@ const AdminEditor = () => {
     }
   };
 
-  const handleDocumentsProcessed = (documents: DocumentData[]) => {
+  const handleDocumentsProcessed = async (documents: DocumentData[]) => {
+    console.log('[AdminEditor] handleDocumentsProcessed', documents);
     setProcessedDocuments(documents);
     if (documents.length === 1) {
-      setCurrentDocument(documents[0]);
+      const doc = documents[0];
       setShowUploader(false);
+      // Always refetch by id — the upstream uploader may have handed us a
+      // stale or empty row (e.g. fetched before the background pipeline
+      // finished writing content/title/summary).
+      if (doc.id) {
+        await loadExistingDocument(doc.id);
+        // Final guard: if the refetch left currentDocument null (API
+        // 404 / permission issue) fall back to whatever the uploader gave us.
+        setCurrentDocument((cur) => cur ?? doc);
+      } else {
+        setCurrentDocument(doc);
+      }
     } else if (documents.length > 1) {
       // Show list of processed documents for selection
       setShowUploader(false);
