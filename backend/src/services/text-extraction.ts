@@ -7,11 +7,55 @@
 // those API keys are not configured.
 
 import { createRequire } from "node:module";
+import { spawn } from "node:child_process";
+import { mkdtemp, rm, writeFile } from "node:fs/promises";
+import { tmpdir } from "node:os";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
 import * as mammoth from "mammoth";
 import { pdfToPng } from "pdf-to-png-converter";
 import { getOpenAI } from "./openai.js";
 
 const MAX_OCR_PAGES = 15;
+const PYTHON_BIN = process.env.PYTHON_BIN ?? "python3";
+const SCRIPT_PATH = path.resolve(
+  path.dirname(fileURLToPath(import.meta.url)),
+  "../../scripts/arabic_pdf_transcribe.py",
+);
+
+/**
+ * Run the Python PyMuPDF transcriber. Handles digital PDFs with proper
+ * Arabic visual-to-logical reordering, NFKC normalization, and 2-column
+ * (JORT) reading order. Returns the extracted text or throws.
+ */
+async function extractPdfWithPyMuPDF(
+  buffer: Buffer,
+  languageHint: "fr" | "ar" | "auto" = "ar",
+): Promise<string> {
+  const dir = await mkdtemp(path.join(tmpdir(), "pdf-py-"));
+  const inPath = path.join(dir, "in.pdf");
+  await writeFile(inPath, buffer);
+  try {
+    return await new Promise<string>((resolve, reject) => {
+      const proc = spawn(
+        PYTHON_BIN,
+        [SCRIPT_PATH, inPath, languageHint === "fr" ? "fr" : "ar"],
+        { stdio: ["ignore", "pipe", "pipe"] },
+      );
+      const out: Buffer[] = [];
+      const err: Buffer[] = [];
+      proc.stdout.on("data", (c) => out.push(c));
+      proc.stderr.on("data", (c) => err.push(c));
+      proc.on("error", reject);
+      proc.on("close", (code) => {
+        if (code === 0) resolve(Buffer.concat(out).toString("utf8").trim());
+        else reject(new Error(`pymupdf exited ${code}: ${Buffer.concat(err).toString("utf8").slice(0, 500)}`));
+      });
+    });
+  } finally {
+    await rm(dir, { recursive: true, force: true }).catch(() => {});
+  }
+}
 
 // pdf-parse@2.x exposes a `PDFParse` class. The package is published
 // as ESM but the CJS build is also there. Use createRequire to load
@@ -228,6 +272,24 @@ export async function extractTextFromFile(
 
   if (isPdf) {
     console.log(`[text-extraction] PDF "${filename}" size=${buffer.length}B lang=${languageHint}`);
+
+    // Try PyMuPDF first — handles Arabic visual→logical reordering, NFKC
+    // normalisation and 2-column JORT layouts that pdf-parse mangles.
+    try {
+      const pyText = await extractPdfWithPyMuPDF(buffer, languageHint);
+      console.log(`[text-extraction] pymupdf: ${pyText.length}c`);
+      if (pyText.length >= 100) {
+        return {
+          text: pyText,
+          pageCount: 1,
+          pages: [{ pageNumber: 1, content: pyText, confidence: 0.95 }],
+          method: "pdf-text",
+        };
+      }
+    } catch (err) {
+      console.warn(`[text-extraction] pymupdf failed: ${(err as Error).message}`);
+    }
+
     const pdf = await extractPdfText(buffer);
     console.log(`[text-extraction] pdf-parse: ${pdf.pageCount}pp text=${pdf.text.length}c`);
     if (pdf.text.length >= 100) {
