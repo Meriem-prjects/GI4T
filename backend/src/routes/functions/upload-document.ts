@@ -223,7 +223,9 @@ export async function uploadDocument(req: Request) {
 
   const reqWithFile = req as Request & { file?: { buffer: Buffer; originalname: string; mimetype: string } };
   if (reqWithFile.file) {
-    filename = reqWithFile.file.originalname;
+    // Multer decodes multipart filenames as Latin-1 by default. Re-decode
+    // as UTF-8 so Arabic / accented filenames are preserved correctly.
+    filename = Buffer.from(reqWithFile.file.originalname, "latin1").toString("utf8");
     buffer = reqWithFile.file.buffer;
     const body = req.body as Record<string, string | undefined>;
     title = body.title;

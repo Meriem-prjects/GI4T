@@ -3,18 +3,31 @@
 
 import { api, ApiError } from "./client.js";
 
-// Prisma returns camelCase; the legacy Supabase code reads snake_case.
-// Recursively convert object keys back to snake_case so consumers keep
-// working without changes.
+// Prisma returns camelCase; the legacy Supabase code reads snake_case
+// for column names. Convert top-level keys (and keys inside nested
+// relation objects) but DO NOT touch items inside arrays — those are
+// usually JSONB columns (e.g. page_contents = [{pageNumber, content}])
+// whose interior shape was set by the app and must be preserved.
 function toSnakeCase(s: string): string {
   return s.replace(/[A-Z]/g, (c) => "_" + c.toLowerCase());
 }
 function snakeCaseKeys<T>(value: T): T {
-  if (Array.isArray(value)) return value.map(snakeCaseKeys) as unknown as T;
+  if (Array.isArray(value)) {
+    // Top-level lists (e.g. /api/documents → items[]). Convert each
+    // row's column keys, but stop recursing into the row's array
+    // properties (JSONB content).
+    return value.map(snakeCaseKeys) as unknown as T;
+  }
   if (value && typeof value === "object" && value.constructor === Object) {
     const out: Record<string, unknown> = {};
     for (const [k, v] of Object.entries(value as Record<string, unknown>)) {
-      out[toSnakeCase(k)] = snakeCaseKeys(v);
+      // Only recurse when the value is a plain object (Prisma relation)
+      // — leave arrays intact so JSONB items keep their original keys.
+      if (v && typeof v === "object" && !Array.isArray(v) && (v as object).constructor === Object) {
+        out[toSnakeCase(k)] = snakeCaseKeys(v);
+      } else {
+        out[toSnakeCase(k)] = v;
+      }
     }
     return out as T;
   }
