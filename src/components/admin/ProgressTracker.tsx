@@ -19,6 +19,7 @@ interface ProcessingJob {
 
 interface ProgressTrackerProps {
   jobId?: string;
+  documentId?: string;
   fileName: string;
   onComplete?: (result: any) => void;
   onError?: (error: string) => void;
@@ -27,6 +28,7 @@ interface ProgressTrackerProps {
 
 const ProgressTracker: React.FC<ProgressTrackerProps> = ({
   jobId,
+  documentId,
   fileName,
   onComplete,
   onError,
@@ -82,17 +84,29 @@ const ProgressTracker: React.FC<ProgressTrackerProps> = ({
     };
   }, [jobId]);
 
-  // Helper to fetch document data
+  // Helper to fetch document data — prefer fetching by documentId
+  // (works because /api/documents/:id is a single-row endpoint), and
+  // fall back to filtering by processing_job_id only if docId is unknown.
   const fetchDocument = async (jobId: string) => {
     try {
+      if (documentId) {
+        const { data: doc, error } = await supabase
+          .from('documents')
+          .select('*')
+          .eq('id', documentId)
+          .maybeSingle();
+        if (doc && !error) {
+          setDocument(doc);
+          return doc;
+        }
+      }
       const { data: doc, error: docError } = await (supabase as any)
         .from('documents')
-        .select('id,title,summary,content,keywords,language,original_filename,file_url,pdf_url,category_id,document_type_id,page_contents,processed_pages,total_pages,created_at,status')
+        .select('*')
         .eq('processing_job_id', jobId)
         .order('created_at', { ascending: false })
         .limit(1)
         .single();
-
       if (doc && !docError) {
         setDocument(doc);
         return doc;

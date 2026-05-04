@@ -21,6 +21,7 @@ interface UploadFile {
   result?: any;
   error?: string;
   jobId?: string; // Add job ID for progress tracking
+  documentId?: string; // Document row id, returned by upload-document
 }
 
 interface Category {
@@ -191,11 +192,12 @@ const BatchDocumentUploader: React.FC<BatchDocumentUploaderProps> = ({ onDocumen
     }
 
     if (jobId) {
-      // Update file with job ID for progress tracking
+      // Update file with job ID + document ID for progress tracking
       setUploadFiles(prev => prev.map(f =>
         f.id === uploadFile.id ? {
           ...f,
           jobId: jobId,
+          documentId: documentId,
           progress: 20,
           status: 'processing'
         } : f
@@ -491,6 +493,7 @@ const BatchDocumentUploader: React.FC<BatchDocumentUploaderProps> = ({ onDocumen
                   <div className="mt-3">
                     <ProgressTracker
                       jobId={uploadFile.jobId}
+                      documentId={uploadFile.documentId}
                       fileName={uploadFile.file.name}
                       pdfUrl={uploadFile.result?.pdf_url || uploadFile.result?.file_url}
                       onComplete={(result) => handleFileCompletion(uploadFile.id, result)}
