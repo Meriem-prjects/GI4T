@@ -41,4 +41,15 @@ jobs:
         run: |
           ls -d node_modules/pdf-to-png-converter 2>/dev/null && echo "pdf-to-png-converter installed" || echo "MISSING pdf-to-png-converter"
           ls -d node_modules/pdf-parse 2>/dev/null && echo "pdf-parse installed" || echo "MISSING pdf-parse"
+          PYTHONPATH=/var/www/app/backend/python_lib python3 -c "import fitz; print('pymupdf', fitz.__version__)" 2>&1 || echo "MISSING pymupdf"
           node -e "import('openai/version.js').then(m => console.log('openai version:', m.VERSION)).catch(() => console.log('openai version check skipped'))"
+
+      - name: Test PyMuPDF script on most recent PDF
+        run: |
+          PDF=$(ls -t /var/www/app/backend/storage/documents/*/*.pdf 2>/dev/null | head -1)
+          echo "Testing on: $PDF"
+          if [ -n "$PDF" ]; then
+            PYTHONPATH=/var/www/app/backend/python_lib python3 /var/www/app/backend/scripts/arabic_pdf_transcribe.py "$PDF" ar 2>&1 | head -c 800
+            echo ""
+            echo "--- end of preview ---"
+          fi
