@@ -45,11 +45,11 @@ model User {
   createdAt    DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
   updatedAt    DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
 
-  profile                 Profile?
-  roles                   UserRole[]
-  accesDroitsPermissions  AccesDroitsPermission[]
-  documents               Document[]
-  activityLogs            ActivityLog[]
+  profile                Profile?
+  roles                  UserRole[]
+  accesDroitsPermissions AccesDroitsPermission[]
+  documents              Document[]
+  activityLogs           ActivityLog[]
 
   @@map("users")
 }
@@ -59,18 +59,18 @@ model User {
 // ============================================================================
 
 model Category {
-  id             String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  name           String
-  nameAr         String?   @map("name_ar")
-  parentId       String?   @map("parent_id") @db.Uuid
-  description    String?
-  descriptionAr  String?   @map("description_ar")
-  color          String?   @default("#3B82F6")
-  createdAt      DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
-  updatedAt      DateTime  @updatedAt @map("updated_at") @db.Timestamptz(6)
+  id            String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name          String
+  nameAr        String?  @map("name_ar")
+  parentId      String?  @map("parent_id") @db.Uuid
+  description   String?
+  descriptionAr String?  @map("description_ar")
+  color         String?  @default("#3B82F6")
+  createdAt     DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt     DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
 
-  parent             Category?           @relation("CategoryHierarchy", fields: [parentId], references: [id])
-  children           Category[]           @relation("CategoryHierarchy")
+  parent             Category?          @relation("CategoryHierarchy", fields: [parentId], references: [id])
+  children           Category[]         @relation("CategoryHierarchy")
   documents          Document[]
   documentCategories DocumentCategory[]
 
@@ -78,12 +78,12 @@ model Category {
 }
 
 model DocumentType {
-  id            String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  id            String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   name          String
-  nameAr        String?   @map("name_ar")
+  nameAr        String?  @map("name_ar")
   description   String?
-  descriptionAr String?   @map("description_ar")
-  createdAt     DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  descriptionAr String?  @map("description_ar")
+  createdAt     DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
 
   documents Document[]
 
@@ -193,78 +193,91 @@ model AccesDroitsPermission {
 // ============================================================================
 
 model Document {
-  id                     String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  userId                 String?  @map("user_id") @db.Uuid
-  title                  String
-  titleAr                String?  @map("title_ar")
-  subtitle               String?
-  subtitleAr             String?  @map("subtitle_ar")
-  summary                String?
-  summaryAr              String?  @map("summary_ar")
-  content                String
-  translatedContent      String?  @map("translated_content")
-  author                 String?
-  authorAr               String?  @map("author_ar")
-  keywords               String[] @default([])
-  keywordsAr             String[] @default([]) @map("keywords_ar")
-  language               String?  @default("fr")
-  categoryId             String?  @map("category_id") @db.Uuid
-  documentTypeId         String?  @map("document_type_id") @db.Uuid
-  originalFilename       String   @map("original_filename")
-  fileUrl                String?  @map("file_url")
-  pdfUrl                 String?  @map("pdf_url")
-  fileSize               Int?     @map("file_size")
-  pageCount              Int?     @default(1) @map("page_count")
-  pageContents           Json?    @map("page_contents")
-  processedPages         Int?     @map("processed_pages")
-  totalPages             Int?     @map("total_pages")
-  status                 String?  @default("processed")
-  published              Boolean? @default(false)
-  processingJobId        String?  @map("processing_job_id") @db.Uuid
-  pdfaCompliance         Boolean? @default(false) @map("pdfa_compliance")
-  pdfaVersion            String?  @map("pdfa_version")
-  pdfaConformanceLevel   String?  @map("pdfa_conformance_level")
-  archivalMetadata       Json?    @map("archival_metadata")
-  archivalFeatures       Json?    @map("archival_features")
-  caseNumber             String?  @map("case_number")
-  caseNumbers            String[] @default([]) @map("case_numbers")
-  year                   Int?
-  court                  String?
-  courtAr                String?  @map("court_ar")
-  courtCategory          String?  @map("court_category")
-  courtCategoryAr        String?  @map("court_category_ar")
-  courtCategoryType      String?  @map("court_category_type")
-  courtCategoryTypeAr    String?  @map("court_category_type_ar")
-  courtLevel             String?  @map("court_level")
-  courtLevelAr           String?  @map("court_level_ar")
-  plaintiff              String?
-  plaintiffAr            String?  @map("plaintiff_ar")
-  defendant              String?
-  defendantAr            String?  @map("defendant_ar")
-  jurisdiction           String?
-  legalReferences        String[] @default([]) @map("legal_references")
-  legalReferencesAr      String[] @default([]) @map("legal_references_ar")
-  bibliography           String?
-  bibliographyAr         String?  @map("bibliography_ar")
-  validationDate         DateTime? @map("validation_date") @db.Date
-  legalDomains           String[] @default([]) @map("legal_domains")
-  mainTopics             String[] @default([]) @map("main_topics")
-  entities               String[] @default([])
-  dates                  String[] @default([])
-  documentType           String?  @map("document_type")
-  textualMetadata        String?  @map("textual_metadata")
+  id                   String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId               String?   @map("user_id") @db.Uuid
+  title                String
+  titleAr              String?   @map("title_ar")
+  subtitle             String?
+  subtitleAr           String?   @map("subtitle_ar")
+  summary              String?
+  summaryAr            String?   @map("summary_ar")
+  content              String
+  translatedContent    String?   @map("translated_content")
+  author               String?
+  authorAr             String?   @map("author_ar")
+  keywords             String[]  @default([])
+  keywordsAr           String[]  @default([]) @map("keywords_ar")
+  language             String?   @default("fr")
+  categoryId           String?   @map("category_id") @db.Uuid
+  documentTypeId       String?   @map("document_type_id") @db.Uuid
+  originalFilename     String    @map("original_filename")
+  fileUrl              String?   @map("file_url")
+  pdfUrl               String?   @map("pdf_url")
+  fileSize             Int?      @map("file_size")
+  pageCount            Int?      @default(1) @map("page_count")
+  pageContents         Json?     @map("page_contents")
+  processedPages       Int?      @map("processed_pages")
+  totalPages           Int?      @map("total_pages")
+  status               String?   @default("processed")
+  published            Boolean?  @default(false)
+  processingJobId      String?   @map("processing_job_id") @db.Uuid
+  pdfaCompliance       Boolean?  @default(false) @map("pdfa_compliance")
+  pdfaVersion          String?   @map("pdfa_version")
+  pdfaConformanceLevel String?   @map("pdfa_conformance_level")
+  archivalMetadata     Json?     @map("archival_metadata")
+  archivalFeatures     Json?     @map("archival_features")
+  caseNumber           String?   @map("case_number")
+  caseNumbers          String[]  @default([]) @map("case_numbers")
+  year                 Int?
+  court                String?
+  courtAr              String?   @map("court_ar")
+  courtCategory        String?   @map("court_category")
+  courtCategoryAr      String?   @map("court_category_ar")
+  courtCategoryType    String?   @map("court_category_type")
+  courtCategoryTypeAr  String?   @map("court_category_type_ar")
+  courtLevel           String?   @map("court_level")
+  courtLevelAr         String?   @map("court_level_ar")
+  plaintiff            String?
+  plaintiffAr          String?   @map("plaintiff_ar")
+  defendant            String?
+  defendantAr          String?   @map("defendant_ar")
+  jurisdiction         String?
+  legalReferences      String[]  @default([]) @map("legal_references")
+  legalReferencesAr    String[]  @default([]) @map("legal_references_ar")
+  bibliography         String?
+  bibliographyAr       String?   @map("bibliography_ar")
+  validationDate       DateTime? @map("validation_date") @db.Date
+  legalDomains         String[]  @default([]) @map("legal_domains")
+  mainTopics           String[]  @default([]) @map("main_topics")
+  entities             String[]  @default([])
+  dates                String[]  @default([])
+  documentType         String?   @map("document_type")
+  textualMetadata      String?   @map("textual_metadata")
+  legalProblem         String?   @map("legal_problem")
+  legalProblemAr       String?   @map("legal_problem_ar")
+  proposedSolution     String?   @map("proposed_solution")
+  proposedSolutionAr   String?   @map("proposed_solution_ar")
+  ruling               String?   @map("ruling")
+  rulingAr             String?   @map("ruling_ar")
+  observations         String?   @map("observations")
+  observationsAr       String?   @map("observations_ar")
+  introduction         String?   @map("introduction")
+  introductionAr       String?   @map("introduction_ar")
+  conclusion           String?   @map("conclusion")
+  conclusionAr         String?   @map("conclusion_ar")
+  sections             Json?     @map("sections")
   // embedding vector(1536) — added via raw SQL migration, not typed in Prisma
   // Use prisma.$queryRaw for semantic search
-  createdAt              DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
-  updatedAt              DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+  createdAt            DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt            DateTime  @updatedAt @map("updated_at") @db.Timestamptz(6)
 
-  user              User?              @relation(fields: [userId], references: [id], onDelete: SetNull)
-  category          Category?          @relation(fields: [categoryId], references: [id])
-  documentTypeRel   DocumentType?      @relation(fields: [documentTypeId], references: [id])
-  processingJob     ProcessingJob?     @relation(fields: [processingJobId], references: [id], onDelete: SetNull)
+  user               User?              @relation(fields: [userId], references: [id], onDelete: SetNull)
+  category           Category?          @relation(fields: [categoryId], references: [id])
+  documentTypeRel    DocumentType?      @relation(fields: [documentTypeId], references: [id])
+  processingJob      ProcessingJob?     @relation(fields: [processingJobId], references: [id], onDelete: SetNull)
   documentCategories DocumentCategory[]
-  comments          DocumentComment[]
-  views             DocumentView[]
+  comments           DocumentComment[]
+  views              DocumentView[]
 
   @@index([status])
   @@index([published])
@@ -410,24 +423,24 @@ model ChatbotTrainingDocument {
 // ============================================================================
 
 model Event {
-  id                   String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  title                String
-  titleAr              String?   @map("title_ar")
-  description          String
-  descriptionAr        String?   @map("description_ar")
-  type                 EventType
-  governorateId        String?   @map("governorate_id") @db.Uuid
-  eventDate            DateTime  @map("event_date") @db.Date
-  peopleImpacted       Int?      @map("people_impacted")
-  availablePlaces      Int?      @map("available_places")
-  registrationEnabled  Boolean?  @default(false) @map("registration_enabled")
-  images               String[]  @default([])
-  latitude             Decimal?  @db.Decimal
-  longitude            Decimal?  @db.Decimal
-  status               String?   @default("published")
-  createdBy            String?   @map("created_by") @db.Uuid
-  createdAt            DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
-  updatedAt            DateTime  @updatedAt @map("updated_at") @db.Timestamptz(6)
+  id                  String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  title               String
+  titleAr             String?   @map("title_ar")
+  description         String
+  descriptionAr       String?   @map("description_ar")
+  type                EventType
+  governorateId       String?   @map("governorate_id") @db.Uuid
+  eventDate           DateTime  @map("event_date") @db.Date
+  peopleImpacted      Int?      @map("people_impacted")
+  availablePlaces     Int?      @map("available_places")
+  registrationEnabled Boolean?  @default(false) @map("registration_enabled")
+  images              String[]  @default([])
+  latitude            Decimal?  @db.Decimal
+  longitude           Decimal?  @db.Decimal
+  status              String?   @default("published")
+  createdBy           String?   @map("created_by") @db.Uuid
+  createdAt           DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt           DateTime  @updatedAt @map("updated_at") @db.Timestamptz(6)
 
   governorate   Governorate?        @relation(fields: [governorateId], references: [id], onDelete: SetNull)
   registrations EventRegistration[]
@@ -522,24 +535,24 @@ model UsefulAddress {
 // ============================================================================
 
 model PhotoAlbum {
-  id             String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  title          String
-  titleAr        String?  @map("title_ar")
-  description    String?
-  descriptionAr  String?  @map("description_ar")
-  date           String?
-  location       String?
-  locationAr     String?  @map("location_ar")
-  governorate    String?
-  category       String   @default("Campagnes")
-  coverImageUrl  String?  @map("cover_image_url")
-  photoUrls      String[] @default([]) @map("photo_urls")
-  photoCount     Int      @default(0) @map("photo_count")
-  views          Int      @default(0)
-  featured       Boolean  @default(false)
-  published      Boolean  @default(true)
-  createdAt      DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
-  updatedAt      DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+  id            String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  title         String
+  titleAr       String?  @map("title_ar")
+  description   String?
+  descriptionAr String?  @map("description_ar")
+  date          String?
+  location      String?
+  locationAr    String?  @map("location_ar")
+  governorate   String?
+  category      String   @default("Campagnes")
+  coverImageUrl String?  @map("cover_image_url")
+  photoUrls     String[] @default([]) @map("photo_urls")
+  photoCount    Int      @default(0) @map("photo_count")
+  views         Int      @default(0)
+  featured      Boolean  @default(false)
+  published     Boolean  @default(true)
+  createdAt     DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt     DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
 
   @@map("photo_albums")
 }

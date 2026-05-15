@@ -23,6 +23,7 @@ import { sanitizeArabicTextFrontend, normalizeArabicForDisplay, handleArabicInpu
 import { useTranslation } from '@/hooks/useTranslation';
 import ProgressTracker from './ProgressTracker';
 import { WorkflowTimeline } from './WorkflowTimeline';
+import SectionsEditor, { type AnalysisSection } from './SectionsEditor';
 
 interface PageContent {
   pageNumber: number;
@@ -76,6 +77,20 @@ interface DocumentData {
   legal_references_ar?: string[];
   bibliography?: string;
   bibliography_ar?: string;
+  // Type-specific structured fields (filled by the AI at upload time)
+  legal_problem?: string;
+  legal_problem_ar?: string;
+  proposed_solution?: string;
+  proposed_solution_ar?: string;
+  ruling?: string;
+  ruling_ar?: string;
+  observations?: string;
+  observations_ar?: string;
+  introduction?: string;
+  introduction_ar?: string;
+  conclusion?: string;
+  conclusion_ar?: string;
+  sections?: AnalysisSection[];
 }
 
 interface Category {
@@ -503,6 +518,122 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
         description: `Les ${sortedPages.length} pages traduites ont été consolidées dans l'onglet Contenu.`,
       });
     }
+  };
+
+  // Translate every structured field present for the current document type
+  // in one OpenAI call via /api/fn/translate-fields. Maps the returned
+  // translations onto the *_ar (or non-_ar) counterparts.
+  const runFullFieldTranslation = async () => {
+    const src = (editedData.language as 'fr' | 'ar') || 'ar';
+    const dst: 'fr' | 'ar' = src === 'ar' ? 'fr' : 'ar';
+    const srcSuffix = src === 'ar' ? '_ar' : '';
+    const dstSuffix = dst === 'ar' ? '_ar' : '';
+
+    // Build the field map from whatever is non-empty in the source language.
+    // Keys use a stable "field_name" so we can write the translations back.
+    const fields: Record<string, string> = {};
+    const pick = (baseKey: keyof DocumentData) => {
+      const fromKey = (baseKey + srcSuffix) as keyof DocumentData;
+      const fromVal = (editedData[fromKey] ?? editedData[baseKey]) as unknown;
+      if (typeof fromVal === 'string' && fromVal.trim().length > 0) {
+        fields[String(baseKey)] = fromVal;
+      }
+    };
+
+    pick('title');
+    pick('subtitle');
+    pick('summary');
+    pick('author');
+    pick('content');
+    pick('textual_metadata' as keyof DocumentData);
+    pick('legal_problem' as keyof DocumentData);
+    pick('proposed_solution' as keyof DocumentData);
+    pick('ruling' as keyof DocumentData);
+    pick('observations' as keyof DocumentData);
+    pick('court');
+    pick('court_level' as keyof DocumentData);
+    pick('introduction' as keyof DocumentData);
+    pick('conclusion' as keyof DocumentData);
+    pick('bibliography');
+    const kwSrc = (src === 'ar' ? editedData.keywords_ar : editedData.keywords) ?? [];
+    if (kwSrc.length > 0) fields['keywords'] = kwSrc.join('\n');
+    const refSrc = (src === 'ar' ? editedData.legal_references_ar : editedData.legal_references) ?? [];
+    if (refSrc.length > 0) fields['legal_references'] = refSrc.join('\n');
+
+    // Sections: one field per section content
+    const sections = editedData.sections ?? [];
+    sections.forEach((s, i) => {
+      const t = src === 'ar' ? s.titleAr : s.title;
+      const c = src === 'ar' ? s.contentAr : s.content;
+      if (t && t.trim()) fields[`section_${i}_title`] = t;
+      if (c && c.trim()) fields[`section_${i}_content`] = c;
+    });
+
+    if (Object.keys(fields).length === 0) {
+      toast({ title: '⚠️ Rien à traduire', description: 'Aucun champ source non vide trouvé.', variant: 'destructive' });
+      return;
+    }
+
+    toast({ title: '🔄 Traduction en cours…', description: `${Object.keys(fields).length} champs envoyés à l'IA` });
+
+    const { data, error } = await supabase.functions.invoke('translate-fields', {
+      body: { fields, sourceLang: src, targetLang: dst },
+    });
+    if (error || !data?.translations) {
+      toast({ title: '❌ Erreur de traduction', description: error?.message ?? 'Pas de réponse', variant: 'destructive' });
+      return;
+    }
+
+    const tr = data.translations as Record<string, string>;
+    const next: Partial<DocumentData> = {};
+    const setTr = (baseKey: string, dstKeyOverride?: string) => {
+      const v = tr[baseKey];
+      if (typeof v === 'string' && v.trim()) {
+        const dstKey = dstKeyOverride ?? (baseKey + dstSuffix);
+        (next as Record<string, unknown>)[dstKey] = v;
+      }
+    };
+    setTr('title');
+    setTr('subtitle');
+    setTr('summary');
+    setTr('author');
+    setTr('content', dst === 'ar' ? 'translated_content' : 'content');
+    setTr('textual_metadata');
+    setTr('legal_problem');
+    setTr('proposed_solution');
+    setTr('ruling');
+    setTr('observations');
+    setTr('court');
+    setTr('court_level');
+    setTr('introduction');
+    setTr('conclusion');
+    setTr('bibliography');
+    if (typeof tr['keywords'] === 'string') {
+      const kws = tr['keywords'].split(/\n+/).map((s) => s.trim()).filter(Boolean);
+      (next as Record<string, unknown>)[dst === 'ar' ? 'keywords_ar' : 'keywords'] = kws;
+    }
+    if (typeof tr['legal_references'] === 'string') {
+      const refs = tr['legal_references'].split(/\n+/).map((s) => s.trim()).filter(Boolean);
+      (next as Record<string, unknown>)[dst === 'ar' ? 'legal_references_ar' : 'legal_references'] = refs;
+    }
+
+    // Apply translated sections back
+    if (sections.length > 0) {
+      const nextSections = sections.map((s, i) => {
+        const t = tr[`section_${i}_title`];
+        const c = tr[`section_${i}_content`];
+        return {
+          ...s,
+          ...(typeof t === 'string' && t.trim() ? (dst === 'ar' ? { titleAr: t } : { title: t }) : {}),
+          ...(typeof c === 'string' && c.trim() ? (dst === 'ar' ? { contentAr: c } : { content: c }) : {}),
+        };
+      });
+      (next as Record<string, unknown>).sections = nextSections;
+    }
+
+    setEditedData((prev) => ({ ...prev, ...next }));
+    setHasChanges(true);
+    toast({ title: '✅ Traduction terminée', description: `${Object.keys(tr).length} champs traduits` });
   };
 
   // Full workflow for analysis documents: translate all pages → consolidate → AI analysis
@@ -2213,25 +2344,36 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
                     <p className="text-xs text-emerald-700 dark:text-emerald-300">
                       Exécute automatiquement les 3 étapes : traduction de toutes les pages → consolidation → analyse IA complète
                     </p>
-                    <Button
-                      onClick={runFullAnalysisWorkflow}
-                      disabled={isAnalyzing}
-                      size="sm"
-                      className="mt-2"
-                      variant="default"
-                    >
-                      {isAnalyzing ? (
-                        <>
-                          <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                          Workflow en cours...
-                        </>
-                      ) : (
-                        <>
-                          <Brain className="h-4 w-4 mr-2" />
-                          Lancer le workflow complet
-                        </>
-                      )}
-                    </Button>
+                    <div className="flex flex-wrap gap-2 mt-2">
+                      <Button
+                        onClick={runFullAnalysisWorkflow}
+                        disabled={isAnalyzing}
+                        size="sm"
+                        variant="default"
+                      >
+                        {isAnalyzing ? (
+                          <>
+                            <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                            Workflow en cours...
+                          </>
+                        ) : (
+                          <>
+                            <Brain className="h-4 w-4 mr-2" />
+                            Lancer le workflow complet
+                          </>
+                        )}
+                      </Button>
+                      <Button
+                        onClick={runFullFieldTranslation}
+                        disabled={isAnalyzing}
+                        size="sm"
+                        variant="outline"
+                        title="Traduit en un appel tous les champs structurés (titre, résumé, problème, solution, sections…)"
+                      >
+                        <BookOpen className="h-4 w-4 mr-2" />
+                        Tout traduire
+                      </Button>
+                    </div>
                   </div>
                 </div>
               </CardContent>
@@ -3315,6 +3457,163 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
                   </div>
                 </div>
               </Card>
+
+              {/* === Structured fields injected by the AI at upload time === */}
+              {isFicheJurisprudence && (
+                <>
+                  <Card className="p-4 lg:col-span-full">
+                    <Label className="text-sm font-medium mb-2 block">
+                      ⚖️ {currentLanguage === 'ar' ? 'المشكل القانوني' : 'Problème juridique (AL MOCHKIL AL 9ANOUNI)'}
+                    </Label>
+                    <CKEditorWrapper
+                      content={renderFormattedContent(
+                        currentLanguage === 'ar' ? (editedData.legal_problem_ar || '') : (editedData.legal_problem || ''),
+                      )}
+                      onChange={(html) =>
+                        setEditedData((prev) => ({
+                          ...prev,
+                          ...(currentLanguage === 'ar' ? { legal_problem_ar: html } : { legal_problem: html }),
+                        }))
+                      }
+                      language={currentLanguage as 'fr' | 'ar'}
+                      placeholder={currentLanguage === 'ar' ? 'وصف المشكل القانوني...' : 'Question de droit posée par le litige…'}
+                      className="min-h-[150px]"
+                    />
+                  </Card>
+                  <Card className="p-4 lg:col-span-full">
+                    <Label className="text-sm font-medium mb-2 block">
+                      🎯 {currentLanguage === 'ar' ? 'الحل المقدّم' : 'Solution proposée (AL 7AL AL MOU9ADDAM)'}
+                    </Label>
+                    <CKEditorWrapper
+                      content={renderFormattedContent(
+                        currentLanguage === 'ar' ? (editedData.proposed_solution_ar || '') : (editedData.proposed_solution || ''),
+                      )}
+                      onChange={(html) =>
+                        setEditedData((prev) => ({
+                          ...prev,
+                          ...(currentLanguage === 'ar' ? { proposed_solution_ar: html } : { proposed_solution: html }),
+                        }))
+                      }
+                      language={currentLanguage as 'fr' | 'ar'}
+                      placeholder={currentLanguage === 'ar' ? 'الحل المعتمد من القاضي...' : 'Réponse du juge, motivation et dispositif…'}
+                      className="min-h-[200px]"
+                    />
+                  </Card>
+                </>
+              )}
+
+              {isCommentDocument && (
+                <>
+                  <Card className="p-4 lg:col-span-full">
+                    <Label className="text-sm font-medium mb-2 block">
+                      🏛️ {currentLanguage === 'ar' ? 'المحكمة' : 'Tribunal (AL MA7KMA)'}
+                    </Label>
+                    <Input
+                      value={currentLanguage === 'ar' ? (editedData.court_ar || '') : (editedData.court || '')}
+                      onChange={(e) =>
+                        setEditedData((prev) => ({
+                          ...prev,
+                          ...(currentLanguage === 'ar' ? { court_ar: e.target.value } : { court: e.target.value }),
+                        }))
+                      }
+                      dir={currentLanguage === 'ar' ? 'rtl' : 'ltr'}
+                      placeholder={currentLanguage === 'ar' ? 'اسم المحكمة...' : 'Nom du tribunal qui a rendu la décision…'}
+                    />
+                  </Card>
+                  <Card className="p-4 lg:col-span-full">
+                    <Label className="text-sm font-medium mb-2 block">
+                      📜 {currentLanguage === 'ar' ? 'القرار' : 'Décision (AL 9ARAR)'}
+                    </Label>
+                    <CKEditorWrapper
+                      content={renderFormattedContent(
+                        currentLanguage === 'ar' ? (editedData.ruling_ar || '') : (editedData.ruling || ''),
+                      )}
+                      onChange={(html) =>
+                        setEditedData((prev) => ({
+                          ...prev,
+                          ...(currentLanguage === 'ar' ? { ruling_ar: html } : { ruling: html }),
+                        }))
+                      }
+                      language={currentLanguage as 'fr' | 'ar'}
+                      placeholder={currentLanguage === 'ar' ? 'نص القرار...' : 'Texte du dispositif de la décision commentée…'}
+                      className="min-h-[200px]"
+                    />
+                  </Card>
+                  <Card className="p-4 lg:col-span-full">
+                    <Label className="text-sm font-medium mb-2 block">
+                      📝 {currentLanguage === 'ar' ? 'ملاحظات' : 'Observations (MOULA7ADHAT)'}
+                    </Label>
+                    <CKEditorWrapper
+                      content={renderFormattedContent(
+                        currentLanguage === 'ar' ? (editedData.observations_ar || '') : (editedData.observations || ''),
+                      )}
+                      onChange={(html) =>
+                        setEditedData((prev) => ({
+                          ...prev,
+                          ...(currentLanguage === 'ar' ? { observations_ar: html } : { observations: html }),
+                        }))
+                      }
+                      language={currentLanguage as 'fr' | 'ar'}
+                      placeholder={currentLanguage === 'ar' ? 'ملاحظات الكاتب على القرار...' : 'Remarques de l\'auteur sur la décision…'}
+                      className="min-h-[200px]"
+                    />
+                  </Card>
+                </>
+              )}
+
+              {isAnalysisDocument && (
+                <>
+                  <Card className="p-4 lg:col-span-full">
+                    <Label className="text-sm font-medium mb-2 block">
+                      📖 {currentLanguage === 'ar' ? 'المقدمة' : 'Introduction (المقدمة)'}
+                    </Label>
+                    <CKEditorWrapper
+                      content={renderFormattedContent(
+                        currentLanguage === 'ar' ? (editedData.introduction_ar || '') : (editedData.introduction || ''),
+                      )}
+                      onChange={(html) =>
+                        setEditedData((prev) => ({
+                          ...prev,
+                          ...(currentLanguage === 'ar' ? { introduction_ar: html } : { introduction: html }),
+                        }))
+                      }
+                      language={currentLanguage as 'fr' | 'ar'}
+                      placeholder={currentLanguage === 'ar' ? 'نص المقدمة...' : 'Texte de l\'introduction…'}
+                      className="min-h-[200px]"
+                    />
+                  </Card>
+                  <Card className="p-4 lg:col-span-full">
+                    <Label className="text-sm font-medium mb-2 block">
+                      📚 {currentLanguage === 'ar' ? 'الأقسام (الأجزاء والفروع)' : 'Sections (parties et sous-sections)'}
+                    </Label>
+                    <SectionsEditor
+                      sections={editedData.sections ?? []}
+                      onChange={(next) => setEditedData((prev) => ({ ...prev, sections: next }))}
+                      currentLanguage={currentLanguage as 'fr' | 'ar'}
+                      primaryLanguage={editedData.language}
+                    />
+                  </Card>
+                  <Card className="p-4 lg:col-span-full">
+                    <Label className="text-sm font-medium mb-2 block">
+                      🏁 {currentLanguage === 'ar' ? 'الخاتمة' : 'Conclusion (الخاتمة)'}
+                    </Label>
+                    <CKEditorWrapper
+                      content={renderFormattedContent(
+                        currentLanguage === 'ar' ? (editedData.conclusion_ar || '') : (editedData.conclusion || ''),
+                      )}
+                      onChange={(html) =>
+                        setEditedData((prev) => ({
+                          ...prev,
+                          ...(currentLanguage === 'ar' ? { conclusion_ar: html } : { conclusion: html }),
+                        }))
+                      }
+                      language={currentLanguage as 'fr' | 'ar'}
+                      placeholder={currentLanguage === 'ar' ? 'نص الخاتمة...' : 'Texte de la conclusion…'}
+                      className="min-h-[200px]"
+                    />
+                  </Card>
+                </>
+              )}
 
               {/* Textual Metadata section (Résumé / Faits) */}
               {!isBlogDocument && (

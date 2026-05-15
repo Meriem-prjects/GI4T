@@ -19,11 +19,19 @@ const schema = z.object({
   skipProcessing: z.boolean().optional(),
 });
 
-function buildAnalysisPrompt(documentTypeName: string | null | undefined): string {
+export type DocKind = "jurisprudence" | "commentaire" | "blog" | "analyse" | "generic";
+
+export function classifyDocType(documentTypeName: string | null | undefined): DocKind {
   const t = (documentTypeName ?? "").toLowerCase();
-  const isJurisprudence = t.includes("jurisprudence") || t.includes("جذاذة") || t.includes("فقه");
-  const isBlogOrComment = t.includes("blog") || t.includes("commentaire") || t.includes("تدوين");
-  const isAnalysis = t.includes("analyse") || t.includes("opinion") || t.includes("تحليل");
+  if (t.includes("jurisprudence") || t.includes("جذاذة") || t.includes("فقه")) return "jurisprudence";
+  if (t.includes("commentaire") || t.includes("تعليق")) return "commentaire";
+  if (t.includes("blog") || t.includes("تدوين") || t.includes("مدونة")) return "blog";
+  if (t.includes("analyse") || t.includes("opinion") || t.includes("تحليل")) return "analyse";
+  return "generic";
+}
+
+function buildAnalysisPrompt(documentTypeName: string | null | undefined): string {
+  const kind = classifyDocType(documentTypeName);
 
   const baseFields = `  "title": "...",                  // titre exact (langue source)
   "title_ar": "...",                // titre en arabe
@@ -43,37 +51,84 @@ function buildAnalysisPrompt(documentTypeName: string | null | undefined): strin
   "dates": ["..."],                 // dates importantes (format JJ/MM/AAAA si possible)
   "textualMetadata": "..."          // 1-3 phrases : qui/quand/quoi du document`;
 
-  const jurisprudenceFields = `  "court": "...",                   // nom du tribunal (langue source)
+  const jurisprudenceFields = `  "court": "...",                       // nom du tribunal (langue source)
   "court_ar": "...",
-  "courtLevel": "...",              // niveau (Cassation, Appel, Première instance, ...)
+  "courtLevel": "...",                  // niveau (Cassation, Appel, Première instance, ...)
   "courtLevelAr": "...",
-  "courtCategory": "...",           // ordre judiciaire/administratif/constitutionnel
+  "courtCategory": "...",               // ordre judiciaire/administratif/constitutionnel
   "courtCategoryAr": "...",
-  "caseNumber": "...",              // numéro de la décision/arrêt
-  "year": 2024,                     // année de la décision (entier)
-  "plaintiff": "...",               // demandeur (langue source)
+  "caseNumber": "...",                  // numéro de la décision/arrêt
+  "year": 2024,                         // année de la décision (entier)
+  "plaintiff": "...",                   // demandeur (langue source)
   "plaintiff_ar": "...",
-  "defendant": "...",               // défendeur (langue source)
+  "defendant": "...",                   // défendeur (langue source)
   "defendant_ar": "...",
-  "jurisdiction": "...",            // ressort géographique`;
+  "jurisdiction": "...",                // ressort géographique
+  "legalProblem": "...",                // ⚖️ AL MOCHKIL AL 9ANOUNI — la question de droit posée par le litige, 2-4 phrases
+  "legalProblemAr": "...",              // المشكل القانوني (arabe)
+  "proposedSolution": "...",            // 🎯 AL 7AL AL MOU9ADDAM — solution adoptée par le juge, motivation principale + dispositif
+  "proposedSolutionAr": "..."           // الحل المقدّم (arabe)`;
 
-  const bibliographyFields = `  "bibliography": "...",            // références bibliographiques rédigées (langue source)
+  const commentaireFields = `  "court": "...",                       // 🏛️ AL MA7KMA — tribunal commenté
+  "court_ar": "...",                    // المحكمة
+  "ruling": "...",                      // 📜 AL 9ARAR — texte/dispositif de la décision commentée
+  "ruling_ar": "...",                   // القرار
+  "observations": "...",                // 📝 MOULA7ADHAT — remarques/commentaires de l'auteur sur la décision
+  "observations_ar": "..."              // ملاحظات`;
+
+  const analyseFields = `  "introduction": "...",                // مقدمة — introduction (texte intégral, 200-600 mots)
+  "introduction_ar": "...",
+  "conclusion": "...",                  // خاتمة — conclusion (texte intégral, 200-600 mots)
+  "conclusion_ar": "...",
+  "sections": [                         // entre l'intro et la conclusion, parties/sections détectées dans l'ordre
+    {
+      "title": "Première partie",       // titre en langue source
+      "titleAr": "الجزء الأول",         // titre en arabe (même item)
+      "level": 1,                       // 1 = partie / جزء, 2 = section / فرع
+      "content": "...",                 // texte complet de cette section (langue source)
+      "contentAr": "..."                // texte en arabe
+    }
+  ]`;
+
+  const bibliographyFields = `  "bibliography": "...",                // références bibliographiques rédigées (langue source)
   "bibliography_ar": "..."`;
 
   let typeHint = "";
   let extra = "";
-  if (isJurisprudence) {
-    typeHint = `Le document est une FICHE DE JURISPRUDENCE / décision judiciaire. Cherche AGRESSIVEMENT le numéro de décision, la juridiction, l'année, les parties (demandeur/défendeur), le niveau juridictionnel.`;
-    extra = ",\n" + jurisprudenceFields + ",\n" + bibliographyFields;
-  } else if (isBlogOrComment) {
-    typeHint = `Le document est un BILLET DE BLOG ou un COMMENTAIRE de décision. Identifie clairement l'auteur, sa qualité (universitaire, avocat...), et le sujet juridique principal.`;
-    extra = ",\n" + bibliographyFields;
-  } else if (isAnalysis) {
-    typeHint = `Le document est une ANALYSE / NOTE DOCTRINALE. Identifie l'auteur, sa qualité, les domaines de droit traités et la thèse défendue.`;
-    extra = ",\n" + bibliographyFields;
-  } else {
-    typeHint = `Document juridique générique. Remplis tous les champs détectables.`;
-    extra = ",\n" + jurisprudenceFields + ",\n" + bibliographyFields;
+  switch (kind) {
+    case "jurisprudence":
+      typeHint = `Le document est une FICHE DE JURISPRUDENCE / décision judiciaire commentée. ` +
+        `Cherche AGRESSIVEMENT : numéro de décision, juridiction, année, parties (demandeur/défendeur), ` +
+        `niveau juridictionnel. Surtout, identifie clairement :\n` +
+        `- "legalProblem" = la question de droit que le juge devait trancher\n` +
+        `- "proposedSolution" = la réponse du juge avec la motivation principale et le dispositif`;
+      extra = ",\n" + jurisprudenceFields + ",\n" + bibliographyFields;
+      break;
+    case "commentaire":
+      typeHint = `Le document est un COMMENTAIRE de décision judiciaire. Sépare bien :\n` +
+        `- "ruling" = le texte de la décision rapportée (les attendus / dispositif cités)\n` +
+        `- "observations" = les remarques personnelles de l'auteur sur cette décision\n` +
+        `- "court" = le tribunal qui a rendu la décision commentée`;
+      extra = ",\n" + commentaireFields + ",\n" + bibliographyFields;
+      break;
+    case "blog":
+      typeHint = `Le document est un BILLET DE BLOG / texte court d'opinion. ` +
+        `Pas de découpage hiérarchique. Identifie l'auteur, sa qualité, et résume le propos.`;
+      extra = ",\n" + bibliographyFields;
+      break;
+    case "analyse":
+      typeHint = `Le document est une ANALYSE / NOTE DOCTRINALE structurée. Découpe-la :\n` +
+        `- "introduction" = la مقدمة (texte intégral du paragraphe d'introduction du document)\n` +
+        `- "conclusion" = la خاتمة (texte intégral du paragraphe de conclusion)\n` +
+        `- "sections" = tableau ORDONNÉ des parties (الجزء الأول, الجزء الثاني, ...) et sous-sections (الفرع الأول, ...) ` +
+        `trouvées entre l'intro et la conclusion. Chaque entrée : title + titleAr + level (1=partie, 2=section) + content + contentAr. ` +
+        `Reproduis le TEXTE INTÉGRAL de chaque section telle qu'elle apparaît, n'invente rien, ne résume pas. ` +
+        `Si le document n'a pas de découpage explicite, retourne sections = [].`;
+      extra = ",\n" + analyseFields + ",\n" + bibliographyFields;
+      break;
+    default:
+      typeHint = `Document juridique générique. Remplis tous les champs détectables.`;
+      extra = ",\n" + jurisprudenceFields + ",\n" + commentaireFields + ",\n" + analyseFields + ",\n" + bibliographyFields;
   }
 
   return `Tu es un analyseur expert de documents juridiques tunisiens (français/arabe).
@@ -242,6 +297,20 @@ async function runProcessingPipeline(args: {
           entities: arr(analysis.entities),
           dates: arr(analysis.dates),
           textualMetadata: str(analysis.textualMetadata),
+          // Type-specific structured fields
+          legalProblem: str(analysis.legalProblem ?? analysis.legal_problem),
+          legalProblemAr: str(analysis.legalProblemAr ?? analysis.legal_problem_ar),
+          proposedSolution: str(analysis.proposedSolution ?? analysis.proposed_solution),
+          proposedSolutionAr: str(analysis.proposedSolutionAr ?? analysis.proposed_solution_ar),
+          ruling: str(analysis.ruling),
+          rulingAr: str(analysis.rulingAr ?? analysis.ruling_ar),
+          observations: str(analysis.observations),
+          observationsAr: str(analysis.observationsAr ?? analysis.observations_ar),
+          introduction: str(analysis.introduction),
+          introductionAr: str(analysis.introductionAr ?? analysis.introduction_ar),
+          conclusion: str(analysis.conclusion),
+          conclusionAr: str(analysis.conclusionAr ?? analysis.conclusion_ar),
+          sections: Array.isArray(analysis.sections) ? (analysis.sections as never) : undefined,
         },
       });
     } catch (err) {

@@ -45,6 +45,7 @@ import { aiSemanticSearch } from "./ai-semantic-search.js";
 import { chatbotFineTuning } from "./chatbot-fine-tuning.js";
 import { accesDroitsChat } from "./acces-droits-chat.js";
 import { translatePage } from "./translate-page.js";
+import { translateFields } from "./translate-fields.js";
 import { asyncFullTranslation } from "./async-full-translation.js";
 import { arabicSpacingFixer } from "./arabic-spacing-fixer.js";
 
@@ -94,6 +95,7 @@ const functions: FunctionDef[] = [
   { name: "chatbot-fine-tuning", handler: chatbotFineTuning, auth: "admin_acces_droits" },
   { name: "acces-droits-chat", handler: accesDroitsChat, auth: "none" },
   { name: "translate-page", handler: translatePage, auth: "required" },
+  { name: "translate-fields", handler: translateFields, auth: "required" },
   { name: "async-full-translation", handler: asyncFullTranslation, auth: "required" },
   { name: "arabic-spacing-fixer", handler: arabicSpacingFixer, auth: "required" },
 ];
