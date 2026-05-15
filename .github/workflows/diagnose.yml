@@ -30,6 +30,12 @@ jobs:
           echo "Latest doc ID: $DOC_ID"
           curl -sS "http://127.0.0.1:4000/api/documents/$DOC_ID" | python3 -c "import sys, json; d=json.load(sys.stdin); print(json.dumps({k:(v if not isinstance(v,str) or len(v)<80 else v[:80]+'...') for k,v in d.items() if not isinstance(v, (list, dict)) or k in ('keywords','keywordsAr')}, ensure_ascii=False, indent=2))" || true
 
+      - name: Structured fields per recent doc (intro / sections / conclusion)
+        run: |
+          DB_URL=$(grep '^DATABASE_URL=' /var/www/app/backend/.env | cut -d= -f2- | tr -d '"' | sed 's/?.*$//')
+          psql "$DB_URL" \
+            -c "SELECT id, LEFT(introduction_ar,40) AS intro_ar, LEFT(conclusion_ar,40) AS conclu_ar, LEFT(legal_problem_ar,40) AS lp_ar, LEFT(proposed_solution_ar,40) AS ps_ar, LEFT(ruling_ar,40) AS rul_ar, jsonb_array_length(sections) AS nb_sec FROM documents ORDER BY created_at DESC LIMIT 6;" || true
+
       - name: Latest processing jobs
         run: |
           DB_URL=$(grep '^DATABASE_URL=' /var/www/app/backend/.env | cut -d= -f2- | tr -d '"' | sed 's/?.*$//')
