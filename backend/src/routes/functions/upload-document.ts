@@ -230,18 +230,39 @@ async function runProcessingPipeline(args: {
       const systemPrompt = buildAnalysisPrompt(docTypeName);
       console.log(`[upload-document] AI analysis docType="${docTypeName ?? "unknown"}"`);
 
+      // For Analyses we need much more output budget because the schema asks
+      // for full-text introduction + conclusion + each section content.
+      const kind = classifyDocType(docTypeName);
+      const maxTokens = kind === "analyse" ? 16000 : 6000;
+
       const raw = await chatCompletion({
         model: "gpt-4o-mini",
         system: systemPrompt,
-        prompt: extraction.text.slice(0, 12000),
+        prompt: extraction.text.slice(0, 16000),
         temperature: 0.2,
-        maxTokens: 4000,
+        maxTokens,
       });
+      console.log(`[upload-document] AI raw response length=${raw.length}c, first 200c="${raw.slice(0, 200).replace(/\n/g, " ")}"`);
       try {
         analysis = JSON.parse(raw);
       } catch {
         const m = raw.match(/\{[\s\S]*\}/);
-        if (m) analysis = JSON.parse(m[0]);
+        if (m) {
+          try {
+            analysis = JSON.parse(m[0]);
+          } catch (e) {
+            console.warn(
+              `[upload-document] JSON parse FAILED on AI response (${raw.length}c). Last 200c="${raw.slice(-200).replace(/\n/g, " ")}". Error: ${(e as Error).message}`,
+            );
+          }
+        } else {
+          console.warn(`[upload-document] AI response had no JSON object detected. Length=${raw.length}c`);
+        }
+      }
+      if (!analysis || Object.keys(analysis).length === 0) {
+        console.warn(`[upload-document] AI analysis returned empty/unparseable JSON for ${documentId}`);
+      } else {
+        console.log(`[upload-document] AI parsed ok, keys: ${Object.keys(analysis).join(",")}`);
       }
 
       const str = (v: unknown) => (typeof v === "string" && v.trim() ? v : undefined);
