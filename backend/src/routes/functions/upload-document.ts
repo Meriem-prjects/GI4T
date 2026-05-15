@@ -90,6 +90,7 @@ Règles :
 - Préserve la casse et la ponctuation arabes (؟ ؛ .).
 - Pour les arrays bilingues, l'ordre français et arabe doit correspondre item par item.
 - Pour year, retourne un entier (pas une chaîne).
+- Pour "dates", "entities", "legalReferences*", "keywords*", "legalDomains", "mainTopics" : tableaux de CHAÎNES uniquement (jamais d'entiers — "2014" et non 2014).
 - Si le document est en arabe, remplis prioritairement les *_ar et fais un titre/résumé français de courtoisie.`;
 }
 
@@ -189,7 +190,22 @@ async function runProcessingPipeline(args: {
       }
 
       const str = (v: unknown) => (typeof v === "string" && v.trim() ? v : undefined);
-      const arr = (v: unknown) => (Array.isArray(v) ? (v as string[]) : undefined);
+      // Coerce array items to strings — gpt-4o-mini sometimes returns
+      // years/numbers as integers even when the schema says String[].
+      const arr = (v: unknown) =>
+        Array.isArray(v)
+          ? v
+              .map((x) => (x == null ? "" : String(x)))
+              .filter((x) => x.trim().length > 0)
+          : undefined;
+      const num = (v: unknown) => {
+        if (typeof v === "number" && Number.isFinite(v)) return Math.trunc(v);
+        if (typeof v === "string") {
+          const n = parseInt(v, 10);
+          if (Number.isFinite(n)) return n;
+        }
+        return undefined;
+      };
 
       await prisma.document.update({
         where: { id: documentId },
@@ -213,7 +229,7 @@ async function runProcessingPipeline(args: {
           courtCategory: str(analysis.courtCategory),
           courtCategoryAr: str(analysis.courtCategoryAr),
           caseNumber: str(analysis.caseNumber),
-          year: typeof analysis.year === "number" ? analysis.year : undefined,
+          year: num(analysis.year),
           plaintiff: str(analysis.plaintiff),
           plaintiffAr: str(analysis.plaintiff_ar),
           defendant: str(analysis.defendant),
