@@ -84,6 +84,7 @@ const AdminEditor = () => {
   const [showUploader, setShowUploader] = useState(true);
   const [isLoading, setIsLoading] = useState(false);
   const [isEditingExisting, setIsEditingExisting] = useState(false);
+  const [aiStatus, setAiStatus] = useState<"idle" | "processing" | "ready" | "failed">("idle");
 
   // Load existing document if doc parameter is present
   useEffect(() => {
@@ -92,6 +93,35 @@ const AdminEditor = () => {
       loadExistingDocument(docId);
     }
   }, [searchParams]);
+
+  // Background poll: if the currently-loaded document is still being
+  // processed by the upload pipeline (AI segmentation in flight), keep
+  // refetching every 5s until it flips to pending_validation/processed.
+  useEffect(() => {
+    if (!currentDocument?.id) return;
+    if (aiStatus !== "processing") return;
+    const interval = window.setInterval(async () => {
+      const { data, error } = await supabase
+        .from('documents')
+        .select('status')
+        .eq('id', currentDocument.id!)
+        .maybeSingle();
+      if (error) return;
+      const s = (data as { status?: string } | null)?.status;
+      if (s && s !== 'processing') {
+        // Done — reload the full document with the new structured fields.
+        await loadExistingDocument(currentDocument.id!);
+        setAiStatus(s === 'extraction_failed' ? 'failed' : 'ready');
+        toast({
+          title: s === 'extraction_failed' ? '❌ Extraction échouée' : '✅ Analyse IA terminée',
+          description: s === 'extraction_failed'
+            ? "L'OCR ou l'IA n'a pas pu traiter ce document."
+            : "Les champs ont été remplis automatiquement.",
+        });
+      }
+    }, 5000);
+    return () => window.clearInterval(interval);
+  }, [currentDocument?.id, aiStatus]);
 
   const loadExistingDocument = async (documentId: string) => {
     setIsLoading(true);
@@ -190,7 +220,18 @@ const AdminEditor = () => {
 
       setCurrentDocument(mappedDocument);
       setShowUploader(false);
-      
+
+      // Drive the background-poll: if the pipeline is still running,
+      // mark the editor as "processing" so the useEffect above keeps
+      // refetching until the AI fills the structured fields.
+      const docStatus = (document as { status?: string }).status;
+      if (docStatus === "processing") {
+        setAiStatus("processing");
+      } else if (docStatus === "extraction_failed") {
+        setAiStatus("failed");
+      } else {
+        setAiStatus("ready");
+      }
     } catch (error) {
       console.error('Error loading document:', error);
       toast({
@@ -288,10 +329,29 @@ const AdminEditor = () => {
       ) : showUploader ? (
         <BatchDocumentUploader onDocumentsProcessed={handleDocumentsProcessed} />
       ) : currentDocument ? (
-        <DocumentEditor 
-          documentData={currentDocument}
-          onSave={handleSave}
-        />
+        <>
+          {aiStatus === "processing" && (
+            <Card className="p-4 bg-blue-50 border-blue-200 dark:bg-blue-950/30 dark:border-blue-800">
+              <div className="flex items-center gap-3">
+                <Loader2 className="h-5 w-5 animate-spin text-blue-600" />
+                <div className="flex-1">
+                  <p className="text-sm font-medium text-blue-900 dark:text-blue-100">
+                    🤖 Analyse IA en cours…
+                  </p>
+                  <p className="text-xs text-blue-700 dark:text-blue-300">
+                    L'extraction structurée (titre, résumé, sections, mots-clés…)
+                    prend 60 à 120 secondes. Les champs se rempliront tout seuls
+                    dès qu'elle sera prête — pas besoin de rafraîchir.
+                  </p>
+                </div>
+              </div>
+            </Card>
+          )}
+          <DocumentEditor
+            documentData={currentDocument}
+            onSave={handleSave}
+          />
+        </>
       ) : processedDocuments.length > 1 ? (
         <Card className="p-6">
           <h3 className="text-lg font-semibold mb-4">
