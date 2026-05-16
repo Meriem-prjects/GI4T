@@ -114,123 +114,203 @@ export function classifyDocType(documentTypeName: string | null | undefined): Do
   return "generic";
 }
 
-function buildAnalysisPrompt(documentTypeName: string | null | undefined): string {
+/**
+ * Build the "anchors-only" prompt for a given document type.
+ * Key principles:
+ *   - The AI emits metadata in the SOURCE language only (no translation).
+ *   - The AI does NOT rewrite content. Instead, it returns ANCHOR strings
+ *     (verbatim from the PDF) that let the backend slice the original
+ *     text into structured blocks.
+ *   - All translation happens later, on user click ("Tout traduire").
+ */
+function buildAnalysisPrompt(
+  documentTypeName: string | null | undefined,
+  sourceLang: "fr" | "ar" | "auto",
+): string {
   const kind = classifyDocType(documentTypeName);
+  const lang = sourceLang === "auto" ? "ar" : sourceLang;
+  const suf = lang === "ar" ? "_ar" : "";
+  const langName = lang === "ar" ? "ARABE" : "FRANÇAIS";
 
-  const baseFields = `  "title": "...",                  // titre exact (langue source)
-  "title_ar": "...",                // titre en arabe
-  "subtitle": "...",                // sous-titre si présent, sinon null
-  "subtitle_ar": "...",
-  "summary": "...",                 // 150-300 mots en langue source
-  "summary_ar": "...",              // 150-300 mots en arabe
-  "author": "...",                  // auteur principal (langue source)
-  "author_ar": "...",
-  "keywords": ["..."],              // 8-15 mots-clés (langue source)
-  "keywords_ar": ["..."],           // 8-15 mots-clés en arabe
-  "legalDomains": ["..."],          // domaines juridiques touchés
-  "mainTopics": ["..."],            // thématiques principales
-  "legalReferences": ["..."],       // textes/articles cités (langue source)
-  "legalReferencesAr": ["..."],     // textes/articles cités en arabe
-  "entities": ["..."],              // personnes/institutions/lois citées
-  "dates": ["..."],                 // dates importantes (format JJ/MM/AAAA si possible)
-  "textualMetadata": "..."          // 1-3 phrases : qui/quand/quoi du document`;
+  const commonRules = `RÈGLES STRICTES :
+1. Réponds UNIQUEMENT avec un JSON strict (mode response_format=json_object).
+2. Tu travailles dans la langue source du document : ${langName}. NE TRADUIS PAS.
+   Tous les champs textuels sont dans cette seule langue.
+3. Pour chaque ancrage (anchor_text, intro_anchor, etc.), recopie le texte
+   EXACTEMENT comme il apparaît dans le PDF (mêmes mots, même ponctuation,
+   mêmes diacritiques) pour que le backend puisse retrouver la position
+   par recherche de chaîne. Ne reformule jamais un ancrage.
+4. anchor_first_words = les 8 à 15 premiers mots du texte qui suit le titre
+   de la section. Sert de filet de sécurité si anchor_text ne matche pas.
+5. Si un champ est introuvable, mets null (ou [] pour un tableau).
+6. keywords${suf} : 8 à 15 chaînes, jamais des nombres.
+7. summary${suf} : 60 à 120 mots maximum, pas plus.
+8. year : entier (pas une chaîne).
+9. Tu ne réécris JAMAIS le contenu intégral des sections — seulement les ancrages.`;
 
-  const jurisprudenceFields = `  "court": "...",                       // nom du tribunal (langue source)
-  "court_ar": "...",
-  "courtLevel": "...",                  // niveau (Cassation, Appel, Première instance, ...)
-  "courtLevelAr": "...",
-  "courtCategory": "...",               // ordre judiciaire/administratif/constitutionnel
-  "courtCategoryAr": "...",
-  "caseNumber": "...",                  // numéro de la décision/arrêt
-  "year": 2024,                         // année de la décision (entier)
-  "plaintiff": "...",                   // demandeur (langue source)
-  "plaintiff_ar": "...",
-  "defendant": "...",                   // défendeur (langue source)
-  "defendant_ar": "...",
-  "jurisdiction": "...",                // ressort géographique
-  "legalProblem": "...",                // ⚖️ AL MOCHKIL AL 9ANOUNI — la question de droit posée par le litige, 2-4 phrases
-  "legalProblemAr": "...",              // المشكل القانوني (arabe)
-  "proposedSolution": "...",            // 🎯 AL 7AL AL MOU9ADDAM — solution adoptée par le juge, motivation principale + dispositif
-  "proposedSolutionAr": "..."           // الحل المقدّم (arabe)`;
+  const baseMetadata = `  "title${suf}": "...",
+  "subtitle${suf}": "...",
+  "author${suf}": "...",
+  "author_position${suf}": "...",      // fonction/qualité de l'auteur (ex: "أستاذ تعليم عال بجامعة صفاقس")
+  "summary${suf}": "...",              // résumé court 60-120 mots
+  "keywords${suf}": ["..."],           // 8-15 mots-clés
+  "legalDomains${suf}": ["..."],       // domaines juridiques touchés
+  "mainTopics${suf}": ["..."],         // thématiques principales
+  "legalReferences${suf}": ["..."],    // textes/articles cités, sous forme de chaînes
+  "entities${suf}": ["..."],           // personnes/institutions/lois citées
+  "dates${suf}": ["..."]               // dates importantes en chaînes`;
 
-  const commentaireFields = `  "court": "...",                       // 🏛️ AL MA7KMA — tribunal commenté
-  "court_ar": "...",                    // المحكمة
-  "ruling": "...",                      // 📜 AL 9ARAR — texte/dispositif de la décision commentée
-  "ruling_ar": "...",                   // القرار
-  "observations": "...",                // 📝 MOULA7ADHAT — remarques/commentaires de l'auteur sur la décision
-  "observations_ar": "..."              // ملاحظات`;
-
-  const analyseFields = `  "introduction": "...",                // مقدمة — introduction (texte intégral, 200-600 mots)
-  "introduction_ar": "...",
-  "conclusion": "...",                  // خاتمة — conclusion (texte intégral, 200-600 mots)
-  "conclusion_ar": "...",
-  "sections": [                         // entre l'intro et la conclusion, parties/sections détectées dans l'ordre
-    {
-      "title": "Première partie",       // titre en langue source
-      "titleAr": "الجزء الأول",         // titre en arabe (même item)
-      "level": 1,                       // 1 = partie / جزء, 2 = section / فرع
-      "content": "...",                 // texte complet de cette section (langue source)
-      "contentAr": "..."                // texte en arabe
-    }
-  ]`;
-
-  const bibliographyFields = `  "bibliography": "...",                // références bibliographiques rédigées (langue source)
-  "bibliography_ar": "..."`;
-
-  let typeHint = "";
-  let extra = "";
   switch (kind) {
-    case "jurisprudence":
-      typeHint = `Le document est une FICHE DE JURISPRUDENCE / décision judiciaire commentée. ` +
-        `Cherche AGRESSIVEMENT : numéro de décision, juridiction, année, parties (demandeur/défendeur), ` +
-        `niveau juridictionnel. Surtout, identifie clairement :\n` +
-        `- "legalProblem" = la question de droit que le juge devait trancher\n` +
-        `- "proposedSolution" = la réponse du juge avec la motivation principale et le dispositif`;
-      extra = ",\n" + jurisprudenceFields + ",\n" + bibliographyFields;
-      break;
-    case "commentaire":
-      typeHint = `Le document est un COMMENTAIRE de décision judiciaire. Sépare bien :\n` +
-        `- "ruling" = le texte de la décision rapportée (les attendus / dispositif cités)\n` +
-        `- "observations" = les remarques personnelles de l'auteur sur cette décision\n` +
-        `- "court" = le tribunal qui a rendu la décision commentée`;
-      extra = ",\n" + commentaireFields + ",\n" + bibliographyFields;
-      break;
-    case "blog":
-      typeHint = `Le document est un BILLET DE BLOG / texte court d'opinion. ` +
-        `Pas de découpage hiérarchique. Identifie l'auteur, sa qualité, et résume le propos.`;
-      extra = ",\n" + bibliographyFields;
-      break;
     case "analyse":
-      typeHint = `Le document est une ANALYSE / NOTE DOCTRINALE structurée. Découpe-la :\n` +
-        `- "introduction" = la مقدمة (texte intégral du paragraphe d'introduction du document)\n` +
-        `- "conclusion" = la خاتمة (texte intégral du paragraphe de conclusion)\n` +
-        `- "sections" = tableau ORDONNÉ des parties (الجزء الأول, الجزء الثاني, ...) et sous-sections (الفرع الأول, ...) ` +
-        `trouvées entre l'intro et la conclusion. Chaque entrée : title + titleAr + level (1=partie, 2=section) + content + contentAr. ` +
-        `Reproduis le TEXTE INTÉGRAL de chaque section telle qu'elle apparaît, n'invente rien, ne résume pas. ` +
-        `Si le document n'a pas de découpage explicite, retourne sections = [].`;
-      extra = ",\n" + analyseFields + ",\n" + bibliographyFields;
-      break;
-    default:
-      typeHint = `Document juridique générique. Remplis tous les champs détectables.`;
-      extra = ",\n" + jurisprudenceFields + ",\n" + commentaireFields + ",\n" + analyseFields + ",\n" + bibliographyFields;
-  }
+      return `Tu es un analyseur expert de documents juridiques tunisiens en ${langName}.
+Le document est une ANALYSE / NOTE DOCTRINALE structurée hiérarchiquement
+(مقدمة → الجزء الأول/الثاني/الثالث → الفرع الأول/الثاني → خاتمة → قائمة المراجع).
+Le nombre de parties et de فروع est VARIABLE : 1, 2, 3 ou plus.
+Une partie peut avoir 0, 1, 2 ou plusieurs فروع.
 
-  return `Tu es un analyseur expert de documents juridiques tunisiens (français/arabe).
-${typeHint}
+${commonRules}
 
-Réponds UNIQUEMENT avec un JSON valide (pas de markdown, pas de commentaire, pas de \`\`\`).
-Schéma attendu :
+Schéma JSON attendu :
 {
-${baseFields}${extra}
+  "doc_kind": "analyse",
+${baseMetadata},
+  "intro_anchor": "...",            // 8-15 premiers mots du paragraphe d'intro (après le titre/auteur/keywords).
+                                    // Mets null si pas de مقدمة identifiable.
+  "conclusion_anchor": "...",       // expression EXACTE qui ouvre la خاتمة (ex: "خاتمة" ou "وفي الختام...").
+                                    // null si pas de conclusion distincte.
+  "biblio_anchor": "...",           // expression EXACTE qui ouvre la bibliographie
+                                    // (ex: "قائمة في بعض المراجع" ou "قائمة المراجع").
+                                    // null si pas de bibliographie.
+  "section_markers": [
+    {
+      "anchor_text": "الجزء الأول : تكريس حرّية تكوين الأحزاب والجمعيّات",   // titre EXACT de la partie tel qu'écrit
+      "anchor_first_words": "بالرّجوع إلى النصوص القانونيّة وإلى فقه القضاء",  // 8-15 mots du contenu qui suit
+      "title${suf}": "تكريس حرّية تكوين الأحزاب والجمعيّات",                  // titre épuré (sans "الجزء الأول :")
+      "level": 1
+    },
+    {
+      "anchor_text": "الفرع الأول : الاستناد إلى الدستور وإلى القانون الدولي",
+      "anchor_first_words": "حرص القضاء التونسي على التوسّع",
+      "title${suf}": "الاستناد إلى الدستور وإلى القانون الدولي",
+      "level": 2
+    }
+    // ... autant que tu en trouves, dans l'ordre du document
+  ]
 }
 
-Règles :
-- Si un champ est introuvable, mets null (ou [] pour un tableau).
-- Préserve la casse et la ponctuation arabes (؟ ؛ .).
-- Pour les arrays bilingues, l'ordre français et arabe doit correspondre item par item.
-- Pour year, retourne un entier (pas une chaîne).
-- Pour "dates", "entities", "legalReferences*", "keywords*", "legalDomains", "mainTopics" : tableaux de CHAÎNES uniquement (jamais d'entiers — "2014" et non 2014).
-- Si le document est en arabe, remplis prioritairement les *_ar et fais un titre/résumé français de courtoisie.`;
+Pour level :
+- 1 = الجزء / Partie / titre majuscule romain (I, II, III).
+- 2 = الفرع / Section / lettre (A, B, أ، ب).
+- 3 = sous-section (rare).
+
+Si pas de structure hiérarchique du tout (très rare pour une analyse) : section_markers = [].`;
+
+    case "jurisprudence":
+      return `Tu es un analyseur expert de documents juridiques tunisiens en ${langName}.
+Le document est une FICHE DE JURISPRUDENCE (décision judiciaire commentée).
+
+${commonRules}
+
+Schéma JSON attendu :
+{
+  "doc_kind": "jurisprudence",
+${baseMetadata},
+  "court${suf}": "...",                 // nom du tribunal (ex: "محكمة التعقيب")
+  "court_level${suf}": "...",           // niveau (Cassation, Appel, Première instance...)
+  "court_category${suf}": "...",        // ordre (judiciaire/administratif/constitutionnel)
+  "case_number": "...",                 // numéro de la décision (chaîne)
+  "year": 2024,                         // année de la décision (entier)
+  "plaintiff${suf}": "...",
+  "defendant${suf}": "...",
+  "jurisdiction${suf}": "...",
+  "biblio_anchor": null,                // expression qui ouvre une bibliographie/notes
+  "section_markers": [
+    {
+      "block_kind": "facts",            // "facts" | "legal_problem" | "proposed_solution" | "references"
+      "anchor_text": "حيث أنّ المتّهم...",
+      "anchor_first_words": "حيث أنّ المتّهم تمّ تتبّعه من أجل جريمة الاعتداء",
+      "label${suf}": "الوقائع"
+    },
+    {
+      "block_kind": "legal_problem",
+      "anchor_text": "وحيث يطرح السّؤال",
+      "anchor_first_words": "وحيث يطرح السّؤال ما هو المبدأ الذي يسبق على الآخر",
+      "label${suf}": "المشكل القانوني"
+    },
+    {
+      "block_kind": "proposed_solution",
+      "anchor_text": "وحيث أنّ علوية الحقوق",
+      "anchor_first_words": "وحيث أنّ علوية الحقوق المتّصلة بالكرامة الإنسانيّة",
+      "label${suf}": "الحلّ المقدّم"
+    }
+  ]
+}
+
+Identifie les marqueurs des 3 blocs principaux : les FAITS, le PROBLÈME JURIDIQUE,
+la SOLUTION/MOTIVATION du juge. Si certains blocs ne sont pas distinctement
+identifiables, omets-les de section_markers.`;
+
+    case "commentaire":
+      return `Tu es un analyseur expert de documents juridiques tunisiens en ${langName}.
+Le document est un COMMENTAIRE de décision judiciaire (note de jurisprudence).
+
+${commonRules}
+
+Schéma JSON attendu :
+{
+  "doc_kind": "commentaire",
+${baseMetadata},
+  "court${suf}": "...",                 // tribunal QUI A RENDU la décision commentée
+  "case_number": "...",                 // numéro de la décision commentée
+  "year": 2024,
+  "biblio_anchor": null,
+  "section_markers": [
+    {
+      "block_kind": "ruling",           // "ruling" = texte/dispositif de la décision rapportée
+      "anchor_text": "قضت محكمة التعقيب",
+      "anchor_first_words": "قضت محكمة التعقيب بما يلي... بعدم وجاهة قرار",
+      "label${suf}": "القرار"
+    },
+    {
+      "block_kind": "observations",     // "observations" = remarques de l'auteur du commentaire
+      "anchor_text": "ملاحظات",
+      "anchor_first_words": "ملاحظات : في تاريخ محكمة التعقيب الطويل، يمثّل قرار",
+      "label${suf}": "ملاحظات"
+    }
+  ]
+}`;
+
+    case "blog":
+      return `Tu es un analyseur expert de documents juridiques tunisiens en ${langName}.
+Le document est un BILLET DE BLOG / texte court d'opinion. Pas de découpage
+hiérarchique attendu — tout le contenu reste dans le champ content de base.
+
+${commonRules}
+
+Schéma JSON attendu :
+{
+  "doc_kind": "blog",
+${baseMetadata},
+  "intro_anchor": null,
+  "biblio_anchor": null,
+  "section_markers": []
+}`;
+
+    default:
+      return `Tu es un analyseur expert de documents juridiques tunisiens en ${langName}.
+Document juridique générique. Remplis les métadonnées détectables.
+
+${commonRules}
+
+Schéma JSON attendu :
+{
+  "doc_kind": "generic",
+${baseMetadata},
+  "intro_anchor": null,
+  "biblio_anchor": null,
+  "section_markers": []
+}`;
+  }
 }
 
 /**
@@ -302,7 +382,7 @@ async function runProcessingPipeline(args: {
       return;
     }
 
-    // Step 2 — AI metadata extraction (prompt tailored to document type)
+    // Step 2 — AI metadata extraction (anchors-only prompt per type)
     await setProgress(50, "ai_analysis");
     let analysis: Record<string, unknown> = {};
     try {
@@ -311,22 +391,18 @@ async function runProcessingPipeline(args: {
         include: { documentTypeRel: true },
       });
       const docTypeName = docWithType?.documentTypeRel?.name ?? null;
-      const systemPrompt = buildAnalysisPrompt(docTypeName);
-      console.log(`[upload-document] AI analysis docType="${docTypeName ?? "unknown"}"`);
-
-      // For Analyses we need much more output budget because the schema asks
-      // for full-text introduction + conclusion + each section content.
       const kind = classifyDocType(docTypeName);
-      const maxTokens = kind === "analyse" ? 16000 : 6000;
+      const sourceLang: "fr" | "ar" | "auto" = language;
+      const systemPrompt = buildAnalysisPrompt(docTypeName, sourceLang);
+      console.log(`[upload-document] AI analysis kind=${kind} docType="${docTypeName ?? "unknown"}" lang=${sourceLang}`);
 
+      // Anchors-only schema → small output (~1500-2500 tokens).
       const raw = await chatCompletion({
         model: "gpt-4o-mini",
         system: systemPrompt,
         prompt: extraction.text.slice(0, 16000),
-        temperature: 0.2,
-        maxTokens,
-        // Force strict JSON output — eliminates the unescaped-quote /
-        // missing-comma class of bugs we kept hitting on Arabic content.
+        temperature: 0.1,
+        maxTokens: 4000,
         json: true,
       });
       console.log(`[upload-document] AI raw response length=${raw.length}c, first 200c="${raw.slice(0, 200).replace(/\n/g, " ")}"`);
@@ -386,57 +462,117 @@ async function runProcessingPipeline(args: {
         return undefined;
       };
 
-      await prisma.document.update({
-        where: { id: documentId },
-        data: {
-          title: str(analysis.title),
-          titleAr: str(analysis.title_ar),
-          subtitle: str(analysis.subtitle),
-          subtitleAr: str(analysis.subtitle_ar),
-          summary: str(analysis.summary),
-          summaryAr: str(analysis.summary_ar),
-          author: str(analysis.author),
-          authorAr: str(analysis.author_ar),
-          keywords: arr(analysis.keywords),
-          keywordsAr: arr(analysis.keywords_ar),
-          legalDomains: arr(analysis.legalDomains),
-          mainTopics: arr(analysis.mainTopics),
-          court: str(analysis.court),
-          courtAr: str(analysis.court_ar),
-          courtLevel: str(analysis.courtLevel),
-          courtLevelAr: str(analysis.courtLevelAr),
-          courtCategory: str(analysis.courtCategory),
-          courtCategoryAr: str(analysis.courtCategoryAr),
-          caseNumber: str(analysis.caseNumber),
-          year: num(analysis.year),
-          plaintiff: str(analysis.plaintiff),
-          plaintiffAr: str(analysis.plaintiff_ar),
-          defendant: str(analysis.defendant),
-          defendantAr: str(analysis.defendant_ar),
-          jurisdiction: str(analysis.jurisdiction),
-          legalReferences: arr(analysis.legalReferences),
-          legalReferencesAr: arr(analysis.legalReferencesAr ?? analysis.legal_references_ar),
-          bibliography: str(analysis.bibliography),
-          bibliographyAr: str(analysis.bibliography_ar),
-          entities: arr(analysis.entities),
-          dates: arr(analysis.dates),
-          textualMetadata: str(analysis.textualMetadata),
-          // Type-specific structured fields
-          legalProblem: str(analysis.legalProblem ?? analysis.legal_problem),
-          legalProblemAr: str(analysis.legalProblemAr ?? analysis.legal_problem_ar),
-          proposedSolution: str(analysis.proposedSolution ?? analysis.proposed_solution),
-          proposedSolutionAr: str(analysis.proposedSolutionAr ?? analysis.proposed_solution_ar),
-          ruling: str(analysis.ruling),
-          rulingAr: str(analysis.rulingAr ?? analysis.ruling_ar),
-          observations: str(analysis.observations),
-          observationsAr: str(analysis.observationsAr ?? analysis.observations_ar),
-          introduction: str(analysis.introduction),
-          introductionAr: str(analysis.introductionAr ?? analysis.introduction_ar),
-          conclusion: str(analysis.conclusion),
-          conclusionAr: str(analysis.conclusionAr ?? analysis.conclusion_ar),
-          sections: Array.isArray(analysis.sections) ? (analysis.sections as never) : undefined,
-        },
-      });
+      // The AI emits SOURCE-LANGUAGE fields only. Translation runs later
+      // on user click via /api/fn/translate-fields.
+      // For an Arabic document, fields come back keyed *_ar; for a French
+      // document, fields come back without suffix. Coalesce both shapes
+      // so the persistence code below stays simple.
+      const pick = (...keys: string[]) => {
+        for (const k of keys) {
+          const v = (analysis as Record<string, unknown>)[k];
+          if (v != null) return v;
+        }
+        return undefined;
+      };
+
+      const data: Record<string, unknown> = {
+        // Bilingual scalar fields — populate the side matching the source language.
+        title: str(pick("title")) ?? str(pick("title_ar")),
+        titleAr: str(pick("title_ar", "title_AR")),
+        subtitle: str(pick("subtitle")),
+        subtitleAr: str(pick("subtitle_ar")),
+        summary: str(pick("summary")),
+        summaryAr: str(pick("summary_ar")),
+        author: str(pick("author")),
+        authorAr: str(pick("author_ar")),
+        keywords: arr(pick("keywords")),
+        keywordsAr: arr(pick("keywords_ar")),
+        legalDomains: arr(pick("legalDomains", "legal_domains", "legalDomains_ar", "legal_domains_ar")),
+        mainTopics: arr(pick("mainTopics", "main_topics", "mainTopics_ar", "main_topics_ar")),
+        legalReferences: arr(pick("legalReferences", "legal_references")),
+        legalReferencesAr: arr(pick("legalReferencesAr", "legal_references_ar")),
+        entities: arr(pick("entities", "entities_ar")),
+        dates: arr(pick("dates", "dates_ar")),
+      };
+
+      // Jurisprudence / commentaire specific scalar fields
+      data.court = str(pick("court"));
+      data.courtAr = str(pick("court_ar"));
+      data.courtLevel = str(pick("court_level", "courtLevel"));
+      data.courtLevelAr = str(pick("court_level_ar", "courtLevelAr"));
+      data.courtCategory = str(pick("court_category", "courtCategory"));
+      data.courtCategoryAr = str(pick("court_category_ar", "courtCategoryAr"));
+      data.caseNumber = str(pick("case_number", "caseNumber"));
+      data.year = num(pick("year"));
+      data.plaintiff = str(pick("plaintiff"));
+      data.plaintiffAr = str(pick("plaintiff_ar"));
+      data.defendant = str(pick("defendant"));
+      data.defendantAr = str(pick("defendant_ar"));
+      data.jurisdiction = str(pick("jurisdiction"));
+      data.jurisdictionAr = undefined;
+
+      // ----- Anchors-based slicing -----
+      const { sliceAnalyse, sliceJurisprudence, sliceCommentaire } = await import(
+        "../../services/doc-segmentation.js"
+      );
+      const sourceText = extraction.text;
+      const intoAr = sourceLang === "ar"; // source is Arabic → fill *_ar fields with sliced content
+      if (kind === "analyse") {
+        const sliced = sliceAnalyse(sourceText, analysis as never);
+        console.log(
+          `[upload-document] sliced analyse: intro=${sliced.introduction.length}c, sections=${sliced.sections.length}, conclusion=${sliced.conclusion.length}c, biblio=${sliced.bibliography.length}c`,
+        );
+        if (intoAr) {
+          if (sliced.introduction) data.introductionAr = sliced.introduction;
+          if (sliced.conclusion) data.conclusionAr = sliced.conclusion;
+          if (sliced.bibliography) data.bibliographyAr = sliced.bibliography;
+        } else {
+          if (sliced.introduction) data.introduction = sliced.introduction;
+          if (sliced.conclusion) data.conclusion = sliced.conclusion;
+          if (sliced.bibliography) data.bibliography = sliced.bibliography;
+        }
+        // Sections JSONB stores both keys; UI reads titleAr/contentAr or title/content
+        data.sections = sliced.sections.map((s) => ({
+          title: intoAr ? "" : s.title,
+          titleAr: intoAr ? s.title : "",
+          content: intoAr ? "" : s.content,
+          contentAr: intoAr ? s.content : "",
+          level: s.level,
+        }));
+      } else if (kind === "jurisprudence") {
+        const sliced = sliceJurisprudence(sourceText, analysis as never);
+        console.log(
+          `[upload-document] sliced jurisprudence: facts=${sliced.facts.length}c, lp=${sliced.legalProblem.length}c, ps=${sliced.proposedSolution.length}c, biblio=${sliced.bibliography.length}c`,
+        );
+        if (intoAr) {
+          if (sliced.legalProblem) data.legalProblemAr = sliced.legalProblem;
+          if (sliced.proposedSolution) data.proposedSolutionAr = sliced.proposedSolution;
+          if (sliced.bibliography) data.bibliographyAr = sliced.bibliography;
+          // Facts (if any) join the legal_problem block above proposed_solution
+          if (sliced.facts && !sliced.legalProblem) data.legalProblemAr = sliced.facts;
+        } else {
+          if (sliced.legalProblem) data.legalProblem = sliced.legalProblem;
+          if (sliced.proposedSolution) data.proposedSolution = sliced.proposedSolution;
+          if (sliced.bibliography) data.bibliography = sliced.bibliography;
+          if (sliced.facts && !sliced.legalProblem) data.legalProblem = sliced.facts;
+        }
+      } else if (kind === "commentaire") {
+        const sliced = sliceCommentaire(sourceText, analysis as never);
+        console.log(
+          `[upload-document] sliced commentaire: ruling=${sliced.ruling.length}c, obs=${sliced.observations.length}c, biblio=${sliced.bibliography.length}c`,
+        );
+        if (intoAr) {
+          if (sliced.ruling) data.rulingAr = sliced.ruling;
+          if (sliced.observations) data.observationsAr = sliced.observations;
+          if (sliced.bibliography) data.bibliographyAr = sliced.bibliography;
+        } else {
+          if (sliced.ruling) data.ruling = sliced.ruling;
+          if (sliced.observations) data.observations = sliced.observations;
+          if (sliced.bibliography) data.bibliography = sliced.bibliography;
+        }
+      }
+
+      await prisma.document.update({ where: { id: documentId }, data: data as never });
     } catch (err) {
       console.warn(`[upload-document] AI analysis failed for ${documentId}:`, (err as Error).message);
     }
