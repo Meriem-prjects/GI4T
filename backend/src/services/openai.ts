@@ -19,12 +19,15 @@ export async function chatCompletion(args: {
   prompt: string;
   temperature?: number;
   maxTokens?: number;
+  /** Force OpenAI to return a syntactically valid JSON object. */
+  json?: boolean;
 }): Promise<string> {
   const openai = getOpenAI();
   const res = await openai.chat.completions.create({
     model: args.model ?? "gpt-4o-mini",
     temperature: args.temperature ?? 0.2,
     max_tokens: args.maxTokens,
+    ...(args.json ? { response_format: { type: "json_object" as const } } : {}),
     messages: [
       ...(args.system ? [{ role: "system" as const, content: args.system }] : []),
       { role: "user" as const, content: args.prompt },

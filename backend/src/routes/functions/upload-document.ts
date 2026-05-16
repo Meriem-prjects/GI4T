@@ -19,6 +19,90 @@ const schema = z.object({
   skipProcessing: z.boolean().optional(),
 });
 
+/**
+ * Best-effort recovery of a JSON object truncated mid-array (typical
+ * symptom: the AI ran out of tokens in the middle of a section's
+ * `content` field). Walks the string, tracks brace/bracket/string depth,
+ * and returns the longest prefix that is followed by a closeable
+ * top-level object — closing any open arrays + the root object.
+ * Returns null if no valid prefix can be salvaged.
+ */
+export function repairTruncatedJson(raw: string): string | null {
+  if (!raw || raw[0] !== "{") return null;
+  // depth stack: '{' or '['
+  const stack: string[] = [];
+  let inString = false;
+  let escape = false;
+  // Last position where we just completed a top-level property
+  // (i.e., right after a comma or '{' while stack.length === 1).
+  let lastSafeEnd = -1;
+  let endsAtKey = false;
+  for (let i = 0; i < raw.length; i++) {
+    const c = raw[i];
+    if (escape) {
+      escape = false;
+      continue;
+    }
+    if (inString) {
+      if (c === "\\") {
+        escape = true;
+      } else if (c === '"') {
+        inString = false;
+      }
+      continue;
+    }
+    if (c === '"') {
+      inString = true;
+      continue;
+    }
+    if (c === "{" || c === "[") {
+      stack.push(c);
+      continue;
+    }
+    if (c === "}" || c === "]") {
+      stack.pop();
+      // Record completion of a top-level property's value
+      if (stack.length === 1) {
+        lastSafeEnd = i;
+        endsAtKey = false;
+      }
+      continue;
+    }
+    if (c === "," && stack.length === 1) {
+      lastSafeEnd = i - 1;
+      endsAtKey = false;
+    }
+  }
+  if (lastSafeEnd < 0) return null;
+  let prefix = raw.slice(0, lastSafeEnd + 1);
+  // Close any open arrays/objects (inside the root)
+  // We need to find what's still open after lastSafeEnd. Re-scan up to that
+  // point with the same logic, tracking open brackets.
+  const open: string[] = [];
+  inString = false;
+  escape = false;
+  for (let i = 0; i <= lastSafeEnd; i++) {
+    const c = prefix[i];
+    if (escape) { escape = false; continue; }
+    if (inString) {
+      if (c === "\\") escape = true;
+      else if (c === '"') inString = false;
+      continue;
+    }
+    if (c === '"') { inString = true; continue; }
+    if (c === "{" || c === "[") open.push(c);
+    else if (c === "}" || c === "]") open.pop();
+  }
+  // Close remaining open brackets in reverse order
+  while (open.length > 0) {
+    const top = open.pop()!;
+    prefix += top === "{" ? "}" : "]";
+  }
+  // Avoid silly truncations
+  if (prefix.length < 50) return null;
+  return prefix;
+}
+
 export type DocKind = "jurisprudence" | "commentaire" | "blog" | "analyse" | "generic";
 
 export function classifyDocType(documentTypeName: string | null | undefined): DocKind {
@@ -241,22 +325,41 @@ async function runProcessingPipeline(args: {
         prompt: extraction.text.slice(0, 16000),
         temperature: 0.2,
         maxTokens,
+        // Force strict JSON output — eliminates the unescaped-quote /
+        // missing-comma class of bugs we kept hitting on Arabic content.
+        json: true,
       });
       console.log(`[upload-document] AI raw response length=${raw.length}c, first 200c="${raw.slice(0, 200).replace(/\n/g, " ")}"`);
       try {
         analysis = JSON.parse(raw);
-      } catch {
+      } catch (firstErr) {
+        // Fallback 1: extract the first {...} block if there's wrapping text.
         const m = raw.match(/\{[\s\S]*\}/);
         if (m) {
           try {
             analysis = JSON.parse(m[0]);
-          } catch (e) {
-            console.warn(
-              `[upload-document] JSON parse FAILED on AI response (${raw.length}c). Last 200c="${raw.slice(-200).replace(/\n/g, " ")}". Error: ${(e as Error).message}`,
-            );
+          } catch (secondErr) {
+            // Fallback 2: aggressive repair — truncate at last complete
+            // top-level property so we keep title/summary/keywords even
+            // when sections content broke the JSON late in the response.
+            try {
+              const repaired = repairTruncatedJson(m[0]);
+              if (repaired) {
+                analysis = JSON.parse(repaired);
+                console.warn(`[upload-document] JSON repaired by truncation (${raw.length}c → ${repaired.length}c)`);
+              } else {
+                throw secondErr;
+              }
+            } catch {
+              console.warn(
+                `[upload-document] JSON parse FAILED on AI response (${raw.length}c). Last 200c="${raw.slice(-200).replace(/\n/g, " ")}". Error: ${(secondErr as Error).message}`,
+              );
+            }
           }
         } else {
-          console.warn(`[upload-document] AI response had no JSON object detected. Length=${raw.length}c`);
+          console.warn(
+            `[upload-document] AI response had no JSON object detected. Length=${raw.length}c. Error: ${(firstErr as Error).message}`,
+          );
         }
       }
       if (!analysis || Object.keys(analysis).length === 0) {
