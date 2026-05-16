@@ -36,6 +36,11 @@ jobs:
           psql "$DB_URL" \
             -c "SELECT id, LEFT(introduction_ar,40) AS intro_ar, LEFT(conclusion_ar,40) AS conclu_ar, LEFT(legal_problem_ar,40) AS lp_ar, LEFT(proposed_solution_ar,40) AS ps_ar, LEFT(ruling_ar,40) AS rul_ar, jsonb_array_length(sections) AS nb_sec FROM documents ORDER BY created_at DESC LIMIT 6;" || true
 
+      - name: Latest sections JSONB shape
+        run: |
+          DB_URL=$(grep '^DATABASE_URL=' /var/www/app/backend/.env | cut -d= -f2- | tr -d '"' | sed 's/?.*$//')
+          psql "$DB_URL" -c "SELECT id, jsonb_pretty(sections) FROM documents WHERE sections IS NOT NULL ORDER BY created_at DESC LIMIT 1;" || true
+
       - name: Latest processing jobs
         run: |
           DB_URL=$(grep '^DATABASE_URL=' /var/www/app/backend/.env | cut -d= -f2- | tr -d '"' | sed 's/?.*$//')
