@@ -41,6 +41,28 @@ jobs:
           DB_URL=$(grep '^DATABASE_URL=' /var/www/app/backend/.env | cut -d= -f2- | tr -d '"' | sed 's/?.*$//')
           psql "$DB_URL" -c "SELECT id, jsonb_pretty(sections) FROM documents WHERE sections IS NOT NULL ORDER BY created_at DESC LIMIT 1;" || true
 
+      - name: Raw content — find section header positions
+        run: |
+          DB_URL=$(grep '^DATABASE_URL=' /var/www/app/backend/.env | cut -d= -f2- | tr -d '"' | sed 's/?.*$//')
+          DOC_ID=$(psql "$DB_URL" -t -A -c "SELECT id FROM documents ORDER BY created_at DESC LIMIT 1;")
+          echo "Doc $DOC_ID"
+          # Grab the first 30000 chars of the raw content
+          psql "$DB_URL" -t -A -c "SELECT LEFT(content, 30000) FROM documents WHERE id='$DOC_ID';" > /tmp/raw.txt
+          echo "--- length ---"
+          wc -c /tmp/raw.txt
+          echo "--- find الجزء / Partie ---"
+          grep -no 'الجزء.\{0,40\}' /tmp/raw.txt | head -20 || true
+          echo "--- find الفرع ---"
+          grep -no 'الفرع.\{0,40\}' /tmp/raw.txt | head -20 || true
+          echo "--- find مقدمة ---"
+          grep -no 'مقدمة\|المقدمة' /tmp/raw.txt | head -5 || true
+          echo "--- find خاتمة ---"
+          grep -no 'خاتمة\|الخاتمة' /tmp/raw.txt | head -5 || true
+          echo "--- find الكلمات المفاتيح ---"
+          grep -no 'الكلمات.\{0,80\}' /tmp/raw.txt | head -5 || true
+          echo "--- find قائمة المراجع ---"
+          grep -no 'قائمة.\{0,40\}' /tmp/raw.txt | head -5 || true
+
       - name: API response as admin (authenticated)
         run: |
           TOKEN=$(curl -sS -X POST http://127.0.0.1:4000/api/auth/login \
