@@ -23,11 +23,13 @@ interface SectionsEditorProps {
 }
 
 const SectionsEditor: React.FC<SectionsEditorProps> = ({
-  sections,
+  sections: sectionsProp,
   onChange,
   currentLanguage,
   primaryLanguage,
 }) => {
+  // Defensive: never crash on undefined / non-array prop.
+  const sections: AnalysisSection[] = Array.isArray(sectionsProp) ? sectionsProp : [];
   const isPrimary = currentLanguage === (primaryLanguage ?? 'ar');
   const isArabicTab = currentLanguage === 'ar';
 
