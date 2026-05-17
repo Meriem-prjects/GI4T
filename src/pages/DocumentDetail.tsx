@@ -22,6 +22,7 @@ import { useDocumentView } from "@/hooks/useDocumentView";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useTranslation } from "@/hooks/useTranslation";
 import PageCarousel, { hasPageBreaks } from "@/components/PageCarousel";
+import TableOfContents, { injectHeadingIds } from "@/components/TableOfContents";
 
 interface PageContent {
   pageNumber: number;
@@ -76,8 +77,6 @@ interface Document {
   plaintiff_ar?: string;
   defendant?: string;
   defendant_ar?: string;
-  bibliography?: string;
-  bibliography_ar?: string;
   textual_metadata?: string;
   translated_textual_metadata?: string;
   page_contents?: JsonPageContents;
@@ -481,7 +480,6 @@ const DocumentDetail = () => {
   const currentPlaintiff = language === 'ar' && document.plaintiff_ar ? document.plaintiff_ar : document.plaintiff;
   const currentDefendant = language === 'ar' && document.defendant_ar ? document.defendant_ar : document.defendant;
   const currentKeywords = language === 'ar' && document.keywords_ar ? document.keywords_ar : document.keywords;
-  const currentBibliography = language === 'ar' && document.bibliography_ar ? document.bibliography_ar : document.bibliography;
 
   // Build paginated content from page_contents if available and has multiple pages
   // Affiche directement la version complète du document
@@ -567,7 +565,7 @@ const DocumentDetail = () => {
   };
 
   const paginatedContent = buildPaginatedContent();
-  const formattedContent = renderFormattedContent(paginatedContent);
+  const formattedContent = injectHeadingIds(renderFormattedContent(paginatedContent));
 
   // Detect if this is an analysis document (not jurisprudence)
   const isAnalysisDocument = () => {
@@ -802,23 +800,6 @@ const DocumentDetail = () => {
                     </div>
                   )}
 
-                  {/* Section Bibliographie - intégrée dans les métadonnées */}
-                  {currentBibliography && (
-                    <div className="mt-6 pt-6 border-t border-border">
-                      <h4 className={`font-semibold text-sm uppercase tracking-wide mb-3 flex items-center gap-2 ${language === 'ar' ? 'flex-row-reverse' : ''}`}>
-                        <BookOpen className="w-4 h-4" />
-                        {language === 'ar' ? 'المراجع / الببليوغرافيا' : 'Références / Bibliographie'}
-                      </h4>
-                      <div
-                        className={`text-sm leading-relaxed whitespace-pre-wrap ${language === 'ar' ? 'text-right arabic-text font-arabic' : ''}`}
-                        dangerouslySetInnerHTML={{
-                          __html: language === 'ar'
-                            ? normalizeArabicForDisplay(currentBibliography.replace(/<\/?p>/gi, '').trim())
-                            : currentBibliography.replace(/<\/?p>/gi, '').trim()
-                        }}
-                      />
-                    </div>
-                  )}
                 </>
               ) : (
                 // Format pour Fiches de jurisprudence
@@ -1009,6 +990,15 @@ const DocumentDetail = () => {
               )}
             </div>
 
+          {/* Table of contents (auto-built from <h1>/<h2> in the body) */}
+          {formattedContent && !hasPageBreaks(formattedContent) && (
+            <TableOfContents
+              html={formattedContent}
+              language={language as 'fr' | 'ar'}
+              className="mb-6 max-w-2xl mx-auto"
+            />
+          )}
+
           {/* Document Content */}
           <div className={`w-full ${language === 'ar' ? 'dir-rtl' : ''}`}>
             {formattedContent ? (
@@ -1161,31 +1151,6 @@ const DocumentDetail = () => {
               </CardContent>
             </Card>
           </section>
-
-          {/* Bibliographie — en bas */}
-          {currentBibliography && (
-            <section
-              className={`mt-6 ${language === 'ar' ? 'text-right' : 'text-left'}`}
-              dir={language === 'ar' ? 'rtl' : 'ltr'}
-            >
-              <h3 className={`text-lg font-semibold mb-4 flex items-center gap-2 ${language === 'ar' ? 'flex-row-reverse justify-end' : ''}`}>
-                <BookOpen className="w-5 h-5 text-muted-foreground" />
-                {language === 'ar' ? 'المراجع / الببليوغرافيا' : 'Références / Bibliographie'}
-              </h3>
-              <Card>
-                <CardContent className="py-5">
-                  <div
-                    className={`text-sm leading-relaxed whitespace-pre-wrap ${language === 'ar' ? 'arabic-text font-arabic' : ''}`}
-                    dangerouslySetInnerHTML={{
-                      __html: language === 'ar'
-                        ? normalizeArabicForDisplay(currentBibliography.replace(/<\/?p>/gi, '').trim())
-                        : currentBibliography.replace(/<\/?p>/gi, '').trim()
-                    }}
-                  />
-                </CardContent>
-              </Card>
-            </section>
-          )}
 
           {/* Comment Section */}
           <div className="mt-12">

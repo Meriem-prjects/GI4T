@@ -46,31 +46,9 @@ interface DocumentData {
   validation_date?: string;
   legal_references?: string[];
   legal_references_ar?: string[];
-  bibliography?: string;
-  bibliography_ar?: string;
   page_contents?: any[];
   total_pages?: number;
   processed_pages?: number;
-  // Type-specific structured fields
-  legal_problem?: string;
-  legal_problem_ar?: string;
-  proposed_solution?: string;
-  proposed_solution_ar?: string;
-  ruling?: string;
-  ruling_ar?: string;
-  observations?: string;
-  observations_ar?: string;
-  introduction?: string;
-  introduction_ar?: string;
-  conclusion?: string;
-  conclusion_ar?: string;
-  sections?: Array<{
-    title?: string;
-    titleAr?: string;
-    level?: 1 | 2;
-    content?: string;
-    contentAr?: string;
-  }>;
 }
 
 
@@ -198,24 +176,9 @@ const AdminEditor = () => {
         validation_date: document.validation_date || '',
         legal_references: document.legal_references || [],
         legal_references_ar: document.legal_references_ar || [],
-        bibliography: document.bibliography || '',
-        bibliography_ar: document.bibliography_ar || '',
         page_contents: (document.page_contents as any[]) || [],
         total_pages: document.total_pages || 0,
         processed_pages: document.processed_pages || 0,
-        legal_problem: document.legal_problem || '',
-        legal_problem_ar: document.legal_problem_ar || '',
-        proposed_solution: document.proposed_solution || '',
-        proposed_solution_ar: document.proposed_solution_ar || '',
-        ruling: document.ruling || '',
-        ruling_ar: document.ruling_ar || '',
-        observations: document.observations || '',
-        observations_ar: document.observations_ar || '',
-        introduction: document.introduction || '',
-        introduction_ar: document.introduction_ar || '',
-        conclusion: document.conclusion || '',
-        conclusion_ar: document.conclusion_ar || '',
-        sections: Array.isArray(document.sections) ? (document.sections as any[]) : [],
       };
 
       setCurrentDocument(mappedDocument);

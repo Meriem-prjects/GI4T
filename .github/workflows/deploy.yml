@@ -83,26 +83,6 @@ jobs:
           npx prisma generate
           npx prisma migrate deploy
 
-      - name: Sync ad-hoc schema additions (idempotent)
-        working-directory: /var/www/app/backend
-        run: |
-          DB_URL=$(grep '^DATABASE_URL=' .env | cut -d= -f2- | tr -d '"' | sed 's/?.*$//')
-          psql "$DB_URL" <<'SQL'
-          ALTER TABLE documents
-            ADD COLUMN IF NOT EXISTS legal_problem text,
-            ADD COLUMN IF NOT EXISTS legal_problem_ar text,
-            ADD COLUMN IF NOT EXISTS proposed_solution text,
-            ADD COLUMN IF NOT EXISTS proposed_solution_ar text,
-            ADD COLUMN IF NOT EXISTS ruling text,
-            ADD COLUMN IF NOT EXISTS ruling_ar text,
-            ADD COLUMN IF NOT EXISTS observations text,
-            ADD COLUMN IF NOT EXISTS observations_ar text,
-            ADD COLUMN IF NOT EXISTS introduction text,
-            ADD COLUMN IF NOT EXISTS introduction_ar text,
-            ADD COLUMN IF NOT EXISTS conclusion text,
-            ADD COLUMN IF NOT EXISTS conclusion_ar text,
-            ADD COLUMN IF NOT EXISTS sections jsonb;
-          SQL
 
       - name: Install PyMuPDF to shared path (no sudo)
         run: |

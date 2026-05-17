@@ -244,8 +244,6 @@ model Document {
   jurisdiction         String?
   legalReferences      String[]  @default([]) @map("legal_references")
   legalReferencesAr    String[]  @default([]) @map("legal_references_ar")
-  bibliography         String?
-  bibliographyAr       String?   @map("bibliography_ar")
   validationDate       DateTime? @map("validation_date") @db.Date
   legalDomains         String[]  @default([]) @map("legal_domains")
   mainTopics           String[]  @default([]) @map("main_topics")
@@ -253,19 +251,10 @@ model Document {
   dates                String[]  @default([])
   documentType         String?   @map("document_type")
   textualMetadata      String?   @map("textual_metadata")
-  legalProblem         String?   @map("legal_problem")
-  legalProblemAr       String?   @map("legal_problem_ar")
-  proposedSolution     String?   @map("proposed_solution")
-  proposedSolutionAr   String?   @map("proposed_solution_ar")
-  ruling               String?   @map("ruling")
-  rulingAr             String?   @map("ruling_ar")
-  observations         String?   @map("observations")
-  observationsAr       String?   @map("observations_ar")
-  introduction         String?   @map("introduction")
-  introductionAr       String?   @map("introduction_ar")
-  conclusion           String?   @map("conclusion")
-  conclusionAr         String?   @map("conclusion_ar")
-  sections             Json?     @map("sections")
+  // Structural fields (introduction, conclusion, sections JSONB,
+  // bibliography, legal_problem, proposed_solution, ruling,
+  // observations) were merged into `content` / `translated_content`
+  // as HTML with H1/H2 headings (see migration 20260517000001).
   // embedding vector(1536) — added via raw SQL migration, not typed in Prisma
   // Use prisma.$queryRaw for semantic search
   createdAt            DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
