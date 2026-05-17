@@ -404,6 +404,12 @@ async function runProcessingPipeline(args: {
         console.log(
           `[upload-document] regex analyse: title=${r.title?.length ?? 0}c, author=${r.author?.length ?? 0}c, kw=${r.keywords.length}, intro=${r.introduction.length}c, sections=${r.sections.length}, conclu=${r.conclusion.length}c, biblio=${r.bibliography.length}c`,
         );
+        for (let si = 0; si < r.sections.length; si++) {
+          const s = r.sections[si];
+          console.log(
+            `[upload-document] regex section[${si}] L${s.level} title="${s.title.slice(0, 60)}" contentLen=${s.content.length}c`,
+          );
+        }
         const intoAr = sourceLang === "ar";
         const dataReg: Record<string, unknown> = {};
         if (r.title) {
