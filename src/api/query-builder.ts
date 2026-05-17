@@ -6,32 +6,47 @@ import { api, ApiError } from "./client.js";
 // Prisma returns camelCase; the legacy Supabase code reads snake_case
 // for column names. Convert top-level keys (and keys inside nested
 // relation objects) but DO NOT touch items inside arrays — those are
-// usually JSONB columns (e.g. page_contents = [{pageNumber, content}])
-// whose interior shape was set by the app and must be preserved.
+// usually JSONB columns (e.g. page_contents = [{pageNumber, content}],
+// sections = [{titleAr, contentAr}]) whose interior shape was set by
+// the app and must be preserved verbatim.
 function toSnakeCase(s: string): string {
   return s.replace(/[A-Z]/g, (c) => "_" + c.toLowerCase());
 }
-function snakeCaseKeys<T>(value: T): T {
+// Internal recursive helper. `intoArrayItems` controls whether nested
+// objects inside an array's items are themselves recursed (only true
+// for the very first call when the API returned a list of rows; false
+// for everything else, including JSONB arrays inside a row).
+function snakeCaseKeysInternal(value: unknown, intoArrayItems: boolean): unknown {
   if (Array.isArray(value)) {
-    // Top-level lists (e.g. /api/documents → items[]). Convert each
-    // row's column keys, but stop recursing into the row's array
-    // properties (JSONB content).
-    return value.map(snakeCaseKeys) as unknown as T;
+    return intoArrayItems
+      ? value.map((v) => snakeCaseKeysInternal(v, false))
+      : value;
   }
-  if (value && typeof value === "object" && value.constructor === Object) {
+  if (value && typeof value === "object" && (value as object).constructor === Object) {
     const out: Record<string, unknown> = {};
     for (const [k, v] of Object.entries(value as Record<string, unknown>)) {
-      // Only recurse when the value is a plain object (Prisma relation)
-      // — leave arrays intact so JSONB items keep their original keys.
+      // Only recurse when the value is a plain object (Prisma relation).
+      // Arrays are JSONB columns → leave items untouched.
       if (v && typeof v === "object" && !Array.isArray(v) && (v as object).constructor === Object) {
-        out[toSnakeCase(k)] = snakeCaseKeys(v);
+        out[toSnakeCase(k)] = snakeCaseKeysInternal(v, false);
       } else {
         out[toSnakeCase(k)] = v;
       }
     }
-    return out as T;
+    return out;
   }
   return value;
+}
+// Public entry-points.
+// Single-row response (Prisma findUnique): convert column keys + nested
+// relation objects, but NOT items inside JSONB arrays.
+function snakeCaseKeys<T>(value: T): T {
+  return snakeCaseKeysInternal(value, false) as T;
+}
+// Multi-row response (Prisma findMany → items[]): convert each row's
+// column keys (still no recursion into the row's JSONB arrays).
+function snakeCaseKeysList<T>(value: T): T {
+  return snakeCaseKeysInternal(value, true) as T;
 }
 
 // Convert snake_case / existing table names to kebab-case REST paths.
@@ -302,7 +317,7 @@ export class QueryBuilder<T = unknown> implements PromiseLike<QueryResult<T>> {
           return this.wrapResult<T>(snakeCaseKeys(first) as T, null, this.countRequested ? total : null);
         }
         return this.wrapResult<T>(
-          snakeCaseKeys(items) as unknown as T,
+          snakeCaseKeysList(items) as unknown as T,
           null,
           this.countRequested ? total : null,
         );
