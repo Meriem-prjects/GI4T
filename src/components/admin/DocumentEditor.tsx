@@ -2245,59 +2245,45 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
         );
       })()}
 
-      {/* Bouton workflow complet pour documents supportés (Analyses, Commentaires, Blogs, Fiches) */}
-      {(() => {
-        if (supportsAIWorkflow && editedData.page_contents && editedData.page_contents.length > 0) {
-          return (
-            <Card className="border-emerald-200 bg-emerald-50/50 dark:border-emerald-800 dark:bg-emerald-950/30">
-              <CardContent className="pt-4">
-                <div className="flex items-start gap-3">
-                  <Brain className="h-5 w-5 text-emerald-600 dark:text-emerald-400 mt-0.5 flex-shrink-0" />
-                  <div className="space-y-2 flex-1">
-                    <p className="text-sm font-medium text-emerald-900 dark:text-emerald-100">
-                      ⚡ Workflow automatisé complet
-                    </p>
-                    <p className="text-xs text-emerald-700 dark:text-emerald-300">
-                      Exécute automatiquement les 3 étapes : traduction de toutes les pages → consolidation → analyse IA complète
-                    </p>
-                    <div className="flex flex-wrap gap-2 mt-2">
-                      <Button
-                        onClick={runFullAnalysisWorkflow}
-                        disabled={isAnalyzing}
-                        size="sm"
-                        variant="default"
-                      >
-                        {isAnalyzing ? (
-                          <>
-                            <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                            Workflow en cours...
-                          </>
-                        ) : (
-                          <>
-                            <Brain className="h-4 w-4 mr-2" />
-                            Lancer le workflow complet
-                          </>
-                        )}
-                      </Button>
-                      <Button
-                        onClick={runFullFieldTranslation}
-                        disabled={isAnalyzing}
-                        size="sm"
-                        variant="outline"
-                        title="Traduit en un appel le titre, l'auteur, le résumé, les mots-clés et le corps complet (HTML préservé)"
-                      >
-                        <BookOpen className="h-4 w-4 mr-2" />
-                        Tout traduire
-                      </Button>
-                    </div>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          );
-        }
-        return null;
-      })()}
+      {/* Bouton "Tout traduire" — un seul appel qui traduit le titre,
+          l'auteur, le résumé, les mots-clés et le corps HTML complet
+          (les balises sont préservées par translate-fields). */}
+      {supportsAIWorkflow && (
+        <Card className="border-emerald-200 bg-emerald-50/50 dark:border-emerald-800 dark:bg-emerald-950/30">
+          <CardContent className="pt-4">
+            <div className="flex items-start gap-3">
+              <BookOpen className="h-5 w-5 text-emerald-600 dark:text-emerald-400 mt-0.5 flex-shrink-0" />
+              <div className="space-y-2 flex-1">
+                <p className="text-sm font-medium text-emerald-900 dark:text-emerald-100">
+                  Traduction bilingue en un clic
+                </p>
+                <p className="text-xs text-emerald-700 dark:text-emerald-300">
+                  Traduit en un appel le titre, l'auteur, le résumé, les mots-clés et le corps complet du document (les balises HTML sont préservées).
+                </p>
+                <Button
+                  onClick={runFullFieldTranslation}
+                  disabled={isAnalyzing}
+                  size="sm"
+                  variant="default"
+                  className="mt-2"
+                >
+                  {isAnalyzing ? (
+                    <>
+                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                      Traduction en cours...
+                    </>
+                  ) : (
+                    <>
+                      <BookOpen className="h-4 w-4 mr-2" />
+                      Tout traduire
+                    </>
+                  )}
+                </Button>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Action Buttons */}
       <div className="flex items-center justify-between">

@@ -28,6 +28,28 @@
 -- The translated_content column is left alone — translation now happens
 -- on the entire HTML body in one round-trip via /api/fn/translate-fields.
 
+-- Ensure the structural columns exist before back-filling. They were
+-- previously created out-of-band on prod via deploy.yml; local /
+-- staging databases may never have had them. ADD COLUMN IF NOT EXISTS
+-- is a no-op when the column already exists, so this is safe in all
+-- environments.
+ALTER TABLE documents
+  ADD COLUMN IF NOT EXISTS introduction text,
+  ADD COLUMN IF NOT EXISTS introduction_ar text,
+  ADD COLUMN IF NOT EXISTS conclusion text,
+  ADD COLUMN IF NOT EXISTS conclusion_ar text,
+  ADD COLUMN IF NOT EXISTS bibliography text,
+  ADD COLUMN IF NOT EXISTS bibliography_ar text,
+  ADD COLUMN IF NOT EXISTS legal_problem text,
+  ADD COLUMN IF NOT EXISTS legal_problem_ar text,
+  ADD COLUMN IF NOT EXISTS proposed_solution text,
+  ADD COLUMN IF NOT EXISTS proposed_solution_ar text,
+  ADD COLUMN IF NOT EXISTS ruling text,
+  ADD COLUMN IF NOT EXISTS ruling_ar text,
+  ADD COLUMN IF NOT EXISTS observations text,
+  ADD COLUMN IF NOT EXISTS observations_ar text,
+  ADD COLUMN IF NOT EXISTS sections jsonb;
+
 -- Helper: build HTML body from structural fields (returns NULL if all empty)
 CREATE OR REPLACE FUNCTION pg_temp.unify_body(
   intro text,
