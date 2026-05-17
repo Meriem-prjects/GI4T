@@ -51,10 +51,15 @@ jobs:
           DB_URL=$(grep '^DATABASE_URL=' /var/www/app/backend/.env | cut -d= -f2- | tr -d '"' | sed 's/?.*$//')
           DOC_ID=$(psql "$DB_URL" -t -A -c "SELECT id FROM documents ORDER BY created_at DESC LIMIT 1;")
           echo "Doc id: $DOC_ID"
+          echo "--- RAW JSON KEYS ONLY ---"
           curl -sS "http://127.0.0.1:4000/api/documents/$DOC_ID" \
             -H "Authorization: Bearer $TOKEN" \
-            | python3 -c "import sys,json; d=json.load(sys.stdin); print(json.dumps({k:(type(v).__name__ if isinstance(v,(list,dict)) else (v if not isinstance(v,str) or len(v)<80 else v[:80]+'...')) for k,v in d.items()}, ensure_ascii=False, indent=2, sort_keys=True))" \
-            | head -c 5000
+            | python3 -c "import sys,json; d=json.load(sys.stdin); print(sorted(d.keys()))"
+          echo ""
+          echo "--- title_ar / introduction_ar / sections[0] ---"
+          curl -sS "http://127.0.0.1:4000/api/documents/$DOC_ID" \
+            -H "Authorization: Bearer $TOKEN" \
+            | python3 -c "import sys,json; d=json.load(sys.stdin); print('title_ar:', repr(d.get('title_ar'))[:120]); print('introduction_ar:', repr(d.get('introduction_ar'))[:120]); s=d.get('sections') or []; print('sections count:', len(s)); print('sections[0] keys:', sorted(s[0].keys()) if s else 'EMPTY'); print('sections[0]:', repr({k:(v if not isinstance(v,str) or len(v)<60 else v[:60]+'...') for k,v in s[0].items()}) if s else '')"
 
       - name: Latest processing jobs
         run: |
