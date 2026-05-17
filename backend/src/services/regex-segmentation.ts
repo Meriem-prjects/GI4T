@@ -33,10 +33,22 @@ export interface RegexAnalyseResult {
 // ───────────────── normalisation ─────────────────
 
 /** Build a normalised version of `s` plus an index map so we can map
- *  any position back to the original string. */
-export function normalize(s: string): { norm: string; map: number[] } {
+ *  any position back to the original string.
+ *  Two versions are produced:
+ *   - `norm` : whitespace collapsed (intra-word spacing preserved with
+ *     a single space), used for human-readable display / loose pattern matching.
+ *   - `compact` : ALL whitespace stripped, used to match section headers
+ *     even when PyMuPDF has inserted stray spaces inside words
+ *     ("الجزء الث ّاني" → compact "الجزءالثاني" which matches "الجزءالثاني" pattern).
+ */
+export function normalize(s: string): {
+  norm: string; map: number[];
+  compact: string; compactMap: number[];
+} {
   let norm = "";
   const map: number[] = [];
+  let compact = "";
+  const compactMap: number[] = [];
   let lastSpace = false;
   for (let i = 0; i < s.length; i++) {
     const code = s.charCodeAt(i);
@@ -47,19 +59,22 @@ export function normalize(s: string): { norm: string; map: number[] } {
     if (code === 0x0622 || code === 0x0623 || code === 0x0625) c = "ا";
     // alef maksura → ya
     else if (code === 0x0649) c = "ي";
-    // ta marbuta → ha (so "الخاتمة" matches "الخاتمه" if the OCR slipped)
-    // Keep for now — Tunisian legal text uses ة consistently.
     if (/\s/.test(c)) {
+      // compact: drop entirely
       if (lastSpace) continue;
       c = " ";
       lastSpace = true;
+      map.push(i);
+      norm += c;
     } else {
       lastSpace = false;
+      map.push(i);
+      norm += c;
+      compactMap.push(i);
+      compact += c;
     }
-    map.push(i);
-    norm += c;
   }
-  return { norm, map };
+  return { norm, map, compact, compactMap };
 }
 
 // ───────────────── ordinals + section header patterns ─────────────────
@@ -79,48 +94,57 @@ const ORDINALS = [
 ];
 const ORDINAL_GROUP = ORDINALS.join("|");
 
-// Header detectors run on NORMALISED text. They use word boundaries that
-// work for Arabic (space before, space/colon/end after).
-const RE_INTRO = new RegExp(
-  "(?:^|\\s)(?:المقدمة|مقدمة)\\s*[:\\-—]?",
+// Patterns run on COMPACT text (no whitespace) so PyMuPDF's intra-word
+// spacing doesn't break detection. They DO NOT use `\b` — that doesn't
+// work for Arabic in JS regex. Instead, they use a negative lookahead
+// for the character that would extend the word (typically more Arabic
+// letters or digits).
+const NEXT_NOT_ARABIC = "(?![\\u0600-\\u06FF\\u0750-\\u077F0-9])";
+const PREV_NOT_ARABIC_LOOKBEHIND = "(?<![\\u0600-\\u06FF\\u0750-\\u077F])";
+
+const RE_INTRO_C = new RegExp(`(?:المقدمة|مقدمة)${NEXT_NOT_ARABIC}`, "g");
+// "الجزء" + ordinal (no space allowed because compact text has none)
+const RE_PART_C = new RegExp(
+  `(?:الجزء)(?:${ORDINAL_GROUP})${NEXT_NOT_ARABIC}`,
   "g",
 );
-const RE_PART = new RegExp(
-  `(?:^|\\s)(?:الجزء)\\s+(?:${ORDINAL_GROUP})\\b`,
+const RE_SECTION_C = new RegExp(
+  `(?:الفرع)(?:${ORDINAL_GROUP})${NEXT_NOT_ARABIC}`,
   "g",
 );
-const RE_SECTION = new RegExp(
-  `(?:^|\\s)(?:الفرع)\\s+(?:${ORDINAL_GROUP})\\b`,
+const RE_CONCLUSION_C = new RegExp(
+  `(?:الخاتمة|خاتمة)${NEXT_NOT_ARABIC}`,
   "g",
 );
-const RE_CONCLUSION = new RegExp(
-  "(?:^|\\s)(?:الخاتمة|خاتمة)\\s*[:\\-—]?",
+// Bibliography: "قائمة" + 0-15 Arabic chars + "المراجع" (covers
+// "قائمة المراجع", "قائمة في بعض المراجع", "قائمة في أهم المراجع",
+// "قائمة من المراجع", etc.)
+const RE_BIBLIO_C = new RegExp(
+  `(?:قائمة)[\\u0600-\\u06FF]{0,20}(?:المراجع|المصادر)${NEXT_NOT_ARABIC}`,
   "g",
 );
-const RE_BIBLIO = new RegExp(
-  "(?:^|\\s)(?:قائمة\\s+(?:في\\s+)?(?:بعض\\s+)?المراجع|قائمة\\s+المصادر|المراجع\\s+و(?:ال)?مصادر|المراجع\\s*:)",
-  "g",
-);
-const RE_KEYWORDS = new RegExp(
-  "(?:^|\\s)(?:الكلمات\\s+المفاتيح)\\s*[:：]?",
+const RE_KEYWORDS_C = new RegExp(
+  `(?:الكلماتالمفاتيح|كلماتمفاتيح)`,
   "g",
 );
 
-// Helper: scan a regex globally on `norm`, map every match back to the
-// original-text position and length. Returns positions sorted ascending.
-function scan(re: RegExp, norm: string, map: number[]): Array<{ start: number; end: number; matchText: string }> {
+/** Scan a regex on the COMPACT normalised text, map back to original positions. */
+function scanCompact(
+  re: RegExp,
+  compact: string,
+  compactMap: number[],
+): Array<{ start: number; end: number; matchText: string }> {
   re.lastIndex = 0;
   const results: Array<{ start: number; end: number; matchText: string }> = [];
   let m: RegExpExecArray | null;
-  while ((m = re.exec(norm))) {
-    const matchStart = m.index + (m[0].match(/^\s+/)?.[0].length ?? 0);
-    const matchEnd = m.index + m[0].length;
-    const origStart = map[matchStart];
-    const origEnd = map[Math.min(matchEnd - 1, map.length - 1)] + 1;
+  while ((m = re.exec(compact))) {
+    const origStart = compactMap[m.index];
+    const lastIdx = Math.min(m.index + m[0].length - 1, compactMap.length - 1);
+    const origEnd = compactMap[lastIdx] + 1;
     if (origStart !== undefined && origEnd !== undefined) {
-      results.push({ start: origStart, end: origEnd, matchText: m[0].trim() });
+      results.push({ start: origStart, end: origEnd, matchText: m[0] });
     }
-    if (m.index === re.lastIndex) re.lastIndex++; // safety against zero-width loops
+    if (m.index === re.lastIndex) re.lastIndex++;
   }
   return results;
 }
@@ -197,14 +221,14 @@ function extractKeywords(text: string, keywordsPos: number | null, nextMarkerPos
 // ───────────────── master extractor ─────────────────
 
 export function extractAnalyseStructure(rawText: string): RegexAnalyseResult {
-  const { norm, map } = normalize(rawText);
+  const { compact, compactMap } = normalize(rawText);
 
-  const introHits = scan(RE_INTRO, norm, map);
-  const partHits = scan(RE_PART, norm, map);
-  const sectionHits = scan(RE_SECTION, norm, map);
-  const conclusionHits = scan(RE_CONCLUSION, norm, map);
-  const biblioHits = scan(RE_BIBLIO, norm, map);
-  const keywordHits = scan(RE_KEYWORDS, norm, map);
+  const introHits = scanCompact(RE_INTRO_C, compact, compactMap);
+  const partHits = scanCompact(RE_PART_C, compact, compactMap);
+  const sectionHits = scanCompact(RE_SECTION_C, compact, compactMap);
+  const conclusionHits = scanCompact(RE_CONCLUSION_C, compact, compactMap);
+  const biblioHits = scanCompact(RE_BIBLIO_C, compact, compactMap);
+  const keywordHits = scanCompact(RE_KEYWORDS_C, compact, compactMap);
 
   const keywordsPos = keywordHits.length > 0 ? keywordHits[0].start : null;
   const biblioPos = biblioHits.length > 0 ? biblioHits[biblioHits.length - 1].start : -1;
