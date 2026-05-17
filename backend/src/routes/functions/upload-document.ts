@@ -382,7 +382,9 @@ async function runProcessingPipeline(args: {
       return;
     }
 
-    // Step 2 — AI metadata extraction (anchors-only prompt per type)
+    // Step 2 — Structural extraction.
+    // For Analyses juridiques: pure regex on the raw PyMuPDF text.
+    // For other types: AI prompt with anchor returns (fallback path).
     await setProgress(50, "ai_analysis");
     let analysis: Record<string, unknown> = {};
     try {
@@ -393,6 +395,56 @@ async function runProcessingPipeline(args: {
       const docTypeName = docWithType?.documentTypeRel?.name ?? null;
       const kind = classifyDocType(docTypeName);
       const sourceLang: "fr" | "ar" | "auto" = language;
+      console.log(`[upload-document] structural extraction kind=${kind} docType="${docTypeName ?? "unknown"}" lang=${sourceLang}`);
+
+      // ===== ANALYSES — REGEX FIRST PATH (fast, deterministic, zero AI) =====
+      if (kind === "analyse") {
+        const { extractAnalyseStructure } = await import("../../services/regex-segmentation.js");
+        const r = extractAnalyseStructure(extraction.text);
+        console.log(
+          `[upload-document] regex analyse: title=${r.title?.length ?? 0}c, author=${r.author?.length ?? 0}c, kw=${r.keywords.length}, intro=${r.introduction.length}c, sections=${r.sections.length}, conclu=${r.conclusion.length}c, biblio=${r.bibliography.length}c`,
+        );
+        const intoAr = sourceLang === "ar";
+        const dataReg: Record<string, unknown> = {};
+        if (r.title) {
+          dataReg.title = r.title;
+          if (intoAr) dataReg.titleAr = r.title;
+        }
+        if (r.author) {
+          if (intoAr) dataReg.authorAr = r.author;
+          else dataReg.author = r.author;
+        }
+        if (r.keywords.length > 0) {
+          if (intoAr) dataReg.keywordsAr = r.keywords;
+          else dataReg.keywords = r.keywords;
+        }
+        if (r.introduction) {
+          if (intoAr) dataReg.introductionAr = r.introduction;
+          else dataReg.introduction = r.introduction;
+        }
+        if (r.conclusion) {
+          if (intoAr) dataReg.conclusionAr = r.conclusion;
+          else dataReg.conclusion = r.conclusion;
+        }
+        if (r.bibliography) {
+          if (intoAr) dataReg.bibliographyAr = r.bibliography;
+          else dataReg.bibliography = r.bibliography;
+        }
+        if (r.sections.length > 0) {
+          dataReg.sections = r.sections.map((s) => ({
+            title: intoAr ? "" : s.title,
+            titleAr: intoAr ? s.title : "",
+            content: intoAr ? "" : s.content,
+            contentAr: intoAr ? s.content : "",
+            level: s.level,
+          }));
+        }
+        await prisma.document.update({ where: { id: documentId }, data: dataReg as never });
+        // Skip the AI block entirely
+        analysis = { __regex: true } as Record<string, unknown>;
+        throw "REGEX_DONE"; // jump to embedding step via catch
+      }
+
       const systemPrompt = buildAnalysisPrompt(docTypeName, sourceLang);
       console.log(`[upload-document] AI analysis kind=${kind} docType="${docTypeName ?? "unknown"}" lang=${sourceLang}`);
 
@@ -511,35 +563,15 @@ async function runProcessingPipeline(args: {
       data.jurisdiction = str(pick("jurisdiction"));
       data.jurisdictionAr = undefined;
 
-      // ----- Anchors-based slicing -----
-      const { sliceAnalyse, sliceJurisprudence, sliceCommentaire } = await import(
+      // ----- Anchors-based slicing (jurisprudence, commentaire) -----
+      // Note: kind === "analyse" is handled by the regex path above and
+      // never reaches this point.
+      const { sliceJurisprudence, sliceCommentaire } = await import(
         "../../services/doc-segmentation.js"
       );
       const sourceText = extraction.text;
       const intoAr = sourceLang === "ar"; // source is Arabic → fill *_ar fields with sliced content
-      if (kind === "analyse") {
-        const sliced = sliceAnalyse(sourceText, analysis as never);
-        console.log(
-          `[upload-document] sliced analyse: intro=${sliced.introduction.length}c, sections=${sliced.sections.length}, conclusion=${sliced.conclusion.length}c, biblio=${sliced.bibliography.length}c`,
-        );
-        if (intoAr) {
-          if (sliced.introduction) data.introductionAr = sliced.introduction;
-          if (sliced.conclusion) data.conclusionAr = sliced.conclusion;
-          if (sliced.bibliography) data.bibliographyAr = sliced.bibliography;
-        } else {
-          if (sliced.introduction) data.introduction = sliced.introduction;
-          if (sliced.conclusion) data.conclusion = sliced.conclusion;
-          if (sliced.bibliography) data.bibliography = sliced.bibliography;
-        }
-        // Sections JSONB stores both keys; UI reads titleAr/contentAr or title/content
-        data.sections = sliced.sections.map((s) => ({
-          title: intoAr ? "" : s.title,
-          titleAr: intoAr ? s.title : "",
-          content: intoAr ? "" : s.content,
-          contentAr: intoAr ? s.content : "",
-          level: s.level,
-        }));
-      } else if (kind === "jurisprudence") {
+      if (kind === "jurisprudence") {
         const sliced = sliceJurisprudence(sourceText, analysis as never);
         console.log(
           `[upload-document] sliced jurisprudence: facts=${sliced.facts.length}c, lp=${sliced.legalProblem.length}c, ps=${sliced.proposedSolution.length}c, biblio=${sliced.bibliography.length}c`,
@@ -574,7 +606,11 @@ async function runProcessingPipeline(args: {
 
       await prisma.document.update({ where: { id: documentId }, data: data as never });
     } catch (err) {
-      console.warn(`[upload-document] AI analysis failed for ${documentId}:`, (err as Error).message);
+      if (err === "REGEX_DONE") {
+        console.log(`[upload-document] regex extraction complete, skipping AI for ${documentId}`);
+      } else {
+        console.warn(`[upload-document] AI analysis failed for ${documentId}:`, (err as Error).message);
+      }
     }
 
     // Step 3 — Embedding
