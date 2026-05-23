@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import CKEditorWrapper from './CKEditorWrapper';
 import CKEditorMini from './CKEditorMini';
+import MarkdownEditor from './MarkdownEditor';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
@@ -74,6 +74,9 @@ interface DocumentData {
   validation_date?: string;
   legal_references?: string[];
   legal_references_ar?: string[];
+  // Multi-line bibliography (one reference per line)
+  bibliography?: string;
+  bibliography_ar?: string;
 }
 
 interface Category {
@@ -531,6 +534,7 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
     pick('textual_metadata' as keyof DocumentData);
     pick('court');
     pick('court_level' as keyof DocumentData);
+    pick('bibliography');
     const kwSrc = (src === 'ar' ? editedData.keywords_ar : editedData.keywords) ?? [];
     if (kwSrc.length > 0) fields['keywords'] = kwSrc.join('\n');
     const refSrc = (src === 'ar' ? editedData.legal_references_ar : editedData.legal_references) ?? [];
@@ -568,6 +572,7 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
     setTr('textual_metadata');
     setTr('court');
     setTr('court_level');
+    setTr('bibliography');
     if (typeof tr['keywords'] === 'string') {
       const kws = tr['keywords'].split(/\n+/).map((s) => s.trim()).filter(Boolean);
       (next as Record<string, unknown>)[dst === 'ar' ? 'keywords_ar' : 'keywords'] = kws;
@@ -1357,6 +1362,8 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
           validation_date: editedData.validation_date || null,
           legal_references: Array.isArray(editedData.legal_references) ? editedData.legal_references.filter(r => r && r.trim()) : null,
           legal_references_ar: Array.isArray(editedData.legal_references_ar) ? editedData.legal_references_ar.filter(r => r && r.trim()).map(r => sanitizeArabicTextFrontend(r)) : null,
+          bibliography: editedData.bibliography?.trim() || null,
+          bibliography_ar: editedData.bibliography_ar?.trim() ? sanitizeArabicTextFrontend(editedData.bibliography_ar.trim()) : null,
           textual_metadata: editedData.language === 'ar' && editedData.textual_metadata ? sanitizeArabicTextFrontend(editedData.textual_metadata) : editedData.textual_metadata || null,
           page_contents: editedData.page_contents ? JSON.parse(JSON.stringify(editedData.page_contents)) : null,
         };
@@ -2288,26 +2295,6 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
       {/* Action Buttons */}
       <div className="flex items-center justify-between">
         <div className="flex items-center space-x-2">
-          {editedData.page_contents && editedData.page_contents.length > 0 && (
-            <Button
-              variant="outline"
-              onClick={() => setCurrentView(currentView === 'pages' ? 'editor' : 'pages')}
-            >
-              {currentView === 'pages' ? (
-                <>
-                  <Eye className="mr-2 h-4 w-4" />
-                  Éditeur
-                </>
-              ) : (
-                <>
-                  <BookOpen className="mr-2 h-4 w-4" />
-                  Traduire page par page
-                </>
-              )}
-            </Button>
-          )}
-
-
           <Button
             variant="outline"
             onClick={() => setShowPreview(!showPreview)}
@@ -3341,10 +3328,44 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
               </Card>
 
               {/* Structural fields (introduction, sections, conclusion, legal_problem,
-                  proposed_solution, ruling, observations, bibliography) were merged into
-                  the main body editor below. Use H1/H2 headings in the body to mark
+                  proposed_solution, ruling, observations) were merged into the main
+                  body editor below. Use H1/H2 headings in the body to mark
                   parts/sections — the public page rebuilds the table of contents from
                   those headings automatically. */}
+
+              {/* Bibliographie — texte multi-ligne, une référence par ligne.
+                  Renseigné automatiquement par le pipeline (extraction du bloc
+                  "قائمة المراجع" / "Bibliographie:" du PDF). */}
+              <Card className="p-4 lg:col-span-full">
+                <div className="space-y-2">
+                  <Label className="text-sm font-medium flex items-center gap-2">
+                    <BookOpen className="h-4 w-4" />
+                    {currentLanguage === 'ar' ? 'قائمة المراجع' : 'Bibliographie'}
+                    <span className="text-xs text-muted-foreground font-normal">
+                      ({currentLanguage === 'ar' ? 'مرجع واحد لكل سطر' : 'une référence par ligne'})
+                    </span>
+                  </Label>
+                  <Textarea
+                    value={currentLanguage === 'ar'
+                      ? (editedData.bibliography_ar || '')
+                      : (editedData.bibliography || '')}
+                    onChange={(e) => {
+                      const v = currentLanguage === 'ar' ? handleArabicInput(e.target.value) : e.target.value;
+                      setEditedData(prev => ({
+                        ...prev,
+                        ...(currentLanguage === 'ar' ? { bibliography_ar: v } : { bibliography: v }),
+                      }));
+                      setHasChanges(true);
+                    }}
+                    placeholder={currentLanguage === 'ar'
+                      ? 'مرجع 1\nمرجع 2\nمرجع 3'
+                      : 'Référence 1\nRéférence 2\nRéférence 3'}
+                    rows={6}
+                    dir={currentLanguage === 'ar' ? 'rtl' : 'ltr'}
+                    className="font-mono text-sm leading-relaxed"
+                  />
+                </div>
+              </Card>
 
               {/* Textual Metadata section (Résumé / Faits) */}
               {!isBlogDocument && (
@@ -3430,33 +3451,6 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
                       Correction Arabe
                     </Button>
                   )}
-                  {editedData.page_contents && editedData.page_contents.length > 0 && (
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => {
-                        const consolidatedContent = editedData.page_contents!
-                          .sort((a, b) => a.pageNumber - b.pageNumber)
-                          .map(p => p.content)
-                          .join('\n\n');
-
-                        setEditedData(prev => ({
-                          ...prev,
-                          content: consolidatedContent
-                        }));
-                        setHasChanges(true);
-
-                        toast({
-                          title: "Contenu synchronisé",
-                          description: `Le contenu a été mis à jour avec ${editedData.page_contents!.length} page(s)`,
-                        });
-                      }}
-                      title="Synchroniser le contenu de l'éditeur avec le contenu par page"
-                    >
-                      <RefreshCw className="mr-2 h-4 w-4" />
-                      Sync pages
-                    </Button>
-                  )}
                   <Button
                     variant="outline"
                     onClick={() => setShowPreview(!showPreview)}
@@ -3512,55 +3506,27 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
                     dangerouslySetInnerHTML={{ __html: renderFormattedContent(getCurrentContent()) }}
                   />
                 </div>
-              ) : editedData.page_contents && editedData.page_contents.length > 1 ? (
-                /* Affichage structuré page par page */
-                <div className="space-y-0">
-                  {editedData.page_contents
-                    .sort((a, b) => a.pageNumber - b.pageNumber)
-                    .map((page) => (
-                      <div key={page.pageNumber} className="page-break">
-                        <CKEditorWrapper
-                          content={renderFormattedContent(currentLanguage === 'ar'
-                            ? normalizeArabicForDisplay(currentLanguage === editedData.language ? page.content : (page.translated_content || ''))
-                            : (currentLanguage === editedData.language ? page.content : (page.translated_content || '')))}
-                          onChange={(newContent) => {
-                            setEditedData(prev => ({
-                              ...prev,
-                              page_contents: prev.page_contents?.map(p =>
-                                p.pageNumber === page.pageNumber
-                                  ? {
-                                    ...p,
-                                    ...(currentLanguage === editedData.language
-                                      ? { content: newContent }
-                                      : { translated_content: newContent }
-                                    )
-                                  }
-                                  : p
-                              )
-                            }));
-                            setHasChanges(true);
-                          }}
-                          language={currentLanguage as 'fr' | 'ar'}
-                          placeholder={`Contenu de la page ${page.pageNumber}...`}
-                          className="min-h-[200px]"
-                        />
-                      </div>
-                    ))}
-                </div>
               ) : (
-                <CKEditorWrapper
-                  content={renderFormattedContent(getCurrentContent())}
-                  onChange={(newContent) => {
+                /* Single unified Markdown body — H1/H2 headings carry
+                   structure. The editor is WYSIWYG, the storage format
+                   is Markdown (round-trip via marked + turndown). The
+                   pipeline produces Markdown directly from Mistral OCR
+                   so no lossy HTML conversion sits between OCR and the
+                   editor. */
+                <MarkdownEditor
+                  content={getCurrentContent()}
+                  onChange={(newMd) => {
                     if (currentLanguage === editedData.language) {
                       setEditedData(prev => ({
                         ...prev,
-                        content: newContent,
-                        fullContent: newContent
+                        content: newMd,
+                        fullContent: newMd
                       }));
                     } else {
-                      setTranslatedContent(newContent);
-                      setHasChanges(true);
+                      setTranslatedContent(newMd);
+                      setEditedData(prev => ({ ...prev, translated_content: newMd }));
                     }
+                    setHasChanges(true);
                   }}
                   language={currentLanguage as 'fr' | 'ar'}
                   placeholder={

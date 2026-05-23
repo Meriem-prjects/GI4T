@@ -52,11 +52,25 @@ const CATEGORIES = [
   { value: "acces_droits", label: "Accès aux Droits" },
 ];
 
-const AdminActualitesEditor = () => {
+type Section = "observatoire" | "acces_droits";
+
+interface AdminActualitesEditorProps {
+  /**
+   * Which admin section is rendering this editor. Sets the `section`
+   * column on save and decides the URL we navigate back to.
+   */
+  section?: Section;
+}
+
+const AdminActualitesEditor = ({ section = "observatoire" }: AdminActualitesEditorProps) => {
   const navigate = useNavigate();
   const { id } = useParams();
   const { user } = useAuth();
   const isEditing = !!id;
+  const listUrl =
+    section === "acces_droits"
+      ? "/admin/acces-aux-droits/actualites"
+      : "/admin/observatoire/actualites";
   
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -117,7 +131,7 @@ const AdminActualitesEditor = () => {
     } catch (error) {
       console.error("Erreur lors du chargement:", error);
       toast.error("Erreur lors du chargement de l'actualité");
-      navigate("/admin/observatoire/actualites");
+      navigate(listUrl);
     } finally {
       setLoading(false);
     }
@@ -206,6 +220,9 @@ const AdminActualitesEditor = () => {
         is_published: formData.is_published,
         published_at: formData.is_published ? new Date().toISOString() : null,
         created_by: user?.id || null,
+        // Tag the news with the section that's editing it so each
+        // admin space only sees its own actualités.
+        section,
       };
 
       if (isEditing) {
@@ -225,7 +242,7 @@ const AdminActualitesEditor = () => {
         toast.success("Actualité créée avec succès");
       }
 
-      navigate("/admin/observatoire/actualites");
+      navigate(listUrl);
     } catch (error) {
       console.error("Erreur:", error);
       toast.error("Erreur lors de l'enregistrement");
@@ -250,7 +267,7 @@ const AdminActualitesEditor = () => {
           <Button
             variant="ghost"
             size="icon"
-            onClick={() => navigate("/admin/observatoire/actualites")}
+            onClick={() => navigate(listUrl)}
           >
             <ArrowLeft className="h-5 w-5" />
           </Button>
@@ -264,7 +281,7 @@ const AdminActualitesEditor = () => {
           </div>
         </div>
         <div className="flex items-center gap-3">
-          <Button variant="outline" onClick={() => navigate("/admin/observatoire/actualites")}>
+          <Button variant="outline" onClick={() => navigate(listUrl)}>
             Annuler
           </Button>
           <Button onClick={handleSubmit} disabled={saving}>

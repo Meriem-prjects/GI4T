@@ -20,6 +20,7 @@ import { setupInitialAdmin } from "./setup-initial-admin.js";
 import { uploadDocument } from "./upload-document.js";
 import { documentAnalysis } from "./document-analysis.js";
 import { reprocessDocument } from "./reprocess-document.js";
+import { reExtractDocument } from "./re-extract-document.js";
 import { trackDocumentView } from "./track-document-view.js";
 import { submitComment } from "./submit-comment.js";
 import { fixAuthors } from "./fix-authors.js";
@@ -70,6 +71,7 @@ const functions: FunctionDef[] = [
   { name: "upload-document", handler: uploadDocument, auth: "required" },
   { name: "document-analysis", handler: documentAnalysis, auth: "required" },
   { name: "reprocess-document", handler: reprocessDocument, auth: "required" },
+  { name: "re-extract-document", handler: reExtractDocument, auth: "required" },
   { name: "track-document-view", handler: trackDocumentView, auth: "none" },
   { name: "submit-comment", handler: submitComment, auth: "none" },
   { name: "fix-authors", handler: fixAuthors, auth: "admin" },

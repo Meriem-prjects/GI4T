@@ -66,9 +66,10 @@ const AdminObservatoire = () => {
             <Route path="commentaires-content" element={<AdminCommentairesContent />} />
             <Route path="analyses-juridiques" element={<AdminAnalysesJuridiques />} />
             <Route path="fiches-jurisprudence" element={<AdminFichesJurisprudence />} />
-            <Route path="actualites" element={<AdminActualites />} />
-            <Route path="actualites/new" element={<AdminActualitesEditor />} />
-            <Route path="actualites/edit/:id" element={<AdminActualitesEditor />} />
+            {/* Actualités — scoped to observatoire so the list & editor stay isolated. */}
+            <Route path="actualites" element={<AdminActualites section="observatoire" />} />
+            <Route path="actualites/new" element={<AdminActualitesEditor section="observatoire" />} />
+            <Route path="actualites/edit/:id" element={<AdminActualitesEditor section="observatoire" />} />
             <Route path="editeur" element={<AdminEditor />} />
             <Route path="validation" element={<AdminValidation />} />
             <Route path="commentaires" element={<AdminCommentaires />} />

@@ -1,5 +1,12 @@
 // Utility functions for formatting and stripping content
 import { normalizeArabicText, isArabicText, fixHehVariants, normalizeArabicForDisplay } from '@/lib/arabicUtils';
+import { marked } from 'marked';
+
+// Configured for the new Markdown storage format:
+//   - GFM (lists, autolinks, tables)
+//   - Soft line breaks become <br> so the formatting users see in the
+//     WYSIWYG editor survives the round-trip.
+marked.setOptions({ gfm: true, breaks: true });
 
 /**
  * Converts simple text formatting markers to HTML for display
@@ -78,7 +85,15 @@ export const renderFormattedContent = (content: string): string => {
     return processedContent;
   }
 
-  return processTextContent(processedContent);
+  // Markdown path — current storage format. Pre-split unusually long
+  // single-line OCR blobs into paragraphs first (marked respects the
+  // newlines we insert), then render via marked.
+  let mdSource = processedContent;
+  if (!/\n/.test(mdSource.trim()) && mdSource.trim().length > 400) {
+    const paragraphs = smartSplitIntoParagraphs(mdSource);
+    mdSource = paragraphs.join("\n\n");
+  }
+  return marked.parse(mdSource) as string;
 };
 
 /**

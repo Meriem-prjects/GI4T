@@ -9,6 +9,12 @@ import AdminChatbotConfig from "./AdminChatbotConfig";
 import AdminFAQQuestions from "./AdminFAQQuestions";
 import AdminAlbumsPhotos from "./AdminAlbumsPhotos";
 import AdminMediatheque from "./AdminMediatheque";
+import AdminActualites from "./AdminActualites";
+import AdminActualitesEditor from "./AdminActualitesEditor";
+import AdminUsefulLinks from "./AdminUsefulLinks";
+import AdminPracticalResources from "./AdminPracticalResources";
+import AdminPracticalGuides from "./AdminPracticalGuides";
+import AdminAccesDroitsParametres from "./AdminAccesDroitsParametres";
 import { cn } from "@/lib/utils";
 
 const AdminAccesAuxDroits = () => {
@@ -40,17 +46,19 @@ const AdminAccesAuxDroits = () => {
           <Routes>
             <Route index element={<AdminDashboard type="acces-aux-droits" />} />
             <Route path="utilisateurs" element={<AdminAccesDroitsUsersManagement />} />
-            <Route path="parametres" element={<div className="p-6">Paramètres - En développement</div>} />
+            <Route path="parametres" element={<AdminAccesDroitsParametres />} />
 
             {/* Médiathèque */}
             <Route path="mediatheque" element={<AdminMediatheque />} />
             <Route path="albums-photos" element={<AdminAlbumsPhotos />} />
 
-            {/* Actualités */}
-            <Route path="actualites" element={<div className="p-6">Actualités - Dernières nouvelles - En développement</div>} />
-            <Route path="ressources-pratiques" element={<div className="p-6">Ressources pratiques - Modèles et formulaires - En développement</div>} />
-            <Route path="liens-utiles" element={<div className="p-6">Liens utiles - Sites externes - En développement</div>} />
-            <Route path="guides-pratiques" element={<div className="p-6">Guides pratiques - Guides pas à pas - En développement</div>} />
+            {/* Actualités — scoped to acces_droits so the list & editor stay isolated. */}
+            <Route path="actualites" element={<AdminActualites section="acces_droits" />} />
+            <Route path="actualites/new" element={<AdminActualitesEditor section="acces_droits" />} />
+            <Route path="actualites/edit/:id" element={<AdminActualitesEditor section="acces_droits" />} />
+            <Route path="ressources-pratiques" element={<AdminPracticalResources />} />
+            <Route path="liens-utiles" element={<AdminUsefulLinks />} />
+            <Route path="guides-pratiques" element={<AdminPracticalGuides />} />
 
             {/* FAQ & Chatbot */}
             <Route path="faq-chatbot" element={<AdminChatbotConfig />} />

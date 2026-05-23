@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Search, Clock, Users, Download, BookOpen, ChevronRight, Home, Briefcase, Heart, GraduationCap, Scale, Plane, ArrowRight } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useTranslation } from "@/hooks/useTranslation";
+import AdminManagedSection from "@/components/accesdroits/AdminManagedSection";
 
 const GuidesPratiquesContent = () => {
   const [searchTerm, setSearchTerm] = useState("");
@@ -146,6 +147,12 @@ const GuidesPratiquesContent = () => {
             {t('practicalGuidesDesc')}
           </p>
         </div>
+
+        {/* Admin-managed guides — appear when the back-office has published entries */}
+        <AdminManagedSection
+          kind="practical_guides"
+          title={{ fr: "Guides récents", ar: "أدلة حديثة" }}
+        />
 
         {/* Search */}
         <div className="mb-6 animate-fade-in">

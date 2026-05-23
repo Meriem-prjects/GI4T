@@ -244,6 +244,8 @@ model Document {
   jurisdiction         String?
   legalReferences      String[]  @default([]) @map("legal_references")
   legalReferencesAr    String[]  @default([]) @map("legal_references_ar")
+  bibliography         String?
+  bibliographyAr       String?   @map("bibliography_ar")
   validationDate       DateTime? @map("validation_date") @db.Date
   legalDomains         String[]  @default([]) @map("legal_domains")
   mainTopics           String[]  @default([]) @map("main_topics")
@@ -471,6 +473,11 @@ model News {
   isFeatured  Boolean?  @map("is_featured")
   readTime    Int?      @map("read_time")
   views       Int?      @default(0)
+  // Which admin section owns this news item. Each section has its own
+  // actualités stream — Observatoire admins manage "observatoire" news,
+  // Accès-aux-Droits admins manage "acces_droits" news. Defaults to
+  // "observatoire" so pre-existing rows stay where they were.
+  section     String    @default("observatoire")
   createdBy   String?   @map("created_by") @db.Uuid
   createdAt   DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
   publishedAt DateTime? @map("published_at") @db.Timestamptz(6)
@@ -493,6 +500,75 @@ model FaqItem {
   updatedAt    DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
 
   @@map("faq_items")
+}
+
+// ─── Accès aux Droits — content sections ───────────────────────────────────
+// These three models back the public Access-to-Rights pages: useful
+// external links, downloadable templates / forms, and step-by-step
+// guides. They share the same shape (bilingual title + description,
+// category for grouping, published flag, sort order) so the admin UI
+// can be templated.
+
+model UsefulLink {
+  id            String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  title         String
+  titleAr       String?  @map("title_ar")
+  description   String?
+  descriptionAr String?  @map("description_ar")
+  url           String
+  category      String?
+  categoryAr    String?  @map("category_ar")
+  icon          String?
+  displayOrder  Int      @default(0) @map("display_order")
+  isPublished   Boolean  @default(true) @map("is_published")
+  createdAt     DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt     DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  @@map("useful_links")
+}
+
+model PracticalResource {
+  id            String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  title         String
+  titleAr       String?  @map("title_ar")
+  description   String?
+  descriptionAr String?  @map("description_ar")
+  fileUrl       String?  @map("file_url")
+  fileSize      Int?     @map("file_size")
+  fileType      String?  @map("file_type")
+  category      String?
+  categoryAr    String?  @map("category_ar")
+  downloads     Int      @default(0)
+  displayOrder  Int      @default(0) @map("display_order")
+  isPublished   Boolean  @default(true) @map("is_published")
+  createdAt     DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt     DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  @@map("practical_resources")
+}
+
+model PracticalGuide {
+  id            String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  title         String
+  titleAr       String?  @map("title_ar")
+  description   String?
+  descriptionAr String?  @map("description_ar")
+  // Full HTML content of the guide (rendered with the same Markdown
+  // pipeline as documents — supports headings, lists, emphasis).
+  content       String?
+  contentAr     String?  @map("content_ar")
+  category      String?
+  categoryAr    String?  @map("category_ar")
+  coverImageUrl String?  @map("cover_image_url")
+  estimatedTime String?  @map("estimated_time")
+  difficulty    String?
+  views         Int      @default(0)
+  displayOrder  Int      @default(0) @map("display_order")
+  isPublished   Boolean  @default(true) @map("is_published")
+  createdAt     DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt     DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  @@map("practical_guides")
 }
 
 model UsefulAddress {

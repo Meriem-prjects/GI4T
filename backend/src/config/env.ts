@@ -18,6 +18,7 @@ const schema = z.object({
   MAX_FILE_SIZE_MB: z.coerce.number().default(100),
 
   OPENAI_API_KEY: z.string().optional(),
+  MISTRAL_API_KEY: z.string().optional(),
   GOOGLE_VISION_API_KEY: z.string().optional(),
   GOOGLE_APPLICATION_CREDENTIALS: z.string().optional(),
   PDFREST_API_KEY: z.string().optional(),

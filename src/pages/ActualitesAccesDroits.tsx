@@ -1,50 +1,52 @@
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { Search, Calendar, Clock, Eye, ArrowRight, ChevronRight } from "lucide-react";
+import { Search, Calendar, Clock, Eye, ArrowRight, ChevronRight, Loader2 } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useTranslation } from "@/hooks/useTranslation";
+import { supabase } from "@/integrations/supabase/client";
+
+interface NewsRow {
+  id: string;
+  title: string;
+  title_ar?: string;
+  excerpt: string;
+  excerpt_ar?: string;
+  category?: string;
+  image_url?: string;
+  read_time?: number;
+  views?: number;
+  is_featured?: boolean;
+  published_at?: string;
+  created_at?: string;
+}
 
 const ActualitesAccesDroits = () => {
   const { isRTL, language } = useLanguage();
   const { t } = useTranslation();
+  const [news, setNews] = useState<NewsRow[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const news = [
-    {
-      id: 1,
-      title: "Nouvelle campagne nationale pour l'accès aux droits",
-      excerpt:
-        "Le gouvernement lance une grande campagne de sensibilisation aux droits fondamentaux dans toutes les régions.",
-      date: "2024-03-15",
-      category: t('campaigns'),
-      views: 3240,
-      readTime: "5 min",
-      featured: true,
-    },
-    {
-      id: 2,
-      title: "Ouverture de 10 nouveaux centres de médiation sociale",
-      excerpt:
-        "Des centres de médiation ouvrent leurs portes pour faciliter l'accès à la justice et aux droits.",
-      date: "2024-03-12",
-      category: t('services'),
-      views: 2890,
-      readTime: "3 min",
-      featured: false,
-    },
-    {
-      id: 3,
-      title: "Formation des médiateurs : nouvelle session prévue en avril",
-      excerpt:
-        "Une session de formation intensive pour les futurs médiateurs sociaux débutera le mois prochain.",
-      date: "2024-03-10",
-      category: t('training'),
-      views: 1567,
-      readTime: "4 min",
-      featured: false,
-    },
-  ];
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      const { data, error } = await supabase
+        .from("news")
+        .select("*")
+        .eq("section", "acces_droits")
+        .eq("is_published", true)
+        .order("published_at", { ascending: false });
+      if (cancelled) return;
+      if (error) console.error("Failed to load acces_droits news:", error);
+      setNews((data as NewsRow[]) ?? []);
+      setLoading(false);
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   return (
     <main className={`flex-1 ${isRTL ? 'font-almarai' : ''}`}>
@@ -82,31 +84,52 @@ const ActualitesAccesDroits = () => {
         </div>
 
         {/* News List */}
+        {loading ? (
+          <div className="flex items-center justify-center py-12">
+            <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+          </div>
+        ) : news.length === 0 ? (
+          <Card className="p-10 text-center text-muted-foreground">
+            {isRTL ? "لا توجد أخبار حالياً" : "Aucune actualité publiée pour le moment."}
+          </Card>
+        ) : (
         <div className="space-y-6 animate-fade-in">
-          {news.map((item) => (
+          {news.map((item) => {
+            const title = isRTL && item.title_ar ? item.title_ar : item.title;
+            const excerpt = isRTL && item.excerpt_ar ? item.excerpt_ar : item.excerpt;
+            const dateStr = item.published_at ?? item.created_at;
+            return (
             <Card key={item.id} className="hover:shadow-md transition-shadow duration-300">
               <CardContent className="p-6">
                 <div className={`flex flex-col lg:flex-row gap-4 ${isRTL ? 'text-right' : ''}`}>
                   <div className="flex-1">
-                    {item.featured && <Badge className="mb-2">{t('featured')}</Badge>}
-                    <Badge variant="outline" className="mb-2">
-                      {item.category}
-                    </Badge>
-                    <h3 className="text-xl font-semibold mb-2">{item.title}</h3>
-                    <p className="text-muted-foreground mb-4">{item.excerpt}</p>
+                    {item.is_featured && <Badge className="mb-2">{t('featured')}</Badge>}
+                    {item.category && (
+                      <Badge variant="outline" className="mb-2">
+                        {item.category}
+                      </Badge>
+                    )}
+                    <h3 className="text-xl font-semibold mb-2">{title}</h3>
+                    <p className="text-muted-foreground mb-4">{excerpt}</p>
                     <div className={`flex items-center gap-4 text-sm text-muted-foreground ${isRTL ? 'flex-row-reverse' : ''}`}>
-                      <div className={`flex items-center ${isRTL ? 'flex-row-reverse' : ''}`}>
-                        <Calendar className={`h-4 w-4 ${isRTL ? 'ml-1' : 'mr-1'}`} />
-                        {new Date(item.date).toLocaleDateString(language === 'ar' ? 'ar-TN' : 'fr-FR')}
-                      </div>
-                      <div className={`flex items-center ${isRTL ? 'flex-row-reverse' : ''}`}>
-                        <Clock className={`h-4 w-4 ${isRTL ? 'ml-1' : 'mr-1'}`} />
-                        {item.readTime}
-                      </div>
-                      <div className={`flex items-center ${isRTL ? 'flex-row-reverse' : ''}`}>
-                        <Eye className={`h-4 w-4 ${isRTL ? 'ml-1' : 'mr-1'}`} />
-                        {item.views}
-                      </div>
+                      {dateStr && (
+                        <div className={`flex items-center ${isRTL ? 'flex-row-reverse' : ''}`}>
+                          <Calendar className={`h-4 w-4 ${isRTL ? 'ml-1' : 'mr-1'}`} />
+                          {new Date(dateStr).toLocaleDateString(language === 'ar' ? 'ar-TN' : 'fr-FR')}
+                        </div>
+                      )}
+                      {item.read_time && (
+                        <div className={`flex items-center ${isRTL ? 'flex-row-reverse' : ''}`}>
+                          <Clock className={`h-4 w-4 ${isRTL ? 'ml-1' : 'mr-1'}`} />
+                          {item.read_time} min
+                        </div>
+                      )}
+                      {item.views != null && (
+                        <div className={`flex items-center ${isRTL ? 'flex-row-reverse' : ''}`}>
+                          <Eye className={`h-4 w-4 ${isRTL ? 'ml-1' : 'mr-1'}`} />
+                          {item.views}
+                        </div>
+                      )}
                     </div>
                   </div>
                   <div className={`flex items-center ${isRTL ? 'justify-start' : ''}`}>
@@ -118,8 +141,10 @@ const ActualitesAccesDroits = () => {
                 </div>
               </CardContent>
             </Card>
-          ))}
+            );
+          })}
         </div>
+        )}
 
         {/* Load More */}
         <div className="flex justify-center mt-8 animate-fade-in">

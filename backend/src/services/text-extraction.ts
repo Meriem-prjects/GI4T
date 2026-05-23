@@ -15,8 +15,35 @@ import { fileURLToPath } from "node:url";
 import * as mammoth from "mammoth";
 import { pdfToPng } from "pdf-to-png-converter";
 import { getOpenAI } from "./openai.js";
+import { renderPdfToPngs } from "./pdf-render.js";
+import { hasMistralKey, ocrPdfWithMistral } from "./mistral.js";
 
 const MAX_OCR_PAGES = 15;
+
+// Detect when the model returns a refusal/help text instead of OCR
+// content (e.g. "Je ne peux pas extraire le texte d'images ou de
+// documents..."). Catches a short reply that is mostly French/English
+// prose with refusal keywords.
+function looksLikeRefusal(text: string): boolean {
+  if (!text) return true;
+  const t = text.trim().toLowerCase();
+  if (t.length > 800) return false;
+  const refusalMarkers = [
+    "je ne peux pas",
+    "i'm sorry",
+    "i cannot",
+    "i can't",
+    "i am unable",
+    "désolé",
+    "n'hésitez pas à le partager",
+    "ne peux pas extraire",
+    "pas d'image",
+    "no image",
+    "no text",
+    "n'ai pas accès",
+  ];
+  return refusalMarkers.some((m) => t.includes(m));
+}
 const PYTHON_BIN = process.env.PYTHON_BIN ?? "python3";
 const SCRIPT_PATH = path.resolve(
   path.dirname(fileURLToPath(import.meta.url)),
@@ -276,7 +303,78 @@ export async function extractTextFromFile(
   if (isPdf) {
     console.log(`[text-extraction] PDF "${filename}" size=${buffer.length}B lang=${languageHint}`);
 
-    // Try PyMuPDF first — handles Arabic visual→logical reordering, NFKC
+    // Mistral OCR (when configured) — send the raw PDF directly to
+    // /v1/ocr. mistral-ocr-latest renders + reads the document and
+    // returns Markdown per page. PDF-direct mode preserves much more
+    // content than per-page image OCR (which truncates aggressively),
+    // and the model's internal renderer handles Arabic better than
+    // pdfjs-dist + image OCR.
+    if (hasMistralKey()) {
+      try {
+        console.log(`[text-extraction] mistral OCR primary (PDF direct mode)`);
+        const r = await ocrPdfWithMistral(buffer);
+        console.log(`[text-extraction] mistral OCR: ${r.fullText.length}c across ${r.pages.length} pages`);
+        if (r.fullText.length >= 100) {
+          return {
+            text: r.fullText,
+            pageCount: r.pages.length,
+            pages: r.pages.map((p) => ({
+              pageNumber: p.pageNumber,
+              content: p.content,
+              confidence: 0.95,
+            })),
+            method: "pdf-vision",
+          };
+        }
+      } catch (err) {
+        console.warn(`[text-extraction] mistral OCR failed, falling back: ${(err as Error).message}`);
+      }
+    }
+
+    // For Arabic PDFs we go straight to gpt-4o vision OCR — rendered
+    // PDF→PNG, then per-page image OCR. PyMuPDF routinely produces
+    // fragmented words and wrong character codes on Tunisian legal PDFs
+    // (custom fonts with broken cmap tables). Sending the PDF as a
+    // `type: "file"` to gpt-4o-mini also doesn't work — the model
+    // refuses ("Je ne peux pas extraire le texte d'images ou de
+    // documents..."). PNG rendering + image vision is the reliable
+    // path. Cost ≈ $0.01–0.05 per page.
+    const visionFirst =
+      languageHint === "ar" && !!process.env.OPENAI_API_KEY;
+    if (visionFirst) {
+      try {
+        console.log(`[text-extraction] arabic → PNG render + vision OCR primary`);
+        // Use our own pdfjs-dist renderer — pdf-to-png-converter is
+        // broken on Windows (cMapUrl uses backslashes, pdfjs rejects).
+        const pngs = await renderPdfToPngs(buffer, 2.0, MAX_OCR_PAGES);
+        console.log(`[text-extraction] pdfjs-dist rendered ${pngs.length} pages`);
+        const ocrPages: ExtractedPage[] = [];
+        for (const png of pngs) {
+          const ocr = await ocrWithOpenAI(png.buffer, "image/png", "ar");
+          if (ocr.text && !looksLikeRefusal(ocr.text)) {
+            ocrPages.push({
+              pageNumber: png.pageNumber,
+              content: ocr.text,
+              confidence: ocr.confidence,
+            });
+          }
+        }
+        const fullText = ocrPages.map((p) => p.content).join("\n\n").trim();
+        console.log(`[text-extraction] vision OCR total ${fullText.length}c across ${ocrPages.length} pages`);
+        if (fullText.length >= 100) {
+          return {
+            text: fullText,
+            pageCount: ocrPages.length,
+            pages: ocrPages,
+            method: "pdf-vision",
+          };
+        }
+      } catch (err) {
+        console.warn(`[text-extraction] vision OCR failed, falling back to PyMuPDF: ${(err as Error).message}`);
+      }
+    }
+
+    // Try PyMuPDF — handles Arabic visual→logical reordering, NFKC
     // normalisation and 2-column JORT layouts that pdf-parse mangles.
     try {
       const pyText = await extractPdfWithPyMuPDF(buffer, languageHint);
@@ -313,13 +411,16 @@ export async function extractTextFromFile(
       console.log(`[text-extraction] trying OpenAI direct PDF input`);
       const text = await extractPdfWithOpenAI(buffer, languageHint);
       console.log(`[text-extraction] OpenAI direct PDF returned ${text.length}c`);
-      if (text.length >= 50) {
+      if (text.length >= 50 && !looksLikeRefusal(text)) {
         return {
           text,
           pageCount: pdf.pageCount || 1,
           pages: [{ pageNumber: 1, content: text, confidence: 0.85 }],
           method: "pdf-vision",
         };
+      }
+      if (looksLikeRefusal(text)) {
+        console.warn(`[text-extraction] OpenAI direct PDF returned a refusal — skipping`);
       }
     } catch (err) {
       lastError = (err as Error).message;
@@ -341,14 +442,16 @@ export async function extractTextFromFile(
       for (const png of pngs) {
         if (!png.content) continue;
         const ocr = await ocrWithOpenAI(png.content, "image/png", languageHint);
-        ocrPages.push({
-          pageNumber: png.pageNumber,
-          content: ocr.text,
-          confidence: ocr.confidence,
-        });
+        if (ocr.text && !looksLikeRefusal(ocr.text)) {
+          ocrPages.push({
+            pageNumber: png.pageNumber,
+            content: ocr.text,
+            confidence: ocr.confidence,
+          });
+        }
       }
       const fullText = ocrPages.map((p) => p.content).join("\n\n").trim();
-      console.log(`[text-extraction] pdf-to-png OCR total ${fullText.length}c`);
+      console.log(`[text-extraction] pdf-to-png OCR total ${fullText.length}c across ${ocrPages.length} pages`);
       if (fullText.length >= 50) {
         return {
           text: fullText,

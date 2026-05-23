@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Search, FileText, Download, Calendar, Eye, ChevronRight, Scale, Home, Briefcase, Heart, Users, Wallet, FolderOpen } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useTranslation } from "@/hooks/useTranslation";
+import AdminManagedSection from "@/components/accesdroits/AdminManagedSection";
 
 const RessourcesPratiquesContent = () => {
   const [searchTerm, setSearchTerm] = useState("");
@@ -158,6 +159,12 @@ const RessourcesPratiquesContent = () => {
             {t('practicalResourcesDesc')}
           </p>
         </div>
+
+        {/* Admin-managed resources — appear when the back-office has published entries */}
+        <AdminManagedSection
+          kind="practical_resources"
+          title={{ fr: "Ressources récentes", ar: "موارد حديثة" }}
+        />
 
         {/* Search */}
         <div className="mb-6 animate-fade-in">

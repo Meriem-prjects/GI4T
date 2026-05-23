@@ -74,8 +74,25 @@ const CATEGORIES = [
   { value: "acces_droits", label: "Accès aux Droits", color: "bg-yellow-500" },
 ];
 
-const AdminActualites = () => {
+type Section = "observatoire" | "acces_droits";
+
+interface AdminActualitesProps {
+  /**
+   * Which admin section is rendering this list. Filters the news query
+   * to that section and keeps navigation inside it (no cross-section
+   * leakage). Defaults to "observatoire" for backwards compat with the
+   * Observatoire admin pages that pre-date the split.
+   */
+  section?: Section;
+}
+
+const AdminActualites = ({ section = "observatoire" }: AdminActualitesProps) => {
   const navigate = useNavigate();
+  // URL prefix for navigation inside this admin section.
+  const baseUrl =
+    section === "acces_droits"
+      ? "/admin/acces-aux-droits/actualites"
+      : "/admin/observatoire/actualites";
   const [news, setNews] = useState<NewsItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
@@ -86,7 +103,8 @@ const AdminActualites = () => {
 
   useEffect(() => {
     loadNews();
-  }, []);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [section]);
 
   const loadNews = async () => {
     setLoading(true);
@@ -94,6 +112,7 @@ const AdminActualites = () => {
       const { data, error } = await supabase
         .from("news")
         .select("*")
+        .eq("section", section)
         .order("created_at", { ascending: false });
 
       if (error) throw error;
@@ -203,7 +222,7 @@ const AdminActualites = () => {
             {news.length} actualité{news.length > 1 ? "s" : ""} au total
           </p>
         </div>
-        <Button onClick={() => navigate("/admin/observatoire/actualites/new")}>
+        <Button onClick={() => navigate(`${baseUrl}/new`)}>
           <Plus className="h-4 w-4 mr-2" />
           Nouvelle actualité
         </Button>
@@ -266,7 +285,7 @@ const AdminActualites = () => {
                 : "Commencez par créer votre première actualité"}
             </p>
             {!searchTerm && categoryFilter === "all" && statusFilter === "all" && (
-              <Button onClick={() => navigate("/admin/observatoire/actualites/new")}>
+              <Button onClick={() => navigate(`${baseUrl}/new`)}>
                 <Plus className="h-4 w-4 mr-2" />
                 Créer une actualité
               </Button>
@@ -348,7 +367,7 @@ const AdminActualites = () => {
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
                           <DropdownMenuItem
-                            onClick={() => navigate(`/admin/observatoire/actualites/edit/${item.id}`)}
+                            onClick={() => navigate(`${baseUrl}/edit/${item.id}`)}
                           >
                             <Edit className="h-4 w-4 mr-2" />
                             Modifier

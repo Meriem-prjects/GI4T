@@ -2,11 +2,13 @@ import React, { useState, useEffect } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, Upload, FileText, Loader2 } from 'lucide-react';
+import { ArrowLeft, Upload, FileText, Loader2, Sparkles, Edit3 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import BatchDocumentUploader from '@/components/admin/BatchDocumentUploader';
 import DocumentEditor from '@/components/admin/DocumentEditor';
+import DocumentAIView from '@/components/admin/DocumentAIView';
+import { Progress } from '@/components/ui/progress';
 
 interface DocumentData {
   id?: string;
@@ -46,11 +48,24 @@ interface DocumentData {
   validation_date?: string;
   legal_references?: string[];
   legal_references_ar?: string[];
+  bibliography?: string;
+  bibliography_ar?: string;
   page_contents?: any[];
   total_pages?: number;
   processed_pages?: number;
 }
 
+
+const STEP_LABELS: Record<string, string> = {
+  queued: 'En attente de traitement',
+  extracting_text: 'Extraction du texte (OCR)',
+  ai_structure_metadata: 'Détection de la structure + métadonnées',
+  translating: 'Traduction bilingue',
+  saving: 'Enregistrement',
+  generating_embedding: 'Indexation sémantique',
+  done: 'Terminé',
+  no_text_extracted: 'Échec : aucun texte extrait',
+};
 
 const AdminEditor = () => {
   const [searchParams] = useSearchParams();
@@ -63,6 +78,10 @@ const AdminEditor = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [isEditingExisting, setIsEditingExisting] = useState(false);
   const [aiStatus, setAiStatus] = useState<"idle" | "processing" | "ready" | "failed">("idle");
+  const [jobProgress, setJobProgress] = useState<{ progress: number; step: string } | null>(null);
+  // "edit"  — classic form-based editor (DocumentEditor) for curation.
+  // "ai"    — Mistral Document AI style 3-panel view: PDF | Texte/Visuel/Découpage.
+  const [viewMode, setViewMode] = useState<'edit' | 'ai'>('ai');
 
   // Load existing document if doc parameter is present
   useEffect(() => {
@@ -73,31 +92,44 @@ const AdminEditor = () => {
   }, [searchParams]);
 
   // Background poll: if the currently-loaded document is still being
-  // processed by the upload pipeline (AI segmentation in flight), keep
-  // refetching every 5s until it flips to pending_validation/processed.
+  // processed by the upload pipeline, keep refetching every 3s until
+  // status flips. Also pulls the processing_job progress so the UI can
+  // show a real progress bar with the current step.
   useEffect(() => {
     if (!currentDocument?.id) return;
     if (aiStatus !== "processing") return;
     const interval = window.setInterval(async () => {
       const { data, error } = await supabase
         .from('documents')
-        .select('status')
+        .select('status, processing_job_id')
         .eq('id', currentDocument.id!)
         .maybeSingle();
       if (error) return;
-      const s = (data as { status?: string } | null)?.status;
+      const row = data as { status?: string; processing_job_id?: string } | null;
+      const s = row?.status;
+      // Pull job progress (separate row).
+      const jobId = row?.processing_job_id;
+      if (jobId) {
+        const { data: job } = await supabase
+          .from('processing_jobs')
+          .select('progress, current_step')
+          .eq('id', jobId)
+          .maybeSingle();
+        const j = job as { progress?: number; current_step?: string } | null;
+        if (j) setJobProgress({ progress: j.progress ?? 0, step: j.current_step ?? '' });
+      }
       if (s && s !== 'processing') {
-        // Done — reload the full document with the new structured fields.
         await loadExistingDocument(currentDocument.id!);
         setAiStatus(s === 'extraction_failed' ? 'failed' : 'ready');
+        setJobProgress(null);
         toast({
-          title: s === 'extraction_failed' ? '❌ Extraction échouée' : '✅ Analyse IA terminée',
+          title: s === 'extraction_failed' ? '❌ Extraction échouée' : '✅ Document prêt',
           description: s === 'extraction_failed'
             ? "L'OCR ou l'IA n'a pas pu traiter ce document."
-            : "Les champs ont été remplis automatiquement.",
+            : "Tous les champs ont été remplis automatiquement.",
         });
       }
-    }, 5000);
+    }, 3000);
     return () => window.clearInterval(interval);
   }, [currentDocument?.id, aiStatus]);
 
@@ -176,6 +208,8 @@ const AdminEditor = () => {
         validation_date: document.validation_date || '',
         legal_references: document.legal_references || [],
         legal_references_ar: document.legal_references_ar || [],
+        bibliography: document.bibliography || '',
+        bibliography_ar: document.bibliography_ar || '',
         page_contents: (document.page_contents as any[]) || [],
         total_pages: document.total_pages || 0,
         processed_pages: document.processed_pages || 0,
@@ -268,9 +302,9 @@ const AdminEditor = () => {
         </div>
       )}
 
-      {/* Bouton "Retour" affiché seulement quand DocumentEditor est actif */}
-      {currentDocument && (
-        <div className="flex justify-start">
+      {/* Bouton "Retour" + bascule de vue affichés seulement quand un document est actif */}
+      {currentDocument && aiStatus !== 'processing' && (
+        <div className="flex justify-between items-center gap-2 flex-wrap">
           <Button
             variant="outline"
             onClick={handleNewDocument}
@@ -279,6 +313,28 @@ const AdminEditor = () => {
             <ArrowLeft className="h-4 w-4" />
             <span>{isEditingExisting ? 'Retour aux contenus' : 'Nouveaux documents'}</span>
           </Button>
+          <div className="flex items-center bg-muted rounded-md p-0.5">
+            <button
+              className={`px-3 py-1.5 text-sm rounded flex items-center gap-1.5 ${
+                viewMode === 'ai' ? 'bg-background shadow-sm font-medium' : 'text-muted-foreground'
+              }`}
+              onClick={() => setViewMode('ai')}
+              title="Vue Document AI : PDF + transcription + découpage"
+            >
+              <Sparkles className="h-3.5 w-3.5" />
+              Document AI
+            </button>
+            <button
+              className={`px-3 py-1.5 text-sm rounded flex items-center gap-1.5 ${
+                viewMode === 'edit' ? 'bg-background shadow-sm font-medium' : 'text-muted-foreground'
+              }`}
+              onClick={() => setViewMode('edit')}
+              title="Vue éditeur classique : formulaire de curation"
+            >
+              <Edit3 className="h-3.5 w-3.5" />
+              Édition
+            </button>
+          </div>
         </div>
       )}
 
@@ -291,30 +347,39 @@ const AdminEditor = () => {
         </Card>
       ) : showUploader ? (
         <BatchDocumentUploader onDocumentsProcessed={handleDocumentsProcessed} />
-      ) : currentDocument ? (
-        <>
-          {aiStatus === "processing" && (
-            <Card className="p-4 bg-blue-50 border-blue-200 dark:bg-blue-950/30 dark:border-blue-800">
-              <div className="flex items-center gap-3">
-                <Loader2 className="h-5 w-5 animate-spin text-blue-600" />
-                <div className="flex-1">
-                  <p className="text-sm font-medium text-blue-900 dark:text-blue-100">
-                    🤖 Analyse IA en cours…
-                  </p>
-                  <p className="text-xs text-blue-700 dark:text-blue-300">
-                    L'extraction structurée (titre, résumé, sections, mots-clés…)
-                    prend 60 à 120 secondes. Les champs se rempliront tout seuls
-                    dès qu'elle sera prête — pas besoin de rafraîchir.
-                  </p>
-                </div>
+      ) : currentDocument && aiStatus === "processing" ? (
+        // Pipeline in flight — show ONLY the progress card. The editor
+        // appears once status flips to pending_validation / completed.
+        <Card className="p-8 max-w-2xl mx-auto">
+          <div className="space-y-5">
+            <div className="flex items-center gap-3">
+              <Loader2 className="h-6 w-6 animate-spin text-primary" />
+              <div className="flex-1">
+                <h3 className="text-base font-semibold">Traitement du document en cours</h3>
+                <p className="text-sm text-muted-foreground">
+                  OCR → structuration → extraction des métadonnées → traduction bilingue
+                </p>
               </div>
-            </Card>
-          )}
-          <DocumentEditor
-            documentData={currentDocument}
-            onSave={handleSave}
-          />
-        </>
+            </div>
+            <Progress value={jobProgress?.progress ?? 0} className="h-2" />
+            <div className="text-xs text-muted-foreground text-center">
+              {jobProgress?.step
+                ? STEP_LABELS[jobProgress.step] ?? jobProgress.step
+                : 'Initialisation…'}
+              {' • '}
+              {jobProgress?.progress ?? 0}%
+            </div>
+            <p className="text-xs text-muted-foreground text-center italic">
+              L'éditeur s'ouvrira automatiquement avec tous les champs déjà remplis (60-120 s).
+            </p>
+          </div>
+        </Card>
+      ) : currentDocument ? (
+        viewMode === 'ai' ? (
+          <DocumentAIView documentData={currentDocument} />
+        ) : (
+          <DocumentEditor documentData={currentDocument} onSave={handleSave} />
+        )
       ) : processedDocuments.length > 1 ? (
         <Card className="p-6">
           <h3 className="text-lg font-semibold mb-4">

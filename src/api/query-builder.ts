@@ -69,8 +69,11 @@ const TABLE_TO_PATH: Record<string, string> = {
   document_categories: "/api/document-categories",
   activity_logs: "/api/activity-logs",
   processing_jobs: "/api/processing-jobs",
-  chatbot_config: "/api/chatbot/config",
-  chatbot_training_documents: "/api/chatbot/training-documents",
+  // Removed legacy mappings — these pointed to hand-rolled endpoints
+  // that didn't return the `{items: [], total}` envelope the shim
+  // expects. The default kebab-case rule below maps these tables to
+  // `/api/chatbot-config` and `/api/chatbot-training-documents`, which
+  // use the generic CRUD router (correct shape).
   user_roles: "/api/users",
   profiles: "/api/users",
   acces_droits_permissions: "/api/users",
@@ -343,10 +346,29 @@ export class QueryBuilder<T = unknown> implements PromiseLike<QueryResult<T>> {
 
       if (this.op === "delete") {
         const idFilter = this.getIdFilter();
-        if (!idFilter) {
-          return this.wrapResult<T>(null, new ApiError(400, "Delete requires an id filter"));
+        if (idFilter) {
+          await api.delete(`${this.path}/${idFilter}`);
+          return this.wrapResult<T>(null as T);
         }
-        await api.delete(`${this.path}/${idFilter}`);
+        // No id filter — fall back to "select matching rows then delete
+        // each by id". The backend's generic CRUD only exposes
+        // DELETE /:id, so we emulate filter-based deletes client-side.
+        // Supports the common ".delete().eq('document_id', x)" pattern
+        // used to clear join-table rows for a parent.
+        if (this.filters.length === 0) {
+          return this.wrapResult<T>(null, new ApiError(400, "Delete requires at least one filter"));
+        }
+        const query = this.buildQuery();
+        const res = await api.get<{ items?: unknown[] } | unknown[]>(this.path, { query });
+        const items: unknown[] = Array.isArray(res)
+          ? res
+          : (res as { items?: unknown[] }).items ?? [];
+        for (const item of items) {
+          const id = (item as { id?: string }).id;
+          if (id) {
+            await api.delete(`${this.path}/${id}`);
+          }
+        }
         return this.wrapResult<T>(null as T);
       }
 

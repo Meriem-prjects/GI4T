@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Search, ExternalLink, Shield, Users, Gavel, Heart, Home, Briefcase, ChevronRight, Globe } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useTranslation } from "@/hooks/useTranslation";
+import AdminManagedSection from "@/components/accesdroits/AdminManagedSection";
 
 const LiensUtilesContent = () => {
   const [searchTerm, setSearchTerm] = useState("");
@@ -221,6 +222,12 @@ const LiensUtilesContent = () => {
             {t('usefulLinksDesc')}
           </p>
         </div>
+
+        {/* Admin-managed links — appear when the back-office has published entries */}
+        <AdminManagedSection
+          kind="useful_links"
+          title={{ fr: "Liens récents", ar: "روابط حديثة" }}
+        />
 
         {/* Search */}
         <div className="mb-6 animate-fade-in">

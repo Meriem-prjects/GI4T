@@ -9,7 +9,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { Trash2, FileText, Settings, BookOpen, Plus, Sparkles, Pencil } from "lucide-react";
+import { Trash2, FileText, Settings, BookOpen, Plus, Sparkles, Pencil, Languages } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import {
@@ -43,6 +43,71 @@ interface TrainingDocument {
   created_at: string;
 }
 
+// ─────────────── Bilingual Q/R parser ───────────────
+
+interface BilingualPair {
+  qFr: string;
+  rFr: string;
+  qAr: string;
+  rAr: string;
+}
+
+/**
+ * Parse the pair-based bilingual content format into structured pairs.
+ * Format expected:
+ *   Q (FR): question fr ?
+ *   R (FR): réponse fr.
+ *   Q (AR): question ar ؟
+ *   R (AR): جواب عربي.
+ *
+ *   Q (FR): ...
+ * Tolerates missing FR or AR side of a pair.
+ */
+function parseBilingualPairs(content: string): BilingualPair[] {
+  if (!content) return [];
+  // Split into blocks on blank line (one block per pair).
+  const blocks = content.split(/\n\s*\n/).map((b) => b.trim()).filter(Boolean);
+  const pairs: BilingualPair[] = [];
+  for (const block of blocks) {
+    const pair: BilingualPair = { qFr: "", rFr: "", qAr: "", rAr: "" };
+    let current: keyof BilingualPair | null = null;
+    for (const rawLine of block.split(/\r?\n/)) {
+      const line = rawLine.trim();
+      if (/^Q\s*\(\s*FR\s*\)\s*:/i.test(line)) {
+        current = "qFr";
+        pair.qFr = line.replace(/^Q\s*\(\s*FR\s*\)\s*:\s*/i, "");
+      } else if (/^R\s*\(\s*FR\s*\)\s*:/i.test(line)) {
+        current = "rFr";
+        pair.rFr = line.replace(/^R\s*\(\s*FR\s*\)\s*:\s*/i, "");
+      } else if (/^Q\s*\(\s*AR\s*\)\s*:/i.test(line)) {
+        current = "qAr";
+        pair.qAr = line.replace(/^Q\s*\(\s*AR\s*\)\s*:\s*/i, "");
+      } else if (/^R\s*\(\s*AR\s*\)\s*:/i.test(line)) {
+        current = "rAr";
+        pair.rAr = line.replace(/^R\s*\(\s*AR\s*\)\s*:\s*/i, "");
+      } else if (current) {
+        // continuation
+        pair[current] = (pair[current] + " " + line).trim();
+      }
+    }
+    if (pair.qFr || pair.qAr) pairs.push(pair);
+  }
+  return pairs;
+}
+
+function serializeBilingualPairs(pairs: BilingualPair[]): string {
+  return pairs
+    .map((p) => {
+      const lines: string[] = [];
+      if (p.qFr) lines.push(`Q (FR): ${p.qFr}`);
+      if (p.rFr) lines.push(`R (FR): ${p.rFr}`);
+      if (p.qAr) lines.push(`Q (AR): ${p.qAr}`);
+      if (p.rAr) lines.push(`R (AR): ${p.rAr}`);
+      return lines.join("\n");
+    })
+    .join("\n\n");
+}
+
 const AdminChatbotConfig = () => {
   const [config, setConfig] = useState<ChatbotConfig | null>(null);
   const [trainingDocs, setTrainingDocs] = useState<TrainingDocument[]>([]);
@@ -55,6 +120,13 @@ const AdminChatbotConfig = () => {
   const [editingDoc, setEditingDoc] = useState<TrainingDocument | null>(null);
   const [editDocTitle, setEditDocTitle] = useState("");
   const [editDocContent, setEditDocContent] = useState("");
+  // Structured view of the bilingual content for the dialog. Parsed
+  // from `editDocContent` on dialog open; re-serialised into
+  // `editDocContent` on save.
+  const [editPairs, setEditPairs] = useState<BilingualPair[]>([]);
+  // Toggle between the structured (pair-cards) editor and the raw
+  // text editor — kept for users who want to bulk-paste content.
+  const [editorMode, setEditorMode] = useState<"structured" | "raw">("structured");
   const { toast } = useToast();
   const { register, handleSubmit, reset, setValue } = useForm();
 
@@ -253,7 +325,30 @@ const AdminChatbotConfig = () => {
     setEditingDoc(doc);
     setEditDocTitle(doc.title);
     setEditDocContent(doc.content);
+    const parsed = parseBilingualPairs(doc.content);
+    setEditPairs(parsed);
+    // If the doc has parseable pairs, open in structured mode by default;
+    // otherwise fall back to raw text mode (legacy or non-Q/R content).
+    setEditorMode(parsed.length > 0 ? "structured" : "raw");
     setIsEditDialogOpen(true);
+  };
+
+  const syncPairsToContent = (pairs: BilingualPair[]) => {
+    setEditPairs(pairs);
+    setEditDocContent(serializeBilingualPairs(pairs));
+  };
+
+  const updatePair = (index: number, field: keyof BilingualPair, value: string) => {
+    const next = editPairs.map((p, i) => (i === index ? { ...p, [field]: value } : p));
+    syncPairsToContent(next);
+  };
+
+  const addPair = () => {
+    syncPairsToContent([...editPairs, { qFr: "", rFr: "", qAr: "", rAr: "" }]);
+  };
+
+  const removePair = (index: number) => {
+    syncPairsToContent(editPairs.filter((_, i) => i !== index));
   };
 
   const updateTrainingText = async () => {
@@ -570,14 +665,14 @@ const AdminChatbotConfig = () => {
 
       {/* Dialog d'édition */}
       <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-        <DialogContent className="max-w-2xl">
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-hidden flex flex-col">
           <DialogHeader>
             <DialogTitle>Modifier le texte d'apprentissage</DialogTitle>
             <DialogDescription>
-              Modifiez le contenu de ce texte d'apprentissage
+              Chaque paire Q/R est éditable en français et en arabe côte à côte.
             </DialogDescription>
           </DialogHeader>
-          <div className="space-y-4">
+          <div className="space-y-4 overflow-y-auto flex-1 pr-2">
             <div className="space-y-2">
               <Label htmlFor="edit-doc-title">Titre du texte</Label>
               <Input
@@ -587,24 +682,115 @@ const AdminChatbotConfig = () => {
                 onChange={(e) => setEditDocTitle(e.target.value)}
               />
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="edit-doc-content">Contenu</Label>
+
+            <div className="flex items-center justify-between border-b pb-2">
+              <Label>Contenu</Label>
+              <div className="flex items-center gap-1 bg-muted rounded-md p-0.5">
+                <button
+                  type="button"
+                  className={`px-2.5 py-1 text-xs rounded ${editorMode === "structured" ? "bg-background shadow-sm font-medium" : "text-muted-foreground"}`}
+                  onClick={() => setEditorMode("structured")}
+                >
+                  <Languages className="h-3 w-3 inline mr-1" />
+                  Paires bilingues
+                </button>
+                <button
+                  type="button"
+                  className={`px-2.5 py-1 text-xs rounded ${editorMode === "raw" ? "bg-background shadow-sm font-medium" : "text-muted-foreground"}`}
+                  onClick={() => setEditorMode("raw")}
+                >
+                  Texte brut
+                </button>
+              </div>
+            </div>
+
+            {editorMode === "structured" ? (
+              <div className="space-y-3">
+                {editPairs.length === 0 && (
+                  <Card className="p-4 text-sm text-muted-foreground text-center">
+                    Aucune paire Q/R détectée. Ajoute la première paire ci-dessous, ou passe en mode « Texte brut » pour coller du contenu existant.
+                  </Card>
+                )}
+                {editPairs.map((p, i) => (
+                  <Card key={i} className="p-3 space-y-2">
+                    <div className="flex items-center justify-between mb-1">
+                      <Badge variant="outline" className="text-xs">Paire #{i + 1}</Badge>
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        onClick={() => removePair(i)}
+                        className="h-7 px-2"
+                      >
+                        <Trash2 className="h-3.5 w-3.5 text-destructive" />
+                      </Button>
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                      <div className="space-y-1.5">
+                        <Label className="text-xs text-muted-foreground">Question (Français)</Label>
+                        <Input
+                          value={p.qFr}
+                          onChange={(e) => updatePair(i, "qFr", e.target.value)}
+                          placeholder="Question en français ?"
+                        />
+                      </div>
+                      <div className="space-y-1.5">
+                        <Label className="text-xs text-muted-foreground">Question (Arabe)</Label>
+                        <Input
+                          dir="rtl"
+                          value={p.qAr}
+                          onChange={(e) => updatePair(i, "qAr", e.target.value)}
+                          placeholder="السؤال بالعربية ؟"
+                        />
+                      </div>
+                      <div className="space-y-1.5">
+                        <Label className="text-xs text-muted-foreground">Réponse (Français)</Label>
+                        <Textarea
+                          rows={3}
+                          value={p.rFr}
+                          onChange={(e) => updatePair(i, "rFr", e.target.value)}
+                          placeholder="Réponse en français."
+                        />
+                      </div>
+                      <div className="space-y-1.5">
+                        <Label className="text-xs text-muted-foreground">Réponse (Arabe)</Label>
+                        <Textarea
+                          rows={3}
+                          dir="rtl"
+                          value={p.rAr}
+                          onChange={(e) => updatePair(i, "rAr", e.target.value)}
+                          placeholder="الجواب بالعربية."
+                        />
+                      </div>
+                    </div>
+                  </Card>
+                ))}
+                <Button variant="outline" size="sm" onClick={addPair} className="w-full">
+                  <Plus className="h-3.5 w-3.5 mr-1.5" />
+                  Ajouter une paire Q/R bilingue
+                </Button>
+              </div>
+            ) : (
               <Textarea
                 id="edit-doc-content"
-                placeholder="Saisissez le contenu du texte d'apprentissage..."
-                rows={10}
+                placeholder="Format attendu — un bloc par paire :&#10;Q (FR): question fr ?&#10;R (FR): réponse fr.&#10;Q (AR): question ar ؟&#10;R (AR): جواب عربي."
+                rows={16}
                 value={editDocContent}
-                onChange={(e) => setEditDocContent(e.target.value)}
+                onChange={(e) => {
+                  setEditDocContent(e.target.value);
+                  // Try to re-parse so switching back to structured mode reflects edits.
+                  setEditPairs(parseBilingualPairs(e.target.value));
+                }}
+                className="font-mono text-xs"
               />
-            </div>
-            <div className="flex justify-end gap-2">
-              <Button variant="outline" onClick={() => setIsEditDialogOpen(false)}>
-                Annuler
-              </Button>
-              <Button onClick={updateTrainingText}>
-                Enregistrer les modifications
-              </Button>
-            </div>
+            )}
+          </div>
+          <div className="flex justify-end gap-2 pt-2 border-t">
+            <Button variant="outline" onClick={() => setIsEditDialogOpen(false)}>
+              Annuler
+            </Button>
+            <Button onClick={updateTrainingText}>
+              Enregistrer les modifications
+            </Button>
           </div>
         </DialogContent>
       </Dialog>

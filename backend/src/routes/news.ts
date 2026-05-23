@@ -15,6 +15,10 @@ const createSchema = z.object({
   isPublished: z.boolean().optional(),
   isFeatured: z.boolean().optional(),
   readTime: z.coerce.number().int().optional().nullable(),
+  // Each admin section owns its own actualités stream. The frontend
+  // sets this when creating a news item; the list endpoint filters by
+  // section so each space sees only its own.
+  section: z.enum(["observatoire", "acces_droits"]).optional(),
 });
 
 export const newsRouter = makeCrudRouter({
@@ -22,5 +26,7 @@ export const newsRouter = makeCrudRouter({
   createSchema,
   updateSchema: createSchema.partial(),
   listOrderBy: { createdAt: "desc" },
-  writeRoles: ["admin", "admin_acces_droits"],
+  // Generic CRUD already forwards `?<col>=<value>` query params to the
+  // Prisma where clause, so `?section=observatoire` Just Works™.
+  writeRoles: ["admin", "admin_acces_droits", "admin_observatoire"],
 });

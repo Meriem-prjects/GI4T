@@ -9,6 +9,7 @@ import { transformKeysToSnake } from "./lib/case-transform.js";
 import { authRouter } from "./routes/auth.js";
 import { usersRouter } from "./routes/users.js";
 import { documentsRouter } from "./routes/documents.js";
+import { documentCategoriesRouter } from "./routes/document-categories.js";
 import { categoriesRouter } from "./routes/categories.js";
 import { documentTypesRouter } from "./routes/document-types.js";
 import { eventsRouter } from "./routes/events.js";
@@ -27,6 +28,10 @@ import { processingJobsRouter } from "./routes/processing-jobs.js";
 import { photoAlbumsRouter } from "./routes/photo-albums.js";
 import { mediaItemsRouter } from "./routes/media-items.js";
 import { storageRouter } from "./routes/storage.js";
+import { chatbotConfigRouter, chatbotTrainingDocumentsRouter } from "./routes/chatbot-config.js";
+import { usefulLinksRouter } from "./routes/useful-links.js";
+import { practicalResourcesRouter } from "./routes/practical-resources.js";
+import { practicalGuidesRouter } from "./routes/practical-guides.js";
 import { functionsRouter } from "./routes/functions/index.js";
 
 export function createApp(): Express {
@@ -35,6 +40,17 @@ export function createApp(): Express {
   app.use(
     helmet({
       crossOriginResourcePolicy: { policy: "cross-origin" },
+      // X-Frame-Options is replaced by CSP frame-ancestors below.
+      // We need to allow the SPA (localhost:8080 in dev, configured
+      // origins in prod) to embed PDFs served from /api/storage in
+      // an iframe — the Document AI view depends on it.
+      frameguard: false,
+      contentSecurityPolicy: {
+        useDefaults: true,
+        directives: {
+          "frame-ancestors": ["'self'", ...corsOrigins],
+        },
+      },
     }),
   );
   app.use(
@@ -70,6 +86,10 @@ export function createApp(): Express {
   app.use("/api/auth", authRouter);
   app.use("/api/users", usersRouter);
   app.use("/api/documents", documentsRouter);
+  app.use("/api/document-categories", documentCategoriesRouter);
+  app.use("/api/useful-links", usefulLinksRouter);
+  app.use("/api/practical-resources", practicalResourcesRouter);
+  app.use("/api/practical-guides", practicalGuidesRouter);
   app.use("/api/categories", categoriesRouter);
   app.use("/api/document-types", documentTypesRouter);
   app.use("/api/events", eventsRouter);
@@ -82,6 +102,10 @@ export function createApp(): Express {
   app.use("/api/jurisdiction-levels", jurisdictionLevelsRouter);
   app.use("/api/languages", languagesRouter);
   app.use("/api/chatbot", chatbotRouter);
+  // Aliases under kebab-case paths — the supabase shim's table-to-URL
+  // mapper translates `chatbot_config` → `/api/chatbot-config` etc.
+  app.use("/api/chatbot-config", chatbotConfigRouter);
+  app.use("/api/chatbot-training-documents", chatbotTrainingDocumentsRouter);
   app.use("/api/statistics", statisticsRouter);
   app.use("/api/activity-logs", activityLogsRouter);
   app.use("/api/processing-jobs", processingJobsRouter);

@@ -7,6 +7,7 @@ import { useChatbotConfig } from "@/hooks/useChatbotConfig";
 import { useToast } from "@/hooks/use-toast";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useTranslation } from "@/hooks/useTranslation";
+import { supabase } from "@/integrations/supabase/client";
 
 interface Message {
   id: number;
@@ -70,68 +71,34 @@ const AssistantVirtuel = () => {
 
     try {
       abortControllerRef.current = new AbortController();
-      
-      const conversationHistory = [...messages, userMessage].map(msg => ({
+
+      // Conversation history sent to the bot for context (last N turns).
+      const history = messages.map((msg) => ({
         role: msg.role,
-        content: msg.content
+        content: msg.content,
       }));
 
-      const response = await fetch(
-        `https://qpkybrcjcoxhkifnbxei.supabase.co/functions/v1/acces-droits-chat`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            messages: conversationHistory,
-            stream: true
-          }),
-          signal: abortControllerRef.current.signal
-        }
+      // Use the supabase-shim which routes to /api/fn/acces-droits-chat
+      // on our local backend (the old hardcoded Supabase Cloud URL is
+      // dead since the migration).
+      const { data, error } = await supabase.functions.invoke('acces-droits-chat', {
+        body: {
+          message: userMessage.content,
+          history,
+          language: isRTL ? 'ar' : 'fr',
+        },
+      });
+
+      if (error) throw new Error(error.message ?? 'Erreur API');
+      const answer = (data as { answer?: string } | null)?.answer ?? '';
+      if (!answer) throw new Error(isRTL ? 'لم يرد المساعد' : "L'assistant n'a pas répondu");
+
+      assistantContent = answer;
+      setMessages((prev) =>
+        prev.map((msg) =>
+          msg.id === assistantMessageId ? { ...msg, content: assistantContent } : msg,
+        ),
       );
-
-      if (!response.ok) {
-        throw new Error(`${isRTL ? 'خطأ HTTP' : 'Erreur HTTP'}: ${response.status}`);
-      }
-
-      const reader = response.body?.getReader();
-      const decoder = new TextDecoder();
-
-      if (!reader) {
-        throw new Error(isRTL ? "لا يمكن قراءة الاستجابة" : "Impossible de lire la réponse");
-      }
-
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
-
-        const chunk = decoder.decode(value);
-        const lines = chunk.split("\n");
-
-        for (const line of lines) {
-          if (line.startsWith("data: ")) {
-            const data = line.slice(6);
-            if (data === "[DONE]") continue;
-
-            try {
-              const parsed = JSON.parse(data);
-              const content = parsed.choices?.[0]?.delta?.content;
-              
-              if (content) {
-                assistantContent += content;
-                setMessages(prev => prev.map(msg => 
-                  msg.id === assistantMessageId 
-                    ? { ...msg, content: assistantContent }
-                    : msg
-                ));
-              }
-            } catch (e) {
-              // Ignorer les erreurs de parsing JSON pour les chunks partiels
-            }
-          }
-        }
-      }
     } catch (error: any) {
       if (error.name === 'AbortError') {
         console.log('Requête annulée');

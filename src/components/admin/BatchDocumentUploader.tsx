@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect, useMemo } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -10,7 +10,6 @@ import { Upload, FileText, X, Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import ProgressTracker from './ProgressTracker';
-import { MultiCategorySelector } from './MultiCategorySelector';
 // PdfToImages no longer needed - using server-side pdfRest conversion
 
 interface UploadFile {
@@ -29,6 +28,7 @@ interface Category {
   name: string;
   name_ar?: string;
   color: string;
+  parent_id?: string | null;
 }
 
 interface DocumentType {
@@ -48,9 +48,37 @@ const BatchDocumentUploader: React.FC<BatchDocumentUploaderProps> = ({ onDocumen
   const [isProcessing, setIsProcessing] = useState(false);
   const [categories, setCategories] = useState<Category[]>([]);
   const [documentTypes, setDocumentTypes] = useState<DocumentType[]>([]);
-  const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
+  // Hierarchical category picker: pick a parent (required) then a sub-
+  // category (optional, only shown when the parent has children).
+  // `selectedCategories` is derived from these two — downstream code
+  // keeps consuming the flat array.
+  const [selectedParentCategoryId, setSelectedParentCategoryId] = useState<string>('');
+  const [selectedSubCategoryId, setSelectedSubCategoryId] = useState<string>('');
+  const rootCategories = useMemo(
+    () => categories.filter((c) => !c.parent_id),
+    [categories],
+  );
+  const childCategories = useMemo(
+    () => categories.filter((c) => c.parent_id === selectedParentCategoryId),
+    [categories, selectedParentCategoryId],
+  );
+  const selectedCategories = useMemo<string[]>(
+    () => [
+      ...(selectedParentCategoryId ? [selectedParentCategoryId] : []),
+      ...(selectedSubCategoryId ? [selectedSubCategoryId] : []),
+    ],
+    [selectedParentCategoryId, selectedSubCategoryId],
+  );
+  // Reset the sub-category whenever the parent changes — the previous
+  // sub no longer belongs to the new parent's subtree.
+  useEffect(() => {
+    setSelectedSubCategoryId('');
+  }, [selectedParentCategoryId]);
   const [selectedDocumentType, setSelectedDocumentType] = useState<string>('');
   const [selectedLanguage, setSelectedLanguage] = useState<string>('ar');
+  // "ai" = full pipeline (OCR + metadata + translation, ~$0.15-0.30/doc, 60-120s)
+  // "direct" = pdf-parse + regex headings, no IA, no translation (free, ~10s)
+  const [processingMode, setProcessingMode] = useState<'ai' | 'direct'>('ai');
 
   // Load categories and document types
   React.useEffect(() => {
@@ -147,6 +175,7 @@ const BatchDocumentUploader: React.FC<BatchDocumentUploaderProps> = ({ onDocumen
 
     formData.append('documentTypeId', documentTypeId);
     formData.append('language', selectedLanguage);
+    formData.append('processingMode', processingMode);
 
     // Update progress to show uploading
     setUploadFiles(prev => prev.map(f =>
@@ -357,38 +386,38 @@ const BatchDocumentUploader: React.FC<BatchDocumentUploaderProps> = ({ onDocumen
     }
   };
 
-  // Callback to handle completion from ProgressTracker
+  // Callback to handle completion from ProgressTracker.
+  // Uses the functional form of setUploadFiles so we can read the
+  // freshly-updated list and decide whether ALL files are done — the
+  // older closure-based read of `uploadFiles` was stale and meant
+  // onDocumentsProcessed was never called after the very pipeline
+  // step that just finished.
   const handleFileCompletion = (uploadFileId: string, result: any) => {
     console.log('File completed via progress tracker:', uploadFileId);
 
-    // Update the upload file status
-    setUploadFiles(prev => prev.map(f =>
-      f.id === uploadFileId ? {
-        ...f,
-        status: 'completed',
-        progress: 100,
-        result: result
-      } : f
-    ));
-
-    // Check if this was the last file processing and update processed documents
-    setTimeout(() => {
-      const currentFiles = uploadFiles.find(f => f.id === uploadFileId);
-      if (currentFiles?.result) {
-        const allCompleted = uploadFiles.every(f => f.status === 'completed' || f.status === 'error');
-        const completedDocuments = uploadFiles
-          .filter(f => f.status === 'completed' && f.result)
-          .map(f => f.result);
-
-        if (allCompleted && completedDocuments.length > 0) {
+    setUploadFiles(prev => {
+      const next = prev.map(f =>
+        f.id === uploadFileId ? {
+          ...f,
+          status: 'completed' as const,
+          progress: 100,
+          result,
+        } : f
+      );
+      const allDone = next.every(f => f.status === 'completed' || f.status === 'error');
+      const completedDocuments = next.filter(f => f.status === 'completed' && f.result).map(f => f.result);
+      if (allDone && completedDocuments.length > 0) {
+        // Defer to avoid setState-in-render warning on parent.
+        setTimeout(() => {
           onDocumentsProcessed(completedDocuments);
           toast({
             title: "Tous les documents traités",
             description: `${completedDocuments.length} document(s) traité(s) avec succès.`,
           });
-        }
+        }, 0);
       }
-    }, 100);
+      return next;
+    });
   };
 
 
@@ -514,6 +543,29 @@ const BatchDocumentUploader: React.FC<BatchDocumentUploaderProps> = ({ onDocumen
       <Card className="p-6">
         <h3 className="text-lg font-semibold mb-4">Configuration des documents</h3>
 
+        {/* Processing mode selector — full row, above the other fields */}
+        <div className="space-y-2 mb-4">
+          <Label htmlFor="processing-mode">Mode de traitement</Label>
+          <Select value={processingMode} onValueChange={(v) => setProcessingMode(v as 'ai' | 'direct')}>
+            <SelectTrigger>
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="ai">
+                🤖 Traitement IA complet (OCR + structure + métadonnées + traduction bilingue) — 60-120 s
+              </SelectItem>
+              <SelectItem value="direct">
+                ⚡ Transcription directe (Mistral OCR uniquement, sans traduction) — ~20-40 s
+              </SelectItem>
+            </SelectContent>
+          </Select>
+          <p className="text-xs text-muted-foreground">
+            {processingMode === 'ai'
+              ? "Mode complet : Mistral OCR du PDF → détection des sections par IA → traduction bilingue automatique. Idéal pour publication."
+              : "Mode transcription : le PDF est envoyé directement à Mistral OCR qui retourne du texte propre avec titres (H1/H2). Le résultat est mis tel quel dans l'éditeur. Aucune traduction, aucune analyse IA supplémentaire."}
+          </p>
+        </div>
+
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
           <div className="space-y-2">
             <Label htmlFor="document-language">Langue du document</Label>
@@ -552,24 +604,86 @@ const BatchDocumentUploader: React.FC<BatchDocumentUploaderProps> = ({ onDocumen
 
           {!selectedDocumentType ||
             !documentTypes.find(t => t.id === selectedDocumentType)?.name.match(/Blog|Commentaires|Analyses/) ? (
-            <div className="space-y-2">
-              <Label>
-                {selectedDocumentType &&
-                  documentTypes.find(t => t.id === selectedDocumentType)?.name.includes('Jurisprudence')
-                  ? (selectedLanguage === 'ar' ? 'فئة الحق الأساسي' : 'Catégorie de droit fondamental')
-                  : 'Catégories'
-                }
-                {selectedDocumentType && documentTypes.find(t => t.id === selectedDocumentType)?.name.includes('Jurisprudence') && (
-                  <span className="text-red-500 ml-1">*</span>
-                )}
-              </Label>
-              <MultiCategorySelector
-                categories={categories}
-                selectedCategoryIds={selectedCategories}
-                onCategoryIdsChange={setSelectedCategories}
-                showArabic={selectedLanguage === 'ar'}
-                maxCategories={5}
-              />
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label>
+                  {selectedDocumentType &&
+                    documentTypes.find(t => t.id === selectedDocumentType)?.name.includes('Jurisprudence')
+                    ? (selectedLanguage === 'ar' ? 'فئة الحق الأساسي' : 'Catégorie de droit fondamental')
+                    : 'Catégorie'
+                  }
+                  {selectedDocumentType && documentTypes.find(t => t.id === selectedDocumentType)?.name.includes('Jurisprudence') && (
+                    <span className="text-red-500 ml-1">*</span>
+                  )}
+                </Label>
+                <Select
+                  value={selectedParentCategoryId}
+                  onValueChange={setSelectedParentCategoryId}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder={selectedLanguage === 'ar' ? 'اختر فئة' : 'Choisir une catégorie'} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {rootCategories.map((cat) => (
+                      <SelectItem key={cat.id} value={cat.id}>
+                        <div className="flex items-center gap-2">
+                          {cat.color && (
+                            <div
+                              className="w-2 h-2 rounded-full"
+                              style={{ backgroundColor: cat.color }}
+                            />
+                          )}
+                          <span>
+                            {selectedLanguage === 'ar' && cat.name_ar ? cat.name_ar : cat.name}
+                          </span>
+                        </div>
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <Label className={!selectedParentCategoryId || childCategories.length === 0 ? 'text-muted-foreground' : ''}>
+                  {selectedLanguage === 'ar' ? 'الفئة الفرعية' : 'Sous-catégorie'}
+                  <span className="text-xs text-muted-foreground ml-2 font-normal">
+                    ({selectedLanguage === 'ar' ? 'اختياري' : 'optionnel'})
+                  </span>
+                </Label>
+                <Select
+                  value={selectedSubCategoryId}
+                  onValueChange={setSelectedSubCategoryId}
+                  disabled={!selectedParentCategoryId || childCategories.length === 0}
+                >
+                  <SelectTrigger>
+                    <SelectValue
+                      placeholder={
+                        !selectedParentCategoryId
+                          ? (selectedLanguage === 'ar' ? 'اختر فئة أولاً' : 'Choisir d\'abord une catégorie')
+                          : childCategories.length === 0
+                            ? (selectedLanguage === 'ar' ? 'لا توجد فئات فرعية' : 'Aucune sous-catégorie')
+                            : (selectedLanguage === 'ar' ? 'اختر فئة فرعية' : 'Choisir une sous-catégorie')
+                      }
+                    />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {childCategories.map((cat) => (
+                      <SelectItem key={cat.id} value={cat.id}>
+                        <div className="flex items-center gap-2">
+                          {cat.color && (
+                            <div
+                              className="w-2 h-2 rounded-full"
+                              style={{ backgroundColor: cat.color }}
+                            />
+                          )}
+                          <span>
+                            {selectedLanguage === 'ar' && cat.name_ar ? cat.name_ar : cat.name}
+                          </span>
+                        </div>
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
           ) : null}
         </div>
