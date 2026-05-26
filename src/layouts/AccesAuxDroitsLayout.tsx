@@ -33,20 +33,21 @@ const AccesAuxDroitsLayout = () => {
     );
   };
 
-  // Determine which sub-navigation to show based on current route
+  // Determine which sub-navigation to show based on current route.
+  // The homepage `/acces-aux-droits` falls through to ActualitesNav so
+  // the citizen sees the full content nav (Accueil / Actualités /
+  // Ressources / Publications / Liens / Guides) right on landing.
   const getSubNav = () => {
     if (location.pathname.includes('/carte-interactive') || location.pathname.includes('/adresses-utiles')) {
       return <CarteInteractiveNav />;
     } else if (location.pathname.includes('/mediatheque') || location.pathname.includes('/albums-photos')) {
       return <MediathequeNav />;
-    } else if (location.pathname.includes('/actualites') || location.pathname.includes('/ressources-pratiques') ||
-      location.pathname.includes('/liens-utiles') || location.pathname.includes('/guides-pratiques') ||
-      location.pathname.includes('/publications')) {
-      return <ActualitesNav />;
     } else if (location.pathname.includes('/foire-aux-questions') || location.pathname.includes('/assistant-virtuel')) {
       return <FAQNav />;
     }
-    return null;
+    // Default: actualites/ressources/liens/guides/publications AND the
+    // homepage itself — all share the same content sub-nav.
+    return <ActualitesNav />;
   };
 
   // Mobile menu structure with parent-child hierarchy
@@ -125,43 +126,26 @@ const AccesAuxDroitsLayout = () => {
             </Link>
 
             <nav className={`hidden md:flex items-center absolute ${isRTL ? 'right-1/2 translate-x-1/2' : 'left-1/2 -translate-x-1/2'} gap-6`}>
+              <Link
+                to="/acces-aux-droits"
+                className={`text-sm font-medium transition-colors duration-200 ${isRTL ? 'font-almarai' : ''} ${
+                  location.pathname === '/acces-aux-droits'
+                    ? 'text-primary font-semibold'
+                    : 'text-foreground hover:text-primary'
+                }`}
+              >
+                {t('home')}
+              </Link>
               <Link to="/acces-aux-droits/carte-interactive" className={`text-sm font-medium text-foreground hover:text-primary transition-colors duration-200 ${isRTL ? 'font-almarai' : ''}`}>
                 {t('interactiveMap')}
               </Link>
               <Link to="/acces-aux-droits/mediatheque" className={`text-sm font-medium text-foreground hover:text-primary transition-colors duration-200 ${isRTL ? 'font-almarai' : ''}`}>
                 {t('mediaLibrary')}
               </Link>
-              <Link to="/acces-aux-droits/actualites" className={`text-sm font-medium text-foreground hover:text-primary transition-colors duration-200 ${isRTL ? 'font-almarai' : ''}`}>
-                {t('actualites')}
-              </Link>
-
-              <DropdownMenu>
-                <DropdownMenuTrigger className={`flex items-center gap-1 text-sm font-medium text-foreground hover:text-primary transition-colors duration-200 outline-none ${isRTL ? 'font-almarai flex-row-reverse' : ''}`}>
-                  {t('practicalResources')}
-                  <ChevronDown className="h-4 w-4" />
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align={isRTL ? "end" : "start"} className="w-56">
-                  <DropdownMenuItem asChild>
-                    <Link to="/acces-aux-droits/guides-pratiques" className={`w-full cursor-pointer flex items-center gap-2 ${isRTL ? 'font-almarai flex-row-reverse text-right' : ''}`}>
-                      <BookOpen className="h-4 w-4" />
-                      {t('practicalGuides')}
-                    </Link>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem asChild>
-                    <Link to="/acces-aux-droits/publications" className={`w-full cursor-pointer flex items-center gap-2 ${isRTL ? 'font-almarai flex-row-reverse text-right' : ''}`}>
-                      <Newspaper className="h-4 w-4" />
-                      {t('publications')}
-                    </Link>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem asChild>
-                    <Link to="/acces-aux-droits/liens-utiles" className={`w-full cursor-pointer flex items-center gap-2 ${isRTL ? 'font-almarai flex-row-reverse text-right' : ''}`}>
-                      <ExternalLink className="h-4 w-4" />
-                      {t('usefulLinks')}
-                    </Link>
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-
+              {/* « Actualités » et « Ressources pratiques » ont été retirés
+                  ici — ils restent accessibles via la sous-nav juste en
+                  dessous du header (avec leurs sous-onglets : Publications,
+                  Liens utiles, Guides pratiques). */}
               <Link to="/acces-aux-droits/assistant-virtuel" className={`text-sm font-medium text-foreground hover:text-primary transition-colors duration-200 ${isRTL ? 'font-almarai' : ''}`}>
                 {t('faqChatbot')}
               </Link>

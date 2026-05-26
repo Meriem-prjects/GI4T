@@ -10,13 +10,9 @@ const CarteInteractiveNav = () => {
   const { isRTL } = useLanguage();
   const { t } = useTranslation();
 
+  // L'onglet « Accueil » a été retiré ici — il est déjà accessible
+  // depuis le header principal (et le bouton home rond en haut à droite).
   const navItems = [
-    {
-      path: "/acces-aux-droits",
-      label: t('home'),
-      icon: Home,
-      description: t('homepage')
-    },
     {
       path: "/acces-aux-droits/carte-interactive",
       label: t('interactiveMap'),

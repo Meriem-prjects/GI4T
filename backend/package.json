@@ -16,7 +16,8 @@
     "seed:chatbot": "node --use-system-ca ./node_modules/tsx/dist/cli.mjs prisma/seed-chatbot-knowledge.ts",
     "seed:chatbot:partie1": "node --use-system-ca ./node_modules/tsx/dist/cli.mjs prisma/seed-chatbot-knowledge-partie1.ts",
     "translate:chatbot": "node --use-system-ca --env-file=.env ./node_modules/tsx/dist/cli.mjs prisma/translate-chatbot-knowledge.ts",
-    "restructure:chatbot": "node --use-system-ca ./node_modules/tsx/dist/cli.mjs prisma/restructure-chatbot-bilingual.ts"
+    "restructure:chatbot": "node --use-system-ca ./node_modules/tsx/dist/cli.mjs prisma/restructure-chatbot-bilingual.ts",
+    "seed:faq": "node --use-system-ca ./node_modules/tsx/dist/cli.mjs prisma/seed-faq-from-chatbot.ts"
   },
   "dependencies": {
     "@google-cloud/vision": "^4.3.2",

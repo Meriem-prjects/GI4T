@@ -1,147 +1,219 @@
-import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { BookOpen, Map, Video, FileText, Home, Briefcase, GraduationCap, Heart, Users, MessageCircle, Scale, ArrowRight } from "lucide-react";
+import { Card, CardContent } from "@/components/ui/card";
 import { Link } from "react-router-dom";
+import {
+  ArrowRight,
+  Compass,
+  Gavel,
+  HeartHandshake,
+  Sparkles,
+  MapPin,
+  BookOpen,
+  Video,
+  FileText,
+} from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { useTranslation } from "@/hooks/useTranslation";
 
 const AccesAuxDroits = () => {
   const { isRTL } = useLanguage();
-  const { t } = useTranslation();
-  const [hoveredCard, setHoveredCard] = useState<string | null>(null);
+  const dir = isRTL ? "rtl" : "ltr";
+  const font = isRTL ? "font-almarai" : "";
+  const arrow = isRTL ? "mr-1.5 rotate-180" : "ml-1.5";
 
-  const quickAccessCards = [
+  // ─── 3 étapes du parcours citoyen ────────────────────────────────
+  // Inspiré du Guide du citoyen (ODF, mai 2025). Volontairement réduit
+  // à 3 étapes pour ne pas surcharger la page d'accueil — chaque étape
+  // pointe vers les guides détaillés.
+  const journey = [
     {
-      id: "guides",
+      step: "01",
+      icon: Compass,
+      titleFr: "Comprendre",
+      titleAr: "تفهم حقوقك",
+      descFr: "Quel tribunal est compétent ? Quels délais respecter ? Quels recours s'offrent à vous face à l'administration ?",
+      descAr: "أي محكمة مختصة بقضيتك ؟ شنية الآجال إلي يلزم تحترمها ؟ شنوة الحلول إلي عندك قدام الإدارة ؟",
       link: "/acces-aux-droits/guides-pratiques",
-      icon: BookOpen,
-      title: t('practicalGuides'),
-      description: t('guidesStepByStep'),
-      color: "bg-amber-500",
-      bgColor: "bg-amber-50",
-      hoverBorder: "hover:border-amber-300"
+      accent: "from-blue-500/15 to-blue-500/5",
+      dot: "bg-blue-500",
     },
     {
-      id: "ressources",
+      step: "02",
+      icon: Gavel,
+      titleFr: "Agir",
+      titleAr: "تتصرف بفعالية",
+      descFr: "Annuler une décision injuste, demander réparation d'un préjudice, obtenir une mesure urgente du juge.",
+      descAr: "تلغي قرار غير عادل، تطلب التعويض على ضرر، تتحصل على إذن استعجالي من القاضي.",
       link: "/acces-aux-droits/ressources-pratiques",
-      icon: FileText,
-      title: t('practicalResources'),
-      description: t('formsModelsDocuments'),
-      color: "bg-blue-600",
-      bgColor: "bg-blue-50",
-      hoverBorder: "hover:border-blue-300"
+      accent: "from-amber-500/15 to-amber-500/5",
+      dot: "bg-amber-500",
     },
     {
-      id: "carte",
-      link: "/acces-aux-droits/carte-interactive",
-      icon: Map,
-      title: t('interactiveMap'),
-      description: t('findServicesNearYou'),
-      color: "bg-emerald-600",
-      bgColor: "bg-emerald-50",
-      hoverBorder: "hover:border-emerald-300"
+      step: "03",
+      icon: HeartHandshake,
+      titleFr: "Être accompagné",
+      titleAr: "تتلقى المساعدة",
+      descFr: "Aide juridictionnelle gratuite, Médiateur Administratif, assistant virtuel : vous n'êtes jamais seul·e.",
+      descAr: "الإعانة القضائية المجانية، الموفق الإداري، المساعد الافتراضي : أنت ما توليش وحدك.",
+      link: "/acces-aux-droits/assistant-virtuel",
+      accent: "from-emerald-500/15 to-emerald-500/5",
+      dot: "bg-emerald-500",
     },
-    {
-      id: "mediatheque",
-      link: "/acces-aux-droits/mediatheque",
-      icon: Video,
-      title: t('mediaLibrary'),
-      description: t('explanatoryVideos'),
-      color: "bg-purple-600",
-      bgColor: "bg-purple-50",
-      hoverBorder: "hover:border-purple-300"
-    }
   ];
 
-  const rightsCases = [
-    { 
-      id: "housing",
-      title: t('housingRight'), 
-      desc: t('housingDesc'), 
-      cases: "156",
-      icon: Home,
-      color: "bg-emerald-600",
-      bgColor: "bg-emerald-50",
-      textColor: "text-emerald-600"
+  // ─── Ressources rapides — 4 entrées seulement, minimalistes ─────
+  const resources = [
+    {
+      icon: BookOpen,
+      titleFr: "Guides pratiques",
+      titleAr: "أدلة عملية",
+      link: "/acces-aux-droits/guides-pratiques",
     },
-    { 
-      id: "work",
-      title: t('workRight'), 
-      desc: t('workDesc'), 
-      cases: "234",
-      icon: Briefcase,
-      color: "bg-blue-600",
-      bgColor: "bg-blue-50",
-      textColor: "text-blue-600"
+    {
+      icon: FileText,
+      titleFr: "Modèles & formulaires",
+      titleAr: "نماذج ومطبوعات",
+      link: "/acces-aux-droits/ressources-pratiques",
     },
-    { 
-      id: "health",
-      title: t('healthRight'), 
-      desc: t('healthDesc'), 
-      cases: "187",
-      icon: Heart,
-      color: "bg-rose-600",
-      bgColor: "bg-rose-50",
-      textColor: "text-rose-600"
+    {
+      icon: MapPin,
+      titleFr: "Près de chez vous",
+      titleAr: "قريب منك",
+      link: "/acces-aux-droits/carte-interactive",
     },
-    { 
-      id: "education",
-      title: t('educationRight'), 
-      desc: t('educationDesc'), 
-      cases: "143",
-      icon: GraduationCap,
-      color: "bg-amber-600",
-      bgColor: "bg-amber-50",
-      textColor: "text-amber-600"
+    {
+      icon: Video,
+      titleFr: "Vidéos pédagogiques",
+      titleAr: "فيديوهات تعليمية",
+      link: "/acces-aux-droits/mediatheque",
     },
-    { 
-      id: "social",
-      title: t('socialRights'), 
-      desc: t('socialDesc'), 
-      cases: "298",
-      icon: Users,
-      color: "bg-purple-600",
-      bgColor: "bg-purple-50",
-      textColor: "text-purple-600"
-    },
-    { 
-      id: "freedom",
-      title: t('freedomExpression'), 
-      desc: t('freedomDesc'), 
-      cases: "89",
-      icon: MessageCircle,
-      color: "bg-cyan-600",
-      bgColor: "bg-cyan-50",
-      textColor: "text-cyan-600"
-    }
   ];
 
   return (
-    <>
-      {/* Quick Access Cards */}
-      <section className="py-6 sm:py-8 md:py-12">
-        <div className="container mx-auto px-4">
-          <h3 className={`text-lg sm:text-xl md:text-2xl font-bold text-center mb-5 sm:mb-6 md:mb-8 ${isRTL ? 'font-almarai' : ''}`}>
-            {t('quickAccess')}
-          </h3>
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 md:gap-5">
-            {quickAccessCards.map((card) => {
-              const Icon = card.icon;
-              return (
-                <Link key={card.id} to={card.link}>
-                  <Card className={`hover:shadow-lg transition-all duration-300 cursor-pointer border ${card.hoverBorder} hover:scale-[1.02] ${card.bgColor} h-full`}>
-                    <CardContent className="pt-4 sm:pt-6 text-center flex flex-col items-center p-3 sm:p-6">
-                      <div className={`w-10 h-10 sm:w-12 sm:h-12 ${card.color} rounded-lg flex items-center justify-center mb-3 sm:mb-4 shadow-sm`}>
-                        <Icon className="h-5 w-5 sm:h-6 sm:w-6 text-white" />
+    <main className="bg-gradient-to-b from-background via-background to-muted/30">
+      {/* ─────────────── HERO ─────────────── */}
+      <section className="relative overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-amber-500/5 pointer-events-none" />
+        <div className="container relative mx-auto px-4 pt-16 md:pt-24 pb-12 md:pb-16">
+          <div className="max-w-3xl mx-auto text-center" dir={dir}>
+            <div className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-primary/10 text-primary text-xs font-medium mb-6 ${font}`}>
+              <Sparkles className="h-3.5 w-3.5" />
+              {isRTL ? "النفاذ إلى الحقوق للجميع" : "L'accès aux droits pour toutes et tous"}
+            </div>
+            <h1 className={`text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight leading-tight mb-5 ${font}`}>
+              {isRTL ? (
+                <>
+                  اعرف حقوقك.
+                  <br />
+                  <span className="bg-gradient-to-r from-primary to-amber-600 bg-clip-text text-transparent">
+                    دافع عليها.
+                  </span>
+                </>
+              ) : (
+                <>
+                  Connaissez vos droits.
+                  <br />
+                  <span className="bg-gradient-to-r from-primary to-amber-600 bg-clip-text text-transparent">
+                    Faites-les valoir.
+                  </span>
+                </>
+              )}
+            </h1>
+            <p className={`text-base md:text-lg text-muted-foreground max-w-2xl mx-auto mb-8 ${font}`}>
+              {isRTL
+                ? "كل المعلومات إلي تحتاجها كي يبدى عندك مشكل مع إدارة عمومية : واضحة، مبسطة، بلهجة تونسية وفرنسية."
+                : "Toutes les informations dont vous avez besoin face à l'administration publique : claires, simplifiées, en français et en arabe tunisien."}
+            </p>
+            <div className={`flex flex-col sm:flex-row items-center justify-center gap-3 ${isRTL ? "sm:flex-row-reverse" : ""}`}>
+              <Button asChild size="lg" className={`min-w-[200px] ${font}`}>
+                <Link to="/acces-aux-droits/guides-pratiques">
+                  {isRTL ? "ابدأ المسار التوجيهي" : "Démarrer le parcours"}
+                  <ArrowRight className={`h-4 w-4 ${arrow}`} />
+                </Link>
+              </Button>
+              <Button asChild size="lg" variant="outline" className={`min-w-[200px] ${font}`}>
+                <Link to="/acces-aux-droits/assistant-virtuel">
+                  {isRTL ? "اسأل المساعد" : "Poser une question"}
+                </Link>
+              </Button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ─────────── 3 ÉTAPES — PARCOURS CITOYEN ─────────── */}
+      <section className="container mx-auto px-4 py-12 md:py-20">
+        <div className="max-w-2xl mx-auto text-center mb-10 md:mb-14" dir={dir}>
+          <div className="inline-block w-12 h-px bg-gradient-to-r from-transparent via-primary to-transparent mb-4" />
+          <h2 className={`text-2xl md:text-3xl font-bold mb-3 ${font}`}>
+            {isRTL ? "ثلاث خطوات لتفعيل حقوقك" : "Trois étapes pour faire valoir vos droits"}
+          </h2>
+          <p className={`text-muted-foreground ${font}`}>
+            {isRTL
+              ? "مسار بسيط ، مبسط ، يرافقك من الفهم إلى الفعل."
+              : "Un parcours simple qui vous accompagne, de la compréhension à l'action."}
+          </p>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-5 md:gap-6">
+          {journey.map((j) => {
+            const Icon = j.icon;
+            const title = isRTL ? j.titleAr : j.titleFr;
+            const desc = isRTL ? j.descAr : j.descFr;
+            return (
+              <Link key={j.step} to={j.link} className="group">
+                <Card className={`h-full overflow-hidden border-border/60 hover:border-border hover:shadow-xl transition-all duration-300 hover:-translate-y-1`}>
+                  <div className={`h-1.5 bg-gradient-to-r ${j.accent}`} />
+                  <CardContent className="p-6 md:p-7" dir={dir}>
+                    <div className={`flex items-start justify-between mb-5 ${isRTL ? "flex-row-reverse" : ""}`}>
+                      <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${j.accent} flex items-center justify-center`}>
+                        <Icon className="h-6 w-6 text-foreground" />
                       </div>
-                      <h3 className={`text-sm sm:text-base md:text-lg font-semibold mb-1 sm:mb-2 ${isRTL ? 'font-almarai' : ''}`}>{card.title}</h3>
-                      <p className={`text-xs sm:text-sm text-muted-foreground hidden sm:block ${isRTL ? 'font-almarai' : ''}`}>
-                        {card.description}
-                      </p>
-                    </CardContent>
-                  </Card>
+                      <span className={`text-3xl font-bold text-muted-foreground/30 ${font}`}>
+                        {j.step}
+                      </span>
+                    </div>
+                    <h3 className={`text-xl font-semibold mb-2 group-hover:text-primary transition-colors ${font}`}>
+                      {title}
+                    </h3>
+                    <p className={`text-sm text-muted-foreground leading-relaxed mb-5 ${font}`}>
+                      {desc}
+                    </p>
+                    <div className={`flex items-center gap-1.5 text-sm font-medium text-primary opacity-0 group-hover:opacity-100 transition-opacity ${font} ${isRTL ? "flex-row-reverse" : ""}`}>
+                      {isRTL ? "اكتشف" : "Découvrir"}
+                      <ArrowRight className={`h-3.5 w-3.5 ${isRTL ? "rotate-180" : ""}`} />
+                    </div>
+                  </CardContent>
+                </Card>
+              </Link>
+            );
+          })}
+        </div>
+      </section>
+
+      {/* ─────────── RESSOURCES RAPIDES — MINIMALISTE ─────────── */}
+      <section className="border-y border-border/40 bg-muted/30">
+        <div className="container mx-auto px-4 py-10 md:py-14">
+          <div className="text-center mb-8" dir={dir}>
+            <h2 className={`text-lg md:text-xl font-semibold text-muted-foreground ${font}`}>
+              {isRTL ? "كل الموارد في متناول يدك" : "Toutes les ressources à votre portée"}
+            </h2>
+          </div>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4 max-w-4xl mx-auto">
+            {resources.map((r, i) => {
+              const Icon = r.icon;
+              const title = isRTL ? r.titleAr : r.titleFr;
+              return (
+                <Link
+                  key={i}
+                  to={r.link}
+                  className="group flex flex-col items-center gap-3 p-5 rounded-xl bg-background border border-border/60 hover:border-primary/40 hover:shadow-md transition-all"
+                >
+                  <div className="w-10 h-10 rounded-lg bg-muted flex items-center justify-center group-hover:bg-primary/10 transition-colors">
+                    <Icon className="h-5 w-5 text-foreground group-hover:text-primary transition-colors" />
+                  </div>
+                  <span className={`text-sm font-medium text-center ${font}`} dir={dir}>
+                    {title}
+                  </span>
                 </Link>
               );
             })}
@@ -149,58 +221,33 @@ const AccesAuxDroits = () => {
         </div>
       </section>
 
-      {/* Rights Categories */}
-      <section className="py-6 sm:py-8 md:py-12 bg-muted/30">
-        <div className="container mx-auto px-4">
-          <h3 className={`text-lg sm:text-xl md:text-2xl font-bold text-center mb-5 sm:mb-6 md:mb-8 ${isRTL ? 'font-almarai' : ''}`}>
-            {t('yourRightsByCategory')}
-          </h3>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 md:gap-5">
-            {rightsCases.map((category) => {
-              const Icon = category.icon;
-              const isHovered = hoveredCard === category.id;
-              return (
-                <Card 
-                  key={category.id} 
-                  className={`hover:shadow-lg transition-all duration-300 cursor-pointer border border-border/50 hover:border-border ${category.bgColor}`}
-                  onMouseEnter={() => setHoveredCard(category.id)}
-                  onMouseLeave={() => setHoveredCard(null)}
-                >
-                  <CardHeader className="pb-2 sm:pb-3 p-3 sm:p-6">
-                    <div className={`flex items-center gap-2 sm:gap-3 ${isRTL ? 'flex-row-reverse' : ''}`}>
-                      <div className={`w-8 h-8 sm:w-10 sm:h-10 ${category.color} rounded-lg flex items-center justify-center shadow-sm flex-shrink-0`}>
-                        <Icon className="h-4 w-4 sm:h-5 sm:w-5 text-white" />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <CardTitle className={`text-sm sm:text-base ${isHovered ? category.textColor : ''} transition-colors ${isRTL ? 'font-almarai text-right' : ''} truncate`}>
-                          {category.title}
-                        </CardTitle>
-                      </div>
-                      <Badge variant="secondary" className={`${category.color} text-white text-xs flex-shrink-0`}>
-                        {category.cases}
-                      </Badge>
-                    </div>
-                  </CardHeader>
-                  <CardContent className="pt-0 p-3 sm:p-6 sm:pt-0">
-                    <CardDescription className={`text-xs sm:text-sm mb-3 sm:mb-4 line-clamp-2 ${isRTL ? 'font-almarai text-right' : ''}`}>
-                      {category.desc}
-                    </CardDescription>
-                    <Button 
-                      variant={isHovered ? "default" : "outline"} 
-                      size="sm" 
-                      className={`w-full h-9 sm:h-10 text-xs sm:text-sm transition-all duration-200 ${isHovered ? `${category.color} text-white border-0` : ''} ${isRTL ? 'font-almarai' : ''}`}
-                    >
-                      {t('explore')}
-                      <ArrowRight className={`h-3.5 w-3.5 sm:h-4 sm:w-4 ${isRTL ? 'mr-1.5 sm:mr-2 rotate-180' : 'ml-1.5 sm:ml-2'}`} />
-                    </Button>
-                  </CardContent>
-                </Card>
-              );
-            })}
-          </div>
+      {/* ─────────── CTA FINAL — ASSISTANT VIRTUEL ─────────── */}
+      <section className="container mx-auto px-4 py-16 md:py-24">
+        <div className="max-w-3xl mx-auto" dir={dir}>
+          <Card className="overflow-hidden border-0 shadow-xl bg-gradient-to-br from-primary to-primary/80 text-primary-foreground">
+            <CardContent className="p-8 md:p-12 text-center">
+              <div className="w-14 h-14 rounded-2xl bg-primary-foreground/10 backdrop-blur flex items-center justify-center mx-auto mb-5">
+                <Sparkles className="h-7 w-7" />
+              </div>
+              <h3 className={`text-2xl md:text-3xl font-bold mb-3 ${font}`}>
+                {isRTL ? "هل لديك سؤال محدد ؟" : "Une question précise ?"}
+              </h3>
+              <p className={`text-base md:text-lg opacity-90 max-w-xl mx-auto mb-7 ${font}`}>
+                {isRTL
+                  ? "اطرح سؤالك مباشرة على المساعد الافتراضي. إجابة فورية بالعربية أو الفرنسية، مبنية على القانون التونسي."
+                  : "Posez votre question à l'assistant virtuel. Réponse immédiate en français ou en arabe, fondée sur le droit tunisien."}
+              </p>
+              <Button asChild size="lg" variant="secondary" className={`min-w-[220px] ${font}`}>
+                <Link to="/acces-aux-droits/assistant-virtuel">
+                  {isRTL ? "افتح المساعد الآن" : "Discuter maintenant"}
+                  <ArrowRight className={`h-4 w-4 ${arrow}`} />
+                </Link>
+              </Button>
+            </CardContent>
+          </Card>
         </div>
       </section>
-    </>
+    </main>
   );
 };
 

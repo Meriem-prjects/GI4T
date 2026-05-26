@@ -4,7 +4,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
-import { FAQItem } from "@/hooks/useFAQItems";
+import { useFAQItems, FAQItem } from "@/hooks/useFAQItems";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 interface FAQItemFormProps {
@@ -24,6 +24,15 @@ export const FAQItemForm = ({ item, onSubmit, onCancel }: FAQItemFormProps) => {
     display_order: item?.display_order || 0,
     is_active: item?.is_active ?? true,
   });
+
+  // Suggestions de catégories : on récupère toutes les catégories
+  // existantes pour éviter les fautes de frappe et garder la cohérence.
+  const { data: allItems } = useFAQItems(false);
+  const existingCategories = Array.from(
+    new Map(
+      (allItems ?? []).map((i) => [i.category, { fr: i.category, ar: i.category_ar }]),
+    ).values(),
+  ).sort((a, b) => a.fr.localeCompare(b.fr));
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -91,7 +100,39 @@ export const FAQItemForm = ({ item, onSubmit, onCancel }: FAQItemFormProps) => {
                 value={formData.category}
                 onChange={(e) => setFormData({ ...formData, category: e.target.value })}
                 required
+                list="faq-existing-categories"
+                placeholder="Tapez ou choisissez une catégorie existante"
               />
+              <datalist id="faq-existing-categories">
+                {existingCategories.map((c) => (
+                  <option key={c.fr} value={c.fr} />
+                ))}
+              </datalist>
+              {existingCategories.length > 0 && (
+                <div className="flex flex-wrap gap-1.5 pt-1">
+                  {existingCategories.slice(0, 12).map((c) => (
+                    <button
+                      key={c.fr}
+                      type="button"
+                      onClick={() =>
+                        setFormData({ ...formData, category: c.fr, category_ar: c.ar || "" })
+                      }
+                      className={`px-2 py-0.5 rounded-full text-[11px] border transition-colors ${
+                        formData.category === c.fr
+                          ? "bg-primary text-primary-foreground border-primary"
+                          : "bg-muted/60 text-muted-foreground border-border hover:bg-muted"
+                      }`}
+                    >
+                      {c.fr}
+                    </button>
+                  ))}
+                  {existingCategories.length > 12 && (
+                    <span className="text-[11px] text-muted-foreground py-0.5">
+                      +{existingCategories.length - 12} autres
+                    </span>
+                  )}
+                </div>
+              )}
             </div>
             <div className="space-y-2">
               <Label htmlFor="category_ar">Catégorie (AR)</Label>
@@ -100,6 +141,7 @@ export const FAQItemForm = ({ item, onSubmit, onCancel }: FAQItemFormProps) => {
                 value={formData.category_ar || ""}
                 onChange={(e) => setFormData({ ...formData, category_ar: e.target.value })}
                 dir="rtl"
+                placeholder="الفئة بالعربية"
               />
             </div>
           </div>
