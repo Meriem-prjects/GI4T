@@ -31,7 +31,7 @@ const AccesAuxDroits = () => {
       titleFr: "Comprendre",
       titleAr: "تفهم حقوقك",
       descFr: "Quel tribunal est compétent ? Quels délais respecter ? Quels recours s'offrent à vous face à l'administration ?",
-      descAr: "أي محكمة مختصة بقضيتك ؟ شنية الآجال إلي يلزم تحترمها ؟ شنوة الحلول إلي عندك قدام الإدارة ؟",
+      descAr: "أيّة محكمة مختصّة بقضيّتك ؟ وما هي الآجال التي يجب احترامها ؟ وما هي الحلول المتاحة أمامك أمام الإدارة ؟",
       link: "/acces-aux-droits/guides-pratiques",
       accent: "from-blue-500/15 to-blue-500/5",
       dot: "bg-blue-500",
@@ -120,8 +120,8 @@ const AccesAuxDroits = () => {
             </h1>
             <p className={`text-base md:text-lg text-muted-foreground max-w-2xl mx-auto mb-8 ${font}`}>
               {isRTL
-                ? "كل المعلومات إلي تحتاجها كي يبدى عندك مشكل مع إدارة عمومية : واضحة، مبسطة، بلهجة تونسية وفرنسية."
-                : "Toutes les informations dont vous avez besoin face à l'administration publique : claires, simplifiées, en français et en arabe tunisien."}
+                ? "كلّ المعلومات التي تحتاج إليها عند نشوب نزاع مع إدارة عمومية : واضحة ومبسَّطة، باللغتين العربية والفرنسية."
+                : "Toutes les informations dont vous avez besoin face à l'administration publique : claires, simplifiées, en français et en arabe."}
             </p>
             <div className={`flex flex-col sm:flex-row items-center justify-center gap-3 ${isRTL ? "sm:flex-row-reverse" : ""}`}>
               <Button asChild size="lg" className={`min-w-[200px] ${font}`}>

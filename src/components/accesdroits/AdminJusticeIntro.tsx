@@ -49,7 +49,7 @@ const THEMES: Theme[] = [
     titleFr: "Tribunal Administratif",
     titleAr: "المحكمة الإدارية",
     descFr: "Où se trouve le tribunal administratif, ses 12 chambres régionales, et comment savoir laquelle est compétente.",
-    descAr: "أين توجد المحكمة الإدارية، دوائرها الإبتدائية الجهوية الـ12، وكيف نعرف الدائرة المختصة جغرافيا.",
+    descAr: "أين توجد المحكمة الإدارية، ودوائرها الابتدائية الجهوية الاثنتا عشرة، وكيف نعرف الدائرة المختصة جغرافيا.",
     link: "/acces-aux-droits/guides-pratiques",
     color: "bg-rose-600",
     bgColor: "bg-rose-50",
@@ -59,7 +59,7 @@ const THEMES: Theme[] = [
     id: "quand-saisir",
     icon: Briefcase,
     titleFr: "Quand saisir le juge administratif ?",
-    titleAr: "متى نلجأ للقضاء الإداري ؟",
+    titleAr: "متى نلجأ إلى القضاء الإداري ؟",
     descFr: "Annuler une décision administrative, demander une indemnisation, obtenir une autorisation ou un constat en urgence.",
     descAr: "إلغاء قرار إداري، طلب تعويض، الحصول على إذن أو معاينة استعجالية.",
     link: "/acces-aux-droits/guides-pratiques",
@@ -71,9 +71,9 @@ const THEMES: Theme[] = [
     id: "delais",
     icon: Clock,
     titleFr: "Délais à respecter",
-    titleAr: "الآجال إلي يلزم نحترموها",
+    titleAr: "الآجال التي يجب احترامها",
     descFr: "60 jours pour annuler une décision, 2 mois pour le recours préalable, 15 ans pour demander réparation d'un dommage.",
-    descAr: "60 يوم لإلغاء قرار إداري، شهرين للمطلب المسبق، 15 عام لطلب التعويض على الضرر.",
+    descAr: "ستّون يوما لإلغاء قرار إداري، شهران للمطلب المسبق، خمسة عشر عاما لطلب التعويض عن الضرر.",
     link: "/acces-aux-droits/guides-pratiques",
     color: "bg-emerald-600",
     bgColor: "bg-emerald-50",
@@ -83,9 +83,9 @@ const THEMES: Theme[] = [
     id: "aide-judiciaire",
     icon: HeartHandshake,
     titleFr: "Aide juridictionnelle gratuite",
-    titleAr: "اإلعانة القضائية المجانية",
+    titleAr: "الإعانة العدلية المجانية",
     descFr: "Si vos revenus sont insuffisants, l'État prend en charge votre avocat, les frais d'huissier, d'expertise et de traduction.",
-    descAr: "إذا كان دخلك ال يكفي لتكليف محامي، الدولة تتكفل بأتعاب المحامي والخبراء والترجمة وتنفيذ الأحكام.",
+    descAr: "إذا كان دخلك لا يكفي لتكليف محامٍ، تتكفّل الدولة بأتعاب المحامي والخبراء والترجمة وتنفيذ الأحكام.",
     link: "/acces-aux-droits/guides-pratiques",
     color: "bg-purple-600",
     bgColor: "bg-purple-50",
@@ -95,9 +95,9 @@ const THEMES: Theme[] = [
     id: "mediateur",
     icon: Users,
     titleFr: "Médiateur Administratif",
-    titleAr: "الموفق اإلداري",
+    titleAr: "الموفّق الإداري",
     descFr: "Avant d'aller au tribunal, le Médiateur peut intervenir auprès de l'administration pour résoudre votre problème à l'amiable.",
-    descAr: "قبل التوجه للمحكمة، الموفق الإداري يتدخل لدى الإدارة لحل المشكل بطريقة ودية.",
+    descAr: "قبل التوجّه إلى المحكمة، يتدخّل الموفّق الإداري لدى الإدارة لحلّ المشكلة بطريقة ودّية.",
     link: "/acces-aux-droits/adresses-utiles",
     color: "bg-cyan-600",
     bgColor: "bg-cyan-50",
@@ -124,7 +124,7 @@ const AdminJusticeIntro = () => {
           </h2>
           <p className={`text-base md:text-lg text-muted-foreground ${isRTL ? "font-almarai" : ""}`}>
             {isRTL
-              ? "كل ما يلزمك تعرفو كي يبدى عندك مشكل مع إدارة عمومية : كيفاش تطعن في قرار إداري، كيفاش تطلب التعويض، شنية الآجال، شكون يعاونك. كل المعلومات والأمثلة العملية متوفرة في الأقسام التالية."
+              ? "كلّ ما تحتاج إلى معرفته عند نشوب نزاع مع إدارة عمومية : كيف تطعن في قرار إداري، وكيف تطلب التعويض، وما هي الآجال، ومن يساعدك. تجد كلّ المعلومات والأمثلة العمليّة في الأقسام التالية."
               : "Tout ce qu'il faut savoir quand vous avez un litige avec une administration publique : comment contester une décision, demander une indemnisation, respecter les délais, vous faire aider. Les guides pratiques détaillés sont disponibles dans les sections suivantes."}
           </p>
         </div>

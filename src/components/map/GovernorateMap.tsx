@@ -1,184 +1,182 @@
-import { useEffect, useRef } from 'react';
-import L from 'leaflet';
-import 'leaflet/dist/leaflet.css';
-import { Event } from '@/types/events';
-import { Governorate } from '@/types/events';
+import { useEffect, useMemo, useRef, useState } from "react";
+import { Event, Governorate } from "@/types/events";
+import { TunisiaMap } from "./TunisiaMap";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Badge } from "@/components/ui/badge";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 interface GovernorateMapProps {
   governorates: Governorate[];
   events: Event[];
+  selectedGovernorate?: string | null;
+  onGovernorateClick?: (name: string | null) => void;
 }
 
-export const GovernorateMap = ({ governorates, events }: GovernorateMapProps) => {
-  const mapRef = useRef<L.Map | null>(null);
-  const mapContainerRef = useRef<HTMLDivElement>(null);
+interface Centroid {
+  cx: number;
+  cy: number;
+}
+
+// Walks the rendered TunisiaMap SVG once on mount and reads each path's
+// getBBox() to derive a centroid in viewBox coordinates. We then drop an
+// event marker (SVG <circle>) at the centroid of the corresponding
+// governorate. This avoids hand-coding 24 coordinate pairs and stays in
+// sync if a path is ever edited.
+function useGovernorateCentroids(svgWrapperRef: React.RefObject<HTMLDivElement>) {
+  const [centroids, setCentroids] = useState<Map<string, Centroid>>(new Map());
 
   useEffect(() => {
-    if (!mapContainerRef.current) return;
+    if (!svgWrapperRef.current) return;
+    const svg = svgWrapperRef.current.querySelector("svg");
+    if (!svg) return;
+    const map = new Map<string, Centroid>();
+    svg.querySelectorAll<SVGPathElement>("path[id]").forEach((path) => {
+      // Skip the duplicate island ids — they map to the same parent
+      // governorate that already has a primary path.
+      if (path.id === "Sfax1" || path.id === "djerba") return;
+      try {
+        const bbox = path.getBBox();
+        map.set(path.id, {
+          cx: bbox.x + bbox.width / 2,
+          cy: bbox.y + bbox.height / 2,
+        });
+      } catch {
+        /* getBBox can throw if the path isn't laid out yet — ignore */
+      }
+    });
+    setCentroids(map);
+  }, [svgWrapperRef]);
 
-    // Initialize map
-    if (!mapRef.current) {
-      // Limites géographiques de la Tunisie
-      const tunisiaBounds: L.LatLngBoundsExpression = [
-        [30.0, 7.3],  // Sud-Ouest
-        [37.7, 11.8]  // Nord-Est
-      ];
+  return centroids;
+}
 
-      mapRef.current = L.map(mapContainerRef.current, {
-        center: [34.0, 9.0],
-        zoom: 6,
-        minZoom: 6,
-        maxZoom: 19,
-        maxBounds: tunisiaBounds,
-        maxBoundsViscosity: 1.0,
-        zoomControl: true,
-        attributionControl: false,
-      });
+export const GovernorateMap = ({
+  governorates: _governorates,
+  events,
+  selectedGovernorate = null,
+  onGovernorateClick,
+}: GovernorateMapProps) => {
+  const { isRTL } = useLanguage();
+  const wrapperRef = useRef<HTMLDivElement>(null);
+  const centroids = useGovernorateCentroids(wrapperRef);
 
-      // CartoDB Voyager — fond moderne et lisible, voir hook principal.
-      L.tileLayer(
-        'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png',
-        {
-          attribution:
-            '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/attributions">CARTO</a>',
-          subdomains: 'abcd',
-          maxZoom: 20,
-        },
-      ).addTo(mapRef.current);
+  const handleStateClick = (name: string) => {
+    if (!onGovernorateClick) return;
+    // Toggle off when clicking the already-selected governorate.
+    onGovernorateClick(name === selectedGovernorate ? null : name);
+  };
+
+  // Group events by governorate name so we can jitter overlapping circles
+  // around the centroid. Same UX as the old Leaflet jitter, but in SVG
+  // viewBox units (the SVG is 836×1270).
+  const eventsByGovernorate = useMemo(() => {
+    const map = new Map<string, Event[]>();
+    for (const ev of events) {
+      const name = ev.governorate?.name;
+      if (!name) continue;
+      const list = map.get(name) ?? [];
+      list.push(ev);
+      map.set(name, list);
     }
+    return map;
+  }, [events]);
 
-    const map = mapRef.current;
-
-    // Clear existing markers
-    map.eachLayer((layer) => {
-      if (layer instanceof L.Marker) {
-        map.removeLayer(layer);
-      }
+  const formatDate = (iso: string) =>
+    new Date(iso).toLocaleDateString(isRTL ? "ar-TN" : "fr-FR", {
+      day: "2-digit",
+      month: "long",
+      year: "numeric",
     });
 
-    // Add event markers
-    events.forEach((event, index) => {
-      let lat = event.latitude;
-      let lng = event.longitude;
-
-      // Fallback to governorate center if coordinates are missing
-      if (!lat || !lng) {
-        if (event.governorate?.geojson) {
-          const geometry = event.governorate.geojson.geometry as any;
-          if (geometry.type === 'Polygon') {
-            const coords = geometry.coordinates[0];
-            let sumLat = 0, sumLng = 0;
-            coords.forEach((c: any) => {
-              sumLng += c[0];
-              sumLat += c[1];
-            });
-            lat = sumLat / coords.length;
-            lng = sumLng / coords.length;
-
-            // Add a small jitter to avoid perfect overlap if multiple events use the fallback center
-            const jitter = 0.02;
-            lat += (Math.random() - 0.5) * jitter;
-            lng += (Math.random() - 0.5) * jitter;
-          }
-        }
-      }
-
-      if (lat && lng) {
-        const markerColor = event.type === 'action_realisee' ? '#10b981' : '#3b82f6';
-        const imageUrl = event.images?.[0] || null;
-
-        const markerIcon = L.divIcon({
-          className: 'custom-event-marker',
-          html: `
-            <div style="
-              width: 40px;
-              height: 30px;
-              border: 2px solid ${markerColor};
-              border-radius: 4px;
-              box-shadow: 0 2px 8px rgba(0,0,0,0.3);
-              overflow: hidden;
-              cursor: pointer;
-              background-color: white;
-            ">
-              ${imageUrl ? `
-                <img 
-                  src="${imageUrl}" 
-                  alt="${event.title}"
-                  style="
-                    width: 100%;
-                    height: 100%;
-                    object-fit: cover;
-                  "
-                  onerror="this.style.display='none'; this.parentElement.innerHTML='<div style=\\'display:flex;align-items:center;justify-content:center;height:100%;color:${markerColor};\\\'><svg width=\\'16\\' height=\\'16\\' viewBox=\\'0 0 24 24\\' fill=\\'currentColor\\'><path d=\\'M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z\\'/></svg></div>';"
-                />
-              ` : `
-                <div style="
-                  display: flex;
-                  align-items: center;
-                  justify-content: center;
-                  height: 100%;
-                  color: ${markerColor};
-                ">
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-                    <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/>
-                  </svg>
-                </div>
-              `}
-            </div>
-          `,
-          iconSize: [40, 30],
-          iconAnchor: [20, 15],
-          popupAnchor: [0, 30]
-        });
-
-        const marker = L.marker([lat, lng], {
-          icon: markerIcon
-        });
-
-        const popupContent = `
-          <div style="width: 300px;">
-            ${imageUrl ? `
-              <div style="margin-bottom: 10px; border-radius: 6px; overflow: hidden;">
-                <img 
-                  src="${imageUrl}" 
-                  alt="${event.title}"
-                  style="width: 100%; height: 140px; object-fit: cover;"
-                />
-              </div>
-            ` : ''}
-            <h3 style="font-weight: bold; margin-bottom: 8px; color: #1f2937; font-size: 15px;">${event.title}</h3>
-            <p style="margin-bottom: 10px; color: #6b7280; font-size: 13px; line-height: 1.4;">${event.description}</p>
-            <div style="display: flex; flex-direction: column; gap: 4px; font-size: 12px; color: #374151;">
-              <div><strong>Type:</strong> ${event.type === 'action_realisee' ? 'Action réalisée' : 'Événement à venir'}</div>
-              <div><strong>Date:</strong> ${new Date(event.event_date).toLocaleDateString('fr-FR')}</div>
-              ${event.governorate?.name ? `<div><strong>Gouvernorat:</strong> ${event.governorate.name}</div>` : ''}
-              ${event.people_impacted ? `<div><strong>Personnes impactées:</strong> ${event.people_impacted}</div>` : ''}
-              ${event.available_places ? `<div><strong>Places disponibles:</strong> ${event.available_places}</div>` : ''}
-            </div>
-          </div>
-        `;
-
-        marker.bindPopup(popupContent, {
-          autoPan: true,
-          autoPanPadding: [80, 80],
-          maxHeight: 400,
-          maxWidth: 300,
-          closeButton: true,
-          keepInView: false,
-          className: 'custom-popup-overflow',
-          offset: [0, 15]
-        });
-        marker.addTo(map);
-      }
-    });
-
-    return () => {
-      if (mapRef.current) {
-        mapRef.current.remove();
-        mapRef.current = null;
-      }
-    };
-  }, [governorates, events]);
-
-  return <div ref={mapContainerRef} style={{ width: '100%', height: '100%', position: 'relative', zIndex: 1 }} />;
+  return (
+    <div ref={wrapperRef} className="w-full h-full flex items-center justify-center p-4 overflow-auto">
+      <TunisiaMap selectedState={selectedGovernorate ?? ""} onStateClick={handleStateClick}>
+        {Array.from(eventsByGovernorate.entries()).flatMap(([name, group]) => {
+          const c = centroids.get(name);
+          if (!c) return [];
+          return group.map((ev, i) => {
+            // Spread overlapping events around the centroid in a small ring.
+            const angle = (2 * Math.PI * i) / Math.max(group.length, 1);
+            const offset = group.length > 1 ? 18 : 0;
+            const cx = c.cx + Math.cos(angle) * offset;
+            const cy = c.cy + Math.sin(angle) * offset;
+            const fill = ev.type === "action_realisee" ? "#10b981" : "#3b82f6";
+            return (
+              <Popover key={ev.id}>
+                <PopoverTrigger asChild>
+                  <circle
+                    cx={cx}
+                    cy={cy}
+                    r={14}
+                    fill={fill}
+                    stroke="white"
+                    strokeWidth={3}
+                    className="cursor-pointer drop-shadow-md hover:opacity-90 transition-opacity"
+                  />
+                </PopoverTrigger>
+                <PopoverContent className="w-72 p-3" dir={isRTL ? "rtl" : "ltr"}>
+                  {ev.images?.[0] && (
+                    <div className="mb-2 -mx-3 -mt-3 overflow-hidden rounded-t-md">
+                      <img
+                        src={ev.images[0]}
+                        alt={ev.title}
+                        className="w-full h-32 object-cover"
+                      />
+                    </div>
+                  )}
+                  <div className="flex items-center gap-2 mb-2">
+                    <Badge
+                      className={
+                        ev.type === "action_realisee"
+                          ? "bg-emerald-600 hover:bg-emerald-600"
+                          : "bg-blue-600 hover:bg-blue-600"
+                      }
+                    >
+                      {ev.type === "action_realisee"
+                        ? isRTL
+                          ? "إجراء منجز"
+                          : "Action réalisée"
+                        : isRTL
+                        ? "حدث قادم"
+                        : "Événement à venir"}
+                    </Badge>
+                  </div>
+                  <h3 className={`font-semibold text-sm leading-snug mb-1 ${isRTL ? "font-almarai" : ""}`}>
+                    {isRTL && ev.title_ar ? ev.title_ar : ev.title}
+                  </h3>
+                  <p className={`text-xs text-muted-foreground leading-relaxed mb-2 line-clamp-3 ${isRTL ? "font-almarai" : ""}`}>
+                    {isRTL && ev.description_ar ? ev.description_ar : ev.description}
+                  </p>
+                  <div className={`text-[11px] text-muted-foreground space-y-0.5 ${isRTL ? "font-almarai" : ""}`}>
+                    <div>
+                      <strong>{isRTL ? "التاريخ : " : "Date : "}</strong>
+                      {formatDate(ev.event_date)}
+                    </div>
+                    {ev.governorate?.name && (
+                      <div>
+                        <strong>{isRTL ? "الولاية : " : "Gouvernorat : "}</strong>
+                        {isRTL && ev.governorate.name_ar ? ev.governorate.name_ar : ev.governorate.name}
+                      </div>
+                    )}
+                    {ev.people_impacted ? (
+                      <div>
+                        <strong>{isRTL ? "المستفيدون : " : "Personnes impactées : "}</strong>
+                        {ev.people_impacted}
+                      </div>
+                    ) : null}
+                    {ev.available_places ? (
+                      <div>
+                        <strong>{isRTL ? "المقاعد المتاحة : " : "Places disponibles : "}</strong>
+                        {ev.available_places}
+                      </div>
+                    ) : null}
+                  </div>
+                </PopoverContent>
+              </Popover>
+            );
+          });
+        })}
+      </TunisiaMap>
+    </div>
+  );
 };

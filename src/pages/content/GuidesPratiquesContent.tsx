@@ -108,11 +108,11 @@ const GUIDES: Guide[] = [
       },
       {
         headingFr: "Comment savoir quel tribunal saisir ?",
-        headingAr: "كيفاش نعرف المحكمة المختصة ؟",
+        headingAr: "كيف نعرف المحكمة المختصة ؟",
         bodyFr:
           "La question de compétence se pose en deux temps : d'abord la matière (quel ordre ?), puis le ressort géographique (quel tribunal dans cet ordre ?). En cas de doute, le tribunal saisi à tort renvoie le dossier au tribunal compétent.",
         bodyAr:
-          "مسألة الاختصاص تطرح على مرحلتين : أولا الموضوع (أي قسم ؟)، ثم المرجع الترابي (أي محكمة في هذا القسم ؟). في صورة الشك، المحكمة المتعهدة خطأ تحيل الملف للمحكمة المختصة.",
+          "تُطرح مسألة الاختصاص على مرحلتين : أولا الموضوع (أيّ قسم ؟)، ثم المرجع الترابي (أيّة محكمة في هذا القسم ؟). في حال الشكّ، تُحيل المحكمة التي تعهدت بالملف خطأً الملفَّ إلى المحكمة المختصة.",
       },
     ],
   },
@@ -122,11 +122,11 @@ const GUIDES: Guide[] = [
     categoryFr: "Tribunal administratif",
     categoryAr: "المحكمة الإدارية",
     titleFr: "Le Tribunal Administratif et ses 12 chambres régionales",
-    titleAr: "المحكمة الإدارية ودوائرها الإبتدائية الجهوية الـ12",
+    titleAr: "المحكمة الإدارية ودوائرها الابتدائية الجهوية الاثنتا عشرة",
     descFr:
       "Le Tribunal Administratif siège à Tunis, mais 12 chambres régionales le représentent dans tout le pays. Savoir où aller selon votre lieu de résidence.",
     descAr:
-      "المحكمة الإدارية مقرها تونس، لكن 12 دائرة جهوية تمثلها في كامل البلاد. اعرف وين تتوجه حسب مقر سكناك.",
+      "مقرّ المحكمة الإدارية بتونس، غير أنّ اثنتي عشرة دائرة جهوية تمثّلها في كامل البلاد. اعرف إلى أين تتوجّه حسب مقرّ سكناك.",
     durationFr: "10 min",
     durationAr: "10 دقائق",
     difficultyFr: "Débutant",
@@ -144,7 +144,7 @@ const GUIDES: Guide[] = [
         bodyFr:
           "Le Tribunal Administratif a son siège à Tunis. Pour rapprocher la justice du citoyen, il dispose de 12 chambres de première instance réparties dans les régions.",
         bodyAr:
-          "المحكمة الإدارية مقرها تونس. ولتقريب القضاء من المواطن، توجد 12 دائرة ابتدائية موزعة على الجهات.",
+          "تتّخذ المحكمة الإدارية من تونس مقرّا لها. وتقريبا للقضاء من المواطن، تتوزّع اثنتا عشرة دائرة ابتدائية على مختلف الجهات.",
       },
       {
         headingFr: "Les 12 chambres régionales",
@@ -152,7 +152,7 @@ const GUIDES: Guide[] = [
         bodyFr:
           "Chaque chambre régionale couvre un ou plusieurs gouvernorats. Le rattachement géographique est défini par décret.",
         bodyAr:
-          "كل دائرة جهوية تغطي ولاية أو أكثر. الانتماء الجغرافي محدد بأمر.",
+          "تغطّي كلّ دائرة جهوية ولاية واحدة أو أكثر. والانتماء الجغرافي محدَّد بأمر.",
         bulletsFr: [
           "Tunis, Ariana, Ben Arous, Manouba",
           "Nabeul, Zaghouan",
@@ -176,11 +176,11 @@ const GUIDES: Guide[] = [
       },
       {
         headingFr: "Comment savoir quelle chambre est compétente ?",
-        headingAr: "كيفاش نعرف الدائرة المختصة ؟",
+        headingAr: "كيف نعرف الدائرة المختصة ؟",
         bodyFr:
           "La compétence territoriale dépend du lieu où la décision administrative contestée a été prise, ou du lieu de résidence du requérant pour certains recours. En cas de doute, déposer la requête à la chambre la plus proche : elle la transmettra à la chambre compétente.",
         bodyAr:
-          "الاختصاص الترابي يتحدد حسب مكان اتخاذ القرار الإداري المطعون فيه، أو حسب مقر سكنى الطاعن في بعض الطعون. في صورة الشك، يمكن إيداع العريضة لدى أقرب دائرة : هي ترسلها للدائرة المختصة.",
+          "يتحدّد الاختصاص الترابي حسب مكان اتّخاذ القرار الإداري المطعون فيه، أو حسب مقرّ سكنى الطاعن في بعض الطعون. في حال الشكّ، يمكن إيداع العريضة لدى أقرب دائرة : فهي تُحيلها إلى الدائرة المختصة.",
       },
     ],
   },
@@ -256,11 +256,11 @@ const GUIDES: Guide[] = [
     categoryFr: "Délais",
     categoryAr: "الآجال",
     titleFr: "Les délais à respecter — 60 jours, 2 mois, 15 ans",
-    titleAr: "الآجال إلي يلزم نحترموها — 60 يوم، شهرين، 15 سنة",
+    titleAr: "الآجال التي يجب احترامها — 60 يوما، شهران، 15 سنة",
     descFr:
       "Saisir le juge trop tard, c'est perdre votre droit. Les trois délais essentiels à connaître pour ne pas se retrouver hors-jeu.",
     descAr:
-      "اللجوء للقاضي بعد فوات الأجل يعني فقدان حقك. الآجال الثلاثة الأساسية إلي يلزم نعرفوهم باش ما نطلعش خارج الميدان.",
+      "اللجوء إلى القاضي بعد فوات الأجل يعني فقدان حقّك. الآجال الثلاثة الأساسية التي يجب معرفتها حتى لا تخرج عن نطاق الإجراء.",
     durationFr: "8 min",
     durationAr: "8 دقائق",
     difficultyFr: "Débutant",
@@ -278,7 +278,7 @@ const GUIDES: Guide[] = [
         bodyFr:
           "Pour un recours en annulation, vous avez 60 jours à compter de la notification ou de la publication de la décision. Passé ce délai, la décision devient définitive.",
         bodyAr:
-          "بالنسبة لدعوى الإلغاء، عندك 60 يوم بداية من تبليغ القرار أو نشره. بعد هذا الأجل، القرار يصبح نهائي.",
+          "بالنسبة لدعوى الإلغاء، لديك ستّون يوما بداية من تاريخ تبليغ القرار أو نشره. بعد انقضاء هذا الأجل، يصبح القرار نهائيا.",
       },
       {
         headingFr: "2 mois pour le recours préalable",
@@ -286,7 +286,7 @@ const GUIDES: Guide[] = [
         bodyFr:
           "Avant la plupart des recours en indemnisation, il faut d'abord adresser une réclamation à l'administration (recours administratif préalable). Celle-ci a 2 mois pour répondre. Son silence vaut rejet.",
         bodyAr:
-          "قبل أغلب دعاوى التعويض، يلزم أولا توجيه مطلب للإدارة (الطعن الإداري المسبق). عندها شهرين باش تجاوب. سكوتها يعتبر رفض.",
+          "قبل رفع أغلب دعاوى التعويض، يجب أوّلا توجيه مطلب إلى الإدارة (الطعن الإداري المسبق). ولها شهران للإجابة. ويُعدّ سكوتها رفضا.",
       },
       {
         headingFr: "15 ans pour demander réparation",
@@ -302,7 +302,7 @@ const GUIDES: Guide[] = [
         bodyFr:
           "Les délais sont d'ordre public : le juge les vérifie d'office. Conservez précieusement les preuves de notification (lettre recommandée, accusé de réception, publication au JORT).",
         bodyAr:
-          "الآجال من النظام العام : القاضي يتثبت فيها تلقائيا. احتفظ بدقة بإثباتات التبليغ (الرسالة المضمونة الوصول، الإشعار، النشر بالرائد الرسمي).",
+          "الآجال من النظام العام : يتثبّت فيها القاضي تلقائيا. احتفظ بعناية بإثباتات التبليغ (الرسالة المضمونة الوصول، الإشعار، النشر بالرائد الرسمي).",
       },
     ],
   },
@@ -312,11 +312,11 @@ const GUIDES: Guide[] = [
     categoryFr: "Avocat",
     categoryAr: "المحامي",
     titleFr: "Avocat obligatoire ou pas ?",
-    titleAr: "المحامي إجباري ولا لا ؟",
+    titleAr: "هل المحامي إجباري أم لا ؟",
     descFr:
       "Devant le juge administratif, le ministère d'avocat est obligatoire dans certains cas et facultatif dans d'autres. Le point pour savoir si vous pouvez vous défendre seul.",
     descAr:
-      "أمام القاضي الإداري، تعيين محامي إجباري في حالات وغير إجباري في حالات أخرى. وضوح للمعرفة هل تستطيع الدفاع عن نفسك بنفسك.",
+      "أمام القاضي الإداري، يكون تعيين المحامي إجباريا في بعض الحالات واختياريا في حالات أخرى. توضيح يُمكّنك من معرفة ما إذا كنت تستطيع الدفاع عن نفسك بنفسك.",
     durationFr: "9 min",
     durationAr: "9 دقائق",
     difficultyFr: "Intermédiaire",
@@ -334,7 +334,7 @@ const GUIDES: Guide[] = [
         bodyFr:
           "Devant les chambres de première instance, le ministère d'avocat n'est pas systématiquement obligatoire pour certains recours simples (notamment référés et requêtes administratives de routine). Le citoyen peut se présenter seul.",
         bodyAr:
-          "أمام الدوائر الإبتدائية، تعيين محامي ليس إجباري بصفة آلية في بعض الطعون البسيطة (خاصة الاستعجالي والعرائض الإدارية العادية). المواطن يمكن يحضر بمفرده.",
+          "أمام الدوائر الابتدائية، لا يكون تعيين المحامي إجباريا بصفة آلية في بعض الطعون البسيطة (خاصة الاستعجالي والعرائض الإدارية العادية). يمكن للمواطن أن يحضر بمفرده.",
       },
       {
         headingFr: "En appel et en cassation",
@@ -342,15 +342,15 @@ const GUIDES: Guide[] = [
         bodyFr:
           "Devant les chambres d'appel et la chambre de cassation, le ministère d'avocat est obligatoire. Vous devez impérativement constituer avocat près du Tribunal Administratif.",
         bodyAr:
-          "أمام دوائر الاستئناف ودائرة التعقيب، تعيين محامي إجباري. يلزمك حتما تنيب محامي لدى المحكمة الإدارية.",
+          "أمام دوائر الاستئناف ودائرة التعقيب، يكون تعيين المحامي إجباريا. يجب عليك حتما توكيل محامٍ لدى المحكمة الإدارية.",
       },
       {
         headingFr: "Pourquoi un avocat reste recommandé",
-        headingAr: "لماذا يبقى المحامي مستحسن",
+        headingAr: "لماذا يبقى الاستعانة بالمحامي مستحسنة",
         bodyFr:
           "Même quand il n'est pas obligatoire, l'avocat connaît les délais, les formes et la jurisprudence. Une requête mal rédigée peut être rejetée pour des raisons de forme avant même d'être examinée sur le fond.",
         bodyAr:
-          "حتى لما ما يكونش إجباري، المحامي يعرف الآجال والأشكال وفقه القضاء. عريضة محررة بشكل غير سليم يمكن ترفض لأسباب شكلية قبل ما تنظر في الأصل.",
+          "حتى عندما لا يكون إجباريا، فإنّ المحامي يعرف الآجال والأشكال وفقه القضاء. والعريضة المحرَّرة بشكل غير سليم قد تُرفض لأسباب شكلية قبل أن يُنظر في الأصل.",
         bulletsFr: [
           "Maîtrise des délais et de la procédure écrite.",
           "Rédaction des conclusions et constitution du dossier.",
@@ -374,7 +374,7 @@ const GUIDES: Guide[] = [
     descFr:
       "Si vos revenus sont insuffisants pour payer un avocat, l'État prend en charge votre défense, les frais d'huissier, d'expertise et de traduction.",
     descAr:
-      "إذا كان دخلك ما يكفيش باش تخلص محامي، الدولة تتكفل بالدفاع عنك وأتعاب عدل التنفيذ والخبراء والترجمة.",
+      "إذا كان دخلك لا يكفي لدفع أتعاب محامٍ، تتكفّل الدولة بالدفاع عنك وبأتعاب عدل التنفيذ والخبراء والترجمة.",
     durationFr: "10 min",
     durationAr: "10 دقائق",
     difficultyFr: "Débutant",
@@ -388,19 +388,19 @@ const GUIDES: Guide[] = [
     sections: [
       {
         headingFr: "Qui peut en bénéficier ?",
-        headingAr: "شكون يستفيد منها ؟",
+        headingAr: "من يستفيد منها ؟",
         bodyFr:
           "Toute personne dont les revenus sont insuffisants pour faire valoir ses droits en justice. Les seuils sont fixés par décret et révisés régulièrement.",
         bodyAr:
-          "كل شخص دخله ما يكفيش باش يتمتع بحقوقه أمام القضاء. الحدود تحدد بأمر وتراجع بصفة دورية.",
+          "كل شخص لا يكفي دخله لتمكينه من ممارسة حقوقه أمام القضاء. تُحدَّد الحدود بأمر وتُراجَع بصفة دورية.",
       },
       {
         headingFr: "Ce que l'État prend en charge",
-        headingAr: "آش تتكفل به الدولة",
+        headingAr: "ما الذي تتكفّل به الدولة",
         bodyFr:
           "L'aide juridictionnelle couvre l'ensemble des frais nécessaires à la procédure :",
         bodyAr:
-          "الإعانة العدلية تغطي كل المصاريف الضرورية للإجراءات :",
+          "تغطّي الإعانة العدلية جميع المصاريف الضرورية للإجراءات :",
         bulletsFr: [
           "Honoraires de l'avocat désigné.",
           "Frais d'huissier de justice.",
@@ -418,11 +418,11 @@ const GUIDES: Guide[] = [
       },
       {
         headingFr: "Comment la demander ?",
-        headingAr: "كيفاش تطلبها ؟",
+        headingAr: "كيف تطلبها ؟",
         bodyFr:
           "Le dossier de demande se dépose au bureau d'aide juridictionnelle du tribunal compétent. Il comprend une demande écrite, un justificatif de revenus, et une copie de la décision contestée le cas échéant.",
         bodyAr:
-          "ملف الطلب يودع بمكتب الإعانة العدلية بالمحكمة المختصة. يحتوي مطلب كتابي، إثبات الدخل، ونسخة من القرار المطعون فيه عند الاقتضاء.",
+          "يُودَع ملف الطلب بمكتب الإعانة العدلية لدى المحكمة المختصة. ويتضمّن مطلبا كتابيا وإثباتا للدخل ونسخة من القرار المطعون فيه عند الاقتضاء.",
       },
     ],
   },
@@ -432,11 +432,11 @@ const GUIDES: Guide[] = [
     categoryFr: "Médiation",
     categoryAr: "الوساطة",
     titleFr: "Le Médiateur Administratif — résoudre à l'amiable",
-    titleAr: "الموفق الإداري — حل ودي قبل المحكمة",
+    titleAr: "الموفّق الإداري — حلٌّ ودّي قبل المحكمة",
     descFr:
       "Avant d'aller au tribunal, le Médiateur Administratif peut intervenir auprès de l'administration pour résoudre votre problème à l'amiable. Gratuit et plus rapide.",
     descAr:
-      "قبل التوجه للمحكمة، الموفق الإداري يتدخل لدى الإدارة لحل المشكل بطريقة ودية. مجاني وأسرع.",
+      "قبل التوجّه إلى المحكمة، يمكن للموفّق الإداري أن يتدخّل لدى الإدارة لحلّ المشكلة بطريقة ودّية. مجّاني وأسرع.",
     durationFr: "8 min",
     durationAr: "8 دقائق",
     difficultyFr: "Débutant",
@@ -450,19 +450,19 @@ const GUIDES: Guide[] = [
     sections: [
       {
         headingFr: "Le rôle du Médiateur",
-        headingAr: "دور الموفق",
+        headingAr: "دور الموفّق",
         bodyFr:
           "Le Médiateur Administratif est une institution indépendante chargée de faciliter le dialogue entre le citoyen et l'administration. Il ne juge pas — il propose une solution équitable.",
         bodyAr:
-          "الموفق الإداري مؤسسة مستقلة مكلفة بتسهيل الحوار بين المواطن والإدارة. هو ما يحكمش — يقترح حل عادل.",
+          "الموفّق الإداري مؤسسة مستقلة مكلَّفة بتسهيل الحوار بين المواطن والإدارة. فهو لا يحكم — بل يقترح حلاًّ عادلا.",
       },
       {
         headingFr: "Quand le saisir ?",
-        headingAr: "متى نلجأ ليه ؟",
+        headingAr: "متى نلجأ إليه ؟",
         bodyFr:
           "Vous pouvez saisir le Médiateur quand vous estimez que l'administration a mal traité votre demande, mais avant ou parallèlement à un recours juridictionnel.",
         bodyAr:
-          "يمكنك اللجوء للموفق عندما تعتبر أن الإدارة عاملتك بطريقة سيئة، قبل أو بالتوازي مع طعن قضائي.",
+          "يمكنك اللجوء إلى الموفّق إذا رأيت أنّ الإدارة قد عاملتك معاملة سيّئة، وذلك قبل تقديم طعن قضائي أو بالتوازي معه.",
         bulletsFr: [
           "Refus injustifié de l'administration.",
           "Silence prolongé sur votre demande.",
@@ -470,19 +470,19 @@ const GUIDES: Guide[] = [
           "Délais excessifs de traitement.",
         ],
         bulletsAr: [
-          "رفض غير مبرر من الإدارة.",
-          "صمت مطول على طلبك.",
-          "تطبيق تعسفي لنص قانوني.",
-          "آجال مفرطة للمعالجة.",
+          "رفض غير مبرَّر من قِبل الإدارة.",
+          "صمت مطوَّل إزاء طلبك.",
+          "تطبيق تعسّفي لنصّ قانوني.",
+          "آجال مفرطة في المعالجة.",
         ],
       },
       {
         headingFr: "Comment le saisir ?",
-        headingAr: "كيفاش نلجأ ليه ؟",
+        headingAr: "كيف نلجأ إليه ؟",
         bodyFr:
           "La saisine est gratuite. Une lettre simple exposant les faits, les démarches déjà entreprises, et accompagnée des pièces justificatives, suffit. Aucun avocat n'est nécessaire.",
         bodyAr:
-          "اللجوء مجاني. رسالة بسيطة تشرح الوقائع والإجراءات إلي قمت بها، ومرفقة بالوثائق المؤيدة، تكفي. ما يلزمش محامي.",
+          "اللجوء مجّاني. تكفي رسالة بسيطة تشرح الوقائع والإجراءات التي قمتَ بها، مرفقة بالوثائق المؤيِّدة. ولا يستوجب توكيل محامٍ.",
       },
     ],
   },
@@ -554,7 +554,7 @@ const GuidesPratiquesContent = () => {
           </h1>
           <p className={`text-base text-muted-foreground ${isRTL ? "font-almarai" : ""}`}>
             {isRTL
-              ? "كل ما يلزمك تعرفو كي يبدى عندك مشكل مع إدارة عمومية : كيفاش تطعن في قرار، تطلب تعويض، تحترم الآجال، وتلقى من يعاونك. سبعة فصول، تفسير بسيط، أمثلة عملية."
+              ? "كلّ ما تحتاج إلى معرفته عند نشوب نزاع مع إدارة عمومية : كيف تطعن في قرار، وكيف تطلب التعويض، وكيف تحترم الآجال، وأين تجد من يساعدك. سبعة فصول، شرحٌ مبسَّط، وأمثلة عمليّة."
               : "Tout ce qu'il faut savoir face à un litige avec une administration publique : comment contester une décision, demander une indemnisation, respecter les délais et trouver de l'aide. Sept chapitres, expliqués simplement, avec des exemples concrets."}
           </p>
         </div>
@@ -607,7 +607,7 @@ const GuidesPratiquesContent = () => {
         {/* Guides accordion — horizontal cards, click to expand in place */}
         {filteredGuides.length === 0 ? (
           <Card className="p-10 text-center text-muted-foreground">
-            {isRTL ? "ما لقيناش أدلة توافق بحثك." : "Aucun guide ne correspond à votre recherche."}
+            {isRTL ? "لم نعثر على أدلّة تطابق بحثك." : "Aucun guide ne correspond à votre recherche."}
           </Card>
         ) : (
           <div className="space-y-3 mb-10 max-w-4xl mx-auto">
@@ -766,7 +766,7 @@ const GuidesPratiquesContent = () => {
               </div>
               <div className="flex-1 text-center sm:text-start">
                 <h4 className={`font-semibold mb-1 ${isRTL ? "font-almarai" : ""}`}>
-                  {isRTL ? "ما زلت في حيرة ؟" : "Vous hésitez encore ?"}
+                  {isRTL ? "هل ما زلت متردّدا ؟" : "Vous hésitez encore ?"}
                 </h4>
                 <p className={`text-sm text-muted-foreground ${isRTL ? "font-almarai" : ""}`}>
                   {isRTL

@@ -1,8 +1,8 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { ChevronRight, Calendar, MapPin, Users } from "lucide-react";
+import { ChevronRight, Calendar, MapPin, Users, X } from "lucide-react";
 import { useEvents } from "@/hooks/useEvents";
 import { useGovernorates } from "@/hooks/useGovernorates";
 import { GovernorateMap } from "@/components/map/GovernorateMap";
@@ -16,13 +16,23 @@ const CarteInteractiveContent = () => {
   const { events = [] } = useEvents();
   const { governorates = [] } = useGovernorates();
   const [filter, setFilter] = useState<FilterType>('all');
+  const [selectedGovernorate, setSelectedGovernorate] = useState<string | null>(null);
   const { isRTL } = useLanguage();
   const { t } = useTranslation();
 
-  const filteredEvents = events.filter((event: Event) => {
-    if (filter === 'all') return true;
-    return event.type === filter;
-  });
+  // Type filter + governorate filter (when a region is selected on the SVG map).
+  const filteredEvents = useMemo(() => {
+    return events.filter((event: Event) => {
+      if (filter !== 'all' && event.type !== filter) return false;
+      if (selectedGovernorate && event.governorate?.name !== selectedGovernorate) return false;
+      return true;
+    });
+  }, [events, filter, selectedGovernorate]);
+
+  const selectedGovernorateAr = useMemo(() => {
+    if (!selectedGovernorate) return null;
+    return governorates.find((g) => g.name === selectedGovernorate)?.name_ar ?? selectedGovernorate;
+  }, [governorates, selectedGovernorate]);
 
   return (
     <main className={`flex-1 ${isRTL ? 'font-almarai' : ''}`}>
@@ -55,9 +65,11 @@ const CarteInteractiveContent = () => {
           <div className="order-1 lg:order-2 lg:sticky lg:top-4 h-[300px] sm:h-[400px] lg:h-[700px] overflow-visible">
             <Card className="h-full overflow-visible">
               <CardContent className="p-0 h-full overflow-visible relative">
-                <GovernorateMap 
-                  governorates={governorates} 
+                <GovernorateMap
+                  governorates={governorates}
                   events={filteredEvents}
+                  selectedGovernorate={selectedGovernorate}
+                  onGovernorateClick={setSelectedGovernorate}
                 />
                 
                 {/* Legend */}
@@ -110,14 +122,31 @@ const CarteInteractiveContent = () => {
                   size="sm"
                   onClick={() => setFilter('evenement_a_venir')}
                   className={`flex-1 sm:min-w-[140px] h-10 sm:h-9 text-sm ${
-                    filter === 'evenement_a_venir' 
-                      ? 'bg-blue-600 hover:bg-blue-700 text-white' 
+                    filter === 'evenement_a_venir'
+                      ? 'bg-blue-600 hover:bg-blue-700 text-white'
                       : 'border-blue-600 text-blue-600 hover:bg-blue-50'
                   }`}
                 >
                   {t('upcomingEvents')}
                 </Button>
               </div>
+
+              {/* Active governorate filter chip — appears when a region is clicked on the SVG map */}
+              {selectedGovernorate && (
+                <div className={`flex items-center ${isRTL ? 'flex-row-reverse justify-end' : ''}`}>
+                  <button
+                    type="button"
+                    onClick={() => setSelectedGovernorate(null)}
+                    className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium bg-blue-50 text-blue-700 border border-blue-200 hover:bg-blue-100 transition-colors ${isRTL ? 'flex-row-reverse font-almarai' : ''}`}
+                  >
+                    <MapPin className="h-3 w-3" />
+                    <span>
+                      {isRTL ? `الولاية : ${selectedGovernorateAr}` : `Filtré par : ${selectedGovernorate}`}
+                    </span>
+                    <X className="h-3 w-3" />
+                  </button>
+                </div>
+              )}
             </div>
             
             {filteredEvents.length === 0 ? (
