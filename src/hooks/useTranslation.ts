@@ -860,7 +860,7 @@ const translations: Record<'fr' | 'ar', Record<TranslationKey, string>> = {
     awarenessCampaign: 'حملة توعية',
     practicalGuide: 'دليل عملي',
     // Layout & Navigation
-    accessToRights: 'الوصول إلى الحقوق',
+    accessToRights: 'النفاذ إلى الحقوق',
     citizenSpace: 'بوابة المواطن',
     mediaLibrary: 'مكتبة الوسائط',
     actualites: 'الأخبار',
@@ -889,7 +889,7 @@ const translations: Record<'fr' | 'ar', Record<TranslationKey, string>> = {
     subscribe: 'اشترك',
     navigation: 'التنقل',
     observatoryOfRights: 'مرصد الحقوق',
-    accessRights: 'الوصول إلى الحقوق',
+    accessRights: 'النفاذ إلى الحقوق',
     publications: 'المنشورات',
     about: 'معلومات عنا',
     legalNotice: 'الإشعارات القانونية',

@@ -6,7 +6,44 @@ function toVectorLiteral(embedding: number[]): string {
   return `[${embedding.map((n) => n.toFixed(8)).join(",")}]`;
 }
 
-export async function generateAndStoreEmbedding(documentId: string, text: string): Promise<void> {
+export interface EmbeddingSource {
+  title?: string | null;
+  titleAr?: string | null;
+  summary?: string | null;
+  summaryAr?: string | null;
+  content?: string | null;
+}
+
+// Build the string passed to the embedding model. Titles are repeated
+// three times so their semantic signal dominates the resulting vector —
+// citizens search by "the title of the fiche" much more than by content.
+// Bilingual titles are included together so a query in either language
+// finds the same document.
+export function buildEmbeddingText(doc: EmbeddingSource): string {
+  const t = (doc.title ?? "").trim();
+  const tAr = (doc.titleAr ?? "").trim();
+  const s = (doc.summary ?? "").trim();
+  const sAr = (doc.summaryAr ?? "").trim();
+  const c = (doc.content ?? "").trim();
+  const parts: string[] = [];
+  // Boost titles: 3× each language.
+  if (t) parts.push(t, t, t);
+  if (tAr) parts.push(tAr, tAr, tAr);
+  // Summaries once each.
+  if (s) parts.push(s);
+  if (sAr) parts.push(sAr);
+  // Content last — carries most of the length budget.
+  if (c) parts.push(c);
+  return parts.join("\n\n");
+}
+
+// Accept either a raw string (legacy signature) or the doc object so
+// existing callers keep working while new code passes the full fields.
+export async function generateAndStoreEmbedding(
+  documentId: string,
+  input: string | EmbeddingSource,
+): Promise<void> {
+  const text = typeof input === "string" ? input : buildEmbeddingText(input);
   // text-embedding-3-small has a hard limit of 8192 tokens. We keep
   // a conservative 4 000 character slice (≈ 1 000–4 000 tokens
   // depending on the language) to never hit the limit.

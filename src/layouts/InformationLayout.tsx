@@ -58,7 +58,7 @@ const InformationLayout = () => {
               </Link>
               <Link to="/acces-aux-droits">
                 <Button variant="outline" size="sm" className={`text-xs sm:text-sm ${isRTL ? 'font-almarai' : ''}`}>
-                  {isRTL ? 'الوصول إلى الحقوق' : 'Accès aux Droits'}
+                  {isRTL ? 'النفاذ إلى الحقوق' : 'Accès aux Droits'}
                 </Button>
               </Link>
             </div>
