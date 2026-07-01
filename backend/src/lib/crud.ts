@@ -51,7 +51,7 @@ export interface CrudOptions<TCreate extends ZodTypeAny, TUpdate extends ZodType
   model: keyof typeof prisma;
   createSchema: TCreate;
   updateSchema: TUpdate;
-  listOrderBy?: Record<string, "asc" | "desc">;
+  listOrderBy?: Record<string, "asc" | "desc"> | Array<Record<string, "asc" | "desc">>;
   writeRoles?: string[];
   publicRead?: boolean;
   defaultWhere?: Record<string, unknown>;
@@ -78,7 +78,7 @@ export function makeCrudRouter<TCreate extends ZodTypeAny, TUpdate extends ZodTy
       const limit = Math.min(Number(req.query.limit ?? 100), 500);
       const offset = Math.max(Number(req.query.offset ?? 0), 0);
 
-      let orderBy: Record<string, "asc" | "desc"> = listOrderBy;
+      let orderBy: Record<string, "asc" | "desc"> | Array<Record<string, "asc" | "desc">> = listOrderBy;
       if (req.query.order_by) {
         const col = snakeToCamel(String(req.query.order_by));
         const dir = (req.query.order as "asc" | "desc") ?? "desc";
