@@ -9,6 +9,7 @@ import { LanguageProvider } from "@/contexts/LanguageContext";
 import ObservatoireProtectedRoute from "@/components/admin/ObservatoireProtectedRoute";
 import AccesDroitsProtectedRoute from "@/components/admin/AccesDroitsProtectedRoute";
 import ScrollToTop from "@/components/ScrollToTop";
+import FloatingAssistant from "@/components/FloatingAssistant";
 import Index from "./pages/Index";
 import Observatoire from "./pages/Observatoire";
 import SearchResults from "./pages/SearchResults";
@@ -120,6 +121,9 @@ const App: React.FC = () => (
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>
+        {/* Global chat bubble — hidden on the full assistant page and on
+            all /admin/* routes (handled internally via useLocation). */}
+        <FloatingAssistant />
           </AuthProvider>
         </LanguageProvider>
       </BrowserRouter>

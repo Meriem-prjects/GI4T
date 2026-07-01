@@ -9,6 +9,7 @@ export interface ChatbotConfig {
   font_family: string;
   system_prompt: string;
   welcome_message: string;
+  welcome_message_ar?: string | null;
   created_at: string;
   updated_at: string;
 }

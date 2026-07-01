@@ -29,6 +29,7 @@ interface ChatbotConfig {
   font_family: string;
   system_prompt: string;
   welcome_message: string;
+  welcome_message_ar?: string | null;
 }
 
 interface TrainingDocument {
@@ -183,7 +184,8 @@ const AdminChatbotConfig = () => {
           secondary_color: formData.secondary_color,
           font_family: formData.font_family,
           system_prompt: formData.system_prompt,
-          welcome_message: formData.welcome_message
+          welcome_message: formData.welcome_message,
+          welcome_message_ar: formData.welcome_message_ar || null,
         })
         .eq('id', config?.id);
 
@@ -511,13 +513,28 @@ const AdminChatbotConfig = () => {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="welcome_message">Message de bienvenue</Label>
+                  <Label htmlFor="welcome_message">Message de bienvenue (Français)</Label>
                   <Textarea
                     id="welcome_message"
                     {...register('welcome_message')}
                     rows={3}
                     placeholder="Message affiché au démarrage..."
                   />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="welcome_message_ar">رسالة الترحيب (بالعربية)</Label>
+                  <Textarea
+                    id="welcome_message_ar"
+                    {...register('welcome_message_ar')}
+                    rows={3}
+                    dir="rtl"
+                    className="font-almarai"
+                    placeholder="الرسالة المعروضة عند الفتح..."
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    Affichée automatiquement quand l'interface est en arabe.
+                  </p>
                 </div>
               </CardContent>
             </Card>

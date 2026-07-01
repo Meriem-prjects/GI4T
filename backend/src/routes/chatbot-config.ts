@@ -16,6 +16,7 @@ const configSchema = z.object({
   fontFamily: z.string().optional(),
   systemPrompt: z.string().optional(),
   welcomeMessage: z.string().optional(),
+  welcomeMessageAr: z.string().optional().nullable(),
 });
 
 export const chatbotConfigRouter = makeCrudRouter({

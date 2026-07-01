@@ -29,15 +29,20 @@ const AssistantVirtuel = () => {
   const abortControllerRef = useRef<AbortController | null>(null);
 
   useEffect(() => {
-    if (config?.welcome_message) {
+    // Pick the Arabic welcome message when the UI is in Arabic mode, fall
+    // back to the French one (which is always present) otherwise.
+    const welcome = isRTL
+      ? (config?.welcome_message_ar || config?.welcome_message)
+      : config?.welcome_message;
+    if (welcome) {
       setMessages([{
         id: 1,
         role: "assistant",
-        content: config.welcome_message,
-        timestamp: new Date()
+        content: welcome,
+        timestamp: new Date(),
       }]);
     }
-  }, [config?.welcome_message]);
+  }, [config?.welcome_message, config?.welcome_message_ar, isRTL]);
 
   useEffect(() => {
     const container = messagesContainerRef.current;

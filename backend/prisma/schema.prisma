@@ -381,15 +381,16 @@ model ActivityLog {
 // ============================================================================
 
 model ChatbotConfig {
-  id             String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  tone           String   @default("professionnel")
-  primaryColor   String   @default("#3B82F6") @map("primary_color")
-  secondaryColor String   @default("#10B981") @map("secondary_color")
-  fontFamily     String   @default("Inter, sans-serif") @map("font_family")
-  systemPrompt   String   @map("system_prompt")
-  welcomeMessage String   @map("welcome_message")
-  createdAt      DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
-  updatedAt      DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+  id                String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  tone              String   @default("professionnel")
+  primaryColor      String   @default("#3B82F6") @map("primary_color")
+  secondaryColor    String   @default("#10B981") @map("secondary_color")
+  fontFamily        String   @default("Inter, sans-serif") @map("font_family")
+  systemPrompt      String   @map("system_prompt")
+  welcomeMessage    String   @map("welcome_message")
+  welcomeMessageAr  String?  @map("welcome_message_ar")
+  createdAt         DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt         DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
 
   @@map("chatbot_config")
 }
