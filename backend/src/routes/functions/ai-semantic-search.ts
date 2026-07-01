@@ -20,11 +20,20 @@ const schema = z.object({
 
 /** Shape a Prisma document row into the frontend-expected flat format. */
 function shapeDocument(doc: Record<string, unknown>, similarity?: number) {
+  // Prefer the multi-category join (document_categories) over the legacy
+  // single primary category, so search results carry the same full
+  // category set that classic Supabase queries return.
+  const rawJoin = (doc as { documentCategories?: Array<{ category?: unknown }> }).documentCategories;
+  const primary = (doc as { category?: unknown }).category ?? null;
+  const joined = Array.isArray(rawJoin)
+    ? rawJoin.map((dc) => dc?.category).filter(Boolean)
+    : [];
+  const categories = joined.length > 0 ? joined : primary ? [primary] : [];
   return {
     ...doc,
     similarity,
-    primaryCategory: (doc as { category?: unknown }).category ?? null,
-    categories: (doc as { category?: unknown }).category ? [(doc as { category: unknown }).category] : [],
+    primaryCategory: primary ?? categories[0] ?? null,
+    categories,
   };
 }
 

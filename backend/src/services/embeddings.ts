@@ -63,6 +63,12 @@ export async function searchBySemantics(
   count = 10,
 ): Promise<Array<{ id: string; similarity: number }>> {
   const embedding = await generateEmbedding(queryText);
+  // Defensive: reject degenerate embeddings before they poison the SQL
+  // literal. `.toFixed(8)` on NaN produces the string "NaN", which
+  // Postgres would reject with a parse error, blanking downstream calls.
+  if (!embedding?.length || embedding.some((n) => !Number.isFinite(n))) {
+    throw new Error("Invalid embedding vector (empty or NaN)");
+  }
   const vectorLiteral = toVectorLiteral(embedding);
   // Inline the vector literal directly into the query.
   return prisma.$queryRawUnsafe<Array<{ id: string; similarity: number }>>(

@@ -19,6 +19,7 @@ import { Progress } from "@/components/ui/progress";
 import { useDocumentSearch } from "@/hooks/useDocumentSearch";
 import { useSearchFilters } from "@/hooks/useSearchFilters";
 import { useDocumentKeywords } from "@/hooks/useDocumentKeywords";
+import { useDebouncedValue } from "@/hooks/useDebouncedValue";
 import { createDocumentPath } from "@/lib/urlUtils";
 import { format } from "date-fns";
 import { useLanguage } from "@/contexts/LanguageContext";
@@ -95,9 +96,14 @@ const SearchResults = () => {
     }
   }, [yearRange]);
 
+  // Debounce the free-text query so we don't fire an AI embedding request
+  // on every keystroke — a full word takes 3–5 s otherwise and the UI can
+  // race between in-flight responses.
+  const debouncedQuery = useDebouncedValue(searchQuery, 450);
+
   // Fetch search results
   const { data: searchData, isLoading: searchLoading } = useDocumentSearch({
-    query: searchQuery,
+    query: debouncedQuery,
     courtType: selectedCourtType !== "all" ? selectedCourtType : undefined,
     yearFrom,
     yearTo,
