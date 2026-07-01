@@ -14,7 +14,6 @@ import {
   Building2,
   UserCheck,
   HeartHandshake,
-  Shield,
   ArrowRight,
   CheckCircle2,
 } from "lucide-react";
@@ -545,12 +544,8 @@ const GuidesPratiquesContent = () => {
       {/* Hero */}
       <section className="bg-gradient-to-b from-background to-muted/40 py-8 md:py-12">
         <div className="container mx-auto px-4 max-w-3xl text-center" dir={isRTL ? "rtl" : "ltr"}>
-          <Badge variant="outline" className="mb-3 gap-1.5">
-            <Shield className="h-3 w-3" />
-            {isRTL ? "دليل المواطن" : "Guide du citoyen"}
-          </Badge>
           <h1 className={`text-2xl md:text-3xl font-bold mb-3 ${isRTL ? "font-almarai" : ""}`}>
-            {isRTL ? "النفاذ إلى القضاء الإداري" : "Accès au juge administratif"}
+            {isRTL ? "دليل المواطن" : "Guide du Citoyen"}
           </h1>
           <p className={`text-base text-muted-foreground ${isRTL ? "font-almarai" : ""}`}>
             {isRTL
