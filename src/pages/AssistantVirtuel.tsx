@@ -8,6 +8,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useTranslation } from "@/hooks/useTranslation";
 import { supabase } from "@/integrations/supabase/client";
+import { renderChatMarkdown, isArabicText } from "@/lib/markdown-chat";
 
 interface Message {
   id: number;
@@ -167,23 +168,38 @@ const AssistantVirtuel = () => {
             {/* Chat Messages */}
             <CardContent ref={messagesContainerRef} className="flex-1 overflow-y-auto p-6">
               <div className="space-y-4">
-                {messages.map((msg) => (
-                  <div key={msg.id} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-                    <div 
-                      className={`max-w-[80%] p-4 rounded-lg ${
-                        msg.role === 'user' 
-                          ? 'text-white' 
-                          : 'bg-muted text-foreground'
-                      } ${isRTL ? 'text-right' : ''}`}
-                      style={msg.role === 'user' ? { backgroundColor: primaryColor } : {}}
-                    >
-                      <p className="text-sm leading-relaxed whitespace-pre-wrap">{msg.content}</p>
-                      <span className="text-xs opacity-70 mt-2 block">
-                        {msg.timestamp.toLocaleTimeString(language === 'ar' ? 'ar-TN' : 'fr-FR', { hour: '2-digit', minute: '2-digit' })}
-                      </span>
+                {messages.map((msg) => {
+                  // Auto-detect Arabic per message so mixed conversations
+                  // (user asks in FR, bot answers in AR, or vice versa)
+                  // still render each bubble in the correct direction.
+                  const msgIsArabic = isArabicText(msg.content);
+                  const bubbleDir = msgIsArabic ? "rtl" : "ltr";
+                  return (
+                    <div key={msg.id} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
+                      <div
+                        dir={bubbleDir}
+                        className={`max-w-[80%] p-4 rounded-lg ${
+                          msg.role === 'user'
+                            ? 'text-white'
+                            : 'bg-muted text-foreground'
+                        } ${msgIsArabic ? 'font-almarai text-right' : 'text-left'}`}
+                        style={msg.role === 'user' ? { backgroundColor: primaryColor } : {}}
+                      >
+                        {msg.role === 'assistant' ? (
+                          <div
+                            className="chat-md text-sm leading-relaxed"
+                            dangerouslySetInnerHTML={{ __html: renderChatMarkdown(msg.content) }}
+                          />
+                        ) : (
+                          <p className="text-sm leading-relaxed whitespace-pre-wrap">{msg.content}</p>
+                        )}
+                        <span className="text-xs opacity-70 mt-2 block">
+                          {msg.timestamp.toLocaleTimeString(language === 'ar' ? 'ar-TN' : 'fr-FR', { hour: '2-digit', minute: '2-digit' })}
+                        </span>
+                      </div>
                     </div>
-                  </div>
-                ))}
+                  );
+                })}
                 {isStreaming && messages[messages.length - 1]?.content === "" && (
                   <div className="flex justify-start">
                     <div className="bg-muted p-4 rounded-lg">
