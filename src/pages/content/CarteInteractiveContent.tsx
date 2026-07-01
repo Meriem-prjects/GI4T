@@ -1,8 +1,17 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { ChevronRight, Calendar, MapPin, Users, X } from "lucide-react";
+import {
+  ChevronRight,
+  Calendar,
+  MapPin,
+  Users,
+  Ticket,
+  ArrowRight,
+  Sparkles,
+  X,
+} from "lucide-react";
 import { useEvents } from "@/hooks/useEvents";
 import { useGovernorates } from "@/hooks/useGovernorates";
 import { GovernorateMap } from "@/components/map/GovernorateMap";
@@ -10,221 +19,377 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import { useTranslation } from "@/hooks/useTranslation";
 import type { Event } from "@/types/events";
 
-type FilterType = 'all' | 'action_realisee' | 'evenement_a_venir';
+type FilterType = "all" | "action_realisee" | "evenement_a_venir";
 
 const CarteInteractiveContent = () => {
   const { events = [] } = useEvents();
   const { governorates = [] } = useGovernorates();
-  const [filter, setFilter] = useState<FilterType>('all');
+  const [filter, setFilter] = useState<FilterType>("all");
   const [selectedGovernorate, setSelectedGovernorate] = useState<string | null>(null);
+  const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
   const { isRTL } = useLanguage();
   const { t } = useTranslation();
 
-  // Type filter + governorate filter (when a region is selected on the SVG map).
   const filteredEvents = useMemo(() => {
     return events.filter((event: Event) => {
-      if (filter !== 'all' && event.type !== filter) return false;
+      if (filter !== "all" && event.type !== filter) return false;
       if (selectedGovernorate && event.governorate?.name !== selectedGovernorate) return false;
       return true;
     });
   }, [events, filter, selectedGovernorate]);
 
-  const selectedGovernorateAr = useMemo(() => {
+  // Auto-select the first event when the filter changes or when nothing is selected.
+  useEffect(() => {
+    if (filteredEvents.length === 0) {
+      setSelectedEvent(null);
+      return;
+    }
+    if (!selectedEvent || !filteredEvents.find((e) => e.id === selectedEvent.id)) {
+      setSelectedEvent(filteredEvents[0]);
+    }
+  }, [filteredEvents, selectedEvent]);
+
+  const selectedGovernorateLabel = useMemo(() => {
     if (!selectedGovernorate) return null;
-    return governorates.find((g) => g.name === selectedGovernorate)?.name_ar ?? selectedGovernorate;
-  }, [governorates, selectedGovernorate]);
+    const g = governorates.find((g) => g.name === selectedGovernorate);
+    return isRTL && g?.name_ar ? g.name_ar : selectedGovernorate;
+  }, [governorates, selectedGovernorate, isRTL]);
+
+  const formatDate = (iso: string) =>
+    new Date(iso).toLocaleDateString(isRTL ? "ar-TN" : "fr-FR", {
+      day: "2-digit",
+      month: "long",
+      year: "numeric",
+    });
+
+  const shortDate = (iso: string) =>
+    new Date(iso).toLocaleDateString(isRTL ? "ar-TN" : "fr-FR", {
+      day: "2-digit",
+      month: "short",
+    });
 
   return (
-    <main className={`flex-1 ${isRTL ? 'font-almarai' : ''}`}>
+    <main className={`flex-1 ${isRTL ? "font-almarai" : ""}`}>
       {/* Breadcrumb */}
       <div className="bg-muted/30 py-2">
         <div className="container mx-auto px-4">
-          <div className={`flex items-center gap-2 text-sm text-muted-foreground ${isRTL ? 'flex-row-reverse justify-end' : ''}`}>
-            <span>{t('home')}</span>
-            <ChevronRight className={`h-4 w-4 ${isRTL ? 'rotate-180' : ''}`} />
-            <span>{t('accessRights')}</span>
-            <ChevronRight className={`h-4 w-4 ${isRTL ? 'rotate-180' : ''}`} />
-            <span className="text-foreground">{t('mapInteractiveTitle')}</span>
+          <div className={`flex items-center gap-2 text-sm text-muted-foreground ${isRTL ? "flex-row-reverse justify-end" : ""}`}>
+            <span>{t("home")}</span>
+            <ChevronRight className={`h-4 w-4 ${isRTL ? "rotate-180" : ""}`} />
+            <span>{t("accessRights")}</span>
+            <ChevronRight className={`h-4 w-4 ${isRTL ? "rotate-180" : ""}`} />
+            <span className="text-foreground">{t("mapInteractiveTitle")}</span>
           </div>
         </div>
       </div>
 
-      {/* Main Content */}
-      <div className="container mx-auto px-4 py-8">
-        {/* Page Header */}
-        <div className={`text-center mb-8 animate-fade-in ${isRTL ? 'text-right' : ''}`}>
-          <h1 className="text-3xl sm:text-4xl font-bold mb-4">{t('mapInteractiveTitle')}</h1>
-          <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-            {t('mapDescription')}
-          </p>
+      <div className="container mx-auto px-4 py-6">
+        {/* Header */}
+        <div className={`mb-5 ${isRTL ? "text-right" : ""}`}>
+          <h1 className="text-2xl sm:text-3xl font-bold mb-1">{t("mapInteractiveTitle")}</h1>
+          <p className="text-sm text-muted-foreground">{t("mapDescription")}</p>
         </div>
 
-        {/* Layout: Map first on mobile, then Events List */}
-        <div className="flex flex-col lg:grid lg:grid-cols-[30%_70%] gap-4 lg:gap-6">
-          {/* Map - First on mobile */}
-          <div className="order-1 lg:order-2 lg:sticky lg:top-4 h-[300px] sm:h-[400px] lg:h-[700px] overflow-visible">
-            <Card className="h-full overflow-visible">
-              <CardContent className="p-0 h-full overflow-visible relative">
+        {/* Filter bar */}
+        <div className={`flex flex-wrap items-center gap-2 mb-5 ${isRTL ? "flex-row-reverse" : ""}`}>
+          <Button
+            variant={filter === "all" ? "default" : "outline"}
+            size="sm"
+            onClick={() => setFilter("all")}
+          >
+            {t("allEvents")} <span className="opacity-70 ml-1">({events.length})</span>
+          </Button>
+          <Button
+            variant={filter === "action_realisee" ? "default" : "outline"}
+            size="sm"
+            onClick={() => setFilter("action_realisee")}
+            className={
+              filter === "action_realisee"
+                ? "bg-emerald-600 hover:bg-emerald-700 text-white"
+                : "border-emerald-600 text-emerald-700 hover:bg-emerald-50"
+            }
+          >
+            {t("completedActions")}{" "}
+            <span className="opacity-70 ml-1">
+              ({events.filter((e) => e.type === "action_realisee").length})
+            </span>
+          </Button>
+          <Button
+            variant={filter === "evenement_a_venir" ? "default" : "outline"}
+            size="sm"
+            onClick={() => setFilter("evenement_a_venir")}
+            className={
+              filter === "evenement_a_venir"
+                ? "bg-blue-600 hover:bg-blue-700 text-white"
+                : "border-blue-600 text-blue-700 hover:bg-blue-50"
+            }
+          >
+            {t("upcomingEvents")}{" "}
+            <span className="opacity-70 ml-1">
+              ({events.filter((e) => e.type === "evenement_a_venir").length})
+            </span>
+          </Button>
+
+          {selectedGovernorate && (
+            <button
+              type="button"
+              onClick={() => setSelectedGovernorate(null)}
+              className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium bg-primary/10 text-primary border border-primary/30 hover:bg-primary/20 transition-colors ${isRTL ? "flex-row-reverse font-almarai" : ""}`}
+            >
+              <MapPin className="h-3 w-3" />
+              <span>{selectedGovernorateLabel}</span>
+              <X className="h-3 w-3" />
+            </button>
+          )}
+        </div>
+
+        {/* 3-column layout: map (30%) — details (center) — list (right) */}
+        <div className="grid grid-cols-1 lg:grid-cols-[30%_1fr_360px] gap-4">
+          {/* ── Column 1 : Interactive Map ─────────────────────────────── */}
+          <Card className="overflow-hidden">
+            <CardContent className="p-3">
+              <div className={`flex items-center justify-between mb-2 ${isRTL ? "flex-row-reverse" : ""}`}>
+                <h3 className="font-semibold text-sm">
+                  {isRTL ? "الخريطة التفاعلية" : "Carte interactive"}
+                </h3>
+                <span className="text-[10px] text-muted-foreground">
+                  {isRTL ? "انقر على منطقة" : "Cliquez sur une région"}
+                </span>
+              </div>
+              <div className="h-[420px] sm:h-[500px] lg:h-[560px] flex items-center justify-center">
                 <GovernorateMap
                   governorates={governorates}
                   events={filteredEvents}
                   selectedGovernorate={selectedGovernorate}
                   onGovernorateClick={setSelectedGovernorate}
+                  selectedEventId={selectedEvent?.id ?? null}
+                  onEventClick={setSelectedEvent}
                 />
-                
-                {/* Legend */}
-                <div className={`absolute top-2 sm:top-4 ${isRTL ? 'left-2 sm:left-4' : 'right-2 sm:right-4'} bg-white/95 backdrop-blur-sm rounded-lg shadow-lg p-2 sm:p-3 space-y-1.5 sm:space-y-2 border border-gray-200 z-[1000]`}>
-                  <div className={`flex items-center gap-1.5 sm:gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
-                    <div className="w-3 h-3 sm:w-4 sm:h-4 bg-green-600 rounded"></div>
-                    <span className="text-[10px] sm:text-xs font-medium text-gray-700">{t('actionCompleted')}</span>
-                  </div>
-                  <div className={`flex items-center gap-1.5 sm:gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
-                    <div className="w-3 h-3 sm:w-4 sm:h-4 bg-blue-600 rounded"></div>
-                    <span className="text-[10px] sm:text-xs font-medium text-gray-700">{t('upcomingEvent')}</span>
-                  </div>
+              </div>
+              {/* Legend */}
+              <div className={`flex items-center justify-center gap-4 mt-2 pt-2 border-t ${isRTL ? "flex-row-reverse" : ""}`}>
+                <div className="flex items-center gap-1.5">
+                  <div className="w-3 h-3 rounded-full bg-emerald-500" />
+                  <span className="text-[10px] text-muted-foreground">
+                    {t("actionCompleted")}
+                  </span>
                 </div>
-              </CardContent>
-            </Card>
-          </div>
-
-          {/* Events List - Second on mobile */}
-          <div className="order-2 lg:order-1 space-y-3 sm:space-y-4 lg:overflow-y-auto lg:max-h-[700px] lg:pr-2 scrollbar-events">
-            <div className="sticky top-0 bg-background z-10 pb-3 sm:pb-4 space-y-3 sm:space-y-4">
-              <div className={`flex items-center justify-between ${isRTL ? 'flex-row-reverse' : ''}`}>
-                <h2 className="text-lg sm:text-xl font-semibold">{t('events')}</h2>
-                <Badge variant="outline" className="text-xs sm:text-sm">{filteredEvents.length} {filteredEvents.length !== 1 ? t('events').toLowerCase() : t('events').toLowerCase()}</Badge>
-              </div>
-              
-              {/* Filter Bar - Stacked on mobile */}
-              <div className="flex flex-col sm:flex-row gap-2 sm:flex-wrap">
-                <Button
-                  variant={filter === 'all' ? 'default' : 'outline'}
-                  size="sm"
-                  onClick={() => setFilter('all')}
-                  className="flex-1 sm:min-w-[100px] h-10 sm:h-9 text-sm"
-                >
-                  {t('allEvents')}
-                </Button>
-                <Button
-                  variant={filter === 'action_realisee' ? 'default' : 'outline'}
-                  size="sm"
-                  onClick={() => setFilter('action_realisee')}
-                  className={`flex-1 sm:min-w-[140px] h-10 sm:h-9 text-sm ${
-                    filter === 'action_realisee' 
-                      ? 'bg-green-600 hover:bg-green-700 text-white' 
-                      : 'border-green-600 text-green-600 hover:bg-green-50'
-                  }`}
-                >
-                  {t('completedActions')}
-                </Button>
-                <Button
-                  variant={filter === 'evenement_a_venir' ? 'default' : 'outline'}
-                  size="sm"
-                  onClick={() => setFilter('evenement_a_venir')}
-                  className={`flex-1 sm:min-w-[140px] h-10 sm:h-9 text-sm ${
-                    filter === 'evenement_a_venir'
-                      ? 'bg-blue-600 hover:bg-blue-700 text-white'
-                      : 'border-blue-600 text-blue-600 hover:bg-blue-50'
-                  }`}
-                >
-                  {t('upcomingEvents')}
-                </Button>
-              </div>
-
-              {/* Active governorate filter chip — appears when a region is clicked on the SVG map */}
-              {selectedGovernorate && (
-                <div className={`flex items-center ${isRTL ? 'flex-row-reverse justify-end' : ''}`}>
-                  <button
-                    type="button"
-                    onClick={() => setSelectedGovernorate(null)}
-                    className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium bg-blue-50 text-blue-700 border border-blue-200 hover:bg-blue-100 transition-colors ${isRTL ? 'flex-row-reverse font-almarai' : ''}`}
-                  >
-                    <MapPin className="h-3 w-3" />
-                    <span>
-                      {isRTL ? `الولاية : ${selectedGovernorateAr}` : `Filtré par : ${selectedGovernorate}`}
-                    </span>
-                    <X className="h-3 w-3" />
-                  </button>
+                <div className="flex items-center gap-1.5">
+                  <div className="w-3 h-3 rounded-full bg-blue-500" />
+                  <span className="text-[10px] text-muted-foreground">
+                    {t("upcomingEvent")}
+                  </span>
                 </div>
-              )}
-            </div>
-            
-            {filteredEvents.length === 0 ? (
-              <div className="text-center py-8 sm:py-12 text-muted-foreground">
-                <Calendar className="h-10 w-10 sm:h-12 sm:w-12 mx-auto mb-3 sm:mb-4 opacity-50" />
-                <p className="text-sm sm:text-base">{t('noResults')}</p>
               </div>
-            ) : (
-              filteredEvents.map((event) => (
-                <Card key={event.id} className="hover:shadow-lg transition-shadow duration-300">
-                  <CardContent className="p-3 sm:p-4">
-                    {/* Event Image */}
-                    {event.images && event.images.length > 0 && (
-                      <div className="mb-3 sm:mb-4 rounded-lg overflow-hidden">
-                        <img 
-                          src={event.images[0]} 
-                          alt={event.title}
-                          className="w-full h-36 sm:h-48 object-cover"
-                        />
-                      </div>
-                    )}
-                    
-                    {/* Event Info */}
-                    <div className="space-y-2 sm:space-y-3">
-                      <div className={`flex items-start justify-between gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
-                        <h3 className={`font-semibold text-base sm:text-lg flex-1 ${isRTL ? 'text-right' : ''}`}>{event.title}</h3>
-                        <Badge 
-                          className={`flex-shrink-0 text-xs ${
-                            event.type === 'action_realisee' 
-                              ? 'bg-green-600 text-white hover:bg-green-700' 
-                              : 'bg-blue-600 text-white hover:bg-blue-700'
-                          }`}
+            </CardContent>
+          </Card>
+
+          {/* ── Column 2 : Detail of selected event ────────────────────── */}
+          <Card className="overflow-hidden">
+            <CardContent className="p-0 h-full">
+              {selectedEvent ? (
+                <div className="h-full flex flex-col" dir={isRTL ? "rtl" : "ltr"}>
+                  {/* Hero image */}
+                  {selectedEvent.images?.[0] ? (
+                    <div className="relative h-56 sm:h-64 overflow-hidden bg-muted">
+                      <img
+                        src={selectedEvent.images[0]}
+                        alt={selectedEvent.title}
+                        className="w-full h-full object-cover"
+                      />
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
+                      <div className={`absolute bottom-3 ${isRTL ? "right-3" : "left-3"}`}>
+                        <Badge
+                          className={
+                            selectedEvent.type === "action_realisee"
+                              ? "bg-emerald-600 hover:bg-emerald-600 text-white"
+                              : "bg-blue-600 hover:bg-blue-600 text-white"
+                          }
                         >
-                          {event.type === 'action_realisee' ? t('actionCompleted') : t('upcomingEvent')}
+                          {selectedEvent.type === "action_realisee"
+                            ? t("actionCompleted")
+                            : t("upcomingEvent")}
                         </Badge>
                       </div>
-                      
-                      <p className={`text-xs sm:text-sm text-muted-foreground line-clamp-2 ${isRTL ? 'text-right' : ''}`}>
-                        {event.description}
-                      </p>
-                      
-                      <div className="space-y-1.5 sm:space-y-2 text-xs sm:text-sm">
-                        <div className={`flex items-center gap-2 text-muted-foreground ${isRTL ? 'flex-row-reverse' : ''}`}>
-                          <Calendar className="h-3.5 w-3.5 sm:h-4 sm:w-4 flex-shrink-0" />
-                          <span>{new Date(event.event_date).toLocaleDateString(isRTL ? 'ar-TN' : 'fr-FR', {
-                            year: 'numeric',
-                            month: 'long',
-                            day: 'numeric'
-                          })}</span>
-                        </div>
-                        
-                        {event.governorate?.name && (
-                          <div className={`flex items-center gap-2 text-muted-foreground ${isRTL ? 'flex-row-reverse' : ''}`}>
-                            <MapPin className="h-3.5 w-3.5 sm:h-4 sm:w-4 flex-shrink-0" />
-                            <span>{event.governorate.name}</span>
-                          </div>
-                        )}
-                        
-                        {event.people_impacted && (
-                          <div className={`flex items-center gap-2 text-muted-foreground ${isRTL ? 'flex-row-reverse' : ''}`}>
-                            <Users className="h-3.5 w-3.5 sm:h-4 sm:w-4 flex-shrink-0" />
-                            <span>{event.people_impacted} {isRTL ? 'شخص متأثر' : 'personnes impactées'}</span>
-                          </div>
-                        )}
-                        
-                        {event.available_places && event.type === 'evenement_a_venir' && (
-                          <div className={`flex items-center gap-2 text-muted-foreground ${isRTL ? 'flex-row-reverse' : ''}`}>
-                            <Users className="h-3.5 w-3.5 sm:h-4 sm:w-4 flex-shrink-0" />
-                            <span>{event.available_places} {isRTL ? 'مقعد متاح' : 'places disponibles'}</span>
-                          </div>
-                        )}
-                      </div>
                     </div>
-                  </CardContent>
-                </Card>
-              ))
-            )}
-          </div>
+                  ) : (
+                    <div className="h-32 bg-gradient-to-br from-primary/5 to-primary/10 flex items-center justify-center">
+                      <Sparkles className="h-10 w-10 text-primary/40" />
+                    </div>
+                  )}
+
+                  {/* Body */}
+                  <div className="p-4 sm:p-5 flex-1 flex flex-col">
+                    <h2 className={`text-lg sm:text-xl font-bold mb-2 ${isRTL ? "text-right font-almarai" : ""}`}>
+                      {isRTL && selectedEvent.title_ar
+                        ? selectedEvent.title_ar
+                        : selectedEvent.title}
+                    </h2>
+                    <p className={`text-sm text-muted-foreground mb-4 ${isRTL ? "text-right font-almarai" : ""}`}>
+                      {isRTL && selectedEvent.description_ar
+                        ? selectedEvent.description_ar
+                        : selectedEvent.description}
+                    </p>
+
+                    {/* Stats grid */}
+                    <div className="grid grid-cols-2 gap-2 mb-4">
+                      <div className="rounded-lg bg-muted/50 p-3">
+                        <div className={`flex items-center gap-1.5 text-xs text-muted-foreground mb-0.5 ${isRTL ? "flex-row-reverse" : ""}`}>
+                          <Calendar className="h-3.5 w-3.5" />
+                          <span>{isRTL ? "التاريخ" : "Date"}</span>
+                        </div>
+                        <div className="text-sm font-semibold">
+                          {formatDate(selectedEvent.event_date)}
+                        </div>
+                      </div>
+                      <div className="rounded-lg bg-muted/50 p-3">
+                        <div className={`flex items-center gap-1.5 text-xs text-muted-foreground mb-0.5 ${isRTL ? "flex-row-reverse" : ""}`}>
+                          <MapPin className="h-3.5 w-3.5" />
+                          <span>{isRTL ? "الولاية" : "Gouvernorat"}</span>
+                        </div>
+                        <div className="text-sm font-semibold">
+                          {selectedEvent.governorate
+                            ? isRTL && selectedEvent.governorate.name_ar
+                              ? selectedEvent.governorate.name_ar
+                              : selectedEvent.governorate.name
+                            : "—"}
+                        </div>
+                      </div>
+                      {selectedEvent.people_impacted ? (
+                        <div className="rounded-lg bg-emerald-50 border border-emerald-100 p-3">
+                          <div className={`flex items-center gap-1.5 text-xs text-emerald-700 mb-0.5 ${isRTL ? "flex-row-reverse" : ""}`}>
+                            <Users className="h-3.5 w-3.5" />
+                            <span>{isRTL ? "المستفيدون" : "Personnes impactées"}</span>
+                          </div>
+                          <div className="text-lg font-bold text-emerald-800">
+                            {selectedEvent.people_impacted}
+                          </div>
+                        </div>
+                      ) : null}
+                      {selectedEvent.available_places ? (
+                        <div className="rounded-lg bg-blue-50 border border-blue-100 p-3">
+                          <div className={`flex items-center gap-1.5 text-xs text-blue-700 mb-0.5 ${isRTL ? "flex-row-reverse" : ""}`}>
+                            <Ticket className="h-3.5 w-3.5" />
+                            <span>{isRTL ? "المقاعد المتاحة" : "Places disponibles"}</span>
+                          </div>
+                          <div className="text-lg font-bold text-blue-800">
+                            {selectedEvent.available_places}
+                          </div>
+                        </div>
+                      ) : null}
+                    </div>
+
+                    {selectedEvent.registration_enabled && (
+                      <Button className={`mt-auto w-full ${isRTL ? "font-almarai" : ""}`}>
+                        {isRTL ? "سجّل الآن" : "S'inscrire à cet événement"}
+                        <ArrowRight className={`h-4 w-4 ${isRTL ? "mr-1.5 rotate-180" : "ml-1.5"}`} />
+                      </Button>
+                    )}
+                  </div>
+                </div>
+              ) : (
+                <div className="h-full flex items-center justify-center p-8 text-center text-muted-foreground">
+                  <div>
+                    <Sparkles className="h-8 w-8 mx-auto mb-2 opacity-40" />
+                    <p className="text-sm">
+                      {isRTL
+                        ? "اختر حدثا من القائمة"
+                        : "Sélectionnez un événement dans la liste"}
+                    </p>
+                  </div>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* ── Column 3 : Compact events list (rows) ──────────────────── */}
+          <Card className="overflow-hidden">
+            <CardContent className="p-0 h-full flex flex-col">
+              <div className={`sticky top-0 z-10 bg-background border-b px-4 py-3 ${isRTL ? "text-right" : ""}`}>
+                <div className={`flex items-center justify-between ${isRTL ? "flex-row-reverse" : ""}`}>
+                  <h3 className="font-semibold text-sm">
+                    {isRTL ? "الأحداث" : "Événements"}
+                  </h3>
+                  <Badge variant="secondary" className="text-xs">
+                    {filteredEvents.length}
+                  </Badge>
+                </div>
+              </div>
+              <div className="flex-1 overflow-y-auto max-h-[560px] divide-y">
+                {filteredEvents.length === 0 ? (
+                  <div className="p-6 text-center text-sm text-muted-foreground">
+                    {t("noResults")}
+                  </div>
+                ) : (
+                  filteredEvents.map((event) => {
+                    const isSelected = selectedEvent?.id === event.id;
+                    const dotColor =
+                      event.type === "action_realisee"
+                        ? "bg-emerald-500"
+                        : "bg-blue-500";
+                    return (
+                      <button
+                        type="button"
+                        key={event.id}
+                        onClick={() => setSelectedEvent(event)}
+                        className={`w-full text-left flex items-center gap-3 px-3 py-2.5 transition-colors ${
+                          isSelected
+                            ? "bg-primary/10"
+                            : "hover:bg-muted/60"
+                        } ${isRTL ? "flex-row-reverse text-right" : ""}`}
+                        dir={isRTL ? "rtl" : "ltr"}
+                      >
+                        {/* Thumb */}
+                        <div className="relative w-11 h-11 rounded-md overflow-hidden bg-muted flex-shrink-0">
+                          {event.images?.[0] ? (
+                            <img
+                              src={event.images[0]}
+                              alt=""
+                              className="w-full h-full object-cover"
+                            />
+                          ) : (
+                            <div className="w-full h-full flex items-center justify-center">
+                              <Sparkles className="h-4 w-4 text-muted-foreground" />
+                            </div>
+                          )}
+                          <span
+                            className={`absolute -top-0.5 -right-0.5 w-3 h-3 rounded-full border-2 border-background ${dotColor}`}
+                          />
+                        </div>
+                        {/* Text */}
+                        <div className="flex-1 min-w-0">
+                          <div
+                            className={`text-sm font-medium leading-snug line-clamp-1 ${isRTL ? "font-almarai" : ""}`}
+                          >
+                            {isRTL && event.title_ar ? event.title_ar : event.title}
+                          </div>
+                          <div
+                            className={`text-[11px] text-muted-foreground flex items-center gap-2 mt-0.5 ${isRTL ? "flex-row-reverse font-almarai" : ""}`}
+                          >
+                            {event.governorate?.name && (
+                              <span className="flex items-center gap-1">
+                                <MapPin className="h-3 w-3" />
+                                {isRTL && event.governorate.name_ar
+                                  ? event.governorate.name_ar
+                                  : event.governorate.name}
+                              </span>
+                            )}
+                            <span className="flex items-center gap-1">
+                              <Calendar className="h-3 w-3" />
+                              {shortDate(event.event_date)}
+                            </span>
+                          </div>
+                        </div>
+                        <ChevronRight
+                          className={`h-4 w-4 text-muted-foreground flex-shrink-0 ${isRTL ? "rotate-180" : ""}`}
+                        />
+                      </button>
+                    );
+                  })
+                )}
+              </div>
+            </CardContent>
+          </Card>
         </div>
       </div>
     </main>

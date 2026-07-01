@@ -1,15 +1,14 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Event, Governorate } from "@/types/events";
 import { TunisiaMap } from "./TunisiaMap";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Badge } from "@/components/ui/badge";
-import { useLanguage } from "@/contexts/LanguageContext";
 
 interface GovernorateMapProps {
   governorates: Governorate[];
   events: Event[];
   selectedGovernorate?: string | null;
   onGovernorateClick?: (name: string | null) => void;
+  selectedEventId?: string | null;
+  onEventClick?: (event: Event) => void;
 }
 
 interface Centroid {
@@ -18,10 +17,8 @@ interface Centroid {
 }
 
 // Walks the rendered TunisiaMap SVG once on mount and reads each path's
-// getBBox() to derive a centroid in viewBox coordinates. We then drop an
-// event marker (SVG <circle>) at the centroid of the corresponding
-// governorate. This avoids hand-coding 24 coordinate pairs and stays in
-// sync if a path is ever edited.
+// getBBox() to derive a centroid in viewBox coordinates. We then drop event
+// thumbnails at the centroid of the corresponding governorate.
 function useGovernorateCentroids(svgWrapperRef: React.RefObject<HTMLDivElement>) {
   const [centroids, setCentroids] = useState<Map<string, Centroid>>(new Map());
 
@@ -31,8 +28,6 @@ function useGovernorateCentroids(svgWrapperRef: React.RefObject<HTMLDivElement>)
     if (!svg) return;
     const map = new Map<string, Centroid>();
     svg.querySelectorAll<SVGPathElement>("path[id]").forEach((path) => {
-      // Skip the duplicate island ids — they map to the same parent
-      // governorate that already has a primary path.
       if (path.id === "Sfax1" || path.id === "djerba") return;
       try {
         const bbox = path.getBBox();
@@ -55,20 +50,17 @@ export const GovernorateMap = ({
   events,
   selectedGovernorate = null,
   onGovernorateClick,
+  selectedEventId = null,
+  onEventClick,
 }: GovernorateMapProps) => {
-  const { isRTL } = useLanguage();
   const wrapperRef = useRef<HTMLDivElement>(null);
   const centroids = useGovernorateCentroids(wrapperRef);
 
   const handleStateClick = (name: string) => {
     if (!onGovernorateClick) return;
-    // Toggle off when clicking the already-selected governorate.
     onGovernorateClick(name === selectedGovernorate ? null : name);
   };
 
-  // Group events by governorate name so we can jitter overlapping circles
-  // around the centroid. Same UX as the old Leaflet jitter, but in SVG
-  // viewBox units (the SVG is 836×1270).
   const eventsByGovernorate = useMemo(() => {
     const map = new Map<string, Event[]>();
     for (const ev of events) {
@@ -81,98 +73,85 @@ export const GovernorateMap = ({
     return map;
   }, [events]);
 
-  const formatDate = (iso: string) =>
-    new Date(iso).toLocaleDateString(isRTL ? "ar-TN" : "fr-FR", {
-      day: "2-digit",
-      month: "long",
-      year: "numeric",
-    });
-
   return (
-    <div ref={wrapperRef} className="w-full h-full flex items-center justify-center p-4 overflow-auto">
+    <div
+      ref={wrapperRef}
+      className="w-full h-full flex items-center justify-center p-2 overflow-auto"
+    >
       <TunisiaMap selectedState={selectedGovernorate ?? ""} onStateClick={handleStateClick}>
+        {/* Circular clip mask, defined once for all thumbnails */}
+        <defs>
+          <clipPath id="event-thumb-clip" clipPathUnits="objectBoundingBox">
+            <circle cx="0.5" cy="0.5" r="0.5" />
+          </clipPath>
+        </defs>
+
         {Array.from(eventsByGovernorate.entries()).flatMap(([name, group]) => {
           const c = centroids.get(name);
           if (!c) return [];
+          const R = 20; // thumbnail radius in viewBox units
           return group.map((ev, i) => {
-            // Spread overlapping events around the centroid in a small ring.
-            const angle = (2 * Math.PI * i) / Math.max(group.length, 1);
-            const offset = group.length > 1 ? 18 : 0;
+            // Fan overlapping thumbnails around the centroid.
+            const angle = (2 * Math.PI * i) / Math.max(group.length, 1) - Math.PI / 2;
+            const offset = group.length > 1 ? R + 6 : 0;
             const cx = c.cx + Math.cos(angle) * offset;
             const cy = c.cy + Math.sin(angle) * offset;
-            const fill = ev.type === "action_realisee" ? "#10b981" : "#3b82f6";
+            const ring = ev.type === "action_realisee" ? "#10b981" : "#3b82f6";
+            const isSelected = selectedEventId === ev.id;
+            const img = ev.images?.[0];
             return (
-              <Popover key={ev.id}>
-                <PopoverTrigger asChild>
+              <g
+                key={ev.id}
+                className="cursor-pointer"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onEventClick?.(ev);
+                }}
+                style={{ transformOrigin: `${cx}px ${cy}px` }}
+              >
+                {/* Halo ring on selection */}
+                {isSelected && (
                   <circle
                     cx={cx}
                     cy={cy}
-                    r={14}
-                    fill={fill}
-                    stroke="white"
-                    strokeWidth={3}
-                    className="cursor-pointer drop-shadow-md hover:opacity-90 transition-opacity"
+                    r={R + 8}
+                    fill="none"
+                    stroke={ring}
+                    strokeOpacity={0.4}
+                    strokeWidth={4}
                   />
-                </PopoverTrigger>
-                <PopoverContent className="w-72 p-3" dir={isRTL ? "rtl" : "ltr"}>
-                  {ev.images?.[0] && (
-                    <div className="mb-2 -mx-3 -mt-3 overflow-hidden rounded-t-md">
-                      <img
-                        src={ev.images[0]}
-                        alt={ev.title}
-                        className="w-full h-32 object-cover"
-                      />
-                    </div>
-                  )}
-                  <div className="flex items-center gap-2 mb-2">
-                    <Badge
-                      className={
-                        ev.type === "action_realisee"
-                          ? "bg-emerald-600 hover:bg-emerald-600"
-                          : "bg-blue-600 hover:bg-blue-600"
-                      }
+                )}
+                {/* Coloured backing */}
+                <circle cx={cx} cy={cy} r={R + 2} fill={ring} />
+                {/* Thumbnail (image if available, else white circle with pin) */}
+                {img ? (
+                  <image
+                    href={img}
+                    x={cx - R}
+                    y={cy - R}
+                    width={R * 2}
+                    height={R * 2}
+                    preserveAspectRatio="xMidYMid slice"
+                    clipPath="url(#event-thumb-clip)"
+                  />
+                ) : (
+                  <>
+                    <circle cx={cx} cy={cy} r={R} fill="white" />
+                    <text
+                      x={cx}
+                      y={cy + 5}
+                      textAnchor="middle"
+                      fontSize="16"
+                      fontWeight="bold"
+                      fill={ring}
                     >
-                      {ev.type === "action_realisee"
-                        ? isRTL
-                          ? "إجراء منجز"
-                          : "Action réalisée"
-                        : isRTL
-                        ? "حدث قادم"
-                        : "Événement à venir"}
-                    </Badge>
-                  </div>
-                  <h3 className={`font-semibold text-sm leading-snug mb-1 ${isRTL ? "font-almarai" : ""}`}>
-                    {isRTL && ev.title_ar ? ev.title_ar : ev.title}
-                  </h3>
-                  <p className={`text-xs text-muted-foreground leading-relaxed mb-2 line-clamp-3 ${isRTL ? "font-almarai" : ""}`}>
-                    {isRTL && ev.description_ar ? ev.description_ar : ev.description}
-                  </p>
-                  <div className={`text-[11px] text-muted-foreground space-y-0.5 ${isRTL ? "font-almarai" : ""}`}>
-                    <div>
-                      <strong>{isRTL ? "التاريخ : " : "Date : "}</strong>
-                      {formatDate(ev.event_date)}
-                    </div>
-                    {ev.governorate?.name && (
-                      <div>
-                        <strong>{isRTL ? "الولاية : " : "Gouvernorat : "}</strong>
-                        {isRTL && ev.governorate.name_ar ? ev.governorate.name_ar : ev.governorate.name}
-                      </div>
-                    )}
-                    {ev.people_impacted ? (
-                      <div>
-                        <strong>{isRTL ? "المستفيدون : " : "Personnes impactées : "}</strong>
-                        {ev.people_impacted}
-                      </div>
-                    ) : null}
-                    {ev.available_places ? (
-                      <div>
-                        <strong>{isRTL ? "المقاعد المتاحة : " : "Places disponibles : "}</strong>
-                        {ev.available_places}
-                      </div>
-                    ) : null}
-                  </div>
-                </PopoverContent>
-              </Popover>
+                      ★
+                    </text>
+                  </>
+                )}
+                {/* White outer stroke */}
+                <circle cx={cx} cy={cy} r={R} fill="none" stroke="white" strokeWidth={2} />
+              </g>
             );
           });
         })}
