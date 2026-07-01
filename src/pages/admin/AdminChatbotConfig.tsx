@@ -566,7 +566,7 @@ const AdminChatbotConfig = () => {
                   </DialogTrigger>
                   <DialogContent className="max-w-2xl">
                     <DialogHeader>
-                      <DialogTitle>Nouveau texte d'apprentissage</DialogTitle>
+                      <DialogTitle>Ajouter un texte d'apprentissage</DialogTitle>
                       <DialogDescription>
                         Ajoutez un texte pour enrichir la base de connaissances de l'assistant
                       </DialogDescription>

@@ -144,7 +144,7 @@ const AdminPracticalResources = () => {
         </div>
         <Button onClick={() => setEditing({ ...emptyForm })}>
           <Plus className="h-4 w-4 mr-2" />
-          Nouvelle ressource
+          Ajouter une ressource
         </Button>
       </div>
 
@@ -154,7 +154,7 @@ const AdminPracticalResources = () => {
         </Card>
       ) : items.length === 0 ? (
         <Card className="p-8 text-center text-muted-foreground">
-          Aucune ressource. Cliquez sur « Nouvelle ressource » pour en ajouter.
+          Aucune ressource. Cliquez sur « Ajouter une ressource » pour en créer une.
         </Card>
       ) : (
         <div className="grid gap-3">
@@ -198,7 +198,7 @@ const AdminPracticalResources = () => {
       <Dialog open={!!editing} onOpenChange={(o) => !o && setEditing(null)}>
         <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>{editing?.id ? "Modifier la ressource" : "Nouvelle ressource"}</DialogTitle>
+            <DialogTitle>{editing?.id ? "Modifier la ressource" : "Ajouter une ressource"}</DialogTitle>
           </DialogHeader>
           {editing && (
             <div className="space-y-4">

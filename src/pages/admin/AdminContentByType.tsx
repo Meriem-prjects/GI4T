@@ -402,7 +402,7 @@ const AdminContentByType: React.FC<AdminContentByTypeProps> = ({
         <Link to={`/admin/observatoire/editeur?type=${documentTypeId}`}>
           <Button>
             <FileText className="w-4 h-4 mr-2" />
-            Nouveau {documentTypeName}
+            Ajouter {documentTypeName}
           </Button>
         </Link>
       </div>

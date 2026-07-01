@@ -273,7 +273,7 @@ const AdminActualitesEditor = ({ section = "observatoire" }: AdminActualitesEdit
           </Button>
           <div>
             <h1 className="text-2xl font-bold text-foreground">
-              {isEditing ? "Modifier l'actualité" : "Nouvelle actualité"}
+              {isEditing ? "Modifier l'actualité" : "Ajouter une actualité"}
             </h1>
             <p className="text-muted-foreground">
               {isEditing ? "Modifiez les informations de l'actualité" : "Créez une nouvelle actualité"}

@@ -224,7 +224,7 @@ const AdminActualites = ({ section = "observatoire" }: AdminActualitesProps) => 
         </div>
         <Button onClick={() => navigate(`${baseUrl}/new`)}>
           <Plus className="h-4 w-4 mr-2" />
-          Nouvelle actualité
+          Ajouter une actualité
         </Button>
       </div>
 

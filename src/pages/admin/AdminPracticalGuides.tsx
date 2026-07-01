@@ -128,7 +128,7 @@ const AdminPracticalGuides = () => {
         </div>
         <Button onClick={() => setEditing({ ...emptyForm })}>
           <Plus className="h-4 w-4 mr-2" />
-          Nouveau guide
+          Ajouter un guide
         </Button>
       </div>
 
@@ -138,7 +138,7 @@ const AdminPracticalGuides = () => {
         </Card>
       ) : items.length === 0 ? (
         <Card className="p-8 text-center text-muted-foreground">
-          Aucun guide. Cliquez sur « Nouveau guide » pour en ajouter.
+          Aucun guide. Cliquez sur « Ajouter un guide » pour en créer un.
         </Card>
       ) : (
         <div className="grid gap-3">
@@ -178,7 +178,7 @@ const AdminPracticalGuides = () => {
       <Dialog open={!!editing} onOpenChange={(o) => !o && setEditing(null)}>
         <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>{editing?.id ? "Modifier le guide" : "Nouveau guide pratique"}</DialogTitle>
+            <DialogTitle>{editing?.id ? "Modifier le guide" : "Ajouter un guide pratique"}</DialogTitle>
           </DialogHeader>
           {editing && (
             <div className="space-y-4">

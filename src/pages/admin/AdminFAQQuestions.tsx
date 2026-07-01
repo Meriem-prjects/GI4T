@@ -99,7 +99,7 @@ const AdminFAQQuestions = () => {
         </div>
         <Button onClick={() => { setEditingFAQ(null); setShowFAQForm(true); }} className="flex items-center gap-2">
           <Plus className="h-4 w-4" />
-          Nouvelle question
+          Ajouter une question
         </Button>
       </div>
 

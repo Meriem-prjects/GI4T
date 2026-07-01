@@ -420,7 +420,7 @@ const AdminContenus = () => {
         <Link to="/admin/observatoire/editeur">
           <Button>
             <FileText className="w-4 h-4 mr-2" />
-            Nouveau Document
+            Ajouter un document
           </Button>
         </Link>
       </div>

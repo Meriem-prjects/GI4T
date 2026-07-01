@@ -207,13 +207,13 @@ const AdminAlbumsPhotos = () => {
                 <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
                     <DialogTrigger asChild>
                         <Button onClick={handleNew} className="gap-2">
-                            <Plus className="w-4 h-4" /> Nouvel album
+                            <Plus className="w-4 h-4" /> Ajouter un album
                         </Button>
                     </DialogTrigger>
 
                     <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
                         <DialogHeader>
-                            <DialogTitle>{isEditing ? "Modifier l'album" : "Nouvel album"}</DialogTitle>
+                            <DialogTitle>{isEditing ? "Modifier l'album" : "Ajouter un album"}</DialogTitle>
                         </DialogHeader>
 
                         <div className="space-y-4 py-2">
@@ -367,7 +367,7 @@ const AdminAlbumsPhotos = () => {
                 <Card>
                     <CardContent className="py-12 text-center text-slate-400">
                         <Camera className="w-12 h-12 mx-auto mb-3 opacity-30" />
-                        <p>Aucun album pour le moment. Cliquez sur "Nouvel album" pour commencer.</p>
+                        <p>Aucun album pour le moment. Cliquez sur « Ajouter un album » pour commencer.</p>
                     </CardContent>
                 </Card>
             ) : (

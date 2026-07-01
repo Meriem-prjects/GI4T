@@ -122,7 +122,7 @@ const AdminUsefulLinks = () => {
         </div>
         <Button onClick={() => setEditing({ ...emptyForm })}>
           <Plus className="h-4 w-4 mr-2" />
-          Nouveau lien
+          Ajouter un lien
         </Button>
       </div>
 
@@ -132,7 +132,7 @@ const AdminUsefulLinks = () => {
         </Card>
       ) : items.length === 0 ? (
         <Card className="p-8 text-center text-muted-foreground">
-          Aucun lien. Cliquez sur « Nouveau lien » pour en ajouter.
+          Aucun lien. Cliquez sur « Ajouter un lien » pour en créer un.
         </Card>
       ) : (
         <div className="grid gap-3">
@@ -173,7 +173,7 @@ const AdminUsefulLinks = () => {
       <Dialog open={!!editing} onOpenChange={(o) => !o && setEditing(null)}>
         <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>{editing?.id ? "Modifier le lien" : "Nouveau lien utile"}</DialogTitle>
+            <DialogTitle>{editing?.id ? "Modifier le lien" : "Ajouter un lien utile"}</DialogTitle>
           </DialogHeader>
           {editing && (
             <div className="space-y-4">

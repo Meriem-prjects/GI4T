@@ -137,7 +137,7 @@ const AdminAccesDroitsUsersManagement = () => {
           className="bg-yellow-600 hover:bg-yellow-700"
         >
           <Plus className="w-4 h-4 mr-2" />
-          Nouvel utilisateur
+          Ajouter un utilisateur
         </Button>
       </div>
 

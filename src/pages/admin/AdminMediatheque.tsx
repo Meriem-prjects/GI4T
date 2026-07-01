@@ -183,13 +183,13 @@ const AdminMediatheque = () => {
                 <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
                     <DialogTrigger asChild>
                         <Button onClick={handleNew} className="gap-2">
-                            <Plus className="w-4 h-4" /> Nouveau média
+                            <Plus className="w-4 h-4" /> Ajouter un média
                         </Button>
                     </DialogTrigger>
 
                     <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
                         <DialogHeader>
-                            <DialogTitle>{isEditing ? "Modifier le média" : "Nouveau média"}</DialogTitle>
+                            <DialogTitle>{isEditing ? "Modifier le média" : "Ajouter un média"}</DialogTitle>
                         </DialogHeader>
                         <div className="space-y-4 py-2">
 
@@ -330,7 +330,7 @@ const AdminMediatheque = () => {
                 <Card>
                     <CardContent className="py-12 text-center text-slate-400">
                         <Film className="w-12 h-12 mx-auto mb-3 opacity-30" />
-                        <p>Aucun média pour le moment. Cliquez sur "Nouveau média" pour commencer.</p>
+                        <p>Aucun média pour le moment. Cliquez sur « Ajouter un média » pour commencer.</p>
                     </CardContent>
                 </Card>
             ) : (

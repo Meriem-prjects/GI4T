@@ -52,7 +52,7 @@ export const EventEditor = () => {
             </div>
             <Button onClick={() => setIsCreating(true)}>
               <Plus className="w-4 h-4 mr-2" />
-              Nouvel événement
+              Ajouter un événement
             </Button>
           </div>
 
