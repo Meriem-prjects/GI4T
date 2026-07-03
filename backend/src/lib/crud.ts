@@ -29,9 +29,7 @@ function flattenQuery(query: Record<string, unknown>): Array<[string, string]> {
 
 function buildWhereFromQuery(query: Record<string, unknown>): Record<string, unknown> {
   const where: Record<string, unknown> = {};
-  console.log("[crud] IN query:", JSON.stringify(query).slice(0, 400));
   const flat = flattenQuery(query);
-  console.log("[crud] flat:", JSON.stringify(flat).slice(0, 400));
   for (const [rawKey, value] of flat) {
     if (RESERVED.has(rawKey)) continue;
 

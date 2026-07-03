@@ -18,7 +18,20 @@ const listQuerySchema = z.object({
   offset: z.coerce.number().min(0).default(0),
   order_by: z.string().default("createdAt"),
   order: z.enum(["asc", "desc"]).default("desc"),
-});
+}).passthrough();
+
+// Supabase-shim frontend sends nested relation filters like
+// `document_categories.category_id=<uuid>`. Express's qs parser turns
+// that into `req.query.document_categories = { category_id: "<uuid>" }`.
+// Translate to Prisma's junction-table filter.
+function extractDocumentCategoryId(query: Record<string, unknown>): string | undefined {
+  const dc = query["document_categories"];
+  if (dc && typeof dc === "object" && !Array.isArray(dc)) {
+    const cid = (dc as Record<string, unknown>)["category_id"];
+    if (typeof cid === "string" && cid.length > 0) return cid;
+  }
+  return undefined;
+}
 
 documentsRouter.get(
   "/",
@@ -38,6 +51,11 @@ documentsRouter.get(
         { titleAr: { contains: q.search, mode: "insensitive" } },
         { content: { contains: q.search, mode: "insensitive" } },
       ];
+    }
+
+    const nestedCategoryId = extractDocumentCategoryId(req.query as Record<string, unknown>);
+    if (nestedCategoryId) {
+      where.documentCategories = { some: { categoryId: nestedCategoryId } };
     }
 
     // Public access only sees published documents. Admins see everything.
