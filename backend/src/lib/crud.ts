@@ -29,10 +29,10 @@ function flattenQuery(query: Record<string, unknown>): Array<[string, string]> {
 
 function buildWhereFromQuery(query: Record<string, unknown>): Record<string, unknown> {
   const where: Record<string, unknown> = {};
-  if (Object.keys(query).some((k) => k.includes(".") || (typeof query[k] === "object" && query[k] !== null && !Array.isArray(query[k])))) {
-    console.log("[crud] raw query with nested/dot:", JSON.stringify(query).slice(0, 300));
-  }
-  for (const [rawKey, value] of flattenQuery(query)) {
+  console.log("[crud] IN query:", JSON.stringify(query).slice(0, 400));
+  const flat = flattenQuery(query);
+  console.log("[crud] flat:", JSON.stringify(flat).slice(0, 400));
+  for (const [rawKey, value] of flat) {
     if (RESERVED.has(rawKey)) continue;
 
     let op: string | null = null;
