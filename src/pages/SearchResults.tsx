@@ -102,11 +102,18 @@ const SearchResults = () => {
   const debouncedQuery = useDebouncedValue(searchQuery, 450);
 
   // Fetch search results
+  // Skip the year filter when the user hasn't narrowed the default range —
+  // most imported docs have year=NULL (OCR didn't extract it), and a
+  // `.gte/.lte("year", ...)` filter excludes NULLs unconditionally.
+  const yearNarrowed =
+    !!yearRange &&
+    (Number(yearFrom) !== yearRange.minYear || Number(yearTo) !== yearRange.maxYear);
+
   const { data: searchData, isLoading: searchLoading } = useDocumentSearch({
     query: debouncedQuery,
     courtType: selectedCourtType !== "all" ? selectedCourtType : undefined,
-    yearFrom,
-    yearTo,
+    yearFrom: yearNarrowed ? yearFrom : undefined,
+    yearTo: yearNarrowed ? yearTo : undefined,
     categories: selectedCategories.length > 0 ? selectedCategories : undefined,
     jurisdictionLevel: selectedJurisdictionLevel !== "all" ? selectedJurisdictionLevel : undefined,
     documentType: selectedDocumentType !== "all" ? selectedDocumentType : undefined,
