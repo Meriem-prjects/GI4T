@@ -7,12 +7,30 @@ import { snakeToCamel } from "./case-transform.js";
 
 const RESERVED = new Set(["limit", "offset", "order_by", "order", "select", "search"]);
 
+// Express's default query parser (`qs`) turns `?a.b=c` into a nested
+// object `req.query = { a: { b: 'c' } }` rather than a literal
+// dotted-key entry. Flatten one level so we can handle Supabase-style
+// nested relation filters uniformly regardless of parser behaviour.
+function flattenQuery(query: Record<string, unknown>): Array<[string, string]> {
+  const out: Array<[string, string]> = [];
+  for (const [k, v] of Object.entries(query)) {
+    if (v && typeof v === "object" && !Array.isArray(v)) {
+      for (const [k2, v2] of Object.entries(v as Record<string, unknown>)) {
+        if (v2 !== undefined && v2 !== null && v2 !== "") {
+          out.push([`${k}.${k2}`, String(v2)]);
+        }
+      }
+    } else if (v !== undefined && v !== null && v !== "") {
+      out.push([k, String(v)]);
+    }
+  }
+  return out;
+}
+
 function buildWhereFromQuery(query: Record<string, unknown>): Record<string, unknown> {
   const where: Record<string, unknown> = {};
-  for (const [rawKey, rawValue] of Object.entries(query)) {
+  for (const [rawKey, value] of flattenQuery(query)) {
     if (RESERVED.has(rawKey)) continue;
-    if (rawValue === undefined || rawValue === null || rawValue === "") continue;
-    const value = String(rawValue);
 
     let op: string | null = null;
     let col = rawKey;
@@ -25,9 +43,6 @@ function buildWhereFromQuery(query: Record<string, unknown>): Record<string, unk
     }
     // Supabase-style nested filter e.g. "document_categories.category_id=xxx"
     // → Prisma relation filter: { documentCategories: { some: { categoryId: xxx } } }.
-    // Without this the dot-notation key silently no-oped and the frontend
-    // received an unfiltered list capped at 100 rows, making individual
-    // documents unreachable by slug when they fell past that cap.
     if (col.includes(".")) {
       const [relationRaw, fieldRaw] = col.split(".", 2) as [string, string];
       const relation = snakeToCamel(relationRaw);
