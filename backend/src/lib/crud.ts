@@ -23,6 +23,25 @@ function buildWhereFromQuery(query: Record<string, unknown>): Record<string, unk
         break;
       }
     }
+    // Supabase-style nested filter e.g. "document_categories.category_id=xxx"
+    // → Prisma relation filter: { documentCategories: { some: { categoryId: xxx } } }.
+    // Without this the dot-notation key silently no-oped and the frontend
+    // received an unfiltered list capped at 100 rows, making individual
+    // documents unreachable by slug when they fell past that cap.
+    if (col.includes(".")) {
+      const [relationRaw, fieldRaw] = col.split(".", 2) as [string, string];
+      const relation = snakeToCamel(relationRaw);
+      const field = snakeToCamel(fieldRaw);
+      const parsed = isNaN(Number(value)) ? value : Number(value);
+      const inner =
+        op === "in"
+          ? { [field]: { in: value.split(",") } }
+          : op
+          ? { [field]: { [op]: parsed } }
+          : { [field]: value };
+      where[relation] = { some: inner };
+      continue;
+    }
     const camelCol = snakeToCamel(col);
     if (op === "in") {
       where[camelCol] = { in: value.split(",") };
