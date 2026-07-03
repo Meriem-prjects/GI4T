@@ -37,6 +37,7 @@ documentsRouter.get(
   "/",
   optionalAuth,
   asyncHandler(async (req, res) => {
+    console.log("[documents] req.query =", JSON.stringify(req.query).slice(0, 500));
     const q = listQuerySchema.parse(req.query);
     const where: Record<string, unknown> = {};
 
