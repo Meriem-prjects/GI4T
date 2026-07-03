@@ -117,9 +117,12 @@ async function upsertCheckpoint(
   documentId?: string | null,
   error?: string | null,
 ): Promise<void> {
+  // Explicit ::uuid cast on the nullable document_id — Prisma sends
+  // JS null as an untyped parameter and Postgres can't implicitly cast
+  // "text NULL" to a uuid column (error 42804).
   await prisma.$executeRawUnsafe(
     `INSERT INTO "import_checkpoints" (file_hash, drive_path, category_name, status, document_id, error, updated_at)
-     VALUES ($1, $2, $3, $4, $5, $6, CURRENT_TIMESTAMP)
+     VALUES ($1, $2, $3, $4, $5::uuid, $6, CURRENT_TIMESTAMP)
      ON CONFLICT (file_hash) DO UPDATE SET
        status = EXCLUDED.status,
        document_id = COALESCE(EXCLUDED.document_id, "import_checkpoints".document_id),
