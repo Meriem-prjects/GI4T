@@ -236,7 +236,8 @@ const DocumentDetail = () => {
               name_ar
             )
           `)
-          .eq('document_categories.category_id', matchingCategory.id);
+          .eq('document_categories.category_id', matchingCategory.id)
+          .limit(1000);
 
         if (documentsError) {
           console.error('Error fetching documents:', documentsError);
