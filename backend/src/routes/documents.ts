@@ -21,15 +21,12 @@ const listQuerySchema = z.object({
 }).passthrough();
 
 // Supabase-shim frontend sends nested relation filters like
-// `document_categories.category_id=<uuid>`. Express's qs parser turns
-// that into `req.query.document_categories = { category_id: "<uuid>" }`.
-// Translate to Prisma's junction-table filter.
+// `document_categories.category_id=<uuid>`. Express's default qs parser
+// keeps the dot as a literal key ({ "document_categories.category_id": v })
+// unless `allowDots` is enabled — read it that way.
 function extractDocumentCategoryId(query: Record<string, unknown>): string | undefined {
-  const dc = query["document_categories"];
-  if (dc && typeof dc === "object" && !Array.isArray(dc)) {
-    const cid = (dc as Record<string, unknown>)["category_id"];
-    if (typeof cid === "string" && cid.length > 0) return cid;
-  }
+  const v = query["document_categories.category_id"];
+  if (typeof v === "string" && v.length > 0) return v;
   return undefined;
 }
 
@@ -37,7 +34,6 @@ documentsRouter.get(
   "/",
   optionalAuth,
   asyncHandler(async (req, res) => {
-    console.log("[documents] req.query =", JSON.stringify(req.query).slice(0, 500));
     const q = listQuerySchema.parse(req.query);
     const where: Record<string, unknown> = {};
 
