@@ -5,7 +5,12 @@ import { searchBySemantics } from "../../services/embeddings.js";
 
 const schema = z.object({
   query: z.string().min(1),
-  threshold: z.number().default(0.5),
+  // 0.35 not 0.5 — users type conversational queries ("je cherche…",
+  // "quels documents parlent de…"). The prefix words dilute the query
+  // embedding, so similarity against legal-doc summaries lands in the
+  // 0.35-0.45 range even for a strong topical match. 0.5 was silently
+  // rejecting most real questions.
+  threshold: z.number().default(0.35),
   limit: z.coerce.number().int().min(1).max(100).default(20),
   filters: z
     .object({
