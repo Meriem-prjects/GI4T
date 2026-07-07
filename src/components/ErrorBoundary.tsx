@@ -57,7 +57,7 @@ export class ErrorBoundary extends Component<Props, State> {
               </Button>
               <Button onClick={() => (window.location.href = "/")}>Accueil</Button>
             </div>
-            {import.meta.env.DEV && this.state.error && (
+            {this.state.error && (
               <details className="text-left text-xs bg-muted/30 p-3 rounded max-h-40 overflow-auto">
                 <summary className="cursor-pointer font-mono">
                   {this.state.error.message}
