@@ -87,13 +87,27 @@ export const useDocumentSearch = (filters: DocumentSearchFilters) => {
             throw error;
           }
 
-          // If AI returns no results, fall back to classic search
-          if (data.noResults) {
+          // Backend serializes all responses in snake_case (Express middleware),
+          // so check both shapes for robustness.
+          const noResults = (data as any).noResults ?? (data as any).no_results;
+          if (noResults) {
             console.log('No AI results found, falling back to classic search');
             // Continue to classic search below
           } else {
+            // Reshape each AI result so it matches the DocumentSearchResult shape
+            // the UI expects — the backend sends `primary_category` in
+            // snake_case, but the render reads `primaryCategory` (camelCase).
+            // Without this remap, every card's title link + "Consulter" button
+            // fell through the `result.primaryCategory ? …` guard and rendered
+            // disabled.
+            const rawResults = (data.results || []) as any[];
+            const results = rawResults.map((r) => ({
+              ...r,
+              primaryCategory:
+                r.primaryCategory ?? r.primary_category ?? r.categories?.[0] ?? null,
+            }));
             return {
-              results: data.results || [],
+              results,
               total: data.total || 0,
               page,
               pageSize,
