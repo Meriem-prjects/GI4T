@@ -101,6 +101,19 @@ const SearchResults = () => {
   // race between in-flight responses.
   const debouncedQuery = useDebouncedValue(searchQuery, 450);
 
+  // Only auto-fire searches in classic mode. AI search (embedding request) is
+  // slow and expensive — it should run on explicit submit so the user's full
+  // question reaches the embedder, not a mid-typing snippet.
+  const [committedQuery, setCommittedQuery] = useState("");
+  useEffect(() => {
+    if (!useAI) setCommittedQuery(debouncedQuery);
+  }, [debouncedQuery, useAI]);
+
+  const submitSearch = () => {
+    setCommittedQuery(searchQuery);
+    setCurrentPage(1);
+  };
+
   // Fetch search results
   // Skip the year filter when the user hasn't narrowed the default range —
   // most imported docs have year=NULL (OCR didn't extract it), and a
@@ -110,7 +123,7 @@ const SearchResults = () => {
     (Number(yearFrom) !== yearRange.minYear || Number(yearTo) !== yearRange.maxYear);
 
   const { data: searchData, isLoading: searchLoading } = useDocumentSearch({
-    query: debouncedQuery,
+    query: committedQuery,
     courtType: selectedCourtType !== "all" ? selectedCourtType : undefined,
     yearFrom: yearNarrowed ? yearFrom : undefined,
     yearTo: yearNarrowed ? yearTo : undefined,
@@ -140,6 +153,7 @@ const SearchResults = () => {
   // Reset all filters
   const resetFilters = () => {
     setSearchQuery("");
+    setCommittedQuery("");
     setSelectedCourtType("all");
     setYearFrom("");
     setYearTo("");
@@ -328,7 +342,7 @@ const SearchResults = () => {
                 : (isRTL ? 'أدخل كلمات مفتاحية، رقم قرار أو موضوع...' : "Entrez des mots-clés, numéro d'arrêt ou thématique...")}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              onKeyDown={(e) => { if (e.key === 'Enter') setCurrentPage(1); }}
+              onKeyDown={(e) => { if (e.key === 'Enter') submitSearch(); }}
               className={`flex-1 h-12 border-0 shadow-none focus-visible:ring-0 focus-visible:ring-offset-0 bg-transparent text-base ${isRTL ? 'text-right' : ''}`}
             />
 
@@ -355,7 +369,7 @@ const SearchResults = () => {
 
             {/* Rechercher button */}
             <Button
-              onClick={() => setCurrentPage(1)}
+              onClick={submitSearch}
               className="h-12 px-6 bg-blue-600 hover:bg-blue-700 text-white font-semibold"
             >
               {isRTL ? 'بحث' : 'Rechercher'}
@@ -454,7 +468,7 @@ const SearchResults = () => {
                         onChange={(e) => setSearchQuery(e.target.value)}
                         onKeyDown={(e) => {
                           if (e.key === 'Enter') {
-                            setCurrentPage(1);
+                            submitSearch();
                           }
                         }}
                         className={`${isRTL ? 'pr-9' : 'pl-9'} text-sm`}
