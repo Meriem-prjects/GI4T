@@ -5,12 +5,13 @@ import { searchBySemantics } from "../../services/embeddings.js";
 
 const schema = z.object({
   query: z.string().min(1),
-  // 0.35 not 0.5 — users type conversational queries ("je cherche…",
-  // "quels documents parlent de…"). The prefix words dilute the query
-  // embedding, so similarity against legal-doc summaries lands in the
-  // 0.35-0.45 range even for a strong topical match. 0.5 was silently
-  // rejecting most real questions.
-  threshold: z.number().default(0.35),
+  // 0.25 not 0.5 — measured: natural-language queries ("je cherche le
+  // droit à la santé") match relevant legal fiches at raw cosine
+  // similarity 0.30-0.35. The title-match boost (see boostByTitleMatch)
+  // then re-ranks the results so the closest topical fiche floats to
+  // the top. 0.25 lets the ranker do its job; 0.5 rejected everything
+  // conversational.
+  threshold: z.number().default(0.25),
   limit: z.coerce.number().int().min(1).max(100).default(20),
   filters: z
     .object({
