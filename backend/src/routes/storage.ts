@@ -8,7 +8,7 @@ import { saveFile, resolveBucketDir, deleteFile, type Bucket } from "../lib/stor
 
 export const storageRouter = Router();
 
-const VALID_BUCKETS: Bucket[] = ["documents", "media"];
+const VALID_BUCKETS: Bucket[] = ["documents", "media", "album-photos"];
 
 function assertBucket(bucket: string): asserts bucket is Bucket {
   if (!VALID_BUCKETS.includes(bucket as Bucket)) {

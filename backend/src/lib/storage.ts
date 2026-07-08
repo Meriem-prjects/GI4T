@@ -3,9 +3,9 @@ import path from "node:path";
 import { randomUUID } from "node:crypto";
 import { env } from "../config/env.js";
 
-export type Bucket = "documents" | "media";
+export type Bucket = "documents" | "media" | "album-photos";
 
-const BUCKETS: Bucket[] = ["documents", "media"];
+const BUCKETS: Bucket[] = ["documents", "media", "album-photos"];
 
 export function resolveBucketDir(bucket: Bucket): string {
   return path.resolve(env.STORAGE_DIR, bucket);
