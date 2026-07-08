@@ -2,6 +2,7 @@ import type { Request } from "express";
 import { z } from "zod";
 import { prisma } from "../../lib/prisma.js";
 import { getOpenAI } from "../../services/openai.js";
+import { searchBySemantics } from "../../services/embeddings.js";
 
 // Semantic-fiche retrieval configuration. Threshold is 0.35 because the
 // corpus is mostly Arabic and citizens ask in French — cross-lingual
@@ -85,65 +86,41 @@ async function retrieveRelevantFiches(question: string): Promise<
   }>
 > {
   try {
-    const openai = getOpenAI();
-    const embedRes = await openai.embeddings.create({
-      model: "text-embedding-3-small",
-      input: question,
+    // Reuse the same pgvector helper as /api/fn/ai-semantic-search — it
+    // inlines the vector literal in the SQL, which is what pgvector needs
+    // (parameter binding via `$1::vector` doesn't round-trip through
+    // Prisma's raw query). Then hydrate ids with metadata Prisma can join.
+    const matches = await searchBySemantics(question, FICHE_MIN_SIMILARITY, FICHE_MAX_RESULTS);
+    if (matches.length === 0) return [];
+    const docs = await prisma.document.findMany({
+      where: { id: { in: matches.map((m) => m.id) } },
+      select: {
+        id: true,
+        title: true,
+        titleAr: true,
+        summary: true,
+        summaryAr: true,
+        documentCategories: {
+          include: { category: { select: { name: true, nameAr: true } } },
+        },
+      },
     });
-    const embedding = embedRes.data?.[0]?.embedding;
-    if (!embedding || embedding.length !== 1536) {
-      console.warn("[acces-droits-chat] embed returned bad shape");
-      return [];
-    }
-    console.log(
-      `[acces-droits-chat] embed ok len=${embedding.length}, querying pgvector min=${FICHE_MIN_SIMILARITY}`,
-    );
-    const vectorLiteral = `[${embedding.join(",")}]`;
-    const rows = await prisma.$queryRawUnsafe<
-      Array<{
-        id: string;
-        title: string;
-        title_ar: string | null;
-        summary: string | null;
-        summary_ar: string | null;
-        category_name: string | null;
-        category_name_ar: string | null;
-        similarity: number;
-      }>
-    >(
-      `SELECT d.id,
-              d.title,
-              d.title_ar,
-              d.summary,
-              d.summary_ar,
-              c.name AS category_name,
-              c.name_ar AS category_name_ar,
-              1 - (d.embedding <=> $1::vector) AS similarity
-         FROM documents d
-         LEFT JOIN document_categories dc ON dc.document_id = d.id
-         LEFT JOIN categories c ON c.id = dc.category_id
-        WHERE d.published = true
-          AND d.embedding IS NOT NULL
-          AND 1 - (d.embedding <=> $1::vector) >= $2
-        ORDER BY d.embedding <=> $1::vector
-        LIMIT $3`,
-      vectorLiteral,
-      FICHE_MIN_SIMILARITY,
-      FICHE_MAX_RESULTS,
-    );
-    console.log(
-      `[acces-droits-chat] pgvector returned ${rows.length} rows, top=${rows[0]?.similarity ?? "n/a"}`,
-    );
-    return rows.map((r) => ({
-      id: r.id,
-      title: r.title,
-      titleAr: r.title_ar,
-      summary: r.summary,
-      summaryAr: r.summary_ar,
-      categoryName: r.category_name,
-      categoryNameAr: r.category_name_ar,
-      similarity: Number(r.similarity),
-    }));
+    const bySim = new Map(matches.map((m) => [m.id, m.similarity]));
+    return docs
+      .map((d) => {
+        const cat = d.documentCategories?.[0]?.category;
+        return {
+          id: d.id,
+          title: d.title,
+          titleAr: d.titleAr,
+          summary: d.summary,
+          summaryAr: d.summaryAr,
+          categoryName: cat?.name ?? null,
+          categoryNameAr: cat?.nameAr ?? null,
+          similarity: bySim.get(d.id) ?? 0,
+        };
+      })
+      .sort((a, b) => b.similarity - a.similarity);
   } catch (err) {
     console.warn("[acces-droits-chat] fiche retrieval failed:", (err as Error).message);
     return [];
