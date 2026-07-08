@@ -3,7 +3,7 @@ import { z, type ZodTypeAny } from "zod";
 import { prisma } from "./prisma.js";
 import { requireAuth, requireRole } from "../middleware/auth.js";
 import { asyncHandler, HttpError } from "../middleware/error.js";
-import { snakeToCamel } from "./case-transform.js";
+import { snakeToCamel, transformKeysToCamel } from "./case-transform.js";
 
 const RESERVED = new Set(["limit", "offset", "order_by", "order", "select", "search"]);
 
@@ -135,7 +135,12 @@ export function makeCrudRouter<TCreate extends ZodTypeAny, TUpdate extends ZodTy
     requireAuth,
     requireRole(...writeRoles),
     asyncHandler(async (req, res) => {
-      const data = opts.createSchema.parse(req.body);
+      // Frontend (Supabase-shim) sends snake_case field names; Zod +
+      // Prisma both speak camelCase. Normalise up front so any
+      // `photo_urls` / `cover_image_url` from the client lands as
+      // `photoUrls` / `coverImageUrl` before validation strips unknowns.
+      const camelBody = transformKeysToCamel(req.body as Record<string, unknown>);
+      const data = opts.createSchema.parse(camelBody);
       const created = await delegate.create({ data });
       res.status(201).json(created);
       if (opts.afterWrite) {
@@ -151,7 +156,8 @@ export function makeCrudRouter<TCreate extends ZodTypeAny, TUpdate extends ZodTy
     requireAuth,
     requireRole(...writeRoles),
     asyncHandler(async (req, res) => {
-      const data = opts.updateSchema.parse(req.body);
+      const camelBody = transformKeysToCamel(req.body as Record<string, unknown>);
+      const data = opts.updateSchema.parse(camelBody);
       const updated = await delegate.update({ where: { id: req.params.id }, data });
       res.json(updated);
       if (opts.afterWrite) {
