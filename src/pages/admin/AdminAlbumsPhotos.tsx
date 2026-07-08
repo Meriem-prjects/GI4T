@@ -90,8 +90,39 @@ const AdminAlbumsPhotos = () => {
         setLoading(false);
     };
 
+    // Client-side compression to keep the multipart body small — phone
+    // photos are routinely 5-10 MB and shipping them raw over a slow
+    // uplink dominates perceived upload time. We resize the longest
+    // side down to 1920 px and re-encode to JPEG 0.85. Files already
+    // under 1 MB or that aren't images are shipped as-is.
+    const compressImage = async (file: File): Promise<Blob> => {
+        if (!file.type.startsWith("image/")) return file;
+        if (file.size <= 1024 * 1024) return file;
+        try {
+            const bitmap = await createImageBitmap(file);
+            const maxDim = 1920;
+            const scale = Math.min(1, maxDim / Math.max(bitmap.width, bitmap.height));
+            const w = Math.round(bitmap.width * scale);
+            const h = Math.round(bitmap.height * scale);
+            const canvas = document.createElement("canvas");
+            canvas.width = w;
+            canvas.height = h;
+            const ctx = canvas.getContext("2d");
+            if (!ctx) return file;
+            ctx.drawImage(bitmap, 0, 0, w, h);
+            const blob: Blob | null = await new Promise((resolve) =>
+                canvas.toBlob((b) => resolve(b), "image/jpeg", 0.85),
+            );
+            if (!blob || blob.size >= file.size) return file;
+            return blob;
+        } catch {
+            return file;
+        }
+    };
+
     const uploadFile = async (file: File, bucket: string, path: string): Promise<string | null> => {
-        const { error } = await supabase.storage.from(bucket).upload(path, file, { upsert: true });
+        const compressed = await compressImage(file);
+        const { error } = await supabase.storage.from(bucket).upload(path, compressed, { upsert: true });
         if (error) {
             toast({ title: "Erreur upload", description: error.message, variant: "destructive" });
             return null;
@@ -114,12 +145,17 @@ const AdminAlbumsPhotos = () => {
         const files = Array.from(e.target.files || []);
         if (!files.length) return;
         setUploadingPhotos(true);
-        const urls: string[] = [];
-        for (const file of files) {
-            const path = `photos/${Date.now()}-${file.name}`;
-            const url = await uploadFile(file, "album-photos", path);
-            if (url) urls.push(url);
-        }
+        // Upload in parallel — the sequential loop turned N photos into
+        // N × round-trip latency. The backend and browser both cope with
+        // concurrent multipart POSTs just fine.
+        const results = await Promise.all(
+            files.map((file, i) => {
+                const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, "_");
+                const path = `photos/${Date.now()}-${i}-${safeName}`;
+                return uploadFile(file, "album-photos", path);
+            }),
+        );
+        const urls = results.filter((u): u is string => !!u);
         setEditingAlbum(prev => ({
             ...prev,
             photo_urls: [...(prev.photo_urls || []), ...urls],
