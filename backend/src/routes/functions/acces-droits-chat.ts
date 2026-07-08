@@ -3,6 +3,15 @@ import { z } from "zod";
 import { prisma } from "../../lib/prisma.js";
 import { getOpenAI } from "../../services/openai.js";
 
+// Semantic-fiche retrieval configuration. Only fiches whose cosine
+// similarity to the question is >= FICHE_MIN_SIMILARITY are surfaced to
+// the user, and at most FICHE_MAX_RESULTS are ever returned. Kept high
+// enough that only solid matches show up — the corpus has some noisy
+// docs and we don't want to send citizens to unrelated fiches.
+const FICHE_MIN_SIMILARITY = 0.5;
+const FICHE_MAX_RESULTS = 3;
+const FICHE_MAX_SUMMARY_CHARS = 600;
+
 const schema = z.object({
   message: z.string().min(1),
   history: z
@@ -56,14 +65,91 @@ const ALWAYS_INCLUDE = 3;
 // Hard cap to keep the prompt fast even on a wide-ranging query.
 const MAX_DOCS_IN_PROMPT = 12;
 
+// Retrieval-augmented step over the observatoire corpus. Uses pgvector on
+// the `documents.embedding` column to find the fiches most similar to the
+// user question, then returns id/title/category/similarity so the client
+// can render clickable cards. Failure is non-fatal — the chat still works
+// without RAG if embedding or vector search errors out.
+async function retrieveRelevantFiches(question: string): Promise<
+  Array<{
+    id: string;
+    title: string;
+    titleAr: string | null;
+    summary: string | null;
+    summaryAr: string | null;
+    categoryName: string | null;
+    categoryNameAr: string | null;
+    similarity: number;
+  }>
+> {
+  try {
+    const openai = getOpenAI();
+    const embedRes = await openai.embeddings.create({
+      model: "text-embedding-3-small",
+      input: question,
+    });
+    const embedding = embedRes.data?.[0]?.embedding;
+    if (!embedding || embedding.length !== 1536) return [];
+    const vectorLiteral = `[${embedding.join(",")}]`;
+    const rows = await prisma.$queryRawUnsafe<
+      Array<{
+        id: string;
+        title: string;
+        title_ar: string | null;
+        summary: string | null;
+        summary_ar: string | null;
+        category_name: string | null;
+        category_name_ar: string | null;
+        similarity: number;
+      }>
+    >(
+      `SELECT d.id,
+              d.title,
+              d.title_ar,
+              d.summary,
+              d.summary_ar,
+              c.name AS category_name,
+              c.name_ar AS category_name_ar,
+              1 - (d.embedding <=> $1::vector) AS similarity
+         FROM documents d
+         LEFT JOIN document_categories dc ON dc.document_id = d.id
+         LEFT JOIN categories c ON c.id = dc.category_id
+        WHERE d.published = true
+          AND d.embedding IS NOT NULL
+          AND 1 - (d.embedding <=> $1::vector) >= $2
+        ORDER BY d.embedding <=> $1::vector
+        LIMIT $3`,
+      vectorLiteral,
+      FICHE_MIN_SIMILARITY,
+      FICHE_MAX_RESULTS,
+    );
+    return rows.map((r) => ({
+      id: r.id,
+      title: r.title,
+      titleAr: r.title_ar,
+      summary: r.summary,
+      summaryAr: r.summary_ar,
+      categoryName: r.category_name,
+      categoryNameAr: r.category_name_ar,
+      similarity: Number(r.similarity),
+    }));
+  } catch (err) {
+    console.warn("[acces-droits-chat] fiche retrieval failed:", (err as Error).message);
+    return [];
+  }
+}
+
 export async function accesDroitsChat(req: Request) {
   const { message, history, language } = schema.parse(req.body);
 
-  const config = await prisma.chatbotConfig.findFirst();
-  const trainingDocs = await prisma.chatbotTrainingDocument.findMany({
-    where: { isActive: true },
-    select: { title: true, titleAr: true, content: true },
-  });
+  const [config, trainingDocs, fiches] = await Promise.all([
+    prisma.chatbotConfig.findFirst(),
+    prisma.chatbotTrainingDocument.findMany({
+      where: { isActive: true },
+      select: { title: true, titleAr: true, content: true },
+    }),
+    retrieveRelevantFiches(message),
+  ]);
 
   // Rank docs by keyword overlap with the user's question. Topics that
   // match keep their full content (up to MAX_CONTENT_PER_DOC); the rest
@@ -84,17 +170,31 @@ export async function accesDroitsChat(req: Request) {
     )
     .join("\n\n");
 
+  // Retrieval-augmented context from the observatoire fiche corpus.
+  // Only titles + short summaries — the full body would blow the prompt
+  // for zero win over the summary the AI pipeline already curated.
+  const fichesContext = fiches
+    .map((f, i) => {
+      const t = language === "ar" && f.titleAr ? f.titleAr : f.title;
+      const s = language === "ar" && f.summaryAr ? f.summaryAr : f.summary;
+      return `[FICHE ${i + 1}] ${t}${s ? `\n${s.slice(0, FICHE_MAX_SUMMARY_CHARS)}` : ""}`;
+    })
+    .join("\n\n");
+
   const systemPrompt = `${config?.systemPrompt ?? "Tu es un assistant juridique tunisien spécialisé dans l'accès aux droits."}
 
 Language: respond in ${language === "ar" ? "Arabic" : "French"}.
 
 PRIORITÉ DE RÉPONSE :
 1. Si la question de l'utilisateur correspond à une Q/R de la base de connaissances ci-dessous, réponds avec la R: associée — c'est la position officielle de l'ODF.
-2. Sinon, réponds avec tes connaissances générales sur le droit tunisien.
-3. Ne jamais inventer un article de loi, une date, un numéro de loi ou de fascicule officiel.
+2. Sinon, utilise les FICHES DE L'OBSERVATOIRE ci-dessous et cite-les naturellement quand elles sont pertinentes ("d'après la fiche X…", "voir la fiche Y…").
+3. Sinon encore, réponds avec tes connaissances générales sur le droit tunisien.
+4. Ne jamais inventer un article de loi, une date, un numéro de loi ou de fascicule officiel.
 
 Base de connaissances ODF (Q/R curées) :
-${context}`;
+${context}
+
+${fiches.length > 0 ? `Fiches de l'observatoire pertinentes :\n${fichesContext}` : ""}`;
 
   // Call OpenAI directly (the official SDK uses Node's `https` module
   // which respects `--use-system-ca` — Mistral's SDK uses `fetch`
@@ -113,5 +213,17 @@ ${context}`;
   });
   const answer = res.choices?.[0]?.message?.content ?? "";
 
-  return { answer, language, matchedTopics: selected.map((s) => s.doc.title) };
+  return {
+    answer,
+    language,
+    matchedTopics: selected.map((s) => s.doc.title),
+    sources: fiches.map((f) => ({
+      id: f.id,
+      title: f.title,
+      titleAr: f.titleAr,
+      categoryName: f.categoryName,
+      categoryNameAr: f.categoryNameAr,
+      similarity: f.similarity,
+    })),
+  };
 }

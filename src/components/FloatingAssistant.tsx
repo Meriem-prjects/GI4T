@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { useLocation } from "react-router-dom";
-import { MessageCircle, Send, Loader2, X, Sparkles } from "lucide-react";
+import { Link, useLocation } from "react-router-dom";
+import { MessageCircle, Send, Loader2, X, Sparkles, FileText, ExternalLink } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useChatbotConfig } from "@/hooks/useChatbotConfig";
@@ -8,6 +8,7 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { renderChatMarkdown, isArabicText } from "@/lib/markdown-chat";
+import { createDocumentPath } from "@/lib/urlUtils";
 
 // A compact, floating chat popup shown at the bottom-right of every public
 // page. It shares the same backend function (`acces-droits-chat`) as the
@@ -15,11 +16,43 @@ import { renderChatMarkdown, isArabicText } from "@/lib/markdown-chat";
 // quick question without navigating away. Hidden on the full-page route to
 // avoid a duplicate, and on all admin routes to keep the back-office clean.
 
+interface Source {
+  id: string;
+  title: string;
+  titleAr: string | null;
+  categoryName: string | null;
+  categoryNameAr: string | null;
+  similarity: number;
+}
+
 interface Message {
   id: number;
   role: "user" | "assistant";
   content: string;
   timestamp: Date;
+  sources?: Source[];
+}
+
+// Colour + label for a similarity score. Kept as three buckets so the
+// user gets an at-a-glance sense of confidence without being overwhelmed.
+function scoreVisual(sim: number, isRTL: boolean): { bg: string; text: string; label: string } {
+  if (sim >= 0.7)
+    return {
+      bg: "bg-emerald-100",
+      text: "text-emerald-800",
+      label: isRTL ? "مطابقة ممتازة" : "Excellente correspondance",
+    };
+  if (sim >= 0.55)
+    return {
+      bg: "bg-blue-100",
+      text: "text-blue-800",
+      label: isRTL ? "مطابقة جيدة" : "Bonne correspondance",
+    };
+  return {
+    bg: "bg-amber-100",
+    text: "text-amber-800",
+    label: isRTL ? "مطابقة معتدلة" : "Correspondance modérée",
+  };
 }
 
 const HIDDEN_PATHS = [
@@ -88,9 +121,23 @@ export const FloatingAssistant = () => {
         body: { message: userMsg.content, history, language: isRTL ? "ar" : "fr" },
       });
       if (error) throw new Error(error.message ?? "Erreur API");
-      const answer = (data as { answer?: string } | null)?.answer ?? "";
+      const payload = data as { answer?: string; sources?: Source[] } | null;
+      const answer = payload?.answer ?? "";
       if (!answer) throw new Error(isRTL ? "لم يرد المساعد" : "L'assistant n'a pas répondu");
-      setMessages((prev) => prev.map((m) => (m.id === assistantId ? { ...m, content: answer } : m)));
+      // Backend response goes through the snake_case middleware, so titleAr
+      // arrives as title_ar etc. Normalise here.
+      const rawSources = (payload?.sources ?? []) as Array<Record<string, unknown>>;
+      const sources: Source[] = rawSources.map((r) => ({
+        id: String(r.id ?? ""),
+        title: String(r.title ?? ""),
+        titleAr: (r.title_ar ?? r.titleAr ?? null) as string | null,
+        categoryName: (r.category_name ?? r.categoryName ?? null) as string | null,
+        categoryNameAr: (r.category_name_ar ?? r.categoryNameAr ?? null) as string | null,
+        similarity: Number(r.similarity ?? 0),
+      }));
+      setMessages((prev) =>
+        prev.map((m) => (m.id === assistantId ? { ...m, content: answer, sources } : m)),
+      );
     } catch (err) {
       toast({
         title: isRTL ? "خطأ" : "Erreur",
@@ -160,7 +207,10 @@ export const FloatingAssistant = () => {
             {messages.map((msg) => {
               const msgAr = isArabicText(msg.content);
               return (
-                <div key={msg.id} className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}>
+                <div
+                  key={msg.id}
+                  className={`flex flex-col gap-2 ${msg.role === "user" ? "items-end" : "items-start"}`}
+                >
                   <div
                     dir={msgAr ? "rtl" : "ltr"}
                     className={`max-w-[85%] px-3 py-2 rounded-lg text-sm leading-relaxed ${
@@ -176,6 +226,82 @@ export const FloatingAssistant = () => {
                       <p className="whitespace-pre-wrap">{msg.content}</p>
                     )}
                   </div>
+
+                  {/* Retrieval-augmented fiche cards. Only rendered for the
+                      assistant's turns that came back with matches. */}
+                  {msg.role === "assistant" && msg.sources && msg.sources.length > 0 && (
+                    <div className="max-w-[85%] w-full space-y-1.5">
+                      <p
+                        className={`text-[10px] uppercase tracking-wide text-muted-foreground px-1 ${
+                          isRTL ? "text-right font-almarai" : ""
+                        }`}
+                      >
+                        {isRTL ? "بطاقات ذات صلة" : "Fiches liées"}
+                      </p>
+                      {msg.sources.map((src) => {
+                        const title = isRTL && src.titleAr ? src.titleAr : src.title;
+                        const category = isRTL && src.categoryNameAr ? src.categoryNameAr : src.categoryName;
+                        const percent = Math.round(src.similarity * 100);
+                        const visual = scoreVisual(src.similarity, isRTL);
+                        const to = src.categoryName
+                          ? createDocumentPath(src.categoryName, src.title)
+                          : `/observatoire/documents/${src.id}`;
+                        return (
+                          <Link
+                            key={src.id}
+                            to={to}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className={`group flex items-start gap-2 rounded-lg border border-border bg-background hover:border-primary/50 hover:shadow-sm transition-all p-2 ${
+                              isRTL ? "flex-row-reverse text-right" : ""
+                            }`}
+                            title={visual.label}
+                          >
+                            <div
+                              className="flex-shrink-0 mt-0.5 h-8 w-8 rounded-md flex items-center justify-center"
+                              style={{ backgroundColor: `${primaryColor}15` }}
+                            >
+                              <FileText className="h-4 w-4" style={{ color: primaryColor }} />
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <div
+                                className={`text-xs font-semibold leading-snug line-clamp-2 group-hover:text-primary ${
+                                  isRTL ? "font-almarai" : ""
+                                }`}
+                              >
+                                {title}
+                              </div>
+                              <div
+                                className={`flex items-center gap-1.5 mt-1 flex-wrap ${
+                                  isRTL ? "flex-row-reverse" : ""
+                                }`}
+                              >
+                                {category && (
+                                  <span
+                                    className={`text-[10px] text-muted-foreground truncate ${
+                                      isRTL ? "font-almarai" : ""
+                                    }`}
+                                  >
+                                    {category}
+                                  </span>
+                                )}
+                                <span
+                                  className={`text-[10px] font-semibold px-1.5 py-0.5 rounded ${visual.bg} ${visual.text}`}
+                                >
+                                  {percent}%
+                                </span>
+                              </div>
+                            </div>
+                            <ExternalLink
+                              className={`h-3 w-3 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0 mt-1 ${
+                                isRTL ? "rotate-180" : ""
+                              }`}
+                            />
+                          </Link>
+                        );
+                      })}
+                    </div>
+                  )}
                 </div>
               );
             })}
