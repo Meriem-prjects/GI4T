@@ -86,11 +86,20 @@ async function retrieveRelevantFiches(question: string): Promise<
   }>
 > {
   try {
+    // Normalise the question before embedding: strip trailing punctuation
+    // (measured: an ending "?" drops cosine similarity from ~0.33 to <0.15
+    // on the exact same substantive content — the embedder treats it as a
+    // generic-question signal). Collapse whitespace too.
+    const cleanQuestion = question
+      .trim()
+      .replace(/[?!;.,]+$/g, "")
+      .replace(/\s+/g, " ")
+      .trim();
     // Reuse the same pgvector helper as /api/fn/ai-semantic-search — it
     // inlines the vector literal in the SQL, which is what pgvector needs
     // (parameter binding via `$1::vector` doesn't round-trip through
     // Prisma's raw query). Then hydrate ids with metadata Prisma can join.
-    const matches = await searchBySemantics(question, FICHE_MIN_SIMILARITY, FICHE_MAX_RESULTS);
+    const matches = await searchBySemantics(cleanQuestion, FICHE_MIN_SIMILARITY, FICHE_MAX_RESULTS);
     if (matches.length === 0) return [];
     const docs = await prisma.document.findMany({
       where: { id: { in: matches.map((m) => m.id) } },
