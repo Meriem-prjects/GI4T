@@ -91,7 +91,13 @@ async function retrieveRelevantFiches(question: string): Promise<
       input: question,
     });
     const embedding = embedRes.data?.[0]?.embedding;
-    if (!embedding || embedding.length !== 1536) return [];
+    if (!embedding || embedding.length !== 1536) {
+      console.warn("[acces-droits-chat] embed returned bad shape");
+      return [];
+    }
+    console.log(
+      `[acces-droits-chat] embed ok len=${embedding.length}, querying pgvector min=${FICHE_MIN_SIMILARITY}`,
+    );
     const vectorLiteral = `[${embedding.join(",")}]`;
     const rows = await prisma.$queryRawUnsafe<
       Array<{
@@ -124,6 +130,9 @@ async function retrieveRelevantFiches(question: string): Promise<
       vectorLiteral,
       FICHE_MIN_SIMILARITY,
       FICHE_MAX_RESULTS,
+    );
+    console.log(
+      `[acces-droits-chat] pgvector returned ${rows.length} rows, top=${rows[0]?.similarity ?? "n/a"}`,
     );
     return rows.map((r) => ({
       id: r.id,
