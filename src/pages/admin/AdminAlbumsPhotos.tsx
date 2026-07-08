@@ -91,43 +91,71 @@ const AdminAlbumsPhotos = () => {
     };
 
     // Client-side compression to keep the multipart body small — phone
-    // photos are routinely 5-10 MB and shipping them raw over a slow
-    // uplink dominates perceived upload time. We resize the longest
-    // side down to 1920 px and re-encode to JPEG 0.85. Files already
-    // under 1 MB or that aren't images are shipped as-is.
-    const compressImage = async (file: File): Promise<Blob> => {
-        if (!file.type.startsWith("image/")) return file;
-        if (file.size <= 1024 * 1024) return file;
+    // photos are routinely 5-10 MB. We convert everything to WebP and
+    // iteratively step quality + dimensions down until the encoded
+    // blob fits under TARGET_MAX_BYTES. Non-images or files already
+    // under target are shipped as-is.
+    const TARGET_MAX_BYTES = 80 * 1024; // 80 KB
+    const compressImage = async (
+        file: File,
+    ): Promise<{ blob: Blob; extension: string }> => {
+        if (!file.type.startsWith("image/")) {
+            return { blob: file, extension: "" };
+        }
         try {
             const bitmap = await createImageBitmap(file);
-            const maxDim = 1920;
-            const scale = Math.min(1, maxDim / Math.max(bitmap.width, bitmap.height));
-            const w = Math.round(bitmap.width * scale);
-            const h = Math.round(bitmap.height * scale);
-            const canvas = document.createElement("canvas");
-            canvas.width = w;
-            canvas.height = h;
-            const ctx = canvas.getContext("2d");
-            if (!ctx) return file;
-            ctx.drawImage(bitmap, 0, 0, w, h);
-            const blob: Blob | null = await new Promise((resolve) =>
-                canvas.toBlob((b) => resolve(b), "image/jpeg", 0.85),
-            );
-            if (!blob || blob.size >= file.size) return file;
-            return blob;
+            // Grid of (maxDim, quality) attempts, sorted by "best quality first".
+            // The loop stops at the first attempt that fits under 80 KB — so a
+            // small file lands on the very first, high-quality tier and we
+            // avoid unnecessary re-encodes.
+            const maxDims = [1920, 1600, 1280, 1024, 800];
+            const qualities = [0.85, 0.75, 0.65, 0.55, 0.45];
+            let bestBlob: Blob | null = null;
+            for (const maxDim of maxDims) {
+                const scale = Math.min(1, maxDim / Math.max(bitmap.width, bitmap.height));
+                const w = Math.round(bitmap.width * scale);
+                const h = Math.round(bitmap.height * scale);
+                const canvas = document.createElement("canvas");
+                canvas.width = w;
+                canvas.height = h;
+                const ctx = canvas.getContext("2d");
+                if (!ctx) continue;
+                ctx.drawImage(bitmap, 0, 0, w, h);
+                for (const quality of qualities) {
+                    const blob: Blob | null = await new Promise((resolve) =>
+                        canvas.toBlob((b) => resolve(b), "image/webp", quality),
+                    );
+                    if (!blob) continue;
+                    bestBlob = blob; // remember the smallest we've made so far
+                    if (blob.size <= TARGET_MAX_BYTES) {
+                        return { blob, extension: "webp" };
+                    }
+                }
+            }
+            // Never reached target — return the smallest attempt anyway so
+            // upload still works. Upstream saw this as "compressed image
+            // could not hit target" but shipping the smallest WebP is
+            // still much better than the original.
+            if (bestBlob) return { blob: bestBlob, extension: "webp" };
+            return { blob: file, extension: "" };
         } catch {
-            return file;
+            return { blob: file, extension: "" };
         }
     };
 
     const uploadFile = async (file: File, bucket: string, path: string): Promise<string | null> => {
-        const compressed = await compressImage(file);
-        const { error } = await supabase.storage.from(bucket).upload(path, compressed, { upsert: true });
+        const { blob, extension } = await compressImage(file);
+        // If compression rewrote the extension (jpg → webp), replace it
+        // on the target key so the file lands with the correct suffix.
+        const finalPath = extension
+            ? `${path.replace(/\.[a-z0-9]+$/i, "")}.${extension}`
+            : path;
+        const { error } = await supabase.storage.from(bucket).upload(finalPath, blob, { upsert: true });
         if (error) {
             toast({ title: "Erreur upload", description: error.message, variant: "destructive" });
             return null;
         }
-        const { data } = supabase.storage.from(bucket).getPublicUrl(path);
+        const { data } = supabase.storage.from(bucket).getPublicUrl(finalPath);
         return data.publicUrl;
     };
 
