@@ -3,10 +3,11 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { Search, Calendar, MapPin, Eye, Camera, Users, ChevronRight } from "lucide-react";
+import { Search, Calendar, MapPin, Eye, Camera, Users, ChevronRight, X, ChevronLeft, ChevronRight as ChevronRightIcon } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useTranslation } from "@/hooks/useTranslation";
 import { supabase } from "@/integrations/supabase/client";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
 interface PhotoAlbum {
   id: string;
@@ -32,8 +33,28 @@ const AlbumsPhotosContent = () => {
   const [selectedCategory, setSelectedCategory] = useState("Tous");
   const [albums, setAlbums] = useState<PhotoAlbum[]>([]);
   const [loading, setLoading] = useState(true);
+  // Selected album opens a dialog with all its photos. lightboxIndex, when
+  // set, promotes one photo to a full-screen overlay so the visitor can
+  // browse with the arrow keys / on-screen buttons.
+  const [openAlbum, setOpenAlbum] = useState<PhotoAlbum | null>(null);
+  const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
   const { isRTL } = useLanguage();
   const { t } = useTranslation();
+
+  // Arrow-key navigation inside the lightbox.
+  useEffect(() => {
+    if (lightboxIndex === null || !openAlbum) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setLightboxIndex(null);
+      const total = openAlbum.photo_urls?.length ?? 0;
+      if (total === 0) return;
+      if (e.key === "ArrowRight") setLightboxIndex((i) => (i === null ? 0 : (i + 1) % total));
+      if (e.key === "ArrowLeft")
+        setLightboxIndex((i) => (i === null ? 0 : (i - 1 + total) % total));
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [lightboxIndex, openAlbum]);
 
   const fetchAlbums = async () => {
     setLoading(true);
@@ -223,7 +244,14 @@ const AlbumsPhotosContent = () => {
                             {album.views || 0} {t('views')}
                           </div>
                         </div>
-                        <Button className="w-full" size="sm">
+                        <Button
+                          className="w-full"
+                          size="sm"
+                          onClick={() => {
+                            setOpenAlbum(album);
+                            setLightboxIndex(null);
+                          }}
+                        >
                           {isRTL ? 'عرض الألبوم' : "Voir l'album"}
                         </Button>
                       </CardContent>
@@ -291,7 +319,14 @@ const AlbumsPhotosContent = () => {
                             {album.views || 0}
                           </div>
                         </div>
-                        <Button size="sm" className="w-full text-xs">
+                        <Button
+                          size="sm"
+                          className="w-full text-xs"
+                          onClick={() => {
+                            setOpenAlbum(album);
+                            setLightboxIndex(null);
+                          }}
+                        >
                           {isRTL ? 'عرض الألبوم' : "Voir l'album"}
                         </Button>
                       </CardContent>
@@ -317,6 +352,115 @@ const AlbumsPhotosContent = () => {
           </div>
         </div>
       </div>
+
+      {/* Album dialog — grid of thumbnails; click any thumbnail to promote
+          it into a full-screen lightbox with arrow-key navigation. */}
+      <Dialog open={!!openAlbum} onOpenChange={(v) => !v && setOpenAlbum(null)}>
+        <DialogContent
+          className="max-w-4xl max-h-[90vh] overflow-hidden flex flex-col"
+          dir={isRTL ? "rtl" : "ltr"}
+        >
+          <DialogHeader>
+            <DialogTitle className={isRTL ? "font-almarai text-right" : ""}>
+              {openAlbum ? getTitle(openAlbum) : ""}
+            </DialogTitle>
+            {openAlbum && (
+              <p className={`text-sm text-muted-foreground ${isRTL ? "font-almarai text-right" : ""}`}>
+                {openAlbum.date}
+                {openAlbum.location ? ` · ${getLocation(openAlbum)}` : ""}
+                {" · "}
+                {openAlbum.photo_urls?.length || 0} {t("photos")}
+              </p>
+            )}
+          </DialogHeader>
+
+          <div className="flex-1 overflow-y-auto -mx-6 px-6">
+            {openAlbum && openAlbum.photo_urls && openAlbum.photo_urls.length > 0 ? (
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2 sm:gap-3">
+                {openAlbum.photo_urls.map((url, i) => (
+                  <button
+                    key={`${url}-${i}`}
+                    type="button"
+                    onClick={() => setLightboxIndex(i)}
+                    className="relative aspect-square bg-muted rounded-md overflow-hidden group focus:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+                  >
+                    <img
+                      src={url}
+                      alt=""
+                      loading="lazy"
+                      className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+                    />
+                  </button>
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-12 text-muted-foreground">
+                <Camera className="h-10 w-10 mx-auto mb-2 opacity-30" />
+                <p className={isRTL ? "font-almarai" : ""}>
+                  {isRTL ? "لا توجد صور في هذا الألبوم" : "Aucune photo dans cet album"}
+                </p>
+              </div>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Lightbox — sits above the album dialog, previous/next + close. */}
+      {openAlbum && lightboxIndex !== null && openAlbum.photo_urls?.[lightboxIndex] && (
+        <div
+          className="fixed inset-0 z-[60] bg-black/95 flex items-center justify-center"
+          onClick={() => setLightboxIndex(null)}
+        >
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              setLightboxIndex(null);
+            }}
+            className="absolute top-4 right-4 text-white/80 hover:text-white z-10 p-2 rounded-full hover:bg-white/10"
+            aria-label={isRTL ? "إغلاق" : "Fermer"}
+          >
+            <X className="h-6 w-6" />
+          </button>
+          {openAlbum.photo_urls.length > 1 && (
+            <>
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  const total = openAlbum.photo_urls.length;
+                  setLightboxIndex((i) => (i === null ? 0 : (i - 1 + total) % total));
+                }}
+                className="absolute left-4 top-1/2 -translate-y-1/2 text-white/80 hover:text-white z-10 p-3 rounded-full hover:bg-white/10"
+                aria-label={isRTL ? "التالي" : "Précédent"}
+              >
+                <ChevronLeft className="h-8 w-8" />
+              </button>
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  const total = openAlbum.photo_urls.length;
+                  setLightboxIndex((i) => (i === null ? 0 : (i + 1) % total));
+                }}
+                className="absolute right-4 top-1/2 -translate-y-1/2 text-white/80 hover:text-white z-10 p-3 rounded-full hover:bg-white/10"
+                aria-label={isRTL ? "السابق" : "Suivant"}
+              >
+                <ChevronRightIcon className="h-8 w-8" />
+              </button>
+            </>
+          )}
+          <img
+            src={openAlbum.photo_urls[lightboxIndex]}
+            alt=""
+            className="max-w-[92vw] max-h-[92vh] object-contain"
+            onClick={(e) => e.stopPropagation()}
+          />
+          <div className="absolute bottom-4 left-1/2 -translate-x-1/2 text-white/70 text-sm">
+            {lightboxIndex + 1} / {openAlbum.photo_urls.length}
+          </div>
+        </div>
+      )}
     </main>
   );
 };
