@@ -3,12 +3,14 @@ import { z } from "zod";
 import { prisma } from "../../lib/prisma.js";
 import { getOpenAI } from "../../services/openai.js";
 
-// Semantic-fiche retrieval configuration. Only fiches whose cosine
-// similarity to the question is >= FICHE_MIN_SIMILARITY are surfaced to
-// the user, and at most FICHE_MAX_RESULTS are ever returned. Kept high
-// enough that only solid matches show up — the corpus has some noisy
-// docs and we don't want to send citizens to unrelated fiches.
-const FICHE_MIN_SIMILARITY = 0.5;
+// Semantic-fiche retrieval configuration. Threshold is 0.35 because the
+// corpus is mostly Arabic and citizens ask in French — cross-lingual
+// cosine similarity from text-embedding-3-small on well-matched fiches
+// hovers around 0.40–0.50 in practice, so 0.50 was empirically too
+// strict (rejected the top-relevant match at 0.435 for "licenciement
+// abusif"). At 0.35 the noise floor is low enough that only fiches
+// legitimately overlapping with the question survive.
+const FICHE_MIN_SIMILARITY = 0.35;
 const FICHE_MAX_RESULTS = 3;
 const FICHE_MAX_SUMMARY_CHARS = 600;
 
