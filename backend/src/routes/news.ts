@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { makeCrudRouter } from "../lib/crud.js";
+import { embedOneAadRow } from "../services/aad-embed.js";
 
 const createSchema = z.object({
   title: z.string().min(1),
@@ -29,4 +30,5 @@ export const newsRouter = makeCrudRouter({
   // Generic CRUD already forwards `?<col>=<value>` query params to the
   // Prisma where clause, so `?section=observatoire` Just Works™.
   writeRoles: ["admin", "admin_acces_droits", "admin_observatoire"],
+  afterWrite: (row) => embedOneAadRow("news", row as Record<string, unknown>),
 });

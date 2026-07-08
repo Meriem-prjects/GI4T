@@ -3,6 +3,7 @@ import { z } from "zod";
 import { prisma } from "../../lib/prisma.js";
 import { getOpenAI } from "../../services/openai.js";
 import { searchBySemantics } from "../../services/embeddings.js";
+import { searchAllAad } from "../../services/aad-embed.js";
 
 // Semantic-fiche retrieval configuration. Threshold 0.15 — measured on
 // this corpus. Full-sentence conversational French questions ("quels
@@ -143,13 +144,13 @@ async function retrieveRelevantFiches(question: string): Promise<
 }
 
 // Retrieval over the native Accès-aux-droits content — practical guides,
-// news articles, practical resources, useful links. These rows are short
-// and editorial, so keyword scoring is enough (no embedding call). Each
-// hit carries the type so the frontend can pick an icon and destination
-// URL. Failure is non-fatal.
+// news articles, practical resources, useful links, and admin-curated
+// Q/R (chatbot training docs). All five share the pgvector approach the
+// observatoire fiches use: hash-guarded embedding column, cosine search,
+// same threshold model. See services/aad-embed.ts for the mechanics.
 type AccesDroitsHit = {
   id: string;
-  type: "guide" | "news" | "resource" | "link";
+  type: "guide" | "news" | "resource" | "link" | "training";
   title: string;
   titleAr: string | null;
   summary: string | null;
@@ -157,159 +158,36 @@ type AccesDroitsHit = {
   category: string | null;
   categoryAr: string | null;
   href: string;
-  score: number;
+  similarity: number;
 };
 
 async function retrieveAccesDroitsContent(question: string): Promise<AccesDroitsHit[]> {
   try {
-    const [guides, news, resources, links] = await Promise.all([
-      prisma.practicalGuide.findMany({
-        where: { isPublished: true },
-        select: {
-          id: true,
-          title: true,
-          titleAr: true,
-          description: true,
-          descriptionAr: true,
-          content: true,
-          category: true,
-          categoryAr: true,
-        },
-      }),
-      prisma.news.findMany({
-        where: { isPublished: true },
-        select: {
-          id: true,
-          title: true,
-          titleAr: true,
-          excerpt: true,
-          excerptAr: true,
-          content: true,
-          contentAr: true,
-          category: true,
-        },
-      }),
-      prisma.practicalResource.findMany({
-        where: { isPublished: true },
-        select: {
-          id: true,
-          title: true,
-          titleAr: true,
-          description: true,
-          descriptionAr: true,
-          category: true,
-          categoryAr: true,
-          fileUrl: true,
-        },
-      }),
-      prisma.usefulLink.findMany({
-        where: { isPublished: true },
-        select: {
-          id: true,
-          title: true,
-          titleAr: true,
-          description: true,
-          descriptionAr: true,
-          category: true,
-          categoryAr: true,
-          url: true,
-        },
-      }),
-    ]);
-
-    const hits: AccesDroitsHit[] = [];
-
-    for (const g of guides) {
-      const score = scoreDoc(question, {
-        title: g.title,
-        titleAr: g.titleAr,
-        content: `${g.description ?? ""} ${g.descriptionAr ?? ""} ${g.content ?? ""}`,
-      });
-      if (score >= ACCES_MIN_SCORE) {
-        hits.push({
-          id: g.id,
-          type: "guide",
-          title: g.title,
-          titleAr: g.titleAr,
-          summary: g.description,
-          summaryAr: g.descriptionAr,
-          category: g.category,
-          categoryAr: g.categoryAr,
-          href: `/acces-aux-droits/guides-pratiques#${g.id}`,
-          score,
-        });
-      }
-    }
-
-    for (const n of news) {
-      const score = scoreDoc(question, {
-        title: n.title,
-        titleAr: n.titleAr,
-        content: `${n.excerpt ?? ""} ${n.excerptAr ?? ""} ${n.content ?? ""} ${n.contentAr ?? ""}`,
-      });
-      if (score >= ACCES_MIN_SCORE) {
-        hits.push({
-          id: n.id,
-          type: "news",
-          title: n.title,
-          titleAr: n.titleAr,
-          summary: n.excerpt,
-          summaryAr: n.excerptAr,
-          category: n.category,
-          categoryAr: null,
-          href: `/acces-aux-droits/actualites#${n.id}`,
-          score,
-        });
-      }
-    }
-
-    for (const r of resources) {
-      const score = scoreDoc(question, {
-        title: r.title,
-        titleAr: r.titleAr,
-        content: `${r.description ?? ""} ${r.descriptionAr ?? ""}`,
-      });
-      if (score >= ACCES_MIN_SCORE) {
-        hits.push({
-          id: r.id,
-          type: "resource",
-          title: r.title,
-          titleAr: r.titleAr,
-          summary: r.description,
-          summaryAr: r.descriptionAr,
-          category: r.category,
-          categoryAr: r.categoryAr,
-          href: r.fileUrl ?? `/acces-aux-droits/ressources-pratiques#${r.id}`,
-          score,
-        });
-      }
-    }
-
-    for (const l of links) {
-      const score = scoreDoc(question, {
-        title: l.title,
-        titleAr: l.titleAr,
-        content: `${l.description ?? ""} ${l.descriptionAr ?? ""}`,
-      });
-      if (score >= ACCES_MIN_SCORE) {
-        hits.push({
-          id: l.id,
-          type: "link",
-          title: l.title,
-          titleAr: l.titleAr,
-          summary: l.description,
-          summaryAr: l.descriptionAr,
-          category: l.category,
-          categoryAr: l.categoryAr,
-          href: l.url,
-          score,
-        });
-      }
-    }
-
-    return hits.sort((a, b) => b.score - a.score).slice(0, ACCES_MAX_RESULTS);
+    const hits = await searchAllAad(question, FICHE_MIN_SIMILARITY, ACCES_MAX_RESULTS);
+    return hits.slice(0, ACCES_MAX_RESULTS).map((h) => ({
+      id: h.id,
+      type: h.type,
+      title: h.title,
+      titleAr: h.titleAr,
+      summary: h.summary,
+      summaryAr: h.summaryAr,
+      category: h.category,
+      categoryAr: h.categoryAr,
+      href:
+        h.href ??
+        (h.type === "guide"
+          ? `/acces-aux-droits/guides-pratiques#${h.id}`
+          : h.type === "news"
+            ? `/acces-aux-droits/actualites#${h.id}`
+            : h.type === "resource"
+              ? `/acces-aux-droits/ressources-pratiques#${h.id}`
+              : h.type === "link"
+                ? "/acces-aux-droits/liens-utiles"
+                : "/acces-aux-droits"),
+      similarity: h.similarity,
+    }));
   } catch (err) {
-    console.warn("[acces-droits-chat] AAD content retrieval failed:", (err as Error).message);
+    console.warn("[acces-droits-chat] AAD retrieval failed:", (err as Error).message);
     return [];
   }
 }
@@ -370,7 +248,9 @@ export async function accesDroitsChat(req: Request) {
             ? "ACTUALITÉ"
             : h.type === "resource"
               ? "RESSOURCE"
-              : "LIEN UTILE";
+              : h.type === "training"
+                ? "Q/R OFFICIELLE"
+                : "LIEN UTILE";
       return `[${kind} ${i + 1}] ${t}${s ? `\n${s.slice(0, FICHE_MAX_SUMMARY_CHARS)}` : ""}`;
     })
     .join("\n\n");
@@ -408,9 +288,8 @@ ${fiches.length > 0 ? `Fiches de l'observatoire pertinentes :\n${fichesContext}\
   const answer = res.choices?.[0]?.message?.content ?? "";
 
   // Emit fiche + Accès-aux-droits hits in one array with a `type` field.
-  // For Accès-aux-droits rows we don't have a cosine similarity — map the
-  // keyword score onto a comparable 0.15–0.5 band so the UI badges look
-  // sensible next to fiche scores.
+  // Both sides carry a real cosine similarity from pgvector now, so the
+  // UI badge can sort/colour them consistently.
   const accesSources = accesDroitsHits.map((h) => ({
     id: h.id,
     type: h.type,
@@ -419,7 +298,7 @@ ${fiches.length > 0 ? `Fiches de l'observatoire pertinentes :\n${fichesContext}\
     categoryName: h.category,
     categoryNameAr: h.categoryAr,
     href: h.href,
-    similarity: Math.min(0.5, 0.15 + h.score * 0.06),
+    similarity: h.similarity,
   }));
 
   const ficheSources = fiches.map((f) => ({

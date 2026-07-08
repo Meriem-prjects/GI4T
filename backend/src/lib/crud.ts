@@ -73,6 +73,10 @@ export interface CrudOptions<TCreate extends ZodTypeAny, TUpdate extends ZodType
   publicRead?: boolean;
   defaultWhere?: Record<string, unknown>;
   include?: Record<string, unknown>;
+  // Fire-and-forget hook invoked after a successful create/update so a
+  // resource can eagerly re-embed itself in the background. Never blocks
+  // the client response — if the hook throws the write still succeeds.
+  afterWrite?: (row: unknown) => void | Promise<void>;
 }
 
 export function makeCrudRouter<TCreate extends ZodTypeAny, TUpdate extends ZodTypeAny>(
@@ -134,6 +138,11 @@ export function makeCrudRouter<TCreate extends ZodTypeAny, TUpdate extends ZodTy
       const data = opts.createSchema.parse(req.body);
       const created = await delegate.create({ data });
       res.status(201).json(created);
+      if (opts.afterWrite) {
+        void Promise.resolve()
+          .then(() => opts.afterWrite!(created))
+          .catch((e) => console.warn(`[crud:${String(opts.model)}] afterWrite failed:`, e));
+      }
     }),
   );
 
@@ -145,6 +154,11 @@ export function makeCrudRouter<TCreate extends ZodTypeAny, TUpdate extends ZodTy
       const data = opts.updateSchema.parse(req.body);
       const updated = await delegate.update({ where: { id: req.params.id }, data });
       res.json(updated);
+      if (opts.afterWrite) {
+        void Promise.resolve()
+          .then(() => opts.afterWrite!(updated))
+          .catch((e) => console.warn(`[crud:${String(opts.model)}] afterWrite failed:`, e));
+      }
     }),
   );
 

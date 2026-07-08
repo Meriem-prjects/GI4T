@@ -34,7 +34,7 @@ import {
 // quick question without navigating away. Hidden on the full-page route to
 // avoid a duplicate, and on all admin routes to keep the back-office clean.
 
-type SourceType = "fiche" | "guide" | "news" | "resource" | "link";
+type SourceType = "fiche" | "guide" | "news" | "resource" | "link" | "training";
 
 interface Source {
   id: string;
@@ -56,6 +56,7 @@ const TYPE_META: Record<
   news: { icon: Newspaper, labelFr: "Actualité", labelAr: "خبر" },
   resource: { icon: Download, labelFr: "Ressource", labelAr: "مورد" },
   link: { icon: ExternalLink, labelFr: "Lien utile", labelAr: "رابط مفيد" },
+  training: { icon: Sparkles, labelFr: "Q/R officielle", labelAr: "سؤال/جواب رسمي" },
 };
 
 interface Message {
@@ -145,6 +146,7 @@ export const FloatingAssistant = () => {
       if (source.type === "fiche") path = `/api/documents/${source.id}`;
       else if (source.type === "guide") path = `/api/practical-guides/${source.id}`;
       else if (source.type === "news") path = `/api/news/${source.id}`;
+      else if (source.type === "training") path = `/api/chatbot/training-documents/${source.id}`;
       const raw = await api.get<Record<string, unknown>>(path);
       // Merged snake/camel picker so we don't rebuild this per type.
       const pick = <T,>(...keys: string[]): T | null => {

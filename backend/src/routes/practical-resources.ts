@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { makeCrudRouter } from "../lib/crud.js";
+import { embedOneAadRow } from "../services/aad-embed.js";
 
 const createSchema = z.object({
   title: z.string().min(1),
@@ -22,4 +23,5 @@ export const practicalResourcesRouter = makeCrudRouter({
   updateSchema: createSchema.partial(),
   listOrderBy: [{ displayOrder: "asc" }, { createdAt: "desc" }],
   writeRoles: ["admin", "admin_acces_droits"],
+  afterWrite: (row) => embedOneAadRow("practical_resources", row as Record<string, unknown>),
 });

@@ -45,6 +45,7 @@ import { batchGenerateEmbeddings } from "./batch-generate-embeddings.js";
 import { aiSemanticSearch } from "./ai-semantic-search.js";
 import { chatbotFineTuning } from "./chatbot-fine-tuning.js";
 import { accesDroitsChat } from "./acces-droits-chat.js";
+import { refreshAadEmbeddingsFn } from "./refresh-aad-embeddings.js";
 import { translatePage } from "./translate-page.js";
 import { translateFields } from "./translate-fields.js";
 import { asyncFullTranslation } from "./async-full-translation.js";
@@ -96,6 +97,7 @@ const functions: FunctionDef[] = [
   { name: "ai-semantic-search", handler: aiSemanticSearch, auth: "none" },
   { name: "chatbot-fine-tuning", handler: chatbotFineTuning, auth: "admin_acces_droits" },
   { name: "acces-droits-chat", handler: accesDroitsChat, auth: "none" },
+  { name: "refresh-aad-embeddings", handler: refreshAadEmbeddingsFn, auth: "admin" },
   { name: "translate-page", handler: translatePage, auth: "required" },
   { name: "translate-fields", handler: translateFields, auth: "required" },
   { name: "async-full-translation", handler: asyncFullTranslation, auth: "required" },
