@@ -150,12 +150,18 @@ const AdminAlbumsPhotos = () => {
         const finalPath = extension
             ? `${path.replace(/\.[a-z0-9]+$/i, "")}.${extension}`
             : path;
-        const { error } = await supabase.storage.from(bucket).upload(finalPath, blob, { upsert: true });
-        if (error) {
-            toast({ title: "Erreur upload", description: error.message, variant: "destructive" });
+        // The backend renames the file with a UUID prefix at save time,
+        // so we MUST build the public URL from the key it returns
+        // (`uploadData.path`) rather than the path we submitted — the
+        // submitted name never lands on disk.
+        const { data: uploadData, error } = await supabase.storage
+            .from(bucket)
+            .upload(finalPath, blob, { upsert: true });
+        if (error || !uploadData) {
+            toast({ title: "Erreur upload", description: error?.message ?? "Upload failed", variant: "destructive" });
             return null;
         }
-        const { data } = supabase.storage.from(bucket).getPublicUrl(finalPath);
+        const { data } = supabase.storage.from(bucket).getPublicUrl(uploadData.path);
         return data.publicUrl;
     };
 
