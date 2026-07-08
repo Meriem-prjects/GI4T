@@ -33,16 +33,19 @@ interface Message {
   sources?: Source[];
 }
 
-// Colour + label for a similarity score. Kept as three buckets so the
-// user gets an at-a-glance sense of confidence without being overwhelmed.
+// Colour + label for a similarity score. Thresholds match the raw cosine
+// range we actually see on this bilingual corpus (French question →
+// Arabic fiche): a "very relevant" match sits at 0.35+, a "solid" one
+// at 0.25+, and anything above the retrieval floor is still worth
+// showing.
 function scoreVisual(sim: number, isRTL: boolean): { bg: string; text: string; label: string } {
-  if (sim >= 0.7)
+  if (sim >= 0.35)
     return {
       bg: "bg-emerald-100",
       text: "text-emerald-800",
       label: isRTL ? "مطابقة ممتازة" : "Excellente correspondance",
     };
-  if (sim >= 0.55)
+  if (sim >= 0.25)
     return {
       bg: "bg-blue-100",
       text: "text-blue-800",
