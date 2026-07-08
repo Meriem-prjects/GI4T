@@ -122,6 +122,11 @@ export const FloatingAssistant = () => {
   const [isStreaming, setIsStreaming] = useState(false);
   const [preview, setPreview] = useState<PreviewState | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
+  // Ref on the newest assistant reply so we can align its TOP with the
+  // top of the visible chat area (rather than autoscrolling to the very
+  // bottom of a long reply, which forces the reader to scroll back up).
+  const lastAssistantRef = useRef<HTMLDivElement | null>(null);
+  const prevStreamingRef = useRef(false);
 
   // Fetches the content for a source and opens the preview dialog. For
   // types we can render inline (fiche / guide / news), we pull from the
@@ -214,9 +219,27 @@ export const FloatingAssistant = () => {
     setMessages([{ id: 1, role: "assistant", content: welcome, timestamp: new Date() }]);
   }, [welcome]);
 
-  // Auto-scroll to the bottom on new messages.
+  // Scroll behaviour: while the assistant is still thinking (spinner),
+  // stick to the bottom so the citizen sees their own message + the
+  // loader. As soon as the reply arrives (streaming → false), align the
+  // TOP of that reply with the top of the chat pane so the reader
+  // starts from the first line — long answers used to scroll straight
+  // to the end.
   useEffect(() => {
     if (!scrollRef.current) return;
+    const wasStreaming = prevStreamingRef.current;
+    prevStreamingRef.current = isStreaming;
+    // Reply just landed → jump to its top.
+    if (wasStreaming && !isStreaming && lastAssistantRef.current) {
+      requestAnimationFrame(() => {
+        lastAssistantRef.current?.scrollIntoView({
+          behavior: "smooth",
+          block: "start",
+        });
+      });
+      return;
+    }
+    // Default: user is sending / spinner up — stay pinned to the bottom.
     scrollRef.current.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" });
   }, [messages, isStreaming]);
 
@@ -329,12 +352,23 @@ export const FloatingAssistant = () => {
 
           {/* Messages */}
           <div ref={scrollRef} className="flex-1 overflow-y-auto p-3 space-y-3 bg-muted/30">
-            {messages.map((msg) => {
+            {(() => {
+              // Track the index of the last non-empty assistant message so we
+              // can pin its ref for the scroll-to-top-of-reply effect.
+              const lastAssistantIndex = (() => {
+                for (let i = messages.length - 1; i >= 0; i--) {
+                  const m = messages[i];
+                  if (m.role === "assistant" && m.content) return i;
+                }
+                return -1;
+              })();
+              return messages.map((msg, index) => {
               const msgAr = isArabicText(msg.content);
               return (
                 <div
                   key={msg.id}
-                  className={`flex flex-col gap-2 ${msg.role === "user" ? "items-end" : "items-start"}`}
+                  ref={index === lastAssistantIndex ? lastAssistantRef : undefined}
+                  className={`flex flex-col gap-2 scroll-mt-2 ${msg.role === "user" ? "items-end" : "items-start"}`}
                 >
                   <div
                     dir={msgAr ? "rtl" : "ltr"}
@@ -430,7 +464,8 @@ export const FloatingAssistant = () => {
                   )}
                 </div>
               );
-            })}
+              });
+            })()}
             {isStreaming && messages[messages.length - 1]?.content === "" && (
               <div className="flex justify-start">
                 <div className="bg-background border border-border px-3 py-2 rounded-lg">

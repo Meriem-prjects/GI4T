@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
@@ -503,6 +503,26 @@ const GuidesPratiquesContent = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
   const [expandedId, setExpandedId] = useState<string | null>(null);
+  // Refs per card so we can scroll the header into view when the user
+  // opens a guide — otherwise the accordion pushes the header out of the
+  // viewport and the reader starts mid-content.
+  const cardRefs = useRef<Record<string, HTMLDivElement | null>>({});
+  useEffect(() => {
+    if (!expandedId) return;
+    // Two-frame wait so the layout has committed the newly-expanded card
+    // before we ask the browser to scroll — otherwise we scroll to where
+    // the collapsed card USED to be.
+    const raf1 = requestAnimationFrame(() => {
+      const raf2 = requestAnimationFrame(() => {
+        const el = cardRefs.current[expandedId];
+        if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
+      });
+      // Nested rAF cleanup — we only need to clear the outer id, the
+      // inner one is queued behind it.
+      void raf2;
+    });
+    return () => cancelAnimationFrame(raf1);
+  }, [expandedId]);
 
   const filteredGuides = useMemo(() => {
     const q = searchTerm.trim().toLowerCase();
@@ -619,7 +639,10 @@ const GuidesPratiquesContent = () => {
               return (
                 <Card
                   key={guide.id}
-                  className={`overflow-hidden border transition-all duration-300 ${
+                  ref={(el) => {
+                    cardRefs.current[guide.id] = el as HTMLDivElement | null;
+                  }}
+                  className={`overflow-hidden border transition-all duration-300 scroll-mt-24 ${
                     isOpen ? `${guide.borderColor} shadow-md` : "border-border hover:shadow-sm"
                   } ${guide.bgColor}`}
                 >
