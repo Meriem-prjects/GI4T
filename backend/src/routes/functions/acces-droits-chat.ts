@@ -4,14 +4,14 @@ import { prisma } from "../../lib/prisma.js";
 import { getOpenAI } from "../../services/openai.js";
 import { searchBySemantics } from "../../services/embeddings.js";
 
-// Semantic-fiche retrieval configuration. Threshold is 0.35 because the
-// corpus is mostly Arabic and citizens ask in French — cross-lingual
-// cosine similarity from text-embedding-3-small on well-matched fiches
-// hovers around 0.40–0.50 in practice, so 0.50 was empirically too
-// strict (rejected the top-relevant match at 0.435 for "licenciement
-// abusif"). At 0.35 the noise floor is low enough that only fiches
-// legitimately overlapping with the question survive.
-const FICHE_MIN_SIMILARITY = 0.35;
+// Semantic-fiche retrieval configuration. Threshold 0.25 — same as
+// /api/fn/ai-semantic-search — because raw cosine similarity from
+// text-embedding-3-small on a French question against an
+// Arabic-language corpus lands at 0.28–0.34 for the actually-relevant
+// fiches (higher values you may see in ai-semantic-search results
+// include the title-match boost). At 0.25 the top-3 results are the
+// legitimate matches without noise creeping in.
+const FICHE_MIN_SIMILARITY = 0.25;
 const FICHE_MAX_RESULTS = 3;
 const FICHE_MAX_SUMMARY_CHARS = 600;
 
