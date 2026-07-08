@@ -14,6 +14,12 @@ import { searchBySemantics } from "../../services/embeddings.js";
 const FICHE_MIN_SIMILARITY = 0.15;
 const FICHE_MAX_RESULTS = 3;
 const FICHE_MAX_SUMMARY_CHARS = 600;
+// Keyword-scored Accès-aux-droits content (guides, actualités, resources,
+// useful links). Cheaper than embeddings and fine since each row is short
+// and has clean editorial titles. We surface up to this many alongside
+// the fiche results so the chat can point to native ADD content too.
+const ACCES_MIN_SCORE = 2;
+const ACCES_MAX_RESULTS = 3;
 
 const schema = z.object({
   message: z.string().min(1),
@@ -136,16 +142,189 @@ async function retrieveRelevantFiches(question: string): Promise<
   }
 }
 
+// Retrieval over the native Accès-aux-droits content — practical guides,
+// news articles, practical resources, useful links. These rows are short
+// and editorial, so keyword scoring is enough (no embedding call). Each
+// hit carries the type so the frontend can pick an icon and destination
+// URL. Failure is non-fatal.
+type AccesDroitsHit = {
+  id: string;
+  type: "guide" | "news" | "resource" | "link";
+  title: string;
+  titleAr: string | null;
+  summary: string | null;
+  summaryAr: string | null;
+  category: string | null;
+  categoryAr: string | null;
+  href: string;
+  score: number;
+};
+
+async function retrieveAccesDroitsContent(question: string): Promise<AccesDroitsHit[]> {
+  try {
+    const [guides, news, resources, links] = await Promise.all([
+      prisma.practicalGuide.findMany({
+        where: { isPublished: true },
+        select: {
+          id: true,
+          title: true,
+          titleAr: true,
+          description: true,
+          descriptionAr: true,
+          content: true,
+          category: true,
+          categoryAr: true,
+        },
+      }),
+      prisma.news.findMany({
+        where: { isPublished: true },
+        select: {
+          id: true,
+          title: true,
+          titleAr: true,
+          excerpt: true,
+          excerptAr: true,
+          content: true,
+          contentAr: true,
+          category: true,
+        },
+      }),
+      prisma.practicalResource.findMany({
+        where: { isPublished: true },
+        select: {
+          id: true,
+          title: true,
+          titleAr: true,
+          description: true,
+          descriptionAr: true,
+          category: true,
+          categoryAr: true,
+          fileUrl: true,
+        },
+      }),
+      prisma.usefulLink.findMany({
+        where: { isPublished: true },
+        select: {
+          id: true,
+          title: true,
+          titleAr: true,
+          description: true,
+          descriptionAr: true,
+          category: true,
+          categoryAr: true,
+          url: true,
+        },
+      }),
+    ]);
+
+    const hits: AccesDroitsHit[] = [];
+
+    for (const g of guides) {
+      const score = scoreDoc(question, {
+        title: g.title,
+        titleAr: g.titleAr,
+        content: `${g.description ?? ""} ${g.descriptionAr ?? ""} ${g.content ?? ""}`,
+      });
+      if (score >= ACCES_MIN_SCORE) {
+        hits.push({
+          id: g.id,
+          type: "guide",
+          title: g.title,
+          titleAr: g.titleAr,
+          summary: g.description,
+          summaryAr: g.descriptionAr,
+          category: g.category,
+          categoryAr: g.categoryAr,
+          href: `/acces-aux-droits/guides-pratiques#${g.id}`,
+          score,
+        });
+      }
+    }
+
+    for (const n of news) {
+      const score = scoreDoc(question, {
+        title: n.title,
+        titleAr: n.titleAr,
+        content: `${n.excerpt ?? ""} ${n.excerptAr ?? ""} ${n.content ?? ""} ${n.contentAr ?? ""}`,
+      });
+      if (score >= ACCES_MIN_SCORE) {
+        hits.push({
+          id: n.id,
+          type: "news",
+          title: n.title,
+          titleAr: n.titleAr,
+          summary: n.excerpt,
+          summaryAr: n.excerptAr,
+          category: n.category,
+          categoryAr: null,
+          href: `/acces-aux-droits/actualites#${n.id}`,
+          score,
+        });
+      }
+    }
+
+    for (const r of resources) {
+      const score = scoreDoc(question, {
+        title: r.title,
+        titleAr: r.titleAr,
+        content: `${r.description ?? ""} ${r.descriptionAr ?? ""}`,
+      });
+      if (score >= ACCES_MIN_SCORE) {
+        hits.push({
+          id: r.id,
+          type: "resource",
+          title: r.title,
+          titleAr: r.titleAr,
+          summary: r.description,
+          summaryAr: r.descriptionAr,
+          category: r.category,
+          categoryAr: r.categoryAr,
+          href: r.fileUrl ?? `/acces-aux-droits/ressources-pratiques#${r.id}`,
+          score,
+        });
+      }
+    }
+
+    for (const l of links) {
+      const score = scoreDoc(question, {
+        title: l.title,
+        titleAr: l.titleAr,
+        content: `${l.description ?? ""} ${l.descriptionAr ?? ""}`,
+      });
+      if (score >= ACCES_MIN_SCORE) {
+        hits.push({
+          id: l.id,
+          type: "link",
+          title: l.title,
+          titleAr: l.titleAr,
+          summary: l.description,
+          summaryAr: l.descriptionAr,
+          category: l.category,
+          categoryAr: l.categoryAr,
+          href: l.url,
+          score,
+        });
+      }
+    }
+
+    return hits.sort((a, b) => b.score - a.score).slice(0, ACCES_MAX_RESULTS);
+  } catch (err) {
+    console.warn("[acces-droits-chat] AAD content retrieval failed:", (err as Error).message);
+    return [];
+  }
+}
+
 export async function accesDroitsChat(req: Request) {
   const { message, history, language } = schema.parse(req.body);
 
-  const [config, trainingDocs, fiches] = await Promise.all([
+  const [config, trainingDocs, fiches, accesDroitsHits] = await Promise.all([
     prisma.chatbotConfig.findFirst(),
     prisma.chatbotTrainingDocument.findMany({
       where: { isActive: true },
       select: { title: true, titleAr: true, content: true },
     }),
     retrieveRelevantFiches(message),
+    retrieveAccesDroitsContent(message),
   ]);
 
   // Rank docs by keyword overlap with the user's question. Topics that
@@ -178,20 +357,38 @@ export async function accesDroitsChat(req: Request) {
     })
     .join("\n\n");
 
+  // Same-shape context block for the Accès-aux-droits content the LLM
+  // should also cite when it fits the question.
+  const accesContext = accesDroitsHits
+    .map((h, i) => {
+      const t = language === "ar" && h.titleAr ? h.titleAr : h.title;
+      const s = language === "ar" && h.summaryAr ? h.summaryAr : h.summary;
+      const kind =
+        h.type === "guide"
+          ? "GUIDE PRATIQUE"
+          : h.type === "news"
+            ? "ACTUALITÉ"
+            : h.type === "resource"
+              ? "RESSOURCE"
+              : "LIEN UTILE";
+      return `[${kind} ${i + 1}] ${t}${s ? `\n${s.slice(0, FICHE_MAX_SUMMARY_CHARS)}` : ""}`;
+    })
+    .join("\n\n");
+
   const systemPrompt = `${config?.systemPrompt ?? "Tu es un assistant juridique tunisien spécialisé dans l'accès aux droits."}
 
 Language: respond in ${language === "ar" ? "Arabic" : "French"}.
 
 PRIORITÉ DE RÉPONSE :
 1. Si la question de l'utilisateur correspond à une Q/R de la base de connaissances ci-dessous, réponds avec la R: associée — c'est la position officielle de l'ODF.
-2. Sinon, utilise les FICHES DE L'OBSERVATOIRE ci-dessous et cite-les naturellement quand elles sont pertinentes ("d'après la fiche X…", "voir la fiche Y…").
+2. Sinon, utilise les FICHES DE L'OBSERVATOIRE et les CONTENUS ACCÈS-AUX-DROITS ci-dessous et cite-les naturellement quand ils sont pertinents ("d'après la fiche X…", "voir le guide Y…", "l'actualité Z traite de ce sujet…").
 3. Sinon encore, réponds avec tes connaissances générales sur le droit tunisien.
 4. Ne jamais inventer un article de loi, une date, un numéro de loi ou de fascicule officiel.
 
 Base de connaissances ODF (Q/R curées) :
 ${context}
 
-${fiches.length > 0 ? `Fiches de l'observatoire pertinentes :\n${fichesContext}` : ""}`;
+${fiches.length > 0 ? `Fiches de l'observatoire pertinentes :\n${fichesContext}\n` : ""}${accesDroitsHits.length > 0 ? `Contenus Accès-aux-droits pertinents :\n${accesContext}` : ""}`;
 
   // Call OpenAI directly (the official SDK uses Node's `https` module
   // which respects `--use-system-ca` — Mistral's SDK uses `fetch`
@@ -210,17 +407,38 @@ ${fiches.length > 0 ? `Fiches de l'observatoire pertinentes :\n${fichesContext}`
   });
   const answer = res.choices?.[0]?.message?.content ?? "";
 
+  // Emit fiche + Accès-aux-droits hits in one array with a `type` field.
+  // For Accès-aux-droits rows we don't have a cosine similarity — map the
+  // keyword score onto a comparable 0.15–0.5 band so the UI badges look
+  // sensible next to fiche scores.
+  const accesSources = accesDroitsHits.map((h) => ({
+    id: h.id,
+    type: h.type,
+    title: h.title,
+    titleAr: h.titleAr,
+    categoryName: h.category,
+    categoryNameAr: h.categoryAr,
+    href: h.href,
+    similarity: Math.min(0.5, 0.15 + h.score * 0.06),
+  }));
+
+  const ficheSources = fiches.map((f) => ({
+    id: f.id,
+    type: "fiche" as const,
+    title: f.title,
+    titleAr: f.titleAr,
+    categoryName: f.categoryName,
+    categoryNameAr: f.categoryNameAr,
+    href: null as string | null,
+    similarity: f.similarity,
+  }));
+
   return {
     answer,
     language,
     matchedTopics: selected.map((s) => s.doc.title),
-    sources: fiches.map((f) => ({
-      id: f.id,
-      title: f.title,
-      titleAr: f.titleAr,
-      categoryName: f.categoryName,
-      categoryNameAr: f.categoryNameAr,
-      similarity: f.similarity,
-    })),
+    sources: [...ficheSources, ...accesSources].sort(
+      (a, b) => b.similarity - a.similarity,
+    ),
   };
 }

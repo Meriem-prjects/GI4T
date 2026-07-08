@@ -1,6 +1,17 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Link, useLocation } from "react-router-dom";
-import { MessageCircle, Send, Loader2, X, Sparkles, FileText, ExternalLink } from "lucide-react";
+import { useLocation } from "react-router-dom";
+import {
+  MessageCircle,
+  Send,
+  Loader2,
+  X,
+  Sparkles,
+  FileText,
+  BookOpen,
+  Newspaper,
+  Download,
+  ExternalLink,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useChatbotConfig } from "@/hooks/useChatbotConfig";
@@ -9,6 +20,13 @@ import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { renderChatMarkdown, isArabicText } from "@/lib/markdown-chat";
 import { createDocumentPath } from "@/lib/urlUtils";
+import { api } from "@/api/client";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 
 // A compact, floating chat popup shown at the bottom-right of every public
 // page. It shares the same backend function (`acces-droits-chat`) as the
@@ -16,14 +34,29 @@ import { createDocumentPath } from "@/lib/urlUtils";
 // quick question without navigating away. Hidden on the full-page route to
 // avoid a duplicate, and on all admin routes to keep the back-office clean.
 
+type SourceType = "fiche" | "guide" | "news" | "resource" | "link";
+
 interface Source {
   id: string;
+  type: SourceType;
   title: string;
   titleAr: string | null;
   categoryName: string | null;
   categoryNameAr: string | null;
   similarity: number;
+  href: string | null;
 }
+
+const TYPE_META: Record<
+  SourceType,
+  { icon: typeof FileText; labelFr: string; labelAr: string }
+> = {
+  fiche: { icon: FileText, labelFr: "Fiche observatoire", labelAr: "بطاقة المرصد" },
+  guide: { icon: BookOpen, labelFr: "Guide pratique", labelAr: "دليل عملي" },
+  news: { icon: Newspaper, labelFr: "Actualité", labelAr: "خبر" },
+  resource: { icon: Download, labelFr: "Ressource", labelAr: "مورد" },
+  link: { icon: ExternalLink, labelFr: "Lien utile", labelAr: "رابط مفيد" },
+};
 
 interface Message {
   id: number;
@@ -67,6 +100,16 @@ function shouldHide(pathname: string): boolean {
   return HIDDEN_PATHS.some((p) => pathname === p || pathname.startsWith(p + "/"));
 }
 
+interface PreviewState {
+  source: Source;
+  loading: boolean;
+  title: string;
+  titleAr: string | null;
+  bodyHtml: string;
+  bodyIsAr: boolean;
+  externalHref: string | null;
+}
+
 export const FloatingAssistant = () => {
   const { pathname } = useLocation();
   const { isRTL, language } = useLanguage();
@@ -76,7 +119,82 @@ export const FloatingAssistant = () => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [inputMessage, setInputMessage] = useState("");
   const [isStreaming, setIsStreaming] = useState(false);
+  const [preview, setPreview] = useState<PreviewState | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
+
+  // Fetches the content for a source and opens the preview dialog. For
+  // types we can render inline (fiche / guide / news), we pull from the
+  // matching /api/... endpoint. For resources and useful links, we just
+  // open the target in a new tab — there's nothing to preview.
+  const openSourcePreview = async (source: Source) => {
+    if (source.type === "resource" || source.type === "link") {
+      if (source.href) window.open(source.href, "_blank", "noopener,noreferrer");
+      return;
+    }
+    setPreview({
+      source,
+      loading: true,
+      title: source.title,
+      titleAr: source.titleAr,
+      bodyHtml: "",
+      bodyIsAr: false,
+      externalHref: null,
+    });
+    try {
+      let path = "";
+      if (source.type === "fiche") path = `/api/documents/${source.id}`;
+      else if (source.type === "guide") path = `/api/practical-guides/${source.id}`;
+      else if (source.type === "news") path = `/api/news/${source.id}`;
+      const raw = await api.get<Record<string, unknown>>(path);
+      // Merged snake/camel picker so we don't rebuild this per type.
+      const pick = <T,>(...keys: string[]): T | null => {
+        for (const k of keys) {
+          const v = raw[k];
+          if (v !== undefined && v !== null && v !== "") return v as T;
+        }
+        return null;
+      };
+      const titleFr = (pick<string>("title") as string) ?? source.title;
+      const titleAr = (pick<string>("title_ar", "titleAr") as string | null) ?? source.titleAr;
+      // Prefer already-translated body when we have it, otherwise fall
+      // back to the source-language content. Fiches carry both.
+      const bodyFr =
+        (pick<string>(
+          "translated_content",
+          "translatedContent",
+          "content",
+        ) as string | null) ?? "";
+      const bodyAr =
+        (pick<string>("content_ar", "contentAr") as string | null) ??
+        (isArabicText(bodyFr) ? bodyFr : "");
+      const chosen = isRTL && bodyAr ? bodyAr : bodyFr || bodyAr;
+      const externalHref =
+        source.type === "fiche"
+          ? source.categoryName
+            ? createDocumentPath(source.categoryName, source.title)
+            : null
+          : source.href;
+      setPreview({
+        source,
+        loading: false,
+        title: isRTL && titleAr ? titleAr : titleFr,
+        titleAr,
+        bodyHtml: renderChatMarkdown(chosen),
+        bodyIsAr: isArabicText(chosen),
+        externalHref,
+      });
+    } catch (err) {
+      toast({
+        title: isRTL ? "خطأ" : "Erreur",
+        description: isRTL
+          ? "تعذّر تحميل المحتوى."
+          : "Impossible de charger le contenu.",
+        variant: "destructive",
+      });
+      setPreview(null);
+      void err;
+    }
+  };
 
   const hidden = shouldHide(pathname);
   const primaryColor = config?.primary_color || "#3B82F6";
@@ -132,11 +250,13 @@ export const FloatingAssistant = () => {
       const rawSources = (payload?.sources ?? []) as Array<Record<string, unknown>>;
       const sources: Source[] = rawSources.map((r) => ({
         id: String(r.id ?? ""),
+        type: ((r.type as SourceType) || "fiche"),
         title: String(r.title ?? ""),
         titleAr: (r.title_ar ?? r.titleAr ?? null) as string | null,
         categoryName: (r.category_name ?? r.categoryName ?? null) as string | null,
         categoryNameAr: (r.category_name_ar ?? r.categoryNameAr ?? null) as string | null,
         similarity: Number(r.similarity ?? 0),
+        href: (r.href ?? null) as string | null,
       }));
       setMessages((prev) =>
         prev.map((m) => (m.id === assistantId ? { ...m, content: answer, sources } : m)),
@@ -246,16 +366,15 @@ export const FloatingAssistant = () => {
                         const category = isRTL && src.categoryNameAr ? src.categoryNameAr : src.categoryName;
                         const percent = Math.round(src.similarity * 100);
                         const visual = scoreVisual(src.similarity, isRTL);
-                        const to = src.categoryName
-                          ? createDocumentPath(src.categoryName, src.title)
-                          : `/observatoire/documents/${src.id}`;
+                        const meta = TYPE_META[src.type] ?? TYPE_META.fiche;
+                        const Icon = meta.icon;
+                        const typeLabel = isRTL ? meta.labelAr : meta.labelFr;
                         return (
-                          <Link
-                            key={src.id}
-                            to={to}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className={`group flex items-start gap-2 rounded-lg border border-border bg-background hover:border-primary/50 hover:shadow-sm transition-all p-2 ${
+                          <button
+                            type="button"
+                            key={`${src.type}-${src.id}`}
+                            onClick={() => openSourcePreview(src)}
+                            className={`group w-full text-start flex items-start gap-2 rounded-lg border border-border bg-background hover:border-primary/50 hover:shadow-sm transition-all p-2 ${
                               isRTL ? "flex-row-reverse text-right" : ""
                             }`}
                             title={visual.label}
@@ -264,7 +383,7 @@ export const FloatingAssistant = () => {
                               className="flex-shrink-0 mt-0.5 h-8 w-8 rounded-md flex items-center justify-center"
                               style={{ backgroundColor: `${primaryColor}15` }}
                             >
-                              <FileText className="h-4 w-4" style={{ color: primaryColor }} />
+                              <Icon className="h-4 w-4" style={{ color: primaryColor }} />
                             </div>
                             <div className="flex-1 min-w-0">
                               <div
@@ -279,13 +398,20 @@ export const FloatingAssistant = () => {
                                   isRTL ? "flex-row-reverse" : ""
                                 }`}
                               >
+                                <span
+                                  className={`text-[10px] text-muted-foreground/80 ${
+                                    isRTL ? "font-almarai" : ""
+                                  }`}
+                                >
+                                  {typeLabel}
+                                </span>
                                 {category && (
                                   <span
                                     className={`text-[10px] text-muted-foreground truncate ${
                                       isRTL ? "font-almarai" : ""
                                     }`}
                                   >
-                                    {category}
+                                    · {category}
                                   </span>
                                 )}
                                 <span
@@ -295,12 +421,7 @@ export const FloatingAssistant = () => {
                                 </span>
                               </div>
                             </div>
-                            <ExternalLink
-                              className={`h-3 w-3 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0 mt-1 ${
-                                isRTL ? "rotate-180" : ""
-                              }`}
-                            />
-                          </Link>
+                          </button>
                         );
                       })}
                     </div>
@@ -351,6 +472,87 @@ export const FloatingAssistant = () => {
           </div>
         </div>
       )}
+
+      {/* Preview dialog — opens over the whole page when the user clicks a
+          source card. We fetch the target's body from the API and render
+          the same markdown pipeline the chat uses. */}
+      <Dialog open={!!preview} onOpenChange={(v) => !v && setPreview(null)}>
+        <DialogContent
+          className="max-w-2xl max-h-[85vh] overflow-hidden flex flex-col"
+          dir={isRTL ? "rtl" : "ltr"}
+        >
+          <DialogHeader>
+            <div className={`flex items-center gap-2 text-xs text-muted-foreground ${isRTL ? "flex-row-reverse" : ""}`}>
+              {preview &&
+                (() => {
+                  const meta = TYPE_META[preview.source.type] ?? TYPE_META.fiche;
+                  const Icon = meta.icon;
+                  return (
+                    <>
+                      <Icon className="h-3.5 w-3.5" style={{ color: primaryColor }} />
+                      <span className={isRTL ? "font-almarai" : ""}>
+                        {isRTL ? meta.labelAr : meta.labelFr}
+                      </span>
+                      {preview.source.categoryName && (
+                        <>
+                          <span>·</span>
+                          <span className={isRTL ? "font-almarai" : ""}>
+                            {isRTL && preview.source.categoryNameAr
+                              ? preview.source.categoryNameAr
+                              : preview.source.categoryName}
+                          </span>
+                        </>
+                      )}
+                    </>
+                  );
+                })()}
+            </div>
+            <DialogTitle
+              className={`text-lg leading-snug ${
+                preview && isArabicText(preview.title) ? "font-almarai text-right" : ""
+              }`}
+              dir={preview && isArabicText(preview.title) ? "rtl" : "ltr"}
+            >
+              {preview?.title}
+            </DialogTitle>
+          </DialogHeader>
+
+          <div className="flex-1 overflow-y-auto -mx-6 px-6">
+            {preview?.loading ? (
+              <div className="flex items-center justify-center py-12">
+                <Loader2 className="h-6 w-6 animate-spin" style={{ color: primaryColor }} />
+              </div>
+            ) : preview?.bodyHtml ? (
+              <div
+                className={`chat-md text-sm leading-relaxed ${
+                  preview.bodyIsAr ? "font-almarai text-right" : "text-left"
+                }`}
+                dir={preview.bodyIsAr ? "rtl" : "ltr"}
+                dangerouslySetInnerHTML={{ __html: preview.bodyHtml }}
+              />
+            ) : (
+              <p className="text-sm text-muted-foreground py-8 text-center">
+                {isRTL ? "لا يوجد محتوى للعرض." : "Aucun contenu à afficher."}
+              </p>
+            )}
+          </div>
+
+          {preview?.externalHref && !preview.loading && (
+            <div className={`pt-3 border-t flex ${isRTL ? "justify-start" : "justify-end"}`}>
+              <a
+                href={preview.externalHref}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-1.5 text-xs font-medium hover:underline"
+                style={{ color: primaryColor }}
+              >
+                {isRTL ? "افتح الصفحة الكاملة" : "Voir la page complète"}
+                <ExternalLink className={`h-3 w-3 ${isRTL ? "rotate-180" : ""}`} />
+              </a>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </>
   );
 };
