@@ -9,12 +9,18 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import { useTranslation } from "@/hooks/useTranslation";
 import { supabase } from "@/integrations/supabase/client";
 import { renderChatMarkdown, isArabicText } from "@/lib/markdown-chat";
+import {
+  ChatSources,
+  normaliseSources,
+  type ChatSource,
+} from "@/components/chat/ChatSources";
 
 interface Message {
   id: number;
   role: "user" | "assistant";
   content: string;
   timestamp: Date;
+  sources?: ChatSource[];
 }
 
 const AssistantVirtuel = () => {
@@ -100,9 +106,12 @@ const AssistantVirtuel = () => {
       if (!answer) throw new Error(isRTL ? 'لم يرد المساعد' : "L'assistant n'a pas répondu");
 
       assistantContent = answer;
+      const sources = normaliseSources((data as { sources?: unknown } | null)?.sources);
       setMessages((prev) =>
         prev.map((msg) =>
-          msg.id === assistantMessageId ? { ...msg, content: assistantContent } : msg,
+          msg.id === assistantMessageId
+            ? { ...msg, content: assistantContent, sources }
+            : msg,
         ),
       );
     } catch (error: any) {
@@ -180,7 +189,7 @@ const AssistantVirtuel = () => {
                   const msgIsArabic = isArabicText(msg.content);
                   const bubbleDir = msgIsArabic ? "rtl" : "ltr";
                   return (
-                    <div key={msg.id} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
+                    <div key={msg.id} className={`flex flex-col gap-2 ${msg.role === 'user' ? 'items-end' : 'items-start'}`}>
                       <div
                         dir={bubbleDir}
                         className={`max-w-[80%] p-4 rounded-lg ${
@@ -202,6 +211,15 @@ const AssistantVirtuel = () => {
                           {msg.timestamp.toLocaleTimeString(language === 'ar' ? 'ar-TN' : 'fr-FR', { hour: '2-digit', minute: '2-digit' })}
                         </span>
                       </div>
+                      {msg.role === 'assistant' && msg.sources && msg.sources.length > 0 && (
+                        <div className="max-w-[80%] w-full">
+                          <ChatSources
+                            sources={msg.sources}
+                            primaryColor={primaryColor}
+                            label={isRTL ? 'مصادر ذات صلة' : 'Sources liées'}
+                          />
+                        </div>
+                      )}
                     </div>
                   );
                 })}

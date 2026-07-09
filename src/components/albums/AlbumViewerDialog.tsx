@@ -28,6 +28,10 @@ interface AlbumViewerDialogProps {
   album: AlbumViewerAlbum | null;
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  /** Non-null: skip the grid and open straight into the lightbox at
+   * this photo. Useful when the parent already shows thumbnails and
+   * only wants the full-screen viewer. */
+  initialLightboxIndex?: number | null;
 }
 
 /**
@@ -38,16 +42,21 @@ interface AlbumViewerDialogProps {
  * mounted from the interactive map (where an event's linked albums are
  * opened without leaving the page).
  */
-export function AlbumViewerDialog({ album, open, onOpenChange }: AlbumViewerDialogProps) {
+export function AlbumViewerDialog({
+  album,
+  open,
+  onOpenChange,
+  initialLightboxIndex = null,
+}: AlbumViewerDialogProps) {
   const { isRTL } = useLanguage();
   const { t } = useTranslation();
-  const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
+  const [lightboxIndex, setLightboxIndex] = useState<number | null>(initialLightboxIndex);
 
-  // Reset the lightbox each time we switch album — otherwise re-opening
-  // a different album jumps straight to a stale index.
+  // When the parent (re)opens the viewer, sync the lightbox to whatever
+  // index it asked for. Passing null falls back to the grid view.
   useEffect(() => {
-    setLightboxIndex(null);
-  }, [album?.id]);
+    if (open) setLightboxIndex(initialLightboxIndex);
+  }, [open, initialLightboxIndex, album?.id]);
 
   // ← / → / Esc while lightbox is up.
   useEffect(() => {

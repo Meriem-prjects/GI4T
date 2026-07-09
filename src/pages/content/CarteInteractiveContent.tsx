@@ -43,6 +43,7 @@ const CarteInteractiveContent = () => {
   // on the selected event card. If the event has exactly one album we
   // skip the picker and open the viewer directly.
   const [viewerAlbum, setViewerAlbum] = useState<AlbumViewerAlbum | null>(null);
+  const [viewerInitialIndex, setViewerInitialIndex] = useState<number | null>(null);
   const [pickerOpen, setPickerOpen] = useState(false);
   const [searchParams] = useSearchParams();
   const { isRTL } = useLanguage();
@@ -80,6 +81,9 @@ const CarteInteractiveContent = () => {
   const openAlbumsForEvent = (event: Event) => {
     const albums = event.photo_albums ?? [];
     if (albums.length === 0) return;
+    // Opening from a CTA / marker click starts on the grid, not a
+    // specific photo.
+    setViewerInitialIndex(null);
     if (albums.length === 1) {
       setViewerAlbum(toViewerAlbum(event, albums[0]));
       return;
@@ -248,122 +252,122 @@ const CarteInteractiveContent = () => {
           </Card>
 
           {/* ── Column 1 : Detail of selected event (visually left) ────── */}
-          <Card className="overflow-hidden lg:order-1">
+          <Card className="overflow-hidden lg:order-1 h-[480px] sm:h-[560px] lg:h-[640px]">
             <CardContent className="p-0 h-full">
               {selectedEvent ? (
                 <div className="h-full flex flex-col" dir={isRTL ? "rtl" : "ltr"}>
-                  {/* Hero image */}
-                  {selectedEvent.images?.[0] ? (
-                    <div className="relative h-56 sm:h-64 overflow-hidden bg-muted">
-                      <img
-                        src={selectedEvent.images[0]}
-                        alt={selectedEvent.title}
-                        className="w-full h-full object-cover"
-                      />
-                      <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
-                      <div className={`absolute bottom-3 ${isRTL ? "right-3" : "left-3"}`}>
-                        <Badge
-                          className={
-                            selectedEvent.type === "action_realisee"
-                              ? "bg-emerald-600 hover:bg-emerald-600 text-white"
-                              : "bg-blue-600 hover:bg-blue-600 text-white"
-                          }
-                        >
-                          {selectedEvent.type === "action_realisee"
-                            ? t("actionCompleted")
-                            : t("upcomingEvent")}
-                        </Badge>
-                      </div>
+                  {/* Compact header: badge + title + date/gouvernorat + impact */}
+                  <div className="p-3 border-b space-y-2 shrink-0">
+                    <div className={`flex items-center gap-2 ${isRTL ? "flex-row-reverse" : ""}`}>
+                      <Badge
+                        className={
+                          selectedEvent.type === "action_realisee"
+                            ? "bg-emerald-600 hover:bg-emerald-600 text-white"
+                            : "bg-blue-600 hover:bg-blue-600 text-white"
+                        }
+                      >
+                        {selectedEvent.type === "action_realisee"
+                          ? t("actionCompleted")
+                          : t("upcomingEvent")}
+                      </Badge>
+                      <span className={`text-xs text-muted-foreground flex items-center gap-1 ${isRTL ? "flex-row-reverse" : ""}`}>
+                        <Calendar className="h-3 w-3" />
+                        {formatDate(selectedEvent.event_date)}
+                      </span>
                     </div>
-                  ) : (
-                    <div className="h-32 bg-gradient-to-br from-primary/5 to-primary/10 flex items-center justify-center">
-                      <Sparkles className="h-10 w-10 text-primary/40" />
-                    </div>
-                  )}
-
-                  {/* Body */}
-                  <div className="p-4 sm:p-5 flex-1 flex flex-col">
-                    <h2 className={`text-lg sm:text-xl font-bold mb-2 ${isRTL ? "text-right font-almarai" : ""}`}>
+                    <h2 className={`text-base font-bold leading-tight ${isRTL ? "text-right font-almarai" : ""}`}>
                       {isRTL && selectedEvent.title_ar
                         ? selectedEvent.title_ar
                         : selectedEvent.title}
                     </h2>
-                    <p className={`text-sm text-muted-foreground mb-4 ${isRTL ? "text-right font-almarai" : ""}`}>
-                      {isRTL && selectedEvent.description_ar
-                        ? selectedEvent.description_ar
-                        : selectedEvent.description}
-                    </p>
-
-                    {/* Stats grid */}
-                    <div className="grid grid-cols-2 gap-2 mb-4">
-                      <div className="rounded-lg bg-muted/50 p-3">
-                        <div className={`flex items-center gap-1.5 text-xs text-muted-foreground mb-0.5 ${isRTL ? "flex-row-reverse" : ""}`}>
-                          <Calendar className="h-3.5 w-3.5" />
-                          <span>{isRTL ? "التاريخ" : "Date"}</span>
-                        </div>
-                        <div className="text-sm font-semibold">
-                          {formatDate(selectedEvent.event_date)}
-                        </div>
-                      </div>
-                      <div className="rounded-lg bg-muted/50 p-3">
-                        <div className={`flex items-center gap-1.5 text-xs text-muted-foreground mb-0.5 ${isRTL ? "flex-row-reverse" : ""}`}>
-                          <MapPin className="h-3.5 w-3.5" />
-                          <span>{isRTL ? "الولاية" : "Gouvernorat"}</span>
-                        </div>
-                        <div className="text-sm font-semibold">
-                          {selectedEvent.governorate
-                            ? isRTL && selectedEvent.governorate.name_ar
-                              ? selectedEvent.governorate.name_ar
-                              : selectedEvent.governorate.name
-                            : "—"}
-                        </div>
-                      </div>
+                    <div className={`flex items-center gap-3 text-xs text-muted-foreground ${isRTL ? "flex-row-reverse" : ""}`}>
+                      <span className={`flex items-center gap-1 ${isRTL ? "flex-row-reverse" : ""}`}>
+                        <MapPin className="h-3 w-3" />
+                        {selectedEvent.governorate
+                          ? isRTL && selectedEvent.governorate.name_ar
+                            ? selectedEvent.governorate.name_ar
+                            : selectedEvent.governorate.name
+                          : "—"}
+                      </span>
                       {selectedEvent.people_impacted ? (
-                        <div className="rounded-lg bg-emerald-50 border border-emerald-100 p-3">
-                          <div className={`flex items-center gap-1.5 text-xs text-emerald-700 mb-0.5 ${isRTL ? "flex-row-reverse" : ""}`}>
-                            <Users className="h-3.5 w-3.5" />
-                            <span>{isRTL ? "المستفيدون" : "Personnes impactées"}</span>
-                          </div>
-                          <div className="text-lg font-bold text-emerald-800">
-                            {selectedEvent.people_impacted}
-                          </div>
-                        </div>
+                        <span className={`flex items-center gap-1 text-emerald-700 font-semibold ${isRTL ? "flex-row-reverse" : ""}`}>
+                          <Users className="h-3 w-3" />
+                          {selectedEvent.people_impacted}
+                        </span>
                       ) : null}
                       {selectedEvent.available_places ? (
-                        <div className="rounded-lg bg-blue-50 border border-blue-100 p-3">
-                          <div className={`flex items-center gap-1.5 text-xs text-blue-700 mb-0.5 ${isRTL ? "flex-row-reverse" : ""}`}>
-                            <Ticket className="h-3.5 w-3.5" />
-                            <span>{isRTL ? "المقاعد المتاحة" : "Places disponibles"}</span>
-                          </div>
-                          <div className="text-lg font-bold text-blue-800">
-                            {selectedEvent.available_places}
-                          </div>
-                        </div>
+                        <span className={`flex items-center gap-1 text-blue-700 font-semibold ${isRTL ? "flex-row-reverse" : ""}`}>
+                          <Ticket className="h-3 w-3" />
+                          {selectedEvent.available_places}
+                        </span>
                       ) : null}
                     </div>
+                  </div>
 
-                    {/* Voir les photos — CTA affiché uniquement si
-                        l'événement a au moins un album publié rattaché. */}
-                    {selectedEvent.photo_albums && selectedEvent.photo_albums.length > 0 && (
-                      <Button
-                        variant="outline"
-                        className={`w-full mb-2 ${isRTL ? "font-almarai flex-row-reverse" : ""}`}
-                        onClick={() => openAlbumsForEvent(selectedEvent)}
-                      >
-                        <Camera className={`h-4 w-4 ${isRTL ? "ml-1.5" : "mr-1.5"}`} />
-                        {isRTL
-                          ? `عرض الصور (${selectedEvent.photo_albums.length})`
-                          : `Voir les photos (${selectedEvent.photo_albums.length})`}
-                      </Button>
-                    )}
+                  {/* Scrollable photo strip — every photo from every linked
+                      album, stacked one below the other. Clicking any image
+                      opens the AlbumViewerDialog straight in lightbox mode
+                      at that photo's index. */}
+                  {(() => {
+                    const allPhotos: Array<{ url: string; album: EventLinkedAlbum }> =
+                      (selectedEvent.photo_albums ?? []).flatMap((a) =>
+                        (a.photo_urls ?? []).map((url) => ({ url, album: a })),
+                      );
+                    if (allPhotos.length === 0) {
+                      return (
+                        <div className="flex-1 flex flex-col items-center justify-center p-6 text-center">
+                          {selectedEvent.images?.[0] ? (
+                            <img
+                              src={selectedEvent.images[0]}
+                              alt={selectedEvent.title}
+                              className="max-w-full max-h-full object-contain rounded-lg mb-3"
+                            />
+                          ) : (
+                            <Sparkles className="h-10 w-10 mx-auto mb-2 opacity-40" />
+                          )}
+                          <p className="text-xs text-muted-foreground">
+                            {isRTL ? "لا توجد صور مرفقة" : "Aucun album lié"}
+                          </p>
+                        </div>
+                      );
+                    }
+                    return (
+                      <div className="flex-1 overflow-y-auto p-3 space-y-3 bg-muted/20">
+                        {allPhotos.map(({ url, album }, i) => {
+                          // Index within THIS album so the lightbox opens on
+                          // the right photo when we hand it back the album.
+                          const localIndex = (album.photo_urls ?? []).indexOf(url);
+                          return (
+                            <button
+                              type="button"
+                              key={`${url}-${i}`}
+                              onClick={() => {
+                                setViewerAlbum(toViewerAlbum(selectedEvent, album));
+                                setViewerInitialIndex(localIndex);
+                              }}
+                              className="block w-full rounded-lg overflow-hidden bg-muted focus:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+                            >
+                              <img
+                                src={url}
+                                alt=""
+                                loading="lazy"
+                                className="w-full h-auto object-cover hover:brightness-95 transition"
+                              />
+                            </button>
+                          );
+                        })}
+                      </div>
+                    );
+                  })()}
 
-                    {selectedEvent.registration_enabled && (
-                      <Button className={`mt-auto w-full ${isRTL ? "font-almarai" : ""}`}>
+                  {selectedEvent.registration_enabled && (
+                    <div className="p-3 border-t shrink-0">
+                      <Button className={`w-full ${isRTL ? "font-almarai" : ""}`}>
                         {isRTL ? "سجّل الآن" : "S'inscrire à cet événement"}
                         <ArrowRight className={`h-4 w-4 ${isRTL ? "mr-1.5 rotate-180" : "ml-1.5"}`} />
                       </Button>
-                    )}
-                  </div>
+                    </div>
+                  )}
                 </div>
               ) : (
                 <div className="h-full flex items-center justify-center p-8 text-center text-muted-foreground">
@@ -530,7 +534,13 @@ const CarteInteractiveContent = () => {
       <AlbumViewerDialog
         album={viewerAlbum}
         open={!!viewerAlbum}
-        onOpenChange={(v) => !v && setViewerAlbum(null)}
+        onOpenChange={(v) => {
+          if (!v) {
+            setViewerAlbum(null);
+            setViewerInitialIndex(null);
+          }
+        }}
+        initialLightboxIndex={viewerInitialIndex}
       />
     </main>
   );
