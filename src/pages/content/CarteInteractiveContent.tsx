@@ -233,8 +233,16 @@ const CarteInteractiveContent = () => {
                   }}
                 />
               </div>
-              {/* Legend */}
-              <div className={`flex items-center justify-center gap-4 mt-2 pt-2 border-t ${isRTL ? "flex-row-reverse" : ""}`}>
+              {/* Legend — dots explain the event markers, the coloured
+                  square explains the region tint (governorates with at
+                  least one completed action). */}
+              <div className={`flex items-center justify-center gap-4 mt-2 pt-2 border-t flex-wrap ${isRTL ? "flex-row-reverse" : ""}`}>
+                <div className="flex items-center gap-1.5">
+                  <div className="w-3 h-3 rounded-sm bg-emerald-200 border border-emerald-300" />
+                  <span className="text-[10px] text-muted-foreground">
+                    {isRTL ? "ولاية بها إجراء منجز" : "Gouvernorat avec action"}
+                  </span>
+                </div>
                 <div className="flex items-center gap-1.5">
                   <div className="w-3 h-3 rounded-full bg-emerald-500" />
                   <span className="text-[10px] text-muted-foreground">

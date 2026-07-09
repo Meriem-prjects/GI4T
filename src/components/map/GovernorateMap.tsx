@@ -73,12 +73,28 @@ export const GovernorateMap = ({
     return map;
   }, [events]);
 
+  // Governorates with at least one completed action ("action_realisee")
+  // — TunisiaMap tints these paths green so completed regions are
+  // visible at a glance regardless of the marker overlay.
+  const actionRealiseeStates = useMemo(() => {
+    const set = new Set<string>();
+    for (const ev of events) {
+      const name = ev.governorate?.name;
+      if (name && ev.type === "action_realisee") set.add(name);
+    }
+    return set;
+  }, [events]);
+
   return (
     <div
       ref={wrapperRef}
       className="w-full h-full flex items-center justify-center p-2 overflow-auto rounded-lg bg-sky-50"
     >
-      <TunisiaMap selectedState={selectedGovernorate ?? ""} onStateClick={handleStateClick}>
+      <TunisiaMap
+        selectedState={selectedGovernorate ?? ""}
+        onStateClick={handleStateClick}
+        actionRealiseeStates={actionRealiseeStates}
+      >
         {/* Circular clip mask, defined once for all thumbnails */}
         <defs>
           <clipPath id="event-thumb-clip" clipPathUnits="objectBoundingBox">
