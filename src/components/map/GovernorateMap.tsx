@@ -76,7 +76,7 @@ export const GovernorateMap = ({
   return (
     <div
       ref={wrapperRef}
-      className="w-full h-full flex items-center justify-center p-2 overflow-auto"
+      className="w-full h-full flex items-center justify-center p-2 overflow-auto rounded-lg bg-sky-50"
     >
       <TunisiaMap selectedState={selectedGovernorate ?? ""} onStateClick={handleStateClick}>
         {/* Circular clip mask, defined once for all thumbnails */}
@@ -85,6 +85,30 @@ export const GovernorateMap = ({
             <circle cx="0.5" cy="0.5" r="0.5" />
           </clipPath>
         </defs>
+
+        {/* Governorate names — rendered at each computed centroid, in
+            the same viewBox as the paths (836×1270). pointer-events:none
+            so labels don't intercept the click that should reach the
+            shape. White stroke acts as a halo so the label stays
+            readable no matter what colour the underlying region is. */}
+        {Array.from(centroids.entries()).map(([name, c]) => (
+          <text
+            key={`label-${name}`}
+            x={c.cx}
+            y={c.cy}
+            textAnchor="middle"
+            dominantBaseline="middle"
+            fontSize="26"
+            fontWeight="600"
+            fill="#0f172a"
+            stroke="white"
+            strokeWidth="4"
+            paintOrder="stroke"
+            style={{ pointerEvents: "none", userSelect: "none" }}
+          >
+            {name}
+          </text>
+        ))}
 
         {Array.from(eventsByGovernorate.entries()).flatMap(([name, group]) => {
           const c = centroids.get(name);

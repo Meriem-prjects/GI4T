@@ -196,10 +196,12 @@ const CarteInteractiveContent = () => {
           )}
         </div>
 
-        {/* 3-column layout: map (30%) — details (center) — list (right) */}
-        <div className="grid grid-cols-1 lg:grid-cols-[30%_1fr_360px] gap-4">
-          {/* ── Column 1 : Interactive Map ─────────────────────────────── */}
-          <Card className="overflow-hidden">
+        {/* 3-column layout: details (left) — map (middle, largest) —
+            list (right). Order + a 1fr middle column gives the map the
+            visual centre of the page. */}
+        <div className="grid grid-cols-1 lg:grid-cols-[360px_1fr_360px] gap-4">
+          {/* ── Column 2 : Interactive Map (visually centre via lg:order-2) ─ */}
+          <Card className="overflow-hidden lg:order-2">
             <CardContent className="p-3">
               <div className={`flex items-center justify-between mb-2 ${isRTL ? "flex-row-reverse" : ""}`}>
                 <h3 className="font-semibold text-sm">
@@ -209,14 +211,22 @@ const CarteInteractiveContent = () => {
                   {isRTL ? "انقر على منطقة" : "Cliquez sur une région"}
                 </span>
               </div>
-              <div className="h-[420px] sm:h-[500px] lg:h-[560px] flex items-center justify-center">
+              <div className="h-[480px] sm:h-[560px] lg:h-[640px] flex items-center justify-center">
                 <GovernorateMap
                   governorates={governorates}
                   events={filteredEvents}
                   selectedGovernorate={selectedGovernorate}
                   onGovernorateClick={setSelectedGovernorate}
                   selectedEventId={selectedEvent?.id ?? null}
-                  onEventClick={setSelectedEvent}
+                  onEventClick={(ev) => {
+                    // Sync the right-column details AND — if the event
+                    // has photo albums — open them straight away instead
+                    // of forcing a second click on "Voir les photos".
+                    setSelectedEvent(ev);
+                    if (ev.photo_albums && ev.photo_albums.length > 0) {
+                      openAlbumsForEvent(ev);
+                    }
+                  }}
                 />
               </div>
               {/* Legend */}
@@ -237,8 +247,8 @@ const CarteInteractiveContent = () => {
             </CardContent>
           </Card>
 
-          {/* ── Column 2 : Detail of selected event ────────────────────── */}
-          <Card className="overflow-hidden">
+          {/* ── Column 1 : Detail of selected event (visually left) ────── */}
+          <Card className="overflow-hidden lg:order-1">
             <CardContent className="p-0 h-full">
               {selectedEvent ? (
                 <div className="h-full flex flex-col" dir={isRTL ? "rtl" : "ltr"}>
@@ -370,8 +380,8 @@ const CarteInteractiveContent = () => {
             </CardContent>
           </Card>
 
-          {/* ── Column 3 : Compact events list (rows) ──────────────────── */}
-          <Card className="overflow-hidden">
+          {/* ── Column 3 : Compact events list (rows, right side) ──────── */}
+          <Card className="overflow-hidden lg:order-3">
             <CardContent className="p-0 h-full flex flex-col">
               <div className={`sticky top-0 z-10 bg-background border-b px-4 py-3 ${isRTL ? "text-right" : ""}`}>
                 <div className={`flex items-center justify-between ${isRTL ? "flex-row-reverse" : ""}`}>
