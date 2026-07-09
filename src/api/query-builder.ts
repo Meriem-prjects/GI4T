@@ -123,7 +123,15 @@ export class QueryBuilder<T = unknown> implements PromiseLike<QueryResult<T>> {
   ) {}
 
   select(columns = "*", opts?: { count?: "exact" | "planned" | "estimated"; head?: boolean }): this {
-    this.op = "select";
+    // Supabase idiom: `.update(x).eq('id', y).select().single()` — the
+    // trailing `.select()` asks the server to return the mutated row.
+    // If we clobber `op` here, the whole chain silently degrades to a
+    // GET (and the mutation never fires — the toast still says success
+    // because the GET succeeds). Preserve any active write op.
+    if (this.op === "select") {
+      this.op = "select";
+    }
+    // else: preserve the write op (update/insert/delete/upsert).
     this.selectStr = columns;
     if (opts?.count) this.countRequested = true;
     if (opts?.head) {
