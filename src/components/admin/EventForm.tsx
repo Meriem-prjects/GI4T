@@ -18,6 +18,15 @@ interface EventFormProps {
   isLoading?: boolean;
 }
 
+// HTML5 <input type="date"> only accepts `YYYY-MM-DD`. The API returns
+// event_date as a full ISO string (`2025-10-28T00:00:00.000Z`), so trim
+// it before seeding the form or the field renders empty and the admin
+// silently loses the date on save.
+const toDateInputValue = (v?: string): string => {
+  if (!v) return new Date().toISOString().split('T')[0];
+  return v.length >= 10 ? v.slice(0, 10) : v;
+};
+
 export const EventForm = ({ initialData, onSubmit, onCancel, isLoading }: EventFormProps) => {
   const [formData, setFormData] = useState<EventFormData>({
     type: initialData?.type || 'action_realisee',
@@ -26,7 +35,7 @@ export const EventForm = ({ initialData, onSubmit, onCancel, isLoading }: EventF
     description: initialData?.description || '',
     description_ar: initialData?.description_ar || '',
     governorate_id: initialData?.governorate_id || '',
-    event_date: initialData?.event_date || new Date().toISOString().split('T')[0],
+    event_date: toDateInputValue(initialData?.event_date),
     people_impacted: initialData?.people_impacted,
     available_places: initialData?.available_places,
     registration_enabled: initialData?.registration_enabled || false,
