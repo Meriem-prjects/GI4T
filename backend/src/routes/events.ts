@@ -84,6 +84,7 @@ eventsRouter.post(
     // like title_ar / event_date / governorate_id / people_impacted /
     // available_places / registration_enabled were silently dropped.
     const camelBody = transformKeysToCamel(req.body as Record<string, unknown>);
+    console.log("[events:POST] body keys:", Object.keys(camelBody), "sample:", JSON.stringify(camelBody).slice(0, 300));
     const data = createSchema.parse(camelBody);
     const created = await prisma.event.create({
       data: { ...data, createdBy: req.user!.userId },
