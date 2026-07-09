@@ -1,13 +1,14 @@
 import { useState, useEffect } from "react";
+import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { Search, Calendar, MapPin, Eye, Camera, Users, ChevronRight, X, ChevronLeft, ChevronRight as ChevronRightIcon } from "lucide-react";
+import { Search, Calendar, MapPin, Eye, Camera, Users, ChevronRight } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useTranslation } from "@/hooks/useTranslation";
 import { supabase } from "@/integrations/supabase/client";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { AlbumViewerDialog } from "@/components/albums/AlbumViewerDialog";
 
 interface PhotoAlbum {
   id: string;
@@ -26,6 +27,15 @@ interface PhotoAlbum {
   views: number;
   featured: boolean;
   published: boolean;
+  // Optional link back to the event this album documents. Populated by
+  // the backend when photo_albums.event_id points to a row in `events`.
+  event_id?: string | null;
+  event?: {
+    id: string;
+    title: string;
+    title_ar?: string | null;
+    event_date?: string | null;
+  } | null;
 }
 
 const AlbumsPhotosContent = () => {
@@ -37,24 +47,8 @@ const AlbumsPhotosContent = () => {
   // set, promotes one photo to a full-screen overlay so the visitor can
   // browse with the arrow keys / on-screen buttons.
   const [openAlbum, setOpenAlbum] = useState<PhotoAlbum | null>(null);
-  const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
   const { isRTL } = useLanguage();
   const { t } = useTranslation();
-
-  // Arrow-key navigation inside the lightbox.
-  useEffect(() => {
-    if (lightboxIndex === null || !openAlbum) return;
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") setLightboxIndex(null);
-      const total = openAlbum.photo_urls?.length ?? 0;
-      if (total === 0) return;
-      if (e.key === "ArrowRight") setLightboxIndex((i) => (i === null ? 0 : (i + 1) % total));
-      if (e.key === "ArrowLeft")
-        setLightboxIndex((i) => (i === null ? 0 : (i - 1 + total) % total));
-    };
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
-  }, [lightboxIndex, openAlbum]);
 
   const fetchAlbums = async () => {
     setLoading(true);
@@ -213,6 +207,18 @@ const AlbumsPhotosContent = () => {
                       </div>
                       <CardHeader>
                         <CardTitle className={`text-lg ${isRTL ? 'text-right' : ''}`}>{getTitle(album)}</CardTitle>
+                        {album.event && (
+                          <Link
+                            to={`/acces-aux-droits/carte-interactive?event=${album.event.id}`}
+                            className={`inline-flex items-center gap-1.5 text-xs text-primary hover:underline mt-1 ${
+                              isRTL ? 'flex-row-reverse font-almarai text-right' : ''
+                            }`}
+                          >
+                            <Calendar className="h-3 w-3" />
+                            {isRTL ? 'الحدث : ' : 'Événement : '}
+                            {isRTL && album.event.title_ar ? album.event.title_ar : album.event.title}
+                          </Link>
+                        )}
                         <CardDescription className={`text-sm ${isRTL ? 'text-right' : ''}`}>
                           {getDesc(album)}
                         </CardDescription>
@@ -247,10 +253,7 @@ const AlbumsPhotosContent = () => {
                         <Button
                           className="w-full"
                           size="sm"
-                          onClick={() => {
-                            setOpenAlbum(album);
-                            setLightboxIndex(null);
-                          }}
+                          onClick={() => setOpenAlbum(album)}
                         >
                           {isRTL ? 'عرض الألبوم' : "Voir l'album"}
                         </Button>
@@ -291,7 +294,21 @@ const AlbumsPhotosContent = () => {
                         </Badge>
                       </div>
                       <CardContent className="p-4">
-                        <h3 className={`font-medium text-sm mb-2 line-clamp-2 ${isRTL ? 'text-right' : ''}`}>{getTitle(album)}</h3>
+                        <h3 className={`font-medium text-sm mb-1 line-clamp-2 ${isRTL ? 'text-right' : ''}`}>{getTitle(album)}</h3>
+                        {album.event && (
+                          <Link
+                            to={`/acces-aux-droits/carte-interactive?event=${album.event.id}`}
+                            className={`inline-flex items-center gap-1 text-[11px] text-primary hover:underline mb-2 ${
+                              isRTL ? 'flex-row-reverse font-almarai' : ''
+                            }`}
+                          >
+                            <Calendar className="h-3 w-3" />
+                            {isRTL ? 'الحدث : ' : 'Événement : '}
+                            <span className="line-clamp-1">
+                              {isRTL && album.event.title_ar ? album.event.title_ar : album.event.title}
+                            </span>
+                          </Link>
+                        )}
                         <p className={`text-xs text-muted-foreground mb-3 line-clamp-2 ${isRTL ? 'text-right' : ''}`}>
                           {getDesc(album)}
                         </p>
@@ -322,10 +339,7 @@ const AlbumsPhotosContent = () => {
                         <Button
                           size="sm"
                           className="w-full text-xs"
-                          onClick={() => {
-                            setOpenAlbum(album);
-                            setLightboxIndex(null);
-                          }}
+                          onClick={() => setOpenAlbum(album)}
                         >
                           {isRTL ? 'عرض الألبوم' : "Voir l'album"}
                         </Button>
@@ -353,114 +367,11 @@ const AlbumsPhotosContent = () => {
         </div>
       </div>
 
-      {/* Album dialog — grid of thumbnails; click any thumbnail to promote
-          it into a full-screen lightbox with arrow-key navigation. */}
-      <Dialog open={!!openAlbum} onOpenChange={(v) => !v && setOpenAlbum(null)}>
-        <DialogContent
-          className="max-w-4xl max-h-[90vh] overflow-hidden flex flex-col"
-          dir={isRTL ? "rtl" : "ltr"}
-        >
-          <DialogHeader>
-            <DialogTitle className={isRTL ? "font-almarai text-right" : ""}>
-              {openAlbum ? getTitle(openAlbum) : ""}
-            </DialogTitle>
-            {openAlbum && (
-              <p className={`text-sm text-muted-foreground ${isRTL ? "font-almarai text-right" : ""}`}>
-                {openAlbum.date}
-                {openAlbum.location ? ` · ${getLocation(openAlbum)}` : ""}
-                {" · "}
-                {openAlbum.photo_urls?.length || 0} {t("photos")}
-              </p>
-            )}
-          </DialogHeader>
-
-          <div className="flex-1 overflow-y-auto -mx-6 px-6">
-            {openAlbum && openAlbum.photo_urls && openAlbum.photo_urls.length > 0 ? (
-              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2 sm:gap-3">
-                {openAlbum.photo_urls.map((url, i) => (
-                  <button
-                    key={`${url}-${i}`}
-                    type="button"
-                    onClick={() => setLightboxIndex(i)}
-                    className="relative aspect-square bg-muted rounded-md overflow-hidden group focus:outline-none focus-visible:ring-2 focus-visible:ring-primary"
-                  >
-                    <img
-                      src={url}
-                      alt=""
-                      loading="lazy"
-                      className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
-                    />
-                  </button>
-                ))}
-              </div>
-            ) : (
-              <div className="text-center py-12 text-muted-foreground">
-                <Camera className="h-10 w-10 mx-auto mb-2 opacity-30" />
-                <p className={isRTL ? "font-almarai" : ""}>
-                  {isRTL ? "لا توجد صور في هذا الألبوم" : "Aucune photo dans cet album"}
-                </p>
-              </div>
-            )}
-          </div>
-        </DialogContent>
-      </Dialog>
-
-      {/* Lightbox — sits above the album dialog, previous/next + close. */}
-      {openAlbum && lightboxIndex !== null && openAlbum.photo_urls?.[lightboxIndex] && (
-        <div
-          className="fixed inset-0 z-[60] bg-black/95 flex items-center justify-center"
-          onClick={() => setLightboxIndex(null)}
-        >
-          <button
-            type="button"
-            onClick={(e) => {
-              e.stopPropagation();
-              setLightboxIndex(null);
-            }}
-            className="absolute top-4 right-4 text-white/80 hover:text-white z-10 p-2 rounded-full hover:bg-white/10"
-            aria-label={isRTL ? "إغلاق" : "Fermer"}
-          >
-            <X className="h-6 w-6" />
-          </button>
-          {openAlbum.photo_urls.length > 1 && (
-            <>
-              <button
-                type="button"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  const total = openAlbum.photo_urls.length;
-                  setLightboxIndex((i) => (i === null ? 0 : (i - 1 + total) % total));
-                }}
-                className="absolute left-4 top-1/2 -translate-y-1/2 text-white/80 hover:text-white z-10 p-3 rounded-full hover:bg-white/10"
-                aria-label={isRTL ? "التالي" : "Précédent"}
-              >
-                <ChevronLeft className="h-8 w-8" />
-              </button>
-              <button
-                type="button"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  const total = openAlbum.photo_urls.length;
-                  setLightboxIndex((i) => (i === null ? 0 : (i + 1) % total));
-                }}
-                className="absolute right-4 top-1/2 -translate-y-1/2 text-white/80 hover:text-white z-10 p-3 rounded-full hover:bg-white/10"
-                aria-label={isRTL ? "السابق" : "Suivant"}
-              >
-                <ChevronRightIcon className="h-8 w-8" />
-              </button>
-            </>
-          )}
-          <img
-            src={openAlbum.photo_urls[lightboxIndex]}
-            alt=""
-            className="max-w-[92vw] max-h-[92vh] object-contain"
-            onClick={(e) => e.stopPropagation()}
-          />
-          <div className="absolute bottom-4 left-1/2 -translate-x-1/2 text-white/70 text-sm">
-            {lightboxIndex + 1} / {openAlbum.photo_urls.length}
-          </div>
-        </div>
-      )}
+      <AlbumViewerDialog
+        album={openAlbum}
+        open={!!openAlbum}
+        onOpenChange={(v) => !v && setOpenAlbum(null)}
+      />
     </main>
   );
 };

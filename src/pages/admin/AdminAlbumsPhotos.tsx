@@ -12,6 +12,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { useToast } from "@/hooks/use-toast";
 import { Plus, Pencil, Trash2, Upload, Camera, Eye, X, ImagePlus, Loader2 } from "lucide-react";
+import { useEvents } from "@/hooks/useEvents";
 
 interface PhotoAlbum {
     id: string;
@@ -31,6 +32,11 @@ interface PhotoAlbum {
     featured: boolean;
     published: boolean;
     created_at: string;
+    // Optional link to a carte-interactive event. Saved via `event_id`
+    // in the payload; the backend converts to `eventId` and returns
+    // both the FK and the joined `event` object.
+    event_id?: string | null;
+    event?: { id: string; title: string; title_ar?: string | null; event_date?: string | null } | null;
 }
 
 const CATEGORIES = ["Événements", "Formations", "Campagnes", "Conférences", "Ateliers", "Cérémonies"];
@@ -55,9 +61,15 @@ const emptyAlbum = (): Partial<PhotoAlbum> => ({
     photo_urls: [],
     featured: false,
     published: true,
+    event_id: null,
 });
 
+// Sentinel for the "Aucun" option — Radix Select rejects value="",
+// so we use a magic string and translate it back to null in the state.
+const NO_EVENT = "__none__";
+
 const AdminAlbumsPhotos = () => {
+    const { events } = useEvents();
     const [albums, setAlbums] = useState<PhotoAlbum[]>([]);
     const [loading, setLoading] = useState(true);
     const [dialogOpen, setDialogOpen] = useState(false);
@@ -331,6 +343,31 @@ const AdminAlbumsPhotos = () => {
                                     <Label>Date</Label>
                                     <Input type="date" value={editingAlbum.date || ""} onChange={e => setEditingAlbum(p => ({ ...p, date: e.target.value }))} />
                                 </div>
+                            </div>
+
+                            {/* Événement lié — optionnel. Alimente le CTA "Voir
+                                les photos" sur la carte interactive publique.
+                                NO_EVENT sentinel (Radix Select interdit "" comme value). */}
+                            <div>
+                                <Label>Événement lié (optionnel)</Label>
+                                <Select
+                                    value={editingAlbum.event_id || NO_EVENT}
+                                    onValueChange={v => setEditingAlbum(p => ({ ...p, event_id: v === NO_EVENT ? null : v }))}
+                                >
+                                    <SelectTrigger><SelectValue placeholder="Aucun événement lié" /></SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value={NO_EVENT}>Aucun événement lié</SelectItem>
+                                        {events.map(ev => (
+                                            <SelectItem key={ev.id} value={ev.id}>
+                                                {ev.title}
+                                                {ev.event_date ? ` — ${new Date(ev.event_date).toLocaleDateString("fr-FR", { day: "2-digit", month: "short", year: "numeric" })}` : ""}
+                                            </SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                                <p className="text-[11px] text-muted-foreground mt-1">
+                                    Le citoyen pourra ouvrir cet album depuis la fiche de l'événement sur la carte.
+                                </p>
                             </div>
 
                             {/* Localisation */}

@@ -10,6 +10,16 @@ export interface Governorate {
   updated_at?: string;
 }
 
+// Compact album shape emitted alongside events for the "Voir les photos"
+// CTA on the carte interactive. Only what the picker/viewer needs.
+export interface EventLinkedAlbum {
+  id: string;
+  title: string;
+  title_ar?: string | null;
+  cover_image_url?: string | null;
+  photo_urls?: string[];
+}
+
 export interface Event {
   id: string;
   title: string;
@@ -30,6 +40,8 @@ export interface Event {
   created_by?: string;
   created_at?: string;
   updated_at?: string;
+  // Populated by GET /api/events (list + detail) via Prisma include.
+  photo_albums?: EventLinkedAlbum[];
 }
 
 export interface EventRegistration {

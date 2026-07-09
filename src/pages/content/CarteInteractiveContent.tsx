@@ -1,7 +1,14 @@
 import { useEffect, useMemo, useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import {
   ChevronRight,
   Calendar,
@@ -11,13 +18,18 @@ import {
   ArrowRight,
   Sparkles,
   X,
+  Camera,
 } from "lucide-react";
 import { useEvents } from "@/hooks/useEvents";
 import { useGovernorates } from "@/hooks/useGovernorates";
 import { GovernorateMap } from "@/components/map/GovernorateMap";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useTranslation } from "@/hooks/useTranslation";
-import type { Event } from "@/types/events";
+import type { Event, EventLinkedAlbum } from "@/types/events";
+import {
+  AlbumViewerDialog,
+  type AlbumViewerAlbum,
+} from "@/components/albums/AlbumViewerDialog";
 
 type FilterType = "all" | "action_realisee" | "evenement_a_venir";
 
@@ -27,6 +39,12 @@ const CarteInteractiveContent = () => {
   const [filter, setFilter] = useState<FilterType>("all");
   const [selectedGovernorate, setSelectedGovernorate] = useState<string | null>(null);
   const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
+  // Album viewer / picker state — opened by the "Voir les photos" CTA
+  // on the selected event card. If the event has exactly one album we
+  // skip the picker and open the viewer directly.
+  const [viewerAlbum, setViewerAlbum] = useState<AlbumViewerAlbum | null>(null);
+  const [pickerOpen, setPickerOpen] = useState(false);
+  const [searchParams] = useSearchParams();
   const { isRTL } = useLanguage();
   const { t } = useTranslation();
 
@@ -48,6 +66,41 @@ const CarteInteractiveContent = () => {
       setSelectedEvent(filteredEvents[0]);
     }
   }, [filteredEvents, selectedEvent]);
+
+  // Deep-link support: /acces-aux-droits/carte-interactive?event=<id>
+  // pre-selects the referenced event so the album page can jump straight
+  // to a specific event marker.
+  useEffect(() => {
+    const eventId = searchParams.get("event");
+    if (!eventId || events.length === 0) return;
+    const match = events.find((e) => e.id === eventId);
+    if (match) setSelectedEvent(match);
+  }, [searchParams, events]);
+
+  const openAlbumsForEvent = (event: Event) => {
+    const albums = event.photo_albums ?? [];
+    if (albums.length === 0) return;
+    if (albums.length === 1) {
+      setViewerAlbum(toViewerAlbum(event, albums[0]));
+      return;
+    }
+    setPickerOpen(true);
+  };
+
+  // The list emitted by /api/events uses the compact shape (id, title,
+  // titleAr, coverImageUrl, photoUrls). AlbumViewerDialog wants the same
+  // fields plus date + location from the parent event to render a header.
+  function toViewerAlbum(event: Event, a: EventLinkedAlbum): AlbumViewerAlbum {
+    return {
+      id: a.id,
+      title: a.title,
+      title_ar: a.title_ar ?? null,
+      date: event.event_date,
+      location: event.governorate?.name ?? null,
+      location_ar: event.governorate?.name_ar ?? null,
+      photo_urls: a.photo_urls ?? [],
+    };
+  }
 
   const selectedGovernorateLabel = useMemo(() => {
     if (!selectedGovernorate) return null;
@@ -279,6 +332,21 @@ const CarteInteractiveContent = () => {
                       ) : null}
                     </div>
 
+                    {/* Voir les photos — CTA affiché uniquement si
+                        l'événement a au moins un album publié rattaché. */}
+                    {selectedEvent.photo_albums && selectedEvent.photo_albums.length > 0 && (
+                      <Button
+                        variant="outline"
+                        className={`w-full mb-2 ${isRTL ? "font-almarai flex-row-reverse" : ""}`}
+                        onClick={() => openAlbumsForEvent(selectedEvent)}
+                      >
+                        <Camera className={`h-4 w-4 ${isRTL ? "ml-1.5" : "mr-1.5"}`} />
+                        {isRTL
+                          ? `عرض الصور (${selectedEvent.photo_albums.length})`
+                          : `Voir les photos (${selectedEvent.photo_albums.length})`}
+                      </Button>
+                    )}
+
                     {selectedEvent.registration_enabled && (
                       <Button className={`mt-auto w-full ${isRTL ? "font-almarai" : ""}`}>
                         {isRTL ? "سجّل الآن" : "S'inscrire à cet événement"}
@@ -392,6 +460,68 @@ const CarteInteractiveContent = () => {
           </Card>
         </div>
       </div>
+
+      {/* Album picker — n'apparaît que si l'événement sélectionné a
+          plusieurs albums. Sinon on ouvre le viewer directement. */}
+      <Dialog open={pickerOpen} onOpenChange={(v) => !v && setPickerOpen(false)}>
+        <DialogContent
+          className="max-w-lg"
+          dir={isRTL ? "rtl" : "ltr"}
+        >
+          <DialogHeader>
+            <DialogTitle className={isRTL ? "font-almarai text-right" : ""}>
+              {isRTL ? "اختر ألبومًا" : "Choisir un album"}
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-2 max-h-[60vh] overflow-y-auto">
+            {selectedEvent?.photo_albums?.map((a) => (
+              <button
+                key={a.id}
+                type="button"
+                onClick={() => {
+                  if (!selectedEvent) return;
+                  setViewerAlbum(toViewerAlbum(selectedEvent, a));
+                  setPickerOpen(false);
+                }}
+                className={`w-full flex items-center gap-3 p-3 rounded-lg border hover:border-primary/50 hover:bg-muted/50 transition ${
+                  isRTL ? "flex-row-reverse text-right" : "text-left"
+                }`}
+              >
+                <div className="w-16 h-16 rounded-md overflow-hidden bg-muted flex-shrink-0">
+                  {a.cover_image_url ? (
+                    <img
+                      src={a.cover_image_url}
+                      alt=""
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center">
+                      <Camera className="h-6 w-6 text-muted-foreground" />
+                    </div>
+                  )}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className={`text-sm font-medium line-clamp-1 ${isRTL ? "font-almarai" : ""}`}>
+                    {isRTL && a.title_ar ? a.title_ar : a.title}
+                  </div>
+                  <div className="text-xs text-muted-foreground">
+                    {a.photo_urls?.length ?? 0} {t("photos")}
+                  </div>
+                </div>
+                <ChevronRight
+                  className={`h-4 w-4 text-muted-foreground flex-shrink-0 ${isRTL ? "rotate-180" : ""}`}
+                />
+              </button>
+            ))}
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      <AlbumViewerDialog
+        album={viewerAlbum}
+        open={!!viewerAlbum}
+        onOpenChange={(v) => !v && setViewerAlbum(null)}
+      />
     </main>
   );
 };

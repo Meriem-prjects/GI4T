@@ -3,6 +3,24 @@ import { z } from "zod";
 import { prisma } from "../lib/prisma.js";
 import { requireAuth, requireRole } from "../middleware/auth.js";
 import { asyncHandler, HttpError } from "../middleware/error.js";
+import { transformKeysToCamel } from "../lib/case-transform.js";
+
+// Shared include shape: bring the governorate + a compact list of linked
+// photo albums (just what the "Voir les photos" CTA needs — id, title,
+// cover, count of photos so the number badge is correct).
+const EVENT_INCLUDE = {
+  governorate: true,
+  photoAlbums: {
+    where: { published: true },
+    select: {
+      id: true,
+      title: true,
+      titleAr: true,
+      coverImageUrl: true,
+      photoUrls: true,
+    },
+  },
+} as const;
 
 export const eventsRouter = Router();
 
@@ -34,7 +52,10 @@ eventsRouter.get(
 
     const items = await prisma.event.findMany({
       where,
-      include: { governorate: true, _count: { select: { registrations: true } } },
+      include: {
+        ...EVENT_INCLUDE,
+        _count: { select: { registrations: true } },
+      },
       orderBy: { eventDate: "desc" },
     });
     res.json({ items });
@@ -46,7 +67,7 @@ eventsRouter.get(
   asyncHandler(async (req, res) => {
     const item = await prisma.event.findUnique({
       where: { id: req.params.id },
-      include: { governorate: true, registrations: true },
+      include: { ...EVENT_INCLUDE, registrations: true },
     });
     if (!item) throw new HttpError(404, "Not found");
     res.json(item);
@@ -58,7 +79,12 @@ eventsRouter.post(
   requireAuth,
   requireRole("admin", "admin_acces_droits"),
   asyncHandler(async (req, res) => {
-    const data = createSchema.parse(req.body);
+    // The frontend shim serialises the payload snake_case; Zod + Prisma
+    // both speak camelCase, so normalise up front. Without this, fields
+    // like title_ar / event_date / governorate_id / people_impacted /
+    // available_places / registration_enabled were silently dropped.
+    const camelBody = transformKeysToCamel(req.body as Record<string, unknown>);
+    const data = createSchema.parse(camelBody);
     const created = await prisma.event.create({
       data: { ...data, createdBy: req.user!.userId },
     });
@@ -71,7 +97,8 @@ eventsRouter.patch(
   requireAuth,
   requireRole("admin", "admin_acces_droits"),
   asyncHandler(async (req, res) => {
-    const data = createSchema.partial().parse(req.body);
+    const camelBody = transformKeysToCamel(req.body as Record<string, unknown>);
+    const data = createSchema.partial().parse(camelBody);
     const updated = await prisma.event.update({
       where: { id: req.params.id },
       data,

@@ -16,6 +16,10 @@ const createSchema = z.object({
   photoCount: z.coerce.number().int().default(0),
   featured: z.boolean().default(false),
   published: z.boolean().default(true),
+  // Optional link back to the event this album documents. The frontend
+  // shim ships `event_id`; makeCrudRouter now runs transformKeysToCamel
+  // before validating, so it lands here as `eventId`.
+  eventId: z.string().uuid().optional().nullable(),
 });
 
 export const photoAlbumsRouter = makeCrudRouter({
@@ -24,4 +28,11 @@ export const photoAlbumsRouter = makeCrudRouter({
   updateSchema: createSchema.partial(),
   listOrderBy: { createdAt: "desc" },
   writeRoles: ["admin", "admin_acces_droits"],
+  // Include the linked event so the public AlbumsPhotos page can render
+  // "Événement : <title>" without an extra round-trip.
+  include: {
+    event: {
+      select: { id: true, title: true, titleAr: true, eventDate: true },
+    },
+  },
 });
