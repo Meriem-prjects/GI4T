@@ -114,7 +114,11 @@ export const EventImageUploader = ({
         const randomString = Math.random().toString(36).substring(2, 15);
         const fileName = `event-${timestamp}-${randomString}.webp`;
         
-        // Upload to Supabase Storage
+        // Upload to Supabase Storage. The backend renames the file with a
+        // UUID prefix (`uuid-original.webp`) to avoid collisions, so we
+        // MUST build the public URL from `data.path` (the real key on
+        // disk) rather than the path we submitted — otherwise the img
+        // 404s and the admin sees a broken thumbnail on save.
         const { data, error } = await supabase.storage
           .from('documents')
           .upload(`events/${fileName}`, compressedBlob, {
@@ -123,12 +127,12 @@ export const EventImageUploader = ({
             upsert: false,
           });
 
-        if (error) throw error;
+        if (error || !data) throw error ?? new Error("Upload failed");
 
-        // Get public URL
+        // Get public URL from the ACTUAL key the server persisted.
         const { data: { publicUrl } } = supabase.storage
           .from('documents')
-          .getPublicUrl(`events/${fileName}`);
+          .getPublicUrl(data.path);
 
         newImageUrls.push(publicUrl);
       }

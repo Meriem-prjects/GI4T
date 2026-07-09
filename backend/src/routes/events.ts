@@ -84,13 +84,7 @@ eventsRouter.post(
     // like title_ar / event_date / governorate_id / people_impacted /
     // available_places / registration_enabled were silently dropped.
     const camelBody = transformKeysToCamel(req.body as Record<string, unknown>);
-    console.log("[events:POST] body:", JSON.stringify(camelBody).slice(0, 800));
-    const parseResult = createSchema.safeParse(camelBody);
-    if (!parseResult.success) {
-      console.log("[events:POST] zod errors:", JSON.stringify(parseResult.error.flatten()));
-      throw parseResult.error;
-    }
-    const data = parseResult.data;
+    const data = createSchema.parse(camelBody);
     const created = await prisma.event.create({
       data: { ...data, createdBy: req.user!.userId },
     });
