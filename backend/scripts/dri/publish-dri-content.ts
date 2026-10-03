@@ -15,10 +15,13 @@
 //   node --use-system-ca --env-file=.env ./node_modules/tsx/dist/cli.mjs scripts/dri/publish-dri-content.ts \
 //     --web "C:/Users/<me>/Desktop/DRI/_web" [--api http://localhost:4000] [--dry-run] [--verify]
 //     [--only=events,albums,media,news,resources,addresses,training,embeddings]
+//     [--resolve test.justclic.org=102.204.206.147]   # host without working DNS
 //
-// Credentials: DRI_API_EMAIL / DRI_API_PASSWORD. Against localhost only,
-// they default to SEED_ADMIN_EMAIL / SEED_ADMIN_PASSWORD from .env.
+// Credentials: DRI_API_EMAIL / DRI_API_PASSWORD (e.g. in the git-ignored
+// .env.local: add --env-file=.env.local). Against localhost only, they
+// default to SEED_ADMIN_EMAIL / SEED_ADMIN_PASSWORD from .env.
 
+import dns from "node:dns";
 import { promises as fs, openAsBlob } from "node:fs";
 import path from "node:path";
 import {
@@ -87,6 +90,19 @@ for (const phase of ONLY) {
     console.error(`Phase inconnue : ${phase} (attendu : ${PHASES.join(", ")})`);
     process.exit(1);
   }
+}
+
+// --resolve host=ip: reach a server whose domain no longer resolves while
+// keeping the Host/SNI (and therefore the stored URLs) on the domain.
+if (cli.resolve) {
+  const [resolveHost, resolveIp] = String(cli.resolve).split("=");
+  const lookup = dns.lookup;
+  (dns as { lookup: unknown }).lookup = (hostname: string, options: unknown, callback?: unknown) => {
+    const cb = (typeof options === "function" ? options : callback) as (...args: unknown[]) => void;
+    const opts = (typeof options === "function" ? {} : options ?? {}) as { all?: boolean };
+    if (hostname !== resolveHost) return (lookup as (...a: unknown[]) => void)(hostname, opts, cb);
+    return opts.all ? cb(null, [{ address: resolveIp, family: 4 }]) : cb(null, resolveIp, 4);
+  };
 }
 
 const stats = { uploads: 0, reused: 0, created: 0, patched: 0, unchanged: 0 };
@@ -308,6 +324,9 @@ async function upsert(
 
 // ── Phases ───────────────────────────────────────────────────────────────
 
+// Titles typed in the admin can carry stray spaces ("Taktouk à Nefta (Tozeur)  ").
+const normTitle = (t: unknown) => String(t ?? "").normalize("NFC").replace(/\s+/g, " ").trim();
+
 let governorateIds = new Map<string, string>();
 const eventIds = new Map<StageKey, string>();
 let eventsCache: Json[] | null = null;
@@ -329,11 +348,20 @@ async function posterUrl(stage: StageKey) {
 
 async function phaseEvents(write: boolean) {
   log(write ? "\n▶ Actions (carte interactive)" : "\n▶ Actions : résolution des identifiants");
-  // Titles typed in the admin can carry stray spaces ("Taktouk à Nefta (Tozeur)  ").
-  const norm = (t: unknown) => String(t ?? "").normalize("NFC").replace(/\s+/g, " ").trim();
   for (const s of STAGES) {
-    const titles = [s.title, ...s.legacyTitles].map(norm);
-    const find = async () => (await existingEvents()).find((e) => titles.includes(norm(e.title))) ?? null;
+    const titles = [s.title, ...s.legacyTitles].map(normTitle);
+    // By title first, else the Taktouk event already on this governorate
+    // (admins typed e.g. "Taktouk à Beja" without the accent).
+    const find = async () => {
+      const events = await existingEvents();
+      return (
+        events.find((e) => titles.includes(normTitle(e.title))) ??
+        events.find(
+          (e) => (e.governorate as Json | null)?.name === s.governorate && /taktouk/i.test(String(e.title)),
+        ) ??
+        null
+      );
+    };
     if (!write) {
       const known = state.ids[`event:${s.key}`];
       const found = known ? await getOrNull(`/api/events/${known}`) : await find();
@@ -374,6 +402,7 @@ async function photoUrl(item: ManifestItem, albumKey: string) {
 
 async function phaseAlbums() {
   log("\n▶ Albums photos");
+  const existingAlbums = await list("/api/photo-albums");
   // The public page lists the newest first: create in reverse display order.
   for (const album of [...ALBUMS].reverse()) {
     const photos = albumPhotos(album.key);
@@ -402,8 +431,9 @@ async function phaseAlbums() {
       published: true,
       event_id: eventIds.get(album.stage) ?? null,
     };
-    await upsert(`album ${album.title} (${urls.length} photos)`, "/api/photo-albums", `album:${album.key}`, payload, async () =>
-      (await list("/api/photo-albums", { title: album.title }))[0] ?? null,
+    const titles = [album.title, ...(album.legacyTitles ?? [])].map(normTitle);
+    await upsert(`album ${album.title} (${urls.length} photos)`, "/api/photo-albums", `album:${album.key}`, payload, () =>
+      existingAlbums.find((a) => titles.includes(normTitle(a.title))) ?? null,
     );
   }
 }
@@ -596,8 +626,8 @@ async function main() {
   const password = process.env.DRI_API_PASSWORD ?? (isLocal ? process.env.SEED_ADMIN_PASSWORD : undefined);
   if (!email || !password) throw new Error("Identifiants manquants : DRI_API_EMAIL / DRI_API_PASSWORD");
 
-  log(`Cible : ${API_BASE}${DRY_RUN ? " (simulation, aucune écriture)" : ""}`);
-  await request("GET", "/health");
+  log(`Cible : ${API_BASE}${cli.resolve ? ` via ${cli.resolve}` : ""}${DRY_RUN ? " (simulation, aucune écriture)" : ""}`);
+  // (No /health check: in production nginx only proxies /api/.)
   const login = await request<{ token: string; user: { roles: string[] } }>("POST", "/api/auth/login", {
     json: { email, password },
   });

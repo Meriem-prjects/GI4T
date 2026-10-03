@@ -191,6 +191,8 @@ export interface Album {
   /** Photo file stem (manifest id suffix) used as the cover. */
   cover: string;
   featured: boolean;
+  /** Titles of albums created by hand in the admin, completed instead of duplicated. */
+  legacyTitles?: string[];
 }
 
 const period = (key: StageKey) => {
@@ -215,6 +217,7 @@ export const ALBUMS: Album[] = [
     date: period("beja"),
     cover: "dscf7785",
     featured: false,
+    legacyTitles: ["Beja | Compagne CinémaTour"],
   },
   {
     key: "kef",
@@ -273,6 +276,7 @@ export const ALBUMS: Album[] = [
     date: "14/01/2026 – 16/01/2026",
     cover: "dscf6642",
     featured: false,
+    legacyTitles: ["Djerba | Formation bénévole"],
   },
   {
     key: "zaghouan",
@@ -318,6 +322,7 @@ export const ALBUMS: Album[] = [
     date: period("ettadhamen"),
     cover: "img-3307",
     featured: true,
+    legacyTitles: ["Cité Tadhamon"],
   },
   {
     key: "chebba",
