@@ -1,8 +1,10 @@
 // Supabase-storage compatible shim.
-import { API_BASE_URL, api, ApiError, getToken } from "./client.js";
+import { API_BASE_URL, api, ApiError } from "./client.js";
 
 interface UploadResult {
-  data: { path: string } | null;
+  // `path` is the key the server actually saved (it prefixes a UUID), and
+  // `url` its absolute public URL built from STORAGE_PUBLIC_URL.
+  data: { path: string; url: string } | null;
   error: ApiError | null;
 }
 
@@ -36,7 +38,7 @@ class StorageBucket {
         undefined,
         { formData: form },
       );
-      return { data: { path: res.key }, error: null };
+      return { data: { path: res.key, url: res.url }, error: null };
     } catch (err) {
       return {
         data: null,
@@ -46,11 +48,11 @@ class StorageBucket {
   }
 
   getPublicUrl(path: string): PublicUrlResult {
-    const token = getToken();
-    const suffix = token ? `?token=${encodeURIComponent(token)}` : "";
+    // Storage reads are public (GET /api/storage/:bucket/* has no auth), so
+    // no token here: these URLs end up saved in the DB and shown publicly.
     return {
       data: {
-        publicUrl: `${API_BASE_URL}/api/storage/${this.bucket}/${path}${suffix}`,
+        publicUrl: `${API_BASE_URL}/api/storage/${this.bucket}/${path}`,
       },
     };
   }

@@ -42,6 +42,8 @@ const CATEGORIES = [
     { id: "documentaries", name: "Documentaires" },
     { id: "interviews", name: "Interviews" },
     { id: "campaigns", name: "Campagnes terrain" },
+    { id: "fiction", name: "Série fiction" },
+    { id: "taktouk", name: "Capsules Taktouk" },
 ];
 const GOVERNORATES = [
     "Tunis", "Ariana", "Ben Arous", "Manouba", "Nabeul", "Zaghouan", "Bizerte",
@@ -96,11 +98,13 @@ const AdminMediatheque = () => {
         if (!file) return;
         setUploadingThumb(true);
         const path = `thumbnails/${Date.now()}-${file.name}`;
-        const { error } = await supabase.storage.from("media").upload(path, file, { upsert: true });
-        if (error) {
-            toast({ title: "Erreur upload", description: error.message, variant: "destructive" });
+        // The backend prefixes a UUID to the file name: build the URL from
+        // the key it returns, never from the path we submitted.
+        const { data: uploadData, error } = await supabase.storage.from("media").upload(path, file, { upsert: true });
+        if (error || !uploadData) {
+            toast({ title: "Erreur upload", description: error?.message ?? "Upload failed", variant: "destructive" });
         } else {
-            const { data } = supabase.storage.from("media").getPublicUrl(path);
+            const { data } = supabase.storage.from("media").getPublicUrl(uploadData.path);
             setEditingItem(p => ({ ...p, thumbnail_url: data.publicUrl }));
         }
         setUploadingThumb(false);
@@ -112,11 +116,11 @@ const AdminMediatheque = () => {
         setUploadingVideo(true);
         const folder = editingItem.type === "Audio" ? "audios" : "videos";
         const path = `${folder}/${Date.now()}-${file.name.replace(/\s+/g, '_')}`;
-        const { error } = await supabase.storage.from("media").upload(path, file, { upsert: true });
-        if (error) {
-            toast({ title: "Erreur d'envoi", description: error.message, variant: "destructive" });
+        const { data: uploadData, error } = await supabase.storage.from("media").upload(path, file, { upsert: true });
+        if (error || !uploadData) {
+            toast({ title: "Erreur d'envoi", description: error?.message ?? "Upload failed", variant: "destructive" });
         } else {
-            const { data } = supabase.storage.from("media").getPublicUrl(path);
+            const { data } = supabase.storage.from("media").getPublicUrl(uploadData.path);
             setEditingItem(p => ({ ...p, video_url: data.publicUrl }));
             toast({ title: "Envoi réussi", description: "Le fichier média a été mis en ligne" });
         }

@@ -1,43 +1,60 @@
+import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useTranslation } from "@/hooks/useTranslation";
+import { supabase } from "@/integrations/supabase/client";
 
+interface NewsRow {
+  id: string;
+  title: string;
+  title_ar?: string | null;
+  excerpt: string;
+  excerpt_ar?: string | null;
+  image_url?: string | null;
+  published_at?: string | null;
+  created_at?: string;
+}
+
+// Latest Accès-aux-droits news on the home page. Renders nothing until
+// the back-office has published some.
 const ActualitesHomeSection = () => {
-  const { isRTL } = useLanguage();
+  const { isRTL, language } = useLanguage();
   const { t } = useTranslation();
+  const [articles, setArticles] = useState<NewsRow[]>([]);
 
-  const articles = [
-    {
-      id: 1,
-      category: t('observatory'),
-      categoryColor: "bg-[#4164D7] text-white",
-      title: isRTL ? "آخر التحديثات في قاعدة البيانات" : "Dernières mises à jour de la base de données",
-      excerpt: isRTL ? "مرصد الحقوق الأساسية (ODF) هو منصة مستقلة تقوم بتجميع وتحليل وإتاحة..." : "L'Observatoire des Droits Fondamentaux (ODF) est une plateforme indépendante qui centralise, analyse et rend accessibles...",
-      date: isRTL ? "8 أكتوبر 2025" : "8 octobre 2025",
-      source: "ODF",
-      image: "https://images.unsplash.com/photo-1589829545856-d10d557cf95f?w=500&q=80"
-    },
-    {
-      id: 2,
-      category: t('awarenessCampaign'),
-      categoryColor: "bg-[#F4D03F] text-gray-900",
-      title: isRTL ? "باجة تستضيف قافلة الوصول إلى القانون" : "Béja accueille notre caravane d'accès au droit",
-      excerpt: isRTL ? "فضاء الوصول إلى القانون الإداري يقدم محتويات تعليمية لمساعدة كل مواطن على الفهم..." : "espace Accès au droit administratif propose des contenus pédagogiques pour aider chaque citoyen à comprendre...",
-      date: isRTL ? "4 أكتوبر 2025" : "4 octobre 2025",
-      image: "https://images.unsplash.com/photo-1552664730-d307ca884978?w=500&q=80"
-    },
-    {
-      id: 3,
-      category: t('practicalGuide'),
-      categoryColor: "bg-[#F4D03F] text-gray-900",
-      title: isRTL ? "دليل عملي للعدالة الإدارية" : "Guide pratique de la justice administrative",
-      excerpt: isRTL ? "فضاء الوصول إلى القانون الإداري يقدم محتويات..." : "espace Accès au droit administratif propose des contenus...",
-      date: isRTL ? "11 سبتمبر 2025" : "11 septembre 2025",
-      image: "https://images.unsplash.com/photo-1456513080510-7bf3a84b82f8?w=500&q=80"
-    }
-  ];
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      const { data, error } = await supabase
+        .from("news")
+        .select("*")
+        .eq("section", "acces_droits")
+        .eq("is_published", true)
+        .order("published_at", { ascending: false })
+        .limit(3);
+      if (cancelled) return;
+      if (error) console.error("Failed to load home news:", error);
+      setArticles((data as NewsRow[]) ?? []);
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  if (articles.length === 0) return null;
+
+  const formatDate = (article: NewsRow) => {
+    const dateStr = article.published_at ?? article.created_at;
+    return dateStr
+      ? new Date(dateStr).toLocaleDateString(language === "ar" ? "ar-TN" : "fr-FR", {
+          day: "numeric",
+          month: "long",
+          year: "numeric",
+        })
+      : "";
+  };
 
   return (
     <section className={`py-16 bg-background ${isRTL ? 'rtl' : ''}`}>
@@ -63,45 +80,51 @@ const ActualitesHomeSection = () => {
 
         {/* Articles Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-7xl">
-          {articles.map((article) => (
-            <Link 
+          {articles.map((article) => {
+            const title = isRTL && article.title_ar ? article.title_ar : article.title;
+            const excerpt = isRTL && article.excerpt_ar ? article.excerpt_ar : article.excerpt;
+            return (
+            <Link
               key={article.id}
-              to="/actualites-acces-droits"
+              to="/acces-aux-droits/actualites"
               className="group"
             >
               <Card className="overflow-hidden h-full hover:shadow-lg transition-shadow duration-300">
                 {/* Badge */}
                 <div className={`p-4 pb-0 ${isRTL ? 'text-right' : ''}`}>
-                  <Badge 
-                    className={`${article.categoryColor} font-semibold px-4 py-1 rounded-full ${isRTL ? 'font-almarai' : ''}`}
+                  <Badge
+                    className={`bg-[#F4D03F] text-gray-900 font-semibold px-4 py-1 rounded-full ${isRTL ? 'font-almarai' : ''}`}
                   >
-                    {article.category}
+                    {t('awarenessCampaign')}
                   </Badge>
                 </div>
 
                 {/* Image */}
-                <div className="overflow-hidden px-4 pt-4">
-                  <img
-                    src={article.image}
-                    alt={article.title}
-                    className="w-full h-48 object-cover rounded-lg group-hover:scale-105 transition-transform duration-300"
-                  />
-                </div>
+                {article.image_url && (
+                  <div className="overflow-hidden px-4 pt-4">
+                    <img
+                      src={article.image_url}
+                      alt={title}
+                      loading="lazy"
+                      className="w-full h-48 object-cover rounded-lg group-hover:scale-105 transition-transform duration-300"
+                    />
+                  </div>
+                )}
 
                 <CardContent className={`p-6 ${isRTL ? 'text-right' : ''}`}>
                   {/* Title */}
                   <h3 className={`text-xl font-bold mb-3 text-foreground line-clamp-2 group-hover:text-primary transition-colors ${isRTL ? 'font-almarai' : ''}`}>
-                    {article.title}
+                    {title}
                   </h3>
 
                   {/* Meta */}
                   <p className={`text-sm text-muted-foreground mb-3 ${isRTL ? 'font-almarai' : ''}`}>
-                    {article.source && `${article.source} - `}{article.date}
+                    {formatDate(article)}
                   </p>
 
                   {/* Excerpt */}
                   <p className={`text-muted-foreground mb-4 line-clamp-3 ${isRTL ? 'font-almarai' : ''}`}>
-                    {article.excerpt}
+                    {excerpt}
                   </p>
 
                   {/* Read More Link */}
@@ -111,7 +134,8 @@ const ActualitesHomeSection = () => {
                 </CardContent>
               </Card>
             </Link>
-          ))}
+            );
+          })}
         </div>
       </div>
     </section>

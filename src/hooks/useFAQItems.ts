@@ -24,8 +24,10 @@ export const useFAQItems = (activeOnly = true) => {
         .from('faq_items')
         .select('*')
         .order('category')
-        .order('display_order');
-      
+        .order('display_order')
+        // The API returns 100 rows by default; the FAQ has more than that.
+        .limit(500);
+
       if (activeOnly) {
         query = query.eq('is_active', true);
       }

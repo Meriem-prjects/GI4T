@@ -4,6 +4,7 @@ dist/
 .env.local
 storage/documents/*
 storage/media/*
+storage/album-photos/*
 !storage/documents/.gitkeep
 !storage/media/.gitkeep
 *.log

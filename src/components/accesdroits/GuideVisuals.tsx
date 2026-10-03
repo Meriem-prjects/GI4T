@@ -100,16 +100,19 @@ export function OrganisationVisual({ isRTL }: { isRTL: boolean }) {
  * ------------------------------------------------------------------------ */
 export function TribunalVisual({ isRTL }: { isRTL: boolean }) {
   // Stylised dots placed approximately on a Tunisia silhouette (svg coords).
+  // The 12 regional chambers listed in the citizen guide (May 2025), plus
+  // the seat in Tunis.
   const chambers = [
-    { x: 200, y: 70, fr: "Bizerte", ar: "بنزرت" },
     { x: 220, y: 100, fr: "Tunis*", ar: "تونس*" },
-    { x: 175, y: 105, fr: "Béja", ar: "باجة" },
+    { x: 200, y: 70, fr: "Bizerte", ar: "بنزرت" },
     { x: 230, y: 140, fr: "Nabeul", ar: "نابل" },
     { x: 145, y: 145, fr: "Le Kef", ar: "الكاف" },
     { x: 215, y: 180, fr: "Sousse", ar: "سوسة" },
-    { x: 160, y: 200, fr: "Kairouan", ar: "القيروان" },
-    { x: 230, y: 230, fr: "Sfax", ar: "صفاقس" },
+    { x: 236, y: 195, fr: "Monastir", ar: "المنستير" },
+    { x: 175, y: 195, fr: "Kairouan", ar: "القيروان" },
     { x: 115, y: 215, fr: "Kasserine", ar: "القصرين" },
+    { x: 160, y: 240, fr: "Sidi Bouzid", ar: "سيدي بوزيد" },
+    { x: 230, y: 235, fr: "Sfax", ar: "صفاقس" },
     { x: 95, y: 270, fr: "Gafsa", ar: "قفصة" },
     { x: 195, y: 295, fr: "Gabès", ar: "قابس" },
     { x: 175, y: 360, fr: "Médenine", ar: "مدنين" },
@@ -141,7 +144,7 @@ export function TribunalVisual({ isRTL }: { isRTL: boolean }) {
         {/* Legend */}
         <div className="flex-1 min-w-0">
           <div className="text-rose-700 font-semibold mb-2 text-sm">
-            {isRTL ? "12 دائرة جهوية" : "12 chambres régionales"}
+            {isRTL ? "المقرّ + 12 دائرة جهوية" : "Siège + 12 chambres régionales"}
           </div>
           <div className="grid grid-cols-2 gap-x-3 gap-y-1 text-[11px]">
             {chambers.map((c, i) => (
@@ -196,7 +199,7 @@ export function RecoursVisual({ isRTL }: { isRTL: boolean }) {
 export function DelaisVisual({ isRTL }: { isRTL: boolean }) {
   const baseStops = [
     { label: "60j", labelAr: "60 يوم", titleFr: "Annulation", titleAr: "الإلغاء", color: "bg-emerald-500", ring: "ring-emerald-300" },
-    { label: "2m", labelAr: "شهرين", titleFr: "Recours préalable", titleAr: "المطلب المسبق", color: "bg-teal-500", ring: "ring-teal-300" },
+    { label: "2m", labelAr: "شهرين", titleFr: "Recours préalable (facultatif)", titleAr: "المطلب المسبق (اختياري)", color: "bg-teal-500", ring: "ring-teal-300" },
     { label: "15a", labelAr: "15 سنة", titleFr: "Indemnisation", titleAr: "التعويض", color: "bg-green-600", ring: "ring-green-300" },
   ];
   // In Arabic, the timeline must read right-to-left: 60 يوم on the right,
@@ -251,7 +254,7 @@ export function AvocatVisual({ isRTL }: { isRTL: boolean }) {
           {isRTL ? "اختياري" : "Facultatif"}
         </div>
         <div className="text-[11px] text-indigo-700 mt-1">
-          {isRTL ? "في بعض الطعون البسيطة" : "Sur recours simples"}
+          {isRTL ? "إلغاء، توقيف تنفيذ، استعجالي — وجوبي في التعويض" : "Annulation, sursis, référé — obligatoire pour l'indemnisation"}
         </div>
       </div>
       <div className="bg-gradient-to-br from-indigo-600 to-indigo-700 text-white rounded-lg p-4 shadow-md">
@@ -274,7 +277,7 @@ export function AvocatVisual({ isRTL }: { isRTL: boolean }) {
 }
 
 /* ---------------------------------------------------------------------------
- * 6. Aide juridictionnelle — what's covered
+ * 6. Aide judiciaire — what's covered
  * ------------------------------------------------------------------------ */
 export function AideVisual({ isRTL }: { isRTL: boolean }) {
   const items = [
@@ -289,7 +292,7 @@ export function AideVisual({ isRTL }: { isRTL: boolean }) {
       <div className="flex items-center gap-2 mb-3">
         <HeartHandshake className="h-5 w-5 text-purple-600" />
         <span className="text-sm font-semibold text-purple-800">
-          {isRTL ? "ما تتكفل به الدولة" : "Pris en charge par l'État"}
+          {isRTL ? "ما تتكفّل به الإعانة القضائية" : "Pris en charge par l'aide judiciaire"}
         </span>
       </div>
       <div className="grid grid-cols-5 gap-2">
@@ -352,7 +355,7 @@ export function MediateurVisual({ isRTL }: { isRTL: boolean }) {
         })}
       </div>
       <p className={`text-[10px] text-cyan-700 text-center mt-3 italic ${isRTL ? "font-almarai" : ""}`}>
-        {isRTL ? "مجاني • بدون محامي • قبل المحكمة" : "Gratuit • Sans avocat • Avant le tribunal"}
+        {isRTL ? "حلّ ودّي • لا يوقف آجال الطعن" : "Solution amiable • Ne suspend pas les délais de recours"}
       </p>
     </div>
   );

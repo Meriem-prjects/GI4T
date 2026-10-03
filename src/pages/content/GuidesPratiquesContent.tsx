@@ -16,6 +16,7 @@ import {
   HeartHandshake,
   ArrowRight,
   CheckCircle2,
+  Download,
 } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useLanguage } from "@/contexts/LanguageContext";
@@ -55,6 +56,9 @@ interface Guide {
   borderColor: string;
   sections: GuideSection[];
 }
+
+// Full guide (48 p., Tunisian Arabic), shipped as a static file in public/.
+const GUIDE_PDF_URL = "/docs/guide-citoyen-justice-administrative.pdf";
 
 const GUIDES: Guide[] = [
   {
@@ -109,9 +113,9 @@ const GUIDES: Guide[] = [
         headingFr: "Comment savoir quel tribunal saisir ?",
         headingAr: "كيف نعرف المحكمة المختصة ؟",
         bodyFr:
-          "La question de compétence se pose en deux temps : d'abord la matière (quel ordre ?), puis le ressort géographique (quel tribunal dans cet ordre ?). En cas de doute, le tribunal saisi à tort renvoie le dossier au tribunal compétent.",
+          "La question de compétence se pose en deux temps : d'abord la matière (quel ordre ?), puis le ressort géographique (quel tribunal dans cet ordre ?). Le Guide du citoyen insiste : une affaire portée devant un tribunal non compétent est rejetée. Avant de déposer, faites-vous confirmer la juridiction compétente par un professionnel. Lorsque les juridictions judiciaires et administratives se disputent ou déclinent une même affaire, c'est le Conseil des conflits de compétence qui tranche.",
         bodyAr:
-          "تُطرح مسألة الاختصاص على مرحلتين : أولا الموضوع (أيّ قسم ؟)، ثم المرجع الترابي (أيّة محكمة في هذا القسم ؟). في حال الشكّ، تُحيل المحكمة التي تعهدت بالملف خطأً الملفَّ إلى المحكمة المختصة.",
+          "تُطرح مسألة الاختصاص على مرحلتين : أولا الموضوع (أيّ قسم ؟)، ثم المرجع الترابي (أيّة محكمة في هذا القسم ؟). ويؤكّد دليل المواطن أنّ القضية المرفوعة أمام محكمة غير مختصة يكون مآلها الرفض، لذا يُستحسن استشارة أهل الاختصاص قبل إيداع العريضة. وعند تنازع الاختصاص بين محاكم القضاء العدلي ومحاكم القضاء الإداري، يبتّ مجلس تنازع الاختصاص في المسألة.",
       },
     ],
   },
@@ -123,9 +127,9 @@ const GUIDES: Guide[] = [
     titleFr: "Le Tribunal Administratif et ses 12 chambres régionales",
     titleAr: "المحكمة الإدارية ودوائرها الابتدائية الجهوية الاثنتا عشرة",
     descFr:
-      "Le Tribunal Administratif siège à Tunis, mais 12 chambres régionales le représentent dans tout le pays. Savoir où aller selon votre lieu de résidence.",
+      "Le Tribunal Administratif siège à Tunis, mais 12 chambres régionales le représentent dans tout le pays. Savoir où déposer votre requête selon l'autorité qui a pris la décision.",
     descAr:
-      "مقرّ المحكمة الإدارية بتونس، غير أنّ اثنتي عشرة دائرة جهوية تمثّلها في كامل البلاد. اعرف إلى أين تتوجّه حسب مقرّ سكناك.",
+      "مقرّ المحكمة الإدارية بتونس، غير أنّ اثنتي عشرة دائرة جهوية تمثّلها في كامل البلاد. اعرف أين تودع عريضتك حسب السلطة التي أصدرت القرار.",
     durationFr: "10 min",
     durationAr: "10 دقائق",
     difficultyFr: "Débutant",
@@ -141,45 +145,55 @@ const GUIDES: Guide[] = [
         headingFr: "Siège principal et chambres régionales",
         headingAr: "المقر الرئيسي والدوائر الجهوية",
         bodyFr:
-          "Le Tribunal Administratif a son siège à Tunis. Pour rapprocher la justice du citoyen, il dispose de 12 chambres de première instance réparties dans les régions.",
+          "Le Tribunal Administratif a son siège à Tunis : rue Eddabbaghine, où se trouve le bureau d'ordre qui reçoit les requêtes, ainsi que rue de Rome et à Montplaisir, près du ministère du Transport. Tél. 70 028 700 — www.jat.tn. Pour rapprocher la justice du citoyen, il dispose de 12 chambres de première instance réparties dans les régions.",
         bodyAr:
-          "تتّخذ المحكمة الإدارية من تونس مقرّا لها. وتقريبا للقضاء من المواطن، تتوزّع اثنتا عشرة دائرة ابتدائية على مختلف الجهات.",
+          "يوجد مقرّ المحكمة الإدارية بتونس العاصمة في نهج الدبّاغين، حيث يوجد مكتب الضبط الذي تُودَع فيه العرائض، وكذلك في نهج روما وفي مونبليزير بجانب وزارة النقل. الهاتف : ⁦70 028 700⁩ — www.jat.tn. وتقريبا للقضاء من المواطن، تتوزّع اثنتا عشرة دائرة ابتدائية على مختلف الجهات.",
       },
       {
         headingFr: "Les 12 chambres régionales",
         headingAr: "الدوائر الإبتدائية الجهوية الـ12",
         bodyFr:
-          "Chaque chambre régionale couvre un ou plusieurs gouvernorats. Le rattachement géographique est défini par décret.",
+          "Chaque chambre régionale couvre un ou plusieurs gouvernorats (liste du Guide du citoyen). Les gouvernorats du Grand Tunis relèvent du siège, à Tunis. Adresses et téléphones : rubrique « Adresses utiles ».",
         bodyAr:
-          "تغطّي كلّ دائرة جهوية ولاية واحدة أو أكثر. والانتماء الجغرافي محدَّد بأمر.",
+          "تغطّي كلّ دائرة جهوية ولاية واحدة أو أكثر (حسب دليل المواطن)، فيما ترجع ولايات تونس الكبرى بالنظر إلى المقرّ بتونس. العناوين وأرقام الهاتف في ركن « عناوين مفيدة ».",
         bulletsFr: [
-          "Tunis, Ariana, Ben Arous, Manouba",
-          "Nabeul, Zaghouan",
-          "Bizerte, Béja, Jendouba",
-          "Sousse, Monastir, Mahdia",
-          "Sfax, Kairouan, Sidi Bouzid",
-          "Gabès, Médenine, Tataouine",
-          "Gafsa, Tozeur, Kébili",
-          "Le Kef, Siliana, Kasserine",
+          "Tunis (siège) : Tunis, Ariana, Ben Arous, Manouba",
+          "Nabeul : Nabeul, Zaghouan",
+          "Bizerte : Bizerte, Béja",
+          "Le Kef : Le Kef, Jendouba, Siliana",
+          "Sousse : Sousse",
+          "Monastir : Monastir, Mahdia",
+          "Kairouan : Kairouan",
+          "Sfax : Sfax",
+          "Sidi Bouzid : Sidi Bouzid",
+          "Kasserine : Kasserine",
+          "Gafsa : Gafsa, Tozeur",
+          "Gabès : Gabès, Kébili",
+          "Médenine : Médenine, Tataouine",
         ],
         bulletsAr: [
-          "تونس، أريانة، بن عروس، منوبة",
-          "نابل، زغوان",
-          "بنزرت، باجة، جندوبة",
-          "سوسة، المنستير، المهدية",
-          "صفاقس، القيروان، سيدي بوزيد",
-          "قابس، مدنين، تطاوين",
-          "قفصة، توزر، قبلي",
-          "الكاف، سليانة، القصرين",
+          "تونس (المقرّ) : تونس، أريانة، بن عروس، منوبة",
+          "نابل : نابل، زغوان",
+          "بنزرت : بنزرت، باجة",
+          "الكاف : الكاف، جندوبة، سليانة",
+          "سوسة : سوسة",
+          "المنستير : المنستير، المهدية",
+          "القيروان : القيروان",
+          "صفاقس : صفاقس",
+          "سيدي بوزيد : سيدي بوزيد",
+          "القصرين : القصرين",
+          "قفصة : قفصة، توزر",
+          "قابس : قابس، قبلي",
+          "مدنين : مدنين، تطاوين",
         ],
       },
       {
-        headingFr: "Comment savoir quelle chambre est compétente ?",
-        headingAr: "كيف نعرف الدائرة المختصة ؟",
+        headingFr: "Où déposer la requête ?",
+        headingAr: "أين نودع العريضة ؟",
         bodyFr:
-          "La compétence territoriale dépend du lieu où la décision administrative contestée a été prise, ou du lieu de résidence du requérant pour certains recours. En cas de doute, déposer la requête à la chambre la plus proche : elle la transmettra à la chambre compétente.",
+          "En règle générale, la requête est déposée au Tribunal administratif à Tunis lorsque l'administration visée est une administration centrale (un ministre, le chef du gouvernement…). Lorsque la décision émane d'une autorité régionale ou locale (gouverneur, président de municipalité, direction régionale, doyen ou directeur d'un établissement d'enseignement supérieur…), elle est déposée auprès de la chambre régionale dont relève le gouvernorat où siège cette autorité. Attention : une requête déposée devant une juridiction non compétente est rejetée.",
         bodyAr:
-          "يتحدّد الاختصاص الترابي حسب مكان اتّخاذ القرار الإداري المطعون فيه، أو حسب مقرّ سكنى الطاعن في بعض الطعون. في حال الشكّ، يمكن إيداع العريضة لدى أقرب دائرة : فهي تُحيلها إلى الدائرة المختصة.",
+          "كقاعدة عامة، تُودَع العريضة بالمحكمة الإدارية بتونس العاصمة إذا كانت الإدارة المعنية إدارة مركزية (وزير، رئيس الحكومة...). أمّا إذا صدر القرار عن سلطة جهوية أو محلية (والٍ، رئيس بلدية، إدارة جهوية، عميد أو مدير مؤسسة تعليم عالٍ...) فتُودَع العريضة بالدائرة الابتدائية التي تتبعها الولاية التي يوجد بها مقرّ تلك السلطة. تنبيه : القضية المرفوعة أمام محكمة غير مختصة يكون مآلها الرفض.",
       },
     ],
   },
@@ -280,12 +294,12 @@ const GUIDES: Guide[] = [
           "بالنسبة لدعوى الإلغاء، لديك ستّون يوما بداية من تاريخ تبليغ القرار أو نشره. بعد انقضاء هذا الأجل، يصبح القرار نهائيا.",
       },
       {
-        headingFr: "2 mois pour le recours préalable",
-        headingAr: "شهرين للمطلب المسبق",
+        headingFr: "2 mois pour le recours préalable (facultatif)",
+        headingAr: "شهرين للمطلب المسبق (اختياري)",
         bodyFr:
-          "Avant la plupart des recours en indemnisation, il faut d'abord adresser une réclamation à l'administration (recours administratif préalable). Celle-ci a 2 mois pour répondre. Son silence vaut rejet.",
+          "Avant d'aller au tribunal, vous pouvez — ce n'est pas obligatoire — demander à l'administration de revenir sur sa décision (recours préalable). Il doit lui être adressé dans les 2 mois suivant la notification de la décision. L'administration a ensuite 2 mois pour répondre : son silence vaut rejet implicite. À partir du rejet, écrit ou implicite, vous disposez de 2 nouveaux mois pour saisir le Tribunal administratif.",
         bodyAr:
-          "قبل رفع أغلب دعاوى التعويض، يجب أوّلا توجيه مطلب إلى الإدارة (الطعن الإداري المسبق). ولها شهران للإجابة. ويُعدّ سكوتها رفضا.",
+          "قبل اللجوء إلى المحكمة، يمكنك — وهذا اختياري — أن تطلب من الإدارة التراجع في قرارها (مطلب مسبق أو تظلّم). ويجب تقديمه في أجل لا يتجاوز شهرين من تاريخ الإعلام بالقرار. وللإدارة بعد ذلك شهران للإجابة، ويُعدّ سكوتها رفضا ضمنيا. وابتداء من تاريخ الرفض، الصريح أو الضمني، يكون لك أجل جديد بشهرين للطعن أمام المحكمة الإدارية.",
       },
       {
         headingFr: "15 ans pour demander réparation",
@@ -331,9 +345,19 @@ const GUIDES: Guide[] = [
         headingFr: "En première instance",
         headingAr: "في الدرجة الأولى",
         bodyFr:
-          "Devant les chambres de première instance, le ministère d'avocat n'est pas systématiquement obligatoire pour certains recours simples (notamment référés et requêtes administratives de routine). Le citoyen peut se présenter seul.",
+          "Devant les chambres de première instance, le Guide du citoyen distingue trois situations :",
         bodyAr:
-          "أمام الدوائر الابتدائية، لا يكون تعيين المحامي إجباريا بصفة آلية في بعض الطعون البسيطة (خاصة الاستعجالي والعرائض الإدارية العادية). يمكن للمواطن أن يحضر بمفرده.",
+          "أمام الدوائر الابتدائية، يميّز دليل المواطن بين ثلاث وضعيات :",
+        bulletsFr: [
+          "Avocat facultatif : recours en annulation d'une décision, demande de sursis à exécution, demande d'autorisation ou de constat en urgence — vous pouvez déposer la requête seul.",
+          "Avocat obligatoire : demande d'indemnisation d'un préjudice causé par l'administration.",
+          "Avocat obligatoire : requête qui demande à la fois l'annulation d'une décision et une indemnisation.",
+        ],
+        bulletsAr: [
+          "المحامي غير وجوبي : دعوى إلغاء قرار إداري، مطلب تأجيل وتوقيف التنفيذ، مطلب إذن أو معاينة استعجالية — يمكنك تقديم القضية بمفردك.",
+          "المحامي وجوبي : دعوى التعويض عن الأضرار التي تسبّبت فيها الإدارة.",
+          "المحامي وجوبي : القضية التي تجمع بين طلب إلغاء قرار وطلب التعويض.",
+        ],
       },
       {
         headingFr: "En appel et en cassation",
@@ -366,20 +390,20 @@ const GUIDES: Guide[] = [
   {
     id: "aide-judiciaire",
     icon: HeartHandshake,
-    categoryFr: "Aide juridictionnelle",
-    categoryAr: "الإعانة العدلية",
-    titleFr: "Aide juridictionnelle gratuite",
-    titleAr: "الإعانة العدلية المجانية",
+    categoryFr: "Aide judiciaire",
+    categoryAr: "الإعانة القضائية",
+    titleFr: "Aide judiciaire gratuite",
+    titleAr: "الإعانة القضائية المجانية",
     descFr:
-      "Si vos revenus sont insuffisants pour payer un avocat, l'État prend en charge votre défense, les frais d'huissier, d'expertise et de traduction.",
+      "Si vos revenus ne vous permettent pas de payer un avocat, l'aide judiciaire prend en charge l'avocat et tous les frais de l'affaire : enregistrement, expertise, huissier, traduction, exécution.",
     descAr:
-      "إذا كان دخلك لا يكفي لدفع أتعاب محامٍ، تتكفّل الدولة بالدفاع عنك وبأتعاب عدل التنفيذ والخبراء والترجمة.",
+      "إذا كان دخلك لا يسمح لك بتكليف محامٍ، تتكفّل الإعانة القضائية بأتعاب المحامي وبجميع مصاريف القضية : التسجيل والخبرة وعدل التنفيذ والترجمة والتنفيذ.",
     durationFr: "10 min",
     durationAr: "10 دقائق",
     difficultyFr: "Débutant",
     difficultyAr: "مبتدئ",
-    tagsFr: ["Revenus modestes", "État", "Prise en charge"],
-    tagsAr: ["دخل ضعيف", "الدولة", "التكفل"],
+    tagsFr: ["Revenus modestes", "Avocat désigné", "Frais pris en charge"],
+    tagsAr: ["دخل ضعيف", "محامٍ معيَّن", "التكفّل بالمصاريف"],
     color: "bg-purple-600",
     bgColor: "bg-purple-50",
     textColor: "text-purple-700",
@@ -389,39 +413,55 @@ const GUIDES: Guide[] = [
         headingFr: "Qui peut en bénéficier ?",
         headingAr: "من يستفيد منها ؟",
         bodyFr:
-          "Toute personne dont les revenus sont insuffisants pour faire valoir ses droits en justice. Les seuils sont fixés par décret et révisés régulièrement.",
+          "Toute personne résidant en Tunisie, quelle que soit sa nationalité, qui n'a pas de revenus ou dont les revenus ne suffisent pas pour faire valoir ses droits — à condition que la demande en justice soit sérieuse. L'aide peut être demandée avant d'introduire l'affaire, en cours de procédure, pour faire exécuter un jugement ou pour faire appel et se pourvoir en cassation.",
         bodyAr:
-          "كل شخص لا يكفي دخله لتمكينه من ممارسة حقوقه أمام القضاء. تُحدَّد الحدود بأمر وتُراجَع بصفة دورية.",
+          "كل شخص مقيم بالجمهورية التونسية مهما كانت جنسيته، ليس له دخل أو دخله لا يكفي للدفاع عن حقوقه، شرط أن يكون الحق الذي يطالب به جدّيا. ويمكن طلب الإعانة قبل رفع القضية، أو أثناء نشرها، أو لتنفيذ حكم، أو بمناسبة الاستئناف أو التعقيب.",
       },
       {
-        headingFr: "Ce que l'État prend en charge",
-        headingAr: "ما الذي تتكفّل به الدولة",
+        headingFr: "Ce qui est pris en charge",
+        headingAr: "ما الذي تتكفّل به الإعانة",
         bodyFr:
-          "L'aide juridictionnelle couvre l'ensemble des frais nécessaires à la procédure :",
+          "L'aide judiciaire couvre l'ensemble des frais liés à l'affaire :",
         bodyAr:
-          "تغطّي الإعانة العدلية جميع المصاريف الضرورية للإجراءات :",
+          "تغطّي الإعانة القضائية جميع المصاريف المتعلّقة بالقضية :",
         bulletsFr: [
+          "Droits d'enregistrement.",
           "Honoraires de l'avocat désigné.",
-          "Frais d'huissier de justice.",
-          "Frais d'expertise et de constat.",
-          "Frais de traduction (français / arabe / langue étrangère).",
-          "Frais d'exécution des jugements.",
+          "Frais de l'expert désigné par le tribunal.",
+          "Frais de constats et d'interpellations par huissier de justice.",
+          "Frais de convocations et de notifications.",
+          "Frais de traduction de documents.",
+          "Frais d'exécution des jugements rendus en votre faveur.",
         ],
         bulletsAr: [
-          "أتعاب المحامي المعين.",
-          "أتعاب عدل التنفيذ.",
-          "مصاريف الخبرة والمعاينة.",
-          "مصاريف الترجمة (الفرنسية / العربية / لغة أجنبية).",
-          "مصاريف تنفيذ الأحكام.",
+          "معاليم التسجيل.",
+          "أتعاب المحامي المعيَّن.",
+          "مصاريف الخبير الذي تعيّنه المحكمة.",
+          "مصاريف المعاينات والاستجوابات التي يقوم بها عدل التنفيذ.",
+          "مصاريف الاستدعاءات والإعلامات.",
+          "مصاريف ترجمة الوثائق.",
+          "مصاريف تنفيذ الأحكام الصادرة لفائدتك.",
         ],
       },
       {
         headingFr: "Comment la demander ?",
         headingAr: "كيف تطلبها ؟",
         bodyFr:
-          "Le dossier de demande se dépose au bureau d'aide juridictionnelle du tribunal compétent. Il comprend une demande écrite, un justificatif de revenus, et une copie de la décision contestée le cas échéant.",
+          "La demande se dépose au bureau d'aide judiciaire du Tribunal administratif à Tunis, ou à la chambre régionale dont dépend votre adresse, qui la transmet au bureau de Tunis. Elle indique vos nom et prénom, adresse, profession, situation familiale et un bref exposé de l'affaire. Vous pouvez choisir votre avocat : indiquez son nom et son adresse, avec la preuve qu'il accepte de vous représenter. Pièces à joindre :",
         bodyAr:
-          "يُودَع ملف الطلب بمكتب الإعانة العدلية لدى المحكمة المختصة. ويتضمّن مطلبا كتابيا وإثباتا للدخل ونسخة من القرار المطعون فيه عند الاقتضاء.",
+          "يُقدَّم المطلب إلى مكتب الإعانة القضائية بمقرّ المحكمة الإدارية بتونس، أو بالدائرة الابتدائية التي يتبعها عنوانك وهي تحيله على مكتب تونس. ويتضمّن الاسم واللقب والعنوان والمهنة والحالة المدنية وتوضيحا مختصرا للقضية. ويمكنك اختيار محاميك : اذكر اسمه وعنوانه مع ما يثبت موافقته على النيابة. الوثائق المرافقة :",
+        bulletsFr: [
+          "Une pièce d'identité.",
+          "Un justificatif d'absence ou d'insuffisance de revenus (certificat d'indigence, déclaration de revenus…).",
+          "Les documents sur votre situation sociale (enfants, personnes à charge…).",
+          "Les pièces de l'affaire : copie de la décision attaquée, dossier médical en cas d'erreur médicale…",
+        ],
+        bulletsAr: [
+          "وثيقة تثبت الهوية.",
+          "ما يثبت انعدام الدخل أو ضعفه (شهادة في الاحتياج، تصريح بالدخل...).",
+          "وثائق تثبت الحالة الاجتماعية (أبناء، عائلة في الكفالة...).",
+          "مؤيدات الدعوى : نسخة من القرار المطعون فيه، الملف الطبي في صورة خطأ طبي...",
+        ],
       },
     ],
   },
@@ -433,15 +473,15 @@ const GUIDES: Guide[] = [
     titleFr: "Le Médiateur Administratif — résoudre à l'amiable",
     titleAr: "الموفّق الإداري — حلٌّ ودّي قبل المحكمة",
     descFr:
-      "Avant d'aller au tribunal, le Médiateur Administratif peut intervenir auprès de l'administration pour résoudre votre problème à l'amiable. Gratuit et plus rapide.",
+      "Le Médiateur administratif peut intervenir auprès de l'administration pour régler votre problème à l'amiable, ou vous aider à faire exécuter un jugement définitif. Attention : le saisir ne suspend pas les délais de recours.",
     descAr:
-      "قبل التوجّه إلى المحكمة، يمكن للموفّق الإداري أن يتدخّل لدى الإدارة لحلّ المشكلة بطريقة ودّية. مجّاني وأسرع.",
+      "يمكن للموفّق الإداري أن يتدخّل لدى الإدارة لحلّ مشكلتك بطريقة ودّية، أو لمساعدتك على تنفيذ حكم بات. تنبيه : اللجوء إليه لا يوقف آجال الطعن.",
     durationFr: "8 min",
     durationAr: "8 دقائق",
     difficultyFr: "Débutant",
     difficultyAr: "مبتدئ",
-    tagsFr: ["Mode amiable", "Gratuit", "Recours préalable"],
-    tagsAr: ["الطريقة الودية", "مجاني", "الطعن المسبق"],
+    tagsFr: ["Mode amiable", "Exécution des jugements", "Délais"],
+    tagsAr: ["الطريقة الودية", "تنفيذ الأحكام", "الآجال"],
     color: "bg-cyan-600",
     bgColor: "bg-cyan-50",
     textColor: "text-cyan-700",
@@ -451,37 +491,61 @@ const GUIDES: Guide[] = [
         headingFr: "Le rôle du Médiateur",
         headingAr: "دور الموفّق",
         bodyFr:
-          "Le Médiateur Administratif est une institution indépendante chargée de faciliter le dialogue entre le citoyen et l'administration. Il ne juge pas — il propose une solution équitable.",
+          "Les « Services du Médiateur administratif » sont un établissement public de l'État. Le citoyen en difficulté avec une administration peut y déposer une plainte pour que le Médiateur intervienne et cherche une solution. Celui qui a obtenu un jugement définitif contre l'administration sans parvenir à le faire exécuter peut aussi le saisir : le Médiateur ne rejuge pas l'affaire, il aide à l'exécution. Ses limites :",
         bodyAr:
-          "الموفّق الإداري مؤسسة مستقلة مكلَّفة بتسهيل الحوار بين المواطن والإدارة. فهو لا يحكم — بل يقترح حلاًّ عادلا.",
+          "« مصالح الموفّق الإداري » مؤسسة عمومية تابعة للدولة. يمكن للمواطن الذي له مشكل مع الإدارة أن يقدّم شكاية للموفّق الإداري ليتدخّل لدى الجهة الإدارية بحثا عن حلّ. كما يمكن لمن تحصّل على حكم بات ضدّ الإدارة ولم يتمكّن من تنفيذه أن يلجأ إليه : فالموفّق لا يعيد النظر في النزاع، بل يساعد على تنفيذ الحكم. حدود تدخّله :",
+        bulletsFr: [
+          "Il n'intervient pas dans les litiges de carrière entre l'administration et ses agents.",
+          "Il n'intervient pas dans une affaire encore pendante devant le tribunal.",
+          "Il ne réexamine pas un litige déjà jugé.",
+        ],
+        bulletsAr: [
+          "لا يتدخّل في نزاعات الحياة المهنية بين الإدارة وأعوانها.",
+          "لا يتدخّل في القضايا التي ما زالت منشورة أمام المحكمة.",
+          "لا ينظر في نزاع صدر فيه حكم.",
+        ],
       },
       {
         headingFr: "Quand le saisir ?",
         headingAr: "متى نلجأ إليه ؟",
         bodyFr:
-          "Vous pouvez saisir le Médiateur quand vous estimez que l'administration a mal traité votre demande, mais avant ou parallèlement à un recours juridictionnel.",
+          "Quelques exemples tirés du Guide du citoyen :",
         bodyAr:
-          "يمكنك اللجوء إلى الموفّق إذا رأيت أنّ الإدارة قد عاملتك معاملة سيّئة، وذلك قبل تقديم طعن قضائي أو بالتوازي معه.",
+          "بعض الأمثلة من دليل المواطن :",
         bulletsFr: [
-          "Refus injustifié de l'administration.",
-          "Silence prolongé sur votre demande.",
-          "Application abusive d'un texte.",
-          "Délais excessifs de traitement.",
+          "Un extrait de casier judiciaire (bulletin n°3) demandé et jamais délivré.",
+          "Vérifier le résultat d'un concours et les notes obtenues.",
+          "Un jugement définitif contre la CNRPS ou contre une municipalité qui n'est pas exécuté.",
+          "Obtenir l'exécution d'un ordre de démolition d'une construction qui vous porte préjudice.",
+          "Corriger l'orthographe de votre nom dans l'extrait de naissance en français.",
         ],
         bulletsAr: [
-          "رفض غير مبرَّر من قِبل الإدارة.",
-          "صمت مطوَّل إزاء طلبك.",
-          "تطبيق تعسّفي لنصّ قانوني.",
-          "آجال مفرطة في المعالجة.",
+          "مطلب بطاقة عدد 3 لم يقع تسليمها رغم طول الانتظار.",
+          "التثبّت في نتيجة مناظرة وفي الأعداد المتحصّل عليها.",
+          "حكم بات ضدّ الصندوق الوطني للتقاعد والحيطة الاجتماعية أو ضدّ بلدية لم يقع تنفيذه.",
+          "طلب تدخّل الموفّق لدى البلدية لتنفيذ قرار هدم بناية تسبّبت في مضرّة.",
+          "إصلاح خطأ في كتابة اللقب بالفرنسية في مضمون الولادة.",
         ],
       },
       {
-        headingFr: "Comment le saisir ?",
-        headingAr: "كيف نلجأ إليه ؟",
+        headingFr: "Où le trouver ?",
+        headingAr: "أين نجده ؟",
         bodyFr:
-          "La saisine est gratuite. Une lettre simple exposant les faits, les démarches déjà entreprises, et accompagnée des pièces justificatives, suffit. Aucun avocat n'est nécessaire.",
+          "Siège : 85, avenue de la Liberté, 1002 Tunis — tél. +216 71 792 655 — fax +216 71 780 292 — mediateur.administratif@email.ati.tn. Les services centraux reçoivent les plaintes des gouvernorats de Tunis, Ariana, Ben Arous, Manouba, Bizerte, Zaghouan, Béja et Nabeul ; des représentants régionaux couvrent le reste du pays. Attention : une plainte au Médiateur ne vous dispense pas de saisir le tribunal et ne suspend pas les délais — sinon votre recours risque d'être rejeté.",
         bodyAr:
-          "اللجوء مجّاني. تكفي رسالة بسيطة تشرح الوقائع والإجراءات التي قمتَ بها، مرفقة بالوثائق المؤيِّدة. ولا يستوجب توكيل محامٍ.",
+          "المقرّ : 85 شارع الحرية، 1002 تونس — الهاتف : ⁦+216 71 792 655⁩ — الفاكس : ⁦+216 71 780 292⁩ — mediateur.administratif@email.ati.tn. وتقبل المصالح المركزية شكايات مواطني ولايات تونس وأريانة وبن عروس ومنوبة وبنزرت وزغوان وباجة ونابل، فيما يغطّي ممثّلون جهويون بقية الولايات. تنبيه : تقديم شكاية للموفّق الإداري لا يعفيك من رفع القضية أمام المحكمة الإدارية ولا يوقف الآجال، وإلّا فقد تُرفض قضيتك.",
+        bulletsFr: [
+          "Représentant régional de Sousse : Sousse, Monastir, Mahdia, Kairouan.",
+          "Représentant régional de Sfax : Sfax, Gabès, Médenine, Tataouine.",
+          "Représentant régional du Kef : Le Kef, Siliana, Jendouba.",
+          "Représentant régional de Gafsa : Gafsa, Tozeur, Kébili, Sidi Bouzid, Kasserine.",
+        ],
+        bulletsAr: [
+          "الممثّل الجهوي بسوسة : سوسة، المنستير، المهدية، القيروان.",
+          "الممثّل الجهوي بصفاقس : صفاقس، قابس، مدنين، تطاوين.",
+          "الممثّل الجهوي بالكاف : الكاف، سليانة، جندوبة.",
+          "الممثّل الجهوي بقفصة : قفصة، توزر، قبلي، سيدي بوزيد، القصرين.",
+        ],
       },
     ],
   },
@@ -572,6 +636,12 @@ const GuidesPratiquesContent = () => {
               ? "كلّ ما تحتاج إلى معرفته عند نشوب نزاع مع إدارة عمومية : كيف تطعن في قرار، وكيف تطلب التعويض، وكيف تحترم الآجال، وأين تجد من يساعدك. سبعة فصول، شرحٌ مبسَّط، وأمثلة عمليّة."
               : "Tout ce qu'il faut savoir face à un litige avec une administration publique : comment contester une décision, demander une indemnisation, respecter les délais et trouver de l'aide. Sept chapitres, expliqués simplement, avec des exemples concrets."}
           </p>
+          <Button asChild size="lg" className="mt-5">
+            <a href={GUIDE_PDF_URL} target="_blank" rel="noreferrer">
+              <Download className={`h-4 w-4 ${isRTL ? "ml-2" : "mr-2"}`} />
+              {isRTL ? "تحميل دليل المواطن كاملا (PDF)" : "Télécharger le Guide du citoyen complet (PDF)"}
+            </a>
+          </Button>
         </div>
       </section>
 

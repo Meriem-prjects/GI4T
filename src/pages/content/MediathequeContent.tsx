@@ -3,10 +3,18 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { Search, Play, Video, Headphones, Mic, Eye, Heart, ChevronRight, Film, Users, BookOpen, MessageSquare, MapPin } from "lucide-react";
+import { Search, Play, Video, Headphones, Mic, Eye, Heart, ChevronRight, Film, Users, BookOpen, MessageSquare, MapPin, Clapperboard, Gavel, type LucideIcon } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useTranslation } from "@/hooks/useTranslation";
 import { supabase } from "@/integrations/supabase/client";
+import { VideoPlayerDialog } from "@/components/media/VideoPlayerDialog";
+import { useGovernorates } from "@/hooks/useGovernorates";
+import { getYouTubeId, getYouTubeThumbnail } from "@/lib/youtube";
+
+/** YouTube links and direct video files play in the page's dialog; other
+ * hosts (Vimeo, Facebook…) open in a new tab. */
+const playsInDialog = (url: string) =>
+  !!getYouTubeId(url) || url.includes("/api/storage/") || /\.(mp4|webm|m4v|mov)(\?|#|$)/i.test(url);
 
 interface MediaItem {
   id: string;
@@ -27,17 +35,23 @@ interface MediaItem {
   published: boolean;
 }
 
-// Category metadata
-const CATEGORY_META: Record<string, { icon: any; color: string; bgColor: string }> = {
-  testimonials: { icon: Users, color: "bg-rose-600", bgColor: "bg-rose-50" },
-  tutorials: { icon: BookOpen, color: "bg-blue-600", bgColor: "bg-blue-50" },
-  podcasts: { icon: Headphones, color: "bg-purple-600", bgColor: "bg-purple-50" },
-  trainings: { icon: Video, color: "bg-emerald-600", bgColor: "bg-emerald-50" },
-  documentaries: { icon: Film, color: "bg-amber-600", bgColor: "bg-amber-50" },
-  interviews: { icon: MessageSquare, color: "bg-cyan-600", bgColor: "bg-cyan-50" },
-  campaigns: { icon: MapPin, color: "bg-orange-600", bgColor: "bg-orange-50" },
+// Category metadata — `category` in the DB is French-only, so the labels
+// shown to visitors come from here (DB value as fallback for unknown ids).
+const CATEGORY_META: Record<string, { icon: LucideIcon; color: string; bgColor: string; labelFr: string; labelAr: string }> = {
+  testimonials: { icon: Users, color: "bg-rose-600", bgColor: "bg-rose-50", labelFr: "Témoignages", labelAr: "شهادات" },
+  tutorials: { icon: BookOpen, color: "bg-blue-600", bgColor: "bg-blue-50", labelFr: "Tutoriels", labelAr: "دروس تعليمية" },
+  podcasts: { icon: Headphones, color: "bg-purple-600", bgColor: "bg-purple-50", labelFr: "Podcasts", labelAr: "بودكاست" },
+  trainings: { icon: Video, color: "bg-emerald-600", bgColor: "bg-emerald-50", labelFr: "Formations", labelAr: "تكوين" },
+  documentaries: { icon: Film, color: "bg-amber-600", bgColor: "bg-amber-50", labelFr: "Documentaires", labelAr: "أفلام وثائقية" },
+  interviews: { icon: MessageSquare, color: "bg-cyan-600", bgColor: "bg-cyan-50", labelFr: "Interviews", labelAr: "حوارات" },
+  campaigns: { icon: MapPin, color: "bg-orange-600", bgColor: "bg-orange-50", labelFr: "Campagnes terrain", labelAr: "حملات ميدانية" },
+  fiction: { icon: Clapperboard, color: "bg-indigo-600", bgColor: "bg-indigo-50", labelFr: "Série fiction", labelAr: "سلسلة درامية" },
+  taktouk: { icon: Gavel, color: "bg-amber-500", bgColor: "bg-amber-50", labelFr: "Capsules Taktouk", labelAr: "كبسولات طقطوق" },
 };
-const DEFAULT_META = { icon: Play, color: "bg-slate-600", bgColor: "bg-slate-50" };
+const DEFAULT_META = { icon: Play, color: "bg-slate-600", bgColor: "bg-slate-50", labelFr: "", labelAr: "" };
+
+// DB values of media_items.type
+const MEDIA_TYPES = ["Vidéo", "Audio", "Webinaire"] as const;
 
 const getTypeIcon = (type: string) => {
   if (type === "Audio") return Headphones;
@@ -48,11 +62,19 @@ const getTypeIcon = (type: string) => {
 const MediathequeContent = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("all");
-  const [selectedType, setSelectedType] = useState("Tous");
+  // "all" or one of MEDIA_TYPES — compared against the DB value, never
+  // against a translated label (that broke the filter in Arabic).
+  const [selectedType, setSelectedType] = useState("all");
   const [mediaContent, setMediaContent] = useState<MediaItem[]>([]);
   const [loading, setLoading] = useState(true);
+  const [playing, setPlaying] = useState<MediaItem | null>(null);
   const { isRTL } = useLanguage();
   const { t } = useTranslation();
+  const { governorates = [] } = useGovernorates();
+
+  // media_items.governorate is the French name; show the Arabic one in RTL.
+  const getGovernorateLabel = (name: string) =>
+    (isRTL && governorates.find((g) => g.name === name)?.name_ar) || name;
 
   const fetchMedia = async () => {
     setLoading(true);
@@ -61,15 +83,14 @@ const MediathequeContent = () => {
         .from("media_items")
         .select("*")
         .eq("published", true)
-        .order("created_at", { ascending: false });
+        .order("created_at", { ascending: false })
+        .limit(500);
 
-      if (!error && data && data.length > 0) {
-        setMediaContent(data);
-      } else {
-        setMediaContent(defaultMedia);
-      }
-    } catch {
-      setMediaContent(defaultMedia);
+      if (error) console.error("Failed to load media_items:", error);
+      setMediaContent(data ?? []);
+    } catch (err) {
+      console.error("Failed to load media_items:", err);
+      setMediaContent([]);
     }
     setLoading(false);
   };
@@ -78,7 +99,28 @@ const MediathequeContent = () => {
     fetchMedia();
   }, []);
 
-  const types = [t('allCategories'), t('video'), t('audio'), t('webinar')];
+  const typeLabels: Record<string, string> = { "Vidéo": t('video'), "Audio": t('audio'), "Webinaire": t('webinar') };
+  const types = [{ id: "all", label: t('allCategories') }, ...MEDIA_TYPES.map((id) => ({ id, label: typeLabels[id] }))];
+  const getTypeLabel = (type: string) => typeLabels[type] || type;
+
+  const getCategoryLabel = (item: MediaItem) => {
+    const meta = CATEGORY_META[item.category_id];
+    if (!meta) return item.category;
+    return isRTL ? meta.labelAr : meta.labelFr;
+  };
+
+  const watch = (item: MediaItem) => {
+    if (!item.video_url) return;
+    if (playsInDialog(item.video_url)) setPlaying(item);
+    else window.open(item.video_url, '_blank', 'noopener');
+  };
+
+  // Uploaded thumbnail first, else the one YouTube generates.
+  const getThumbnail = (item: MediaItem) => {
+    if (item.thumbnail_url) return item.thumbnail_url;
+    const id = item.video_url ? getYouTubeId(item.video_url) : null;
+    return id ? getYouTubeThumbnail(id) : "";
+  };
 
   // Build dynamic category cards from content
   const categoryCounts: Record<string, number> = {};
@@ -92,7 +134,7 @@ const MediathequeContent = () => {
     ...Object.entries(categoryCounts).map(([id, count]) => {
       const meta = CATEGORY_META[id] || DEFAULT_META;
       const item = mediaContent.find(m => m.category_id === id);
-      return { id, name: item?.category || id, icon: meta.icon, color: meta.color, bgColor: meta.bgColor, count };
+      return { id, name: item ? getCategoryLabel(item) : id, icon: meta.icon, color: meta.color, bgColor: meta.bgColor, count };
     }),
   ];
 
@@ -103,7 +145,7 @@ const MediathequeContent = () => {
       (titleToSearch || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
       (descToSearch || "").toLowerCase().includes(searchTerm.toLowerCase());
     const matchesCategory = selectedCategory === "all" || item.category_id === selectedCategory;
-    const matchesType = selectedType === "Tous" || selectedType === t('allCategories') || item.type === selectedType;
+    const matchesType = selectedType === "all" || item.type === selectedType;
     return matchesSearch && matchesCategory && matchesType;
   });
 
@@ -176,9 +218,9 @@ const MediathequeContent = () => {
         <div className="flex flex-wrap gap-2 mb-6 justify-center">
           <span className={`text-sm font-medium text-muted-foreground ${isRTL ? 'ml-2' : 'mr-2'}`}>{t('type')}:</span>
           {types.map((type) => (
-            <Button key={type} variant={selectedType === type ? "default" : "outline"} size="sm"
-              onClick={() => setSelectedType(type)} className="transition-all duration-200">
-              {type}
+            <Button key={type.id} variant={selectedType === type.id ? "default" : "outline"} size="sm"
+              onClick={() => setSelectedType(type.id)} className="transition-all duration-200">
+              {type.label}
             </Button>
           ))}
         </div>
@@ -190,7 +232,7 @@ const MediathequeContent = () => {
         ) : (
           <>
             {/* Featured Content */}
-            {selectedCategory === "all" && selectedType === "Tous" && featuredContent.length > 0 && (
+            {selectedCategory === "all" && selectedType === "all" && !searchTerm && featuredContent.length > 0 && (
               <div className="mb-10 animate-fade-in">
                 <h2 className={`text-xl font-semibold mb-4 ${isRTL ? 'text-right' : ''}`}>{t('featured')}</h2>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
@@ -201,8 +243,8 @@ const MediathequeContent = () => {
                       <Card key={item.id} className={`hover:shadow-lg transition-all duration-300 border border-border/50 ${meta.bgColor}`}>
                         <div className="relative">
                           <div className="aspect-video bg-muted rounded-t-lg overflow-hidden flex items-center justify-center">
-                            {item.thumbnail_url ? (
-                              <img src={item.thumbnail_url} alt={getTitle(item)} className="w-full h-full object-cover" />
+                            {getThumbnail(item) ? (
+                              <img src={getThumbnail(item)} alt={getTitle(item)} loading="lazy" className="w-full h-full object-cover" />
                             ) : (
                               <div className={`w-16 h-16 ${meta.color} rounded-full flex items-center justify-center shadow-lg`}>
                                 <Icon className="h-8 w-8 text-white" />
@@ -210,7 +252,7 @@ const MediathequeContent = () => {
                             )}
                           </div>
                           <Badge className={`absolute top-2 ${isRTL ? 'right-2' : 'left-2'} ${meta.color} text-white`}>{t('featured')}</Badge>
-                          <Badge variant="outline" className={`absolute top-2 ${isRTL ? 'left-2' : 'right-2'} bg-background`}>{item.type}</Badge>
+                          <Badge variant="outline" className={`absolute top-2 ${isRTL ? 'left-2' : 'right-2'} bg-background`}>{getTypeLabel(item.type)}</Badge>
                         </div>
                         <CardHeader className="pb-2">
                           <CardTitle className={`text-lg ${isRTL ? 'text-right' : ''}`}>{getTitle(item)}</CardTitle>
@@ -223,12 +265,12 @@ const MediathequeContent = () => {
                               <div className={`flex items-center ${isRTL ? 'flex-row-reverse' : ''}`}><Eye className={`h-3 w-3 ${isRTL ? 'ml-1' : 'mr-1'}`} />{item.views?.toLocaleString() || 0}</div>
                               <div className={`flex items-center ${isRTL ? 'flex-row-reverse' : ''}`}><Heart className={`h-3 w-3 ${isRTL ? 'ml-1' : 'mr-1'}`} />{item.likes || 0}</div>
                             </div>
-                            <Badge variant="outline" className="text-xs">{item.category}</Badge>
+                            <Badge variant="outline" className="text-xs">{getCategoryLabel(item)}</Badge>
                           </div>
                           <Button
                             className={`w-full ${meta.color} text-white hover:opacity-90`}
                             size="sm"
-                            onClick={() => item.video_url && window.open(item.video_url, '_blank')}
+                            onClick={() => watch(item)}
                           >
                             <Play className={`h-3 w-3 ${isRTL ? 'ml-1' : 'mr-1'}`} />
                             {t('watch')}
@@ -244,7 +286,11 @@ const MediathequeContent = () => {
             {/* All Content Grid */}
             <div className="mb-10 animate-fade-in">
               <h2 className={`text-xl font-semibold mb-4 ${isRTL ? 'text-right' : ''}`}>
-                {selectedCategory === "all" && selectedType === "Tous" ? t('allResources') : `${selectedType !== "Tous" ? selectedType : ""}`}
+                {selectedType !== "all"
+                  ? getTypeLabel(selectedType)
+                  : selectedCategory === "all"
+                    ? t('allResources')
+                    : categoryCards.find((c) => c.id === selectedCategory)?.name}
               </h2>
               {filteredContent.length === 0 ? (
                 <div className="text-center py-12 text-muted-foreground">
@@ -260,20 +306,20 @@ const MediathequeContent = () => {
                       <Card key={item.id} className={`hover:shadow-lg transition-all duration-300 border border-border/50 ${meta.bgColor}`}>
                         <div className="relative">
                           <div className="aspect-video bg-muted rounded-t-lg overflow-hidden flex items-center justify-center">
-                            {item.thumbnail_url ? (
-                              <img src={item.thumbnail_url} alt={getTitle(item)} className="w-full h-full object-cover" />
+                            {getThumbnail(item) ? (
+                              <img src={getThumbnail(item)} alt={getTitle(item)} loading="lazy" className="w-full h-full object-cover" />
                             ) : (
                               <div className={`w-12 h-12 ${meta.color} rounded-full flex items-center justify-center shadow-md`}>
                                 <Icon className="h-6 w-6 text-white" />
                               </div>
                             )}
                           </div>
-                          <Badge variant="outline" className={`absolute top-2 ${isRTL ? 'left-2' : 'right-2'} bg-background text-xs`}>{item.type}</Badge>
+                          <Badge variant="outline" className={`absolute top-2 ${isRTL ? 'left-2' : 'right-2'} bg-background text-xs`}>{getTypeLabel(item.type)}</Badge>
                         </div>
                         <CardContent className="p-4">
                           <h3 className={`font-medium text-sm mb-2 line-clamp-2 ${isRTL ? 'text-right' : ''}`}>{getTitle(item)}</h3>
                           <p className={`text-xs text-muted-foreground mb-3 line-clamp-2 ${isRTL ? 'text-right' : ''}`}>{getDesc(item)}</p>
-                          {item.governorate && <p className="text-xs text-muted-foreground mb-2">📍 {item.governorate}</p>}
+                          {item.governorate && <p className={`text-xs text-muted-foreground mb-2 ${isRTL ? 'text-right' : ''}`}>📍 {getGovernorateLabel(item.governorate)}</p>}
                           <div className={`flex items-center justify-between mb-3 text-xs text-muted-foreground ${isRTL ? 'flex-row-reverse' : ''}`}>
                             {item.duration && <span>{item.duration}</span>}
                             <div className={`flex items-center gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
@@ -284,7 +330,7 @@ const MediathequeContent = () => {
                           <Button
                             size="sm"
                             className={`w-full text-xs ${meta.color} text-white hover:opacity-90`}
-                            onClick={() => item.video_url && window.open(item.video_url, '_blank')}
+                            onClick={() => watch(item)}
                           >
                             <Play className={`h-3 w-3 ${isRTL ? 'ml-1' : 'mr-1'}`} />
                             {t('watch')}
@@ -306,26 +352,10 @@ const MediathequeContent = () => {
           <Button>{isRTL ? 'اقترح شهادة' : 'Proposer un témoignage'}</Button>
         </div>
       </div>
+
+      <VideoPlayerDialog item={playing} open={!!playing} onOpenChange={() => setPlaying(null)} />
     </main>
   );
 };
-
-// Fallback static content
-const defaultMedia: MediaItem[] = [
-  {
-    id: "1", title: "Témoignage : Mon recours contre une discrimination", title_ar: "شهادة: دفاعي عن حقوقي",
-    description: "Sarah raconte comment elle a fait valoir ses droits suite à une discrimination à l'embauche",
-    description_ar: "سارة تروي كيف دافعت عن حقوقها في التوظيف",
-    type: "Vidéo", category: "Témoignages", category_id: "testimonials", governorate: "",
-    video_url: "", thumbnail_url: "", duration: "8:45", views: 12450, likes: 234, featured: true, published: true
-  },
-  {
-    id: "2", title: "Podcast Droits & Société - Épisode 12", title_ar: "بودكاست الحقوق والمجتمع - الحلقة 12",
-    description: "L'accès au logement social : défis et solutions en Tunisie",
-    description_ar: "الوصول إلى السكن الاجتماعي: تحديات وحلول",
-    type: "Audio", category: "Podcasts", category_id: "podcasts", governorate: "",
-    video_url: "", thumbnail_url: "", duration: "32:15", views: 3420, likes: 89, featured: true, published: true
-  },
-];
 
 export default MediathequeContent;

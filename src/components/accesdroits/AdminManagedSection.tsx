@@ -27,7 +27,22 @@ interface UsefulLinkItem extends BaseItem {
 interface PracticalResourceItem extends BaseItem {
   file_url?: string;
   file_size?: number;
+  file_type?: string;
 }
+
+const formatFileSize = (bytes: number, isRTL: boolean) => {
+  const mb = bytes / (1024 * 1024);
+  const value = mb >= 1 ? mb.toFixed(1) : String(Math.max(1, Math.round(bytes / 1024)));
+  const unit = mb >= 1 ? (isRTL ? "م.ب" : "Mo") : isRTL ? "ك.ب" : "Ko";
+  return `${value.replace(".", ",")} ${unit}`;
+};
+
+// "application/pdf" → "PDF"; falls back to the URL extension. Long MIME
+// subtypes (e.g. vnd.openxmlformats-…) are not worth showing.
+const fileTypeLabel = (fileType?: string, url?: string) => {
+  const ext = (fileType?.split("/").pop() || url?.split("?")[0].split(".").pop() || "").toUpperCase();
+  return ext.length <= 4 ? ext : "";
+};
 
 interface PracticalGuideItem extends BaseItem {
   estimated_time?: string;
@@ -40,6 +55,8 @@ interface AdminManagedSectionProps {
   kind: ItemKind;
   /** Section heading shown above the cards. */
   title: { fr: string; ar: string };
+  /** Shown instead of nothing when there are no published items. */
+  emptyMessage?: { fr: string; ar: string };
 }
 
 /**
@@ -49,7 +66,7 @@ interface AdminManagedSectionProps {
  * the user sees. As soon as an admin adds entries via the back-office,
  * they appear here automatically.
  */
-const AdminManagedSection = ({ kind, title }: AdminManagedSectionProps) => {
+const AdminManagedSection = ({ kind, title, emptyMessage }: AdminManagedSectionProps) => {
   const { isRTL } = useLanguage();
   const [items, setItems] = useState<AnyItem[]>([]);
   const [loading, setLoading] = useState(true);
@@ -83,7 +100,14 @@ const AdminManagedSection = ({ kind, title }: AdminManagedSectionProps) => {
       </Card>
     );
   }
-  if (items.length === 0) return null;
+  if (items.length === 0) {
+    if (!emptyMessage) return null;
+    return (
+      <Card className="p-10 mb-10 text-center text-muted-foreground" dir={isRTL ? "rtl" : "ltr"}>
+        {isRTL ? emptyMessage.ar : emptyMessage.fr}
+      </Card>
+    );
+  }
 
   return (
     <section className="mb-10">
@@ -115,14 +139,27 @@ const AdminManagedSection = ({ kind, title }: AdminManagedSectionProps) => {
                   </a>
                 </Button>
               )}
-              {kind === "practical_resources" && (item as PracticalResourceItem).file_url && (
-                <Button asChild variant="outline" size="sm" className="mt-auto self-start">
-                  <a href={(item as PracticalResourceItem).file_url!} target="_blank" rel="noreferrer">
-                    <Download className="h-3.5 w-3.5 mr-1.5" />
-                    {isRTL ? "تحميل" : "Télécharger"}
-                  </a>
-                </Button>
-              )}
+              {kind === "practical_resources" && (item as PracticalResourceItem).file_url && (() => {
+                const resource = item as PracticalResourceItem;
+                const typeLabel = fileTypeLabel(resource.file_type, resource.file_url);
+                return (
+                  <div className="mt-auto flex items-center justify-between gap-2">
+                    <Button asChild variant="outline" size="sm">
+                      <a href={resource.file_url!} target="_blank" rel="noreferrer">
+                        <Download className={`h-3.5 w-3.5 ${isRTL ? "ml-1.5" : "mr-1.5"}`} />
+                        {isRTL ? "تحميل" : "Télécharger"}
+                      </a>
+                    </Button>
+                    {(typeLabel || resource.file_size) && (
+                      <span className="text-xs text-muted-foreground">
+                        {[typeLabel, resource.file_size ? formatFileSize(resource.file_size, isRTL) : ""]
+                          .filter(Boolean)
+                          .join(" · ")}
+                      </span>
+                    )}
+                  </div>
+                );
+              })()}
               {kind === "practical_guides" && (
                 <div className="flex items-center justify-between mt-auto">
                   <div className="flex items-center gap-2 text-xs text-muted-foreground">

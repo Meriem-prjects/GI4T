@@ -16,6 +16,9 @@ const createSchema = z.object({
   isPublished: z.boolean().optional(),
   isFeatured: z.boolean().optional(),
   readTime: z.coerce.number().int().optional().nullable(),
+  // Without this, Zod strips the field and every item lands with a NULL
+  // published_at — lists ordered by it then show today's date for all.
+  publishedAt: z.coerce.date().optional().nullable(),
   // Each admin section owns its own actualités stream. The frontend
   // sets this when creating a news item; the list endpoint filters by
   // section so each space sees only its own.

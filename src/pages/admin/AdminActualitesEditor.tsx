@@ -147,15 +147,17 @@ const AdminActualitesEditor = ({ section = "observatoire" }: AdminActualitesEdit
       const fileName = `news-${Date.now()}.${fileExt}`;
       const filePath = `news/${fileName}`;
 
-      const { error: uploadError } = await supabase.storage
+      const { data: uploadData, error: uploadError } = await supabase.storage
         .from("documents")
         .upload(filePath, file);
 
-      if (uploadError) throw uploadError;
+      if (uploadError || !uploadData) throw uploadError ?? new Error("Upload failed");
 
+      // The backend prefixes a UUID to the file name: build the URL from the
+      // key it returns, never from the path we submitted.
       const { data: { publicUrl } } = supabase.storage
         .from("documents")
-        .getPublicUrl(filePath);
+        .getPublicUrl(uploadData.path);
 
       setFormData(prev => ({ ...prev, image_url: publicUrl }));
       toast.success("Image téléchargée avec succès");

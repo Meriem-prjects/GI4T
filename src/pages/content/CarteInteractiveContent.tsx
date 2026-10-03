@@ -106,6 +106,18 @@ const CarteInteractiveContent = () => {
     };
   }
 
+  // Campaign totals, computed from the completed actions only.
+  const stats = useMemo(() => {
+    const done = events.filter((e) => e.type === "action_realisee");
+    return {
+      actions: done.length,
+      governorates: new Set(done.map((e) => e.governorate?.name).filter(Boolean)).size,
+      people: done.reduce((sum, e) => sum + (e.people_impacted ?? 0), 0),
+    };
+  }, [events]);
+
+  const formatNumber = (n: number) => n.toLocaleString(isRTL ? "ar-TN" : "fr-FR");
+
   const selectedGovernorateLabel = useMemo(() => {
     if (!selectedGovernorate) return null;
     const g = governorates.find((g) => g.name === selectedGovernorate);
@@ -146,6 +158,27 @@ const CarteInteractiveContent = () => {
           <h1 className="text-2xl sm:text-3xl font-bold mb-1">{t("mapInteractiveTitle")}</h1>
           <p className="text-sm text-muted-foreground">{t("mapDescription")}</p>
         </div>
+
+        {/* Campaign figures */}
+        {stats.actions > 0 && (
+          <div className="grid grid-cols-3 gap-3 mb-5" dir={isRTL ? "rtl" : "ltr"}>
+            {[
+              { value: stats.actions, label: isRTL ? "إجراءات منجزة" : "actions réalisées", icon: Sparkles },
+              { value: stats.governorates, label: isRTL ? "ولايات" : "gouvernorats", icon: MapPin },
+              { value: stats.people, label: isRTL ? "شخصا تم الوصول إليهم" : "personnes touchées", icon: Users },
+            ].map(({ value, label, icon: Icon }) => (
+              <Card key={label} className="bg-emerald-50/60 border-emerald-200">
+                <CardContent className="p-3 flex items-center gap-3">
+                  <Icon className="h-5 w-5 text-emerald-600 shrink-0 hidden sm:block" />
+                  <div className="min-w-0">
+                    <div className="text-lg sm:text-2xl font-bold text-emerald-700 leading-tight">{formatNumber(value)}</div>
+                    <div className="text-[11px] sm:text-xs text-muted-foreground">{label}</div>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        )}
 
         {/* Filter bar */}
         <div className={`flex flex-wrap items-center gap-2 mb-5 ${isRTL ? "flex-row-reverse" : ""}`}>
@@ -298,9 +331,12 @@ const CarteInteractiveContent = () => {
                           : "—"}
                       </span>
                       {selectedEvent.people_impacted ? (
-                        <span className={`flex items-center gap-1 text-emerald-700 font-semibold ${isRTL ? "flex-row-reverse" : ""}`}>
+                        <span
+                          className={`flex items-center gap-1 text-emerald-700 font-semibold ${isRTL ? "flex-row-reverse" : ""}`}
+                          title={isRTL ? "عدد الأشخاص الذين تم الوصول إليهم" : "Personnes touchées"}
+                        >
                           <Users className="h-3 w-3" />
-                          {selectedEvent.people_impacted}
+                          {formatNumber(selectedEvent.people_impacted)}
                         </span>
                       ) : null}
                       {selectedEvent.available_places ? (
@@ -310,6 +346,13 @@ const CarteInteractiveContent = () => {
                         </span>
                       ) : null}
                     </div>
+                    {(isRTL ? selectedEvent.description_ar || selectedEvent.description : selectedEvent.description) && (
+                      <p className={`text-xs text-muted-foreground leading-relaxed line-clamp-6 ${isRTL ? "text-right font-almarai" : ""}`}>
+                        {isRTL
+                          ? selectedEvent.description_ar || selectedEvent.description
+                          : selectedEvent.description}
+                      </p>
+                    )}
                   </div>
 
                   {/* Scrollable photo strip — every photo from every linked

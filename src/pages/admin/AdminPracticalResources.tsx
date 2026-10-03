@@ -84,12 +84,16 @@ const AdminPracticalResources = () => {
   const handleFileUpload = async (file: File) => {
     setUploading(true);
     try {
-      const { data, error } = await supabase.storage.from("documents").upload(file.name, file);
-      if (error) throw error;
-      const publicUrl = (data as { publicUrl?: string })?.publicUrl ?? "";
+      const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, "_");
+      const { data, error } = await supabase.storage
+        .from("documents")
+        .upload(`resources/${Date.now()}-${safeName}`, file);
+      if (error || !data) throw error ?? new Error("Upload failed");
+      // The API requires an absolute URL: use the one the server built
+      // (getPublicUrl is relative when VITE_API_URL is empty in prod).
       setEditing((prev) => ({
         ...(prev ?? {}),
-        file_url: publicUrl,
+        file_url: data.url,
         file_size: file.size,
         file_type: file.type,
       }));
@@ -107,7 +111,8 @@ const AdminPracticalResources = () => {
       return;
     }
     setSaving(true);
-    const payload = { ...editing };
+    // "" fails the API's URL validation: send null when no file was attached.
+    const payload = { ...editing, file_url: editing.file_url || null };
     delete (payload as { id?: string }).id;
     const op = editing.id
       ? supabase.from("practical_resources").update(payload).eq("id", editing.id)

@@ -1,277 +1,154 @@
-import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
+import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Search, FileText, Download, Calendar, Eye, BookOpen, ChevronRight } from "lucide-react";
+import { FileText, Download, Calendar, BookOpen, ChevronRight, Languages } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
 
+interface Publication {
+  id: string;
+  titleFr: string;
+  titleAr: string;
+  descFr: string;
+  descAr: string;
+  typeFr: string;
+  typeAr: string;
+  pages: number;
+  sizeFr: string;
+  sizeAr: string;
+  date?: string;
+  coverUrl: string;
+  fileUrl: string;
+}
+
+// Publications of the national campaign for access to administrative
+// justice. Files are static assets in public/docs/.
+const PUBLICATIONS: Publication[] = [
+  {
+    id: "guide-citoyen",
+    titleFr: "Guide du citoyen pour l'accès à la justice administrative",
+    titleAr: "دليل المواطن للنفاذ إلى القضاء الإداري",
+    descFr:
+      "Le guide de la Campagne nationale pour l'accès à la justice administrative, rédigé en arabe tunisien : organisation judiciaire, Tribunal administratif et ses chambres régionales, recours, délais, avocat, aide judiciaire et Médiateur administratif.",
+    descAr:
+      "دليل الحملة الوطنية للنفاذ إلى القضاء الإداري، بالدارجة التونسية : التنظيم القضائي، المحكمة الإدارية ودوائرها الجهوية، الطعون، الآجال، المحامي، الإعانة القضائية والموفّق الإداري.",
+    typeFr: "Guide",
+    typeAr: "دليل",
+    pages: 48,
+    sizeFr: "2,3 Mo",
+    sizeAr: "2,3 م.ب",
+    date: "2025-05-26",
+    coverUrl: "/docs/guide-citoyen-couverture.webp",
+    fileUrl: "/docs/guide-citoyen-justice-administrative.pdf",
+  },
+  {
+    id: "planche-refere-suspension",
+    titleFr: "BD Taktouk : suspendre un arrêté de démolition",
+    titleAr: "قصة مصوّرة مع طقطوق : دعوى في إيقاف تنفيذ قرار هدم",
+    descFr:
+      "Taktouk explique à Ali qu'un recours en annulation ne suspend pas l'arrêté de démolition pris par le président de la municipalité : il faut déposer auprès du Tribunal administratif une demande distincte de sursis à exécution — avant, avec ou même après le recours en annulation.",
+    descAr:
+      "طقطوق يشرح لعلي أنّ قضية الإلغاء لا توقف تنفيذ قرار الهدم الصادر عن رئيس البلدية، ويلزم تقديم مطلب مستقل في إيقاف التنفيذ إلى المحكمة الإدارية، قبل دعوى الإلغاء أو معها أو حتى بعدها.",
+    typeFr: "Bande dessinée",
+    typeAr: "قصة مصوّرة",
+    pages: 1,
+    sizeFr: "124 Ko",
+    sizeAr: "124 ك.ب",
+    coverUrl: "/docs/planche-bd-refere-suspension.webp",
+    fileUrl: "/docs/planche-bd-refere-suspension.pdf",
+  },
+];
+
 const PublicationsContent = () => {
-  const [searchTerm, setSearchTerm] = useState("");
-  const [selectedCategory, setSelectedCategory] = useState("Tous");
   const { isRTL } = useLanguage();
 
-  const publications = [
-    {
-      id: 1,
-      title: "Rapport annuel 2023 - État des droits en Tunisie",
-      description: "Analyse complète de la situation des droits fondamentaux en Tunisie",
-      category: "Rapport annuel",
-      type: "Rapport",
-      pages: 156,
-      publishDate: "2024-01-15",
-      downloads: 3200,
-      size: "2.3 MB",
-      featured: true,
-      coverImage: "/api/placeholder/300/400"
-    },
-    {
-      id: 2,
-      title: "Guide pratique du droit au logement",
-      description: "Manuel complet sur les droits et recours en matière de logement",
-      category: "Guide pratique",
-      type: "Guide",
-      pages: 89,
-      publishDate: "2023-12-10",
-      downloads: 1890,
-      size: "1.8 MB",
-      featured: false
-    },
-    {
-      id: 3,
-      title: "Étude sur l'accès à l'emploi des personnes handicapées",
-      description: "Recherche approfondie sur les obstacles et solutions pour l'inclusion professionnelle",
-      category: "Étude",
-      type: "Étude",
-      pages: 67,
-      publishDate: "2023-11-22",
-      downloads: 1250,
-      size: "1.4 MB",
-      featured: true
-    },
-    {
-      id: 4,
-      title: "Fiche info - Vos droits face aux discriminations",
-      description: "Synthèse pratique des recours en cas de discrimination",
-      category: "Fiche info",
-      type: "Fiche",
-      pages: 12,
-      publishDate: "2024-01-08",
-      downloads: 5600,
-      size: "340 KB",
-      featured: false
-    },
-    {
-      id: 5,
-      title: "Analyse jurisprudentielle - Droit de la famille 2023",
-      description: "Évolutions récentes de la jurisprudence en droit de la famille",
-      category: "Analyse juridique",
-      type: "Analyse",
-      pages: 45,
-      publishDate: "2023-12-15",
-      downloads: 890,
-      size: "950 KB",
-      featured: false
-    },
-    {
-      id: 6,
-      title: "Manuel de formation - Médiation sociale",
-      description: "Outils et méthodes pour la médiation dans le domaine social",
-      category: "Manuel",
-      type: "Manuel",
-      pages: 123,
-      publishDate: "2023-10-30",
-      downloads: 1450,
-      size: "2.1 MB",
-      featured: false
-    }
-  ];
-
-  const categories = ["Tous", "Rapport annuel", "Guide pratique", "Étude", "Fiche info", "Analyse juridique", "Manuel"];
-
-  const filteredPublications = publications.filter(publication => {
-    const matchesSearch = publication.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         publication.description.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesCategory = selectedCategory === "Tous" || publication.category === selectedCategory;
-    return matchesSearch && matchesCategory;
-  });
-
-  const featuredPublications = publications.filter(pub => pub.featured);
-
   return (
-    <main className="flex-1">
+    <main className={`flex-1 ${isRTL ? "font-almarai" : ""}`}>
       {/* Breadcrumb */}
       <div className="bg-muted/30 py-2">
         <div className="container mx-auto px-4">
           <div className={`flex items-center gap-2 text-sm text-muted-foreground ${isRTL ? 'flex-row-reverse justify-end' : ''}`}>
-            <span>Accueil</span>
+            <span>{isRTL ? "الرئيسية" : "Accueil"}</span>
             <ChevronRight className={`h-4 w-4 ${isRTL ? 'rotate-180' : ''}`} />
-            <span>Accès aux droits</span>
+            <span>{isRTL ? "النفاذ إلى الحقوق" : "Accès aux droits"}</span>
             <ChevronRight className={`h-4 w-4 ${isRTL ? 'rotate-180' : ''}`} />
-            <span className="text-foreground">Publications</span>
+            <span className="text-foreground">{isRTL ? "منشورات" : "Publications"}</span>
           </div>
         </div>
       </div>
 
       {/* Main Content */}
-      <div className="container mx-auto px-4 py-8">
+      <div className="container mx-auto px-4 py-8" dir={isRTL ? "rtl" : "ltr"}>
         {/* Page Header */}
         <div className="text-center mb-8 animate-fade-in">
-          <h1 className="text-3xl sm:text-4xl font-bold mb-4">Publications</h1>
+          <h1 className="text-3xl sm:text-4xl font-bold mb-4">{isRTL ? "منشورات" : "Publications"}</h1>
           <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-            Consultez nos rapports, guides et études sur les droits fondamentaux et l'accès à la justice.
+            {isRTL
+              ? "منشورات الحملة الوطنية للنفاذ إلى القضاء الإداري، للمطالعة أو التحميل مجانا."
+              : "Les publications de la Campagne nationale pour l'accès à la justice administrative, à lire ou télécharger gratuitement."}
           </p>
         </div>
 
-        {/* Search and Filters */}
-        <div className="mb-8 animate-fade-in">
-          <div className="relative mb-4">
-            <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-            <Input
-              placeholder="Rechercher une publication..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10"
-            />
-          </div>
-
-          <div className="flex flex-wrap gap-2">
-            {categories.map((category) => (
-              <Button
-                key={category}
-                variant={selectedCategory === category ? "default" : "outline"}
-                size="sm"
-                onClick={() => setSelectedCategory(category)}
-                className="transition-all duration-200"
-              >
-                {category}
-              </Button>
-            ))}
-          </div>
-        </div>
-
-        {/* Featured Publications */}
-        {selectedCategory === "Tous" && (
-          <div className="mb-12 animate-fade-in">
-            <h2 className="text-2xl font-semibold mb-6">Publications à la une</h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {featuredPublications.map((publication) => (
-                <Card key={publication.id} className="hover:shadow-lg transition-shadow duration-300 border-primary/20 hover-scale">
-                  <CardHeader>
-                    <div className="flex justify-between items-start mb-2">
-                      <Badge variant="secondary" className="bg-primary/10 text-primary">
-                        À la une
-                      </Badge>
-                      <Badge variant="outline" className="text-xs">
-                        {publication.category}
-                      </Badge>
-                    </div>
-                    <CardTitle className="text-lg">{publication.title}</CardTitle>
-                    <CardDescription className="text-sm">
-                      {publication.description}
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="flex items-center justify-between mb-4 text-xs text-muted-foreground">
-                      <div className="flex items-center space-x-4">
-                        <div className="flex items-center">
-                          <FileText className="h-3 w-3 mr-1" />
-                          {publication.pages} pages
-                        </div>
-                        <div className="flex items-center">
-                          <Download className="h-3 w-3 mr-1" />
-                          {publication.downloads}
-                        </div>
-                        <div className="flex items-center">
-                          <Calendar className="h-3 w-3 mr-1" />
-                          {new Date(publication.publishDate).toLocaleDateString('fr-FR')}
-                        </div>
-                      </div>
-                      <span>{publication.size}</span>
-                    </div>
-                    
-                    <div className="flex gap-2">
-                      <Button className="flex-1" size="sm">
-                        <BookOpen className="h-3 w-3 mr-1" />
-                        Lire
-                      </Button>
-                      <Button variant="outline" size="sm">
-                        <Download className="h-3 w-3" />
-                      </Button>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* All Publications */}
-        <div className="mb-12 animate-fade-in">
-          <h2 className="text-2xl font-semibold mb-6">
-            {selectedCategory === "Tous" ? "Toutes les publications" : `Publications - ${selectedCategory}`}
-          </h2>
-          
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-            {filteredPublications.map((publication) => (
-              <Card key={publication.id} className="hover:shadow-md transition-shadow duration-300 hover-scale">
-                <CardContent className="p-4">
-                  <div className="flex items-start justify-between">
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2 mb-2">
-                        <h3 className="font-medium text-sm">{publication.title}</h3>
-                        <Badge variant="outline" className="text-xs">
-                          {publication.type}
-                        </Badge>
-                      </div>
-                      <p className="text-xs text-muted-foreground mb-3">
-                        {publication.description}
-                      </p>
-                      <div className="flex items-center justify-between text-xs text-muted-foreground">
-                        <div className="flex items-center space-x-3">
-                          <div className="flex items-center">
-                            <FileText className="h-3 w-3 mr-1" />
-                            {publication.pages} pages
-                          </div>
-                          <div className="flex items-center">
-                            <Download className="h-3 w-3 mr-1" />
-                            {publication.downloads}
-                          </div>
-                          <div className="flex items-center">
-                            <Calendar className="h-3 w-3 mr-1" />
-                            {new Date(publication.publishDate).toLocaleDateString('fr-FR')}
-                          </div>
-                        </div>
-                        <span>{publication.size}</span>
-                      </div>
-                    </div>
-                    <div className="flex flex-col gap-1 ml-4">
-                      <Button size="sm" className="text-xs">
-                        <BookOpen className="h-3 w-3" />
-                      </Button>
-                      <Button variant="outline" size="sm" className="text-xs">
-                        <Download className="h-3 w-3" />
-                      </Button>
-                    </div>
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-12 animate-fade-in">
+          {PUBLICATIONS.map((pub) => (
+            <Card key={pub.id} className="overflow-hidden hover:shadow-lg transition-shadow duration-300">
+              <CardContent className="p-0 flex flex-col sm:flex-row h-full">
+                <a
+                  href={pub.fileUrl}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="sm:w-48 flex-shrink-0 bg-muted"
+                >
+                  <img
+                    src={pub.coverUrl}
+                    alt={isRTL ? pub.titleAr : pub.titleFr}
+                    loading="lazy"
+                    className="w-full h-64 sm:h-full object-cover object-top"
+                  />
+                </a>
+                <div className="flex-1 p-5 flex flex-col">
+                  <Badge variant="outline" className="self-start mb-2 text-xs">
+                    {isRTL ? pub.typeAr : pub.typeFr}
+                  </Badge>
+                  <h2 className="text-lg font-semibold mb-2 leading-snug">{isRTL ? pub.titleAr : pub.titleFr}</h2>
+                  <p className="text-sm text-muted-foreground mb-4">{isRTL ? pub.descAr : pub.descFr}</p>
+                  <div className="flex flex-wrap items-center gap-x-4 gap-y-1 mb-4 text-xs text-muted-foreground">
+                    <span className="flex items-center gap-1">
+                      <FileText className="h-3 w-3" />
+                      {pub.pages} {isRTL ? "صفحة" : pub.pages > 1 ? "pages" : "page"}
+                    </span>
+                    <span className="flex items-center gap-1">
+                      <Languages className="h-3 w-3" />
+                      {isRTL ? "عربية" : "Arabe"}
+                    </span>
+                    {pub.date && (
+                      <span className="flex items-center gap-1">
+                        <Calendar className="h-3 w-3" />
+                        {new Date(pub.date).toLocaleDateString(isRTL ? "ar-TN" : "fr-FR", {
+                          month: "long",
+                          year: "numeric",
+                        })}
+                      </span>
+                    )}
+                    <span>PDF · {isRTL ? pub.sizeAr : pub.sizeFr}</span>
                   </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        </div>
-
-        {/* Newsletter Signup */}
-        <div className="bg-muted/50 rounded-lg p-6 text-center animate-fade-in">
-          <h3 className="text-xl font-semibold mb-2">Recevez nos nouvelles publications</h3>
-          <p className="text-muted-foreground mb-4">
-            Abonnez-vous pour être notifié des nouveaux rapports et études.
-          </p>
-          <div className="flex gap-2 max-w-md mx-auto">
-            <Input placeholder="Votre email..." className="flex-1" />
-            <Button>
-              S'abonner
-            </Button>
-          </div>
+                  <div className="mt-auto flex gap-2">
+                    <Button asChild className="flex-1" size="sm">
+                      <a href={pub.fileUrl} target="_blank" rel="noreferrer">
+                        <BookOpen className={`h-3.5 w-3.5 ${isRTL ? "ml-1.5" : "mr-1.5"}`} />
+                        {isRTL ? "قراءة" : "Lire"}
+                      </a>
+                    </Button>
+                    <Button asChild variant="outline" size="sm">
+                      <a href={pub.fileUrl} download>
+                        <Download className={`h-3.5 w-3.5 ${isRTL ? "ml-1.5" : "mr-1.5"}`} />
+                        {isRTL ? "تحميل" : "Télécharger"}
+                      </a>
+                    </Button>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          ))}
         </div>
       </div>
     </main>

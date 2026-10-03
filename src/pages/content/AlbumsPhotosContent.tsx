@@ -57,16 +57,14 @@ const AlbumsPhotosContent = () => {
         .from("photo_albums")
         .select("*")
         .eq("published", true)
-        .order("created_at", { ascending: false });
+        .order("created_at", { ascending: false })
+        .limit(500);
 
-      if (!error && data && data.length > 0) {
-        setAlbums(data);
-      } else {
-        // Fallback to static data
-        setAlbums(defaultAlbums);
-      }
-    } catch {
-      setAlbums(defaultAlbums);
+      if (error) console.error("Failed to load photo_albums:", error);
+      setAlbums(data ?? []);
+    } catch (err) {
+      console.error("Failed to load photo_albums:", err);
+      setAlbums([]);
     }
     setLoading(false);
   };
@@ -93,6 +91,9 @@ const AlbumsPhotosContent = () => {
     [t('workshops')]: "Ateliers",
     [t('ceremonies')]: "Cérémonies",
   };
+  // album.category holds the French DB value — show the translated label.
+  const getCategoryLabel = (category: string) =>
+    Object.entries(categoryMap).find(([, value]) => value === category)?.[0] ?? category;
 
   const filteredAlbums = albums.filter(album => {
     const titleToSearch = isRTL ? (album.title_ar || album.title) : album.title;
@@ -202,7 +203,7 @@ const AlbumsPhotosContent = () => {
                           {t('featured')}
                         </Badge>
                         <Badge variant="outline" className={`absolute top-3 ${isRTL ? 'left-3' : 'right-3'} bg-background`}>
-                          {album.category}
+                          {getCategoryLabel(album.category)}
                         </Badge>
                       </div>
                       <CardHeader>
@@ -290,7 +291,7 @@ const AlbumsPhotosContent = () => {
                           )}
                         </div>
                         <Badge variant="outline" className={`absolute top-2 ${isRTL ? 'left-2' : 'right-2'} bg-background text-xs`}>
-                          {album.category}
+                          {getCategoryLabel(album.category)}
                         </Badge>
                       </div>
                       <CardContent className="p-4">
@@ -375,25 +376,5 @@ const AlbumsPhotosContent = () => {
     </main>
   );
 };
-
-// Fallback static data used if database is empty
-const defaultAlbums: PhotoAlbum[] = [
-  {
-    id: "1", title: "Journée Portes Ouvertes - Accès aux Droits", title_ar: "يوم الأبواب المفتوحة - حق الوصول",
-    date: "15 Mars 2024", location: "Centre-ville de Tunis", location_ar: "وسط مدينة تونس",
-    photo_urls: [], photos: 45, photo_count: 45, views: 1250, category: "Événements",
-    description: "Grande journée d'information sur les droits des citoyens",
-    description_ar: "يوم معلومات بشأن حقوق المواطنين",
-    cover_image_url: "", governorate: "Tunis", featured: true, published: true
-  } as any,
-  {
-    id: "3", title: "Campagne sensibilisation - Droits des femmes", title_ar: "حملة توعية - حقوق المرأة",
-    date: "8 Mars 2024", location: "Avenue Habib Bourguiba", location_ar: "شارع الحبيب بورقيبة",
-    photo_urls: [], photo_count: 67, views: 2100, category: "Campagnes",
-    description: "Campagne de sensibilisation à l'égalité des droits",
-    description_ar: "حملة توعية للمساواة في الحقوق",
-    cover_image_url: "", governorate: "Tunis", featured: true, published: true
-  } as any,
-];
 
 export default AlbumsPhotosContent;
