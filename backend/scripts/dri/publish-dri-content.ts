@@ -445,7 +445,7 @@ async function phaseMedia() {
   log("\n▶ Médiathèque (vidéos YouTube)");
   let pending = 0;
   for (const v of [...VIDEOS].reverse()) {
-    const link = YOUTUBE_LINKS[v.id]?.trim();
+    const link = YOUTUBE_LINKS[v.id]?.url.trim();
     if (!link) {
       pending++;
       continue;
@@ -464,6 +464,7 @@ async function phaseMedia() {
       // Shorts keep their URL so the player shows them vertically.
       video_url: /\/shorts\//i.test(link) ? link : `https://www.youtube.com/watch?v=${youTubeId}`,
       thumbnail_url: `https://i.ytimg.com/vi/${youTubeId}/hqdefault.jpg`,
+      duration: YOUTUBE_LINKS[v.id].duration,
       featured: v.featured,
       published: true,
     };
