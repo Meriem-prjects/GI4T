@@ -39,9 +39,9 @@ const ObservatoireHeader = () => {
       icon: FileText,
       link: '/observatoire/analyses-opinions',
       children: [
-        { label: isRTL ? 'التحليلات القانونية' : 'Analyses juridiques', link: '/observatoire/analyses-juridiques' },
-        { label: isRTL ? 'بطاقات الاجتهاد القضائي' : 'Fiches jurisprudence', link: '/observatoire/fiches-jurisprudence' },
-        { label: isRTL ? 'التعليقات' : 'Commentaires', link: '/observatoire/commentaires' }
+        { label: isRTL ? 'التحاليل القانونية' : 'Analyses juridiques', link: '/observatoire/analyses-juridiques' },
+        { label: isRTL ? 'جذاذات فقه القضاء' : 'Fiches jurisprudence', link: '/observatoire/fiches-jurisprudence' },
+        { label: isRTL ? 'التعاليق' : 'Commentaires', link: '/observatoire/commentaires' }
       ]
     },
     {
@@ -65,7 +65,7 @@ const ObservatoireHeader = () => {
                 {isRTL ? 'مرصد الحقوق الأساسية' : 'Observatoire des Droits Fondamentaux'}
               </h1>
               <p className={`text-xs sm:text-sm text-muted-foreground hidden sm:block ${isRTL ? 'font-almarai' : ''}`}>
-                {isRTL ? 'مراقبة وحماية حقوق المواطنين' : 'Surveillance et protection des droits citoyens'}
+                {isRTL ? 'رصد حقوق المواطنين وحمايتها' : 'Surveillance et protection des droits citoyens'}
               </p>
             </div>
           </Link>

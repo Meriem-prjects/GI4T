@@ -29,9 +29,9 @@ const AccesAuxDroits = () => {
       step: "01",
       icon: Compass,
       titleFr: "Comprendre",
-      titleAr: "تفهم حقوقك",
+      titleAr: "افهم حقوقك",
       descFr: "Quel tribunal est compétent ? Quels délais respecter ? Quels recours s'offrent à vous face à l'administration ?",
-      descAr: "أيّة محكمة مختصّة بقضيّتك ؟ وما هي الآجال التي يجب احترامها ؟ وما هي الحلول المتاحة أمامك أمام الإدارة ؟",
+      descAr: "أيّة محكمة مختصّة بقضيّتك ؟ وما هي الآجال التي يجب احترامها ؟ وما هي سبل الطعن المتاحة لك في مواجهة الإدارة ؟",
       link: "/acces-aux-droits/guides-pratiques",
       accent: "from-blue-500/15 to-blue-500/5",
       dot: "bg-blue-500",
@@ -40,9 +40,9 @@ const AccesAuxDroits = () => {
       step: "02",
       icon: Gavel,
       titleFr: "Agir",
-      titleAr: "تتصرف بفعالية",
+      titleAr: "تحرّك",
       descFr: "Annuler une décision injuste, demander réparation d'un préjudice, obtenir une mesure urgente du juge.",
-      descAr: "تلغي قرار غير عادل، تطلب التعويض على ضرر، تتحصل على إذن استعجالي من القاضي.",
+      descAr: "إلغاء قرار جائر، طلب التعويض عن ضرر، الحصول على إذن استعجالي من القاضي.",
       link: "/acces-aux-droits/ressources-pratiques",
       accent: "from-amber-500/15 to-amber-500/5",
       dot: "bg-amber-500",
@@ -51,9 +51,9 @@ const AccesAuxDroits = () => {
       step: "03",
       icon: HeartHandshake,
       titleFr: "Être accompagné",
-      titleAr: "تتلقى المساعدة",
+      titleAr: "احصل على المرافقة",
       descFr: "Aide juridictionnelle gratuite, Médiateur Administratif, assistant virtuel : vous n'êtes jamais seul·e.",
-      descAr: "الإعانة القضائية المجانية، الموفق الإداري، المساعد الافتراضي : أنت ما توليش وحدك.",
+      descAr: "الإعانة القضائية المجانية، الموفق الإداري، المساعد الافتراضي : لست وحدك أبدا.",
       link: "/acces-aux-droits/assistant-virtuel",
       accent: "from-emerald-500/15 to-emerald-500/5",
       dot: "bg-emerald-500",
@@ -105,7 +105,7 @@ const AccesAuxDroits = () => {
                   اعرف حقوقك.
                   <br />
                   <span className="bg-gradient-to-r from-primary to-amber-600 bg-clip-text text-transparent">
-                    دافع عليها.
+                    دافع عنها.
                   </span>
                 </>
               ) : (
@@ -149,7 +149,7 @@ const AccesAuxDroits = () => {
           </h2>
           <p className={`text-muted-foreground ${font}`}>
             {isRTL
-              ? "مسار بسيط ، مبسط ، يرافقك من الفهم إلى الفعل."
+              ? "مسار بسيط يرافقك من الفهم إلى الفعل."
               : "Un parcours simple qui vous accompagne, de la compréhension à l'action."}
           </p>
         </div>

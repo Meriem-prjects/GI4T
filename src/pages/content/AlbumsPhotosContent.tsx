@@ -216,7 +216,7 @@ const AlbumsPhotosContent = () => {
                             }`}
                           >
                             <Calendar className="h-3 w-3" />
-                            {isRTL ? 'الحدث : ' : 'Événement : '}
+                            {isRTL ? 'الفعالية : ' : 'Événement : '}
                             {isRTL && album.event.title_ar ? album.event.title_ar : album.event.title}
                           </Link>
                         )}
@@ -304,7 +304,7 @@ const AlbumsPhotosContent = () => {
                             }`}
                           >
                             <Calendar className="h-3 w-3" />
-                            {isRTL ? 'الحدث : ' : 'Événement : '}
+                            {isRTL ? 'الفعالية : ' : 'Événement : '}
                             <span className="line-clamp-1">
                               {isRTL && album.event.title_ar ? album.event.title_ar : album.event.title}
                             </span>
@@ -355,10 +355,10 @@ const AlbumsPhotosContent = () => {
 
         {/* Newsletter Signup */}
         <div className={`bg-muted/50 rounded-lg p-6 text-center animate-fade-in ${isRTL ? 'text-right' : ''}`}>
-          <h3 className="text-xl font-semibold mb-2">{isRTL ? 'لا تفوت أي حدث' : 'Ne ratez aucun événement'}</h3>
+          <h3 className="text-xl font-semibold mb-2">{isRTL ? 'لا تفوّت أي فعالية' : 'Ne ratez aucun événement'}</h3>
           <p className="text-muted-foreground mb-4">
             {isRTL
-              ? 'اشترك في نشرتنا الإخبارية للحصول على معلومات حول الأحداث القادمة واكتشاف الصور مسبقًا.'
+              ? 'اشترك في نشرتنا الإخبارية للحصول على معلومات حول الفعاليات القادمة واكتشاف الصور مسبقًا.'
               : 'Abonnez-vous à notre newsletter pour être informé de nos prochains événements et découvrir les photos en avant-première.'}
           </p>
           <div className={`flex gap-2 max-w-md mx-auto ${isRTL ? 'flex-row-reverse' : ''}`}>

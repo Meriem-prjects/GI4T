@@ -159,7 +159,7 @@ const AssistantVirtuel = () => {
             </h1>
           </div>
           <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-            {isRTL ? 'اطرح أسئلتك القانونية في الوقت الفعلي' : 'Posez vos questions juridiques en temps réel'}
+            {isRTL ? 'اطرح أسئلتك القانونية واحصل على إجابة مباشرة' : 'Posez vos questions juridiques en temps réel'}
           </p>
         </div>
       </section>
@@ -279,8 +279,8 @@ const AssistantVirtuel = () => {
             </h3>
             <ul className={`space-y-2 text-sm text-muted-foreground ${isRTL ? 'list-none' : ''}`}>
               <li>{isRTL ? '• اطرح أسئلتك بلغة طبيعية' : '• Posez vos questions en langage naturel'}</li>
-              <li>{isRTL ? '• احصل على إجابات قانونية مكيفة لحالتك' : '• Recevez des réponses juridiques adaptées à votre situation'}</li>
-              <li>{isRTL ? '• يستخدم المساعد وثائق التدريب للحصول على إجابات دقيقة' : '• L\'assistant utilise les documents d\'apprentissage pour des réponses précises'}</li>
+              <li>{isRTL ? '• احصل على إجابات قانونية ملائمة لوضعيتك' : '• Recevez des réponses juridiques adaptées à votre situation'}</li>
+              <li>{isRTL ? '• يعتمد المساعد على وثائق مرجعية لتقديم إجابات دقيقة' : '• L\'assistant utilise les documents d\'apprentissage pour des réponses précises'}</li>
               <li>{isRTL ? '• محادثتك سرية وآمنة' : '• Votre conversation est confidentielle et sécurisée'}</li>
             </ul>
           </div>

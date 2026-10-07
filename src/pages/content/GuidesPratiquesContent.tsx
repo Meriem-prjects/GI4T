@@ -279,7 +279,7 @@ const GUIDES: Guide[] = [
     difficultyFr: "Débutant",
     difficultyAr: "مبتدئ",
     tagsFr: ["60 jours", "2 mois", "15 ans"],
-    tagsAr: ["60 يوم", "شهرين", "15 سنة"],
+    tagsAr: ["60 يوما", "شهران", "15 سنة"],
     color: "bg-emerald-600",
     bgColor: "bg-emerald-50",
     textColor: "text-emerald-700",
@@ -287,7 +287,7 @@ const GUIDES: Guide[] = [
     sections: [
       {
         headingFr: "60 jours pour annuler une décision",
-        headingAr: "60 يوم لإلغاء قرار إداري",
+        headingAr: "60 يوما لإلغاء قرار إداري",
         bodyFr:
           "Pour un recours en annulation, vous avez 60 jours à compter de la notification ou de la publication de la décision. Passé ce délai, la décision devient définitive.",
         bodyAr:
@@ -295,7 +295,7 @@ const GUIDES: Guide[] = [
       },
       {
         headingFr: "2 mois pour le recours préalable (facultatif)",
-        headingAr: "شهرين للمطلب المسبق (اختياري)",
+        headingAr: "شهران للمطلب المسبق (اختياري)",
         bodyFr:
           "Avant d'aller au tribunal, vous pouvez — ce n'est pas obligatoire — demander à l'administration de revenir sur sa décision (recours préalable). Il doit lui être adressé dans les 2 mois suivant la notification de la décision. L'administration a ensuite 2 mois pour répondre : son silence vaut rejet implicite. À partir du rejet, écrit ou implicite, vous disposez de 2 nouveaux mois pour saisir le Tribunal administratif.",
         bodyAr:
@@ -369,7 +369,7 @@ const GUIDES: Guide[] = [
       },
       {
         headingFr: "Pourquoi un avocat reste recommandé",
-        headingAr: "لماذا يبقى الاستعانة بالمحامي مستحسنة",
+        headingAr: "لماذا تبقى الاستعانة بمحامٍ مستحسنة",
         bodyFr:
           "Même quand il n'est pas obligatoire, l'avocat connaît les délais, les formes et la jurisprudence. Une requête mal rédigée peut être rejetée pour des raisons de forme avant même d'être examinée sur le fond.",
         bodyAr:
@@ -826,7 +826,7 @@ const GuidesPratiquesContent = () => {
                               onClick={() => setExpandedId(null)}
                               className={isRTL ? "font-almarai" : ""}
                             >
-                              {isRTL ? "إغلاق" : "Réduire"}
+                              {isRTL ? "طيّ" : "Réduire"}
                             </Button>
                             <Button asChild size="sm" className={isRTL ? "font-almarai" : ""}>
                               <Link to="/acces-aux-droits/assistant-virtuel">

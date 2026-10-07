@@ -39,7 +39,7 @@ interface NewsRow {
 const CATEGORY_AR: Record<string, string> = {
   "Campagne terrain": "حملة ميدانية",
   "Bilan de campagne": "حصيلة الحملة",
-  "Événement": "حدث",
+  "Événement": "فعالية",
 };
 
 const ActualitesAccesDroits = () => {
@@ -117,7 +117,7 @@ const ActualitesAccesDroits = () => {
           <h1 className="text-3xl sm:text-4xl font-bold mb-4">{t('actualites')}</h1>
           <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
             {isRTL
-              ? 'تابع آخر الأخبار والفعاليات المتعلقة بالوصول إلى الحقوق.'
+              ? 'تابع آخر الأخبار والفعاليات المتعلقة بالنفاذ إلى الحقوق.'
               : "Suivez les dernières nouvelles et événements liés à l'accès aux droits."}
           </p>
         </div>

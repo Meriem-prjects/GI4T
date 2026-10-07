@@ -90,7 +90,7 @@ export const DocumentTypeForm = ({ isOpen, onClose, documentType }: DocumentType
               id="name_ar"
               value={formData.name_ar}
               onChange={(e) => setFormData({ ...formData, name_ar: e.target.value })}
-              placeholder="مثال: بطاقة تحليل قانوني"
+              placeholder="مثال: جذاذة تحليل قانوني"
               dir="rtl"
             />
           </div>
@@ -112,7 +112,7 @@ export const DocumentTypeForm = ({ isOpen, onClose, documentType }: DocumentType
               id="description_ar"
               value={formData.description_ar}
               onChange={(e) => setFormData({ ...formData, description_ar: e.target.value })}
-              placeholder="وصف نوع البطاقة..."
+              placeholder="وصف نوع الجذاذة..."
               rows={3}
               dir="rtl"
             />

@@ -335,7 +335,7 @@ const TextesFondamentaux = () => {
                           className="rounded-full font-semibold px-3 py-1 text-xs"
                           style={{ backgroundColor: `${categoryColor}15`, color: categoryColor }}
                         >
-                          {count.toString().padStart(2, '0')} {isRTL ? 'وثيقة' : count <= 1 ? 'Fiche' : 'Fiches'}
+                          {count.toString().padStart(2, '0')} {isRTL ? 'جذاذة' : count <= 1 ? 'Fiche' : 'Fiches'}
                         </Badge>
                       </div>
 
@@ -360,7 +360,7 @@ const TextesFondamentaux = () => {
                           handleExploreCategory(category.name);
                         }}
                       >
-                        <span>{isRTL ? 'استشارة' : 'Consulter'}</span>
+                        <span>{isRTL ? 'اطّلع' : 'Consulter'}</span>
                         <ExternalLink className="w-4 h-4" />
                       </Button>
                     </CardContent>

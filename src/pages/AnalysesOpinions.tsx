@@ -50,7 +50,7 @@ const AnalysesOpinions = () => {
       label: isRTL ? "التحاليل القانونية" : "Analyses juridiques",
       count: getTypeCount("Analyses juridiques"),
       description: isRTL
-        ? "دراسات مفصّلة لتطوّر الفقه القضائي والأطر التنظيمية التونسية."
+        ? "دراسات مفصّلة لتطوّر فقه القضاء والأطر التنظيمية التونسية."
         : "Études détaillées sur l'évolution de la jurisprudence et des cadres réglementaires tunisiens.",
       icon: FileText,
       color: "#2563EB",
@@ -60,7 +60,7 @@ const AnalysesOpinions = () => {
     },
     {
       name: "commentaires",
-      label: isRTL ? "التعليقات" : "Commentaires",
+      label: isRTL ? "التعاليق" : "Commentaires",
       count: getTypeCount("Commentaires"),
       description: isRTL
         ? "آراء مستنيرة وتعليقات على أهم القرارات من قبل أساتذة وممارسين."
@@ -191,7 +191,7 @@ const AnalysesOpinions = () => {
                         style={{ borderColor: c.color, color: c.color }}
                       >
                         <Link to={c.link} className="inline-flex items-center gap-1.5">
-                          <span>{isRTL ? "استشارة" : "Consulter"}</span>
+                          <span>{isRTL ? "اطّلع" : "Consulter"}</span>
                           <ExternalLink className="w-4 h-4" />
                         </Link>
                       </Button>

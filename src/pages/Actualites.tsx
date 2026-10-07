@@ -26,8 +26,8 @@ const Actualites = () => {
 
   const categoryLabels: Record<string, { fr: string; ar: string }> = {
     all: { fr: 'Toutes', ar: 'الكل' },
-    jurisprudence: { fr: 'Jurisprudence', ar: 'فقه قضائي' },
-    acces_droits: { fr: 'Accès au droit', ar: 'الوصول للقانون' },
+    jurisprudence: { fr: 'Jurisprudence', ar: 'فقه القضاء' },
+    acces_droits: { fr: 'Accès au droit', ar: 'النفاذ إلى القانون' },
     odf: { fr: 'ODF', ar: 'مرصد الحقوق' },
     event: { fr: 'Événements', ar: 'فعاليات' },
     publication: { fr: 'Publications', ar: 'منشورات' }

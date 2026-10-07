@@ -201,7 +201,7 @@ export const SearchAutocomplete = ({
     category: language === 'ar' ? 'فئات' : 'Catégories',
     court: language === 'ar' ? 'المحاكم' : 'Tribunaux',
     keyword: language === 'ar' ? 'الكلمات المفاتيح' : 'Mots-clés',
-    jurisdiction: language === 'ar' ? 'الاختصاص' : 'Juridictions',
+    jurisdiction: language === 'ar' ? 'درجات التقاضي' : 'Juridictions',
   };
 
   return (

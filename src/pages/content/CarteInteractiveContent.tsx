@@ -163,9 +163,9 @@ const CarteInteractiveContent = () => {
         {stats.actions > 0 && (
           <div className="grid grid-cols-3 gap-3 mb-5" dir={isRTL ? "rtl" : "ltr"}>
             {[
-              { value: stats.actions, label: isRTL ? "إجراءات منجزة" : "actions réalisées", icon: Sparkles },
+              { value: stats.actions, label: isRTL ? "أنشطة منجزة" : "actions réalisées", icon: Sparkles },
               { value: stats.governorates, label: isRTL ? "ولايات" : "gouvernorats", icon: MapPin },
-              { value: stats.people, label: isRTL ? "شخصا تم الوصول إليهم" : "personnes touchées", icon: Users },
+              { value: stats.people, label: isRTL ? "شخصا بلغتهم الحملة" : "personnes touchées", icon: Users },
             ].map(({ value, label, icon: Icon }) => (
               <Card key={label} className="bg-emerald-50/60 border-emerald-200">
                 <CardContent className="p-3 flex items-center gap-3">
@@ -245,7 +245,7 @@ const CarteInteractiveContent = () => {
                   {isRTL ? "الخريطة التفاعلية" : "Carte interactive"}
                 </h3>
                 <span className="text-[10px] text-muted-foreground">
-                  {isRTL ? "انقر على منطقة" : "Cliquez sur une région"}
+                  {isRTL ? "انقر على ولاية" : "Cliquez sur une région"}
                 </span>
               </div>
               <div className="h-[480px] sm:h-[560px] lg:h-[640px] flex items-center justify-center">
@@ -273,7 +273,7 @@ const CarteInteractiveContent = () => {
                 <div className="flex items-center gap-1.5">
                   <div className="w-3 h-3 rounded-sm bg-emerald-200 border border-emerald-300" />
                   <span className="text-[10px] text-muted-foreground">
-                    {isRTL ? "ولاية بها إجراء منجز" : "Gouvernorat avec action"}
+                    {isRTL ? "ولاية بها نشاط منجز" : "Gouvernorat avec action"}
                   </span>
                 </div>
                 <div className="flex items-center gap-1.5">
@@ -333,7 +333,7 @@ const CarteInteractiveContent = () => {
                       {selectedEvent.people_impacted ? (
                         <span
                           className={`flex items-center gap-1 text-emerald-700 font-semibold ${isRTL ? "flex-row-reverse" : ""}`}
-                          title={isRTL ? "عدد الأشخاص الذين تم الوصول إليهم" : "Personnes touchées"}
+                          title={isRTL ? "عدد الأشخاص الذين بلغتهم الحملة" : "Personnes touchées"}
                         >
                           <Users className="h-3 w-3" />
                           {formatNumber(selectedEvent.people_impacted)}
@@ -377,7 +377,7 @@ const CarteInteractiveContent = () => {
                             <Sparkles className="h-10 w-10 mx-auto mb-2 opacity-40" />
                           )}
                           <p className="text-xs text-muted-foreground">
-                            {isRTL ? "لا توجد صور مرفقة" : "Aucun album lié"}
+                            {isRTL ? "لا يوجد ألبوم مرتبط" : "Aucun album lié"}
                           </p>
                         </div>
                       );
@@ -426,7 +426,7 @@ const CarteInteractiveContent = () => {
                     <Sparkles className="h-8 w-8 mx-auto mb-2 opacity-40" />
                     <p className="text-sm">
                       {isRTL
-                        ? "اختر حدثا من القائمة"
+                        ? "اختر فعالية من القائمة"
                         : "Sélectionnez un événement dans la liste"}
                     </p>
                   </div>
@@ -441,7 +441,7 @@ const CarteInteractiveContent = () => {
               <div className={`sticky top-0 z-10 bg-background border-b px-4 py-3 ${isRTL ? "text-right" : ""}`}>
                 <div className={`flex items-center justify-between ${isRTL ? "flex-row-reverse" : ""}`}>
                   <h3 className="font-semibold text-sm">
-                    {isRTL ? "الأحداث" : "Événements"}
+                    {isRTL ? "الفعاليات" : "Événements"}
                   </h3>
                   <Badge variant="secondary" className="text-xs">
                     {filteredEvents.length}

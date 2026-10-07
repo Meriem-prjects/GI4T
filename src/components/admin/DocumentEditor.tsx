@@ -125,7 +125,7 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
     if (!editedData.document_type_id || documentTypes.length === 0) return false;
     const docType = documentTypes.find(dt => dt.id === editedData.document_type_id);
     return docType?.name === 'Analyses juridiques' ||
-      docType?.name_ar === 'التحليلات القانونية';
+      docType?.name_ar === 'التحاليل القانونية' || docType?.name_ar === 'التحليلات القانونية';
   }, [editedData.document_type_id, documentTypes]);
 
   // Detect if document is "Commentaires"
@@ -133,7 +133,7 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
     if (!editedData.document_type_id || documentTypes.length === 0) return false;
     const docType = documentTypes.find(dt => dt.id === editedData.document_type_id);
     return docType?.name === 'Commentaires' ||
-      docType?.name_ar === 'التعليقات';
+      docType?.name_ar === 'التعاليق' || docType?.name_ar === 'التعليقات';
   }, [editedData.document_type_id, documentTypes]);
 
   // Detect if document is "Blogs"
@@ -2899,7 +2899,7 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ documentData, onSave })
                             const cleaned = handleArabicInput(e.target.value);
                             setEditedData(prev => ({ ...prev, subtitle_ar: cleaned }));
                           }}
-                          placeholder="العنوان الفرعي للوثيقة (اختيari)"
+                          placeholder="العنوان الفرعي للوثيقة (اختياري)"
                           dir="rtl"
                           className="mt-1"
                         />

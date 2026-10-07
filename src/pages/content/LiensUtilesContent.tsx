@@ -505,7 +505,7 @@ const LiensUtilesContent = () => {
           <div className="relative">
             <Search className={`absolute ${isRTL ? "right-3" : "left-3"} top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground`} />
             <Input
-              placeholder={isRTL ? "ابحث في الروابط…" : "Rechercher une institution…"}
+              placeholder={isRTL ? "ابحث عن مؤسسة…" : "Rechercher une institution…"}
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className={`h-10 ${isRTL ? "pr-10 text-right" : "pl-10"}`}
@@ -550,7 +550,7 @@ const LiensUtilesContent = () => {
         {/* Empty state */}
         {filtered.length === 0 && (
           <div className="text-center py-12 text-sm text-muted-foreground border rounded-lg">
-            {isRTL ? "لم نعثر على روابط تطابق بحثك." : "Aucune institution ne correspond à votre recherche."}
+            {isRTL ? "لم نعثر على مؤسسة تطابق بحثك." : "Aucune institution ne correspond à votre recherche."}
           </div>
         )}
 

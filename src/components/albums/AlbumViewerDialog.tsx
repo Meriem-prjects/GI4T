@@ -159,7 +159,7 @@ export function AlbumViewerDialog({
                   setLightboxIndex((i) => (i === null ? 0 : (i - 1 + total) % total));
                 }}
                 className="absolute left-4 top-1/2 -translate-y-1/2 text-white/80 hover:text-white z-10 p-3 rounded-full hover:bg-white/10"
-                aria-label={isRTL ? "التالي" : "Précédent"}
+                aria-label={isRTL ? "السابق" : "Précédent"}
               >
                 <ChevronLeft className="h-8 w-8" />
               </button>
@@ -171,7 +171,7 @@ export function AlbumViewerDialog({
                   setLightboxIndex((i) => (i === null ? 0 : (i + 1) % total));
                 }}
                 className="absolute right-4 top-1/2 -translate-y-1/2 text-white/80 hover:text-white z-10 p-3 rounded-full hover:bg-white/10"
-                aria-label={isRTL ? "السابق" : "Suivant"}
+                aria-label={isRTL ? "التالي" : "Suivant"}
               >
                 <ChevronRight className="h-8 w-8" />
               </button>

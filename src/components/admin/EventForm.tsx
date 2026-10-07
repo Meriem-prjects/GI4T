@@ -104,7 +104,7 @@ export const EventForm = ({ initialData, onSubmit, onCancel, isLoading }: EventF
                 id="title_ar"
                 value={formData.title_ar}
                 onChange={(e) => setFormData({ ...formData, title_ar: e.target.value })}
-                placeholder="عنوان الحدث"
+                placeholder="عنوان الفعالية"
                 dir="rtl"
               />
             </div>

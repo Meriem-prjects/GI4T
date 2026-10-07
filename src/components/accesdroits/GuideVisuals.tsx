@@ -169,7 +169,7 @@ export function TribunalVisual({ isRTL }: { isRTL: boolean }) {
 export function RecoursVisual({ isRTL }: { isRTL: boolean }) {
   const items = [
     { icon: XCircle, fr: "Annulation", ar: "الإلغاء", descFr: "Décision illégale", descAr: "قرار غير شرعي", color: "bg-amber-500" },
-    { icon: Coins, fr: "Indemnisation", ar: "التعويض", descFr: "Préjudice subi", descAr: "ضرر متكبد", color: "bg-orange-500" },
+    { icon: Coins, fr: "Indemnisation", ar: "التعويض", descFr: "Préjudice subi", descAr: "ضرر حاصل", color: "bg-orange-500" },
     { icon: Zap, fr: "Référé", ar: "الاستعجالي", descFr: "Urgence", descAr: "حالة الاستعجال", color: "bg-red-500" },
     { icon: HelpCircle, fr: "Interprétation", ar: "التفسير", descFr: "Décision ambiguë", descAr: "قرار غامض", color: "bg-yellow-500" },
   ];
@@ -198,11 +198,11 @@ export function RecoursVisual({ isRTL }: { isRTL: boolean }) {
  * ------------------------------------------------------------------------ */
 export function DelaisVisual({ isRTL }: { isRTL: boolean }) {
   const baseStops = [
-    { label: "60j", labelAr: "60 يوم", titleFr: "Annulation", titleAr: "الإلغاء", color: "bg-emerald-500", ring: "ring-emerald-300" },
-    { label: "2m", labelAr: "شهرين", titleFr: "Recours préalable (facultatif)", titleAr: "المطلب المسبق (اختياري)", color: "bg-teal-500", ring: "ring-teal-300" },
+    { label: "60j", labelAr: "60 يوما", titleFr: "Annulation", titleAr: "الإلغاء", color: "bg-emerald-500", ring: "ring-emerald-300" },
+    { label: "2m", labelAr: "شهران", titleFr: "Recours préalable (facultatif)", titleAr: "المطلب المسبق (اختياري)", color: "bg-teal-500", ring: "ring-teal-300" },
     { label: "15a", labelAr: "15 سنة", titleFr: "Indemnisation", titleAr: "التعويض", color: "bg-green-600", ring: "ring-green-300" },
   ];
-  // In Arabic, the timeline must read right-to-left: 60 يوم on the right,
+  // In Arabic, the timeline must read right-to-left: 60 يوما on the right,
   // 15 سنة on the left. Reversing the array (instead of relying on CSS dir)
   // keeps the gradient line and ring positions stable across languages.
   const stops = isRTL ? [...baseStops].reverse() : baseStops;
@@ -269,7 +269,7 @@ export function AvocatVisual({ isRTL }: { isRTL: boolean }) {
           {isRTL ? "إجباري" : "Obligatoire"}
         </div>
         <div className="text-[11px] opacity-90 mt-1">
-          {isRTL ? "محامي لدى المحكمة الإدارية" : "Avocat près du TA"}
+          {isRTL ? "محامٍ لدى المحكمة الإدارية" : "Avocat près du TA"}
         </div>
       </div>
     </div>
@@ -281,7 +281,7 @@ export function AvocatVisual({ isRTL }: { isRTL: boolean }) {
  * ------------------------------------------------------------------------ */
 export function AideVisual({ isRTL }: { isRTL: boolean }) {
   const items = [
-    { icon: UserCheck, fr: "Avocat", ar: "محامي" },
+    { icon: UserCheck, fr: "Avocat", ar: "محامٍ" },
     { icon: Stamp, fr: "Huissier", ar: "عدل تنفيذ" },
     { icon: FileText, fr: "Expertise", ar: "خبرة" },
     { icon: Languages, fr: "Traduction", ar: "ترجمة" },
@@ -309,7 +309,7 @@ export function AideVisual({ isRTL }: { isRTL: boolean }) {
         })}
       </div>
       <p className="text-[10px] text-purple-700 text-center mt-3 italic">
-        {isRTL ? "100% مجاني للمتمتعين بالشروط" : "100% gratuit pour les bénéficiaires"}
+        {isRTL ? "مجاني 100% لمن تتوفّر فيهم الشروط" : "100% gratuit pour les bénéficiaires"}
       </p>
     </div>
   );

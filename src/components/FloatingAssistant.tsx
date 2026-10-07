@@ -51,7 +51,7 @@ const TYPE_META: Record<
   SourceType,
   { icon: typeof FileText; labelFr: string; labelAr: string }
 > = {
-  fiche: { icon: FileText, labelFr: "Fiche observatoire", labelAr: "بطاقة المرصد" },
+  fiche: { icon: FileText, labelFr: "Fiche observatoire", labelAr: "جذاذة المرصد" },
   guide: { icon: BookOpen, labelFr: "Guide pratique", labelAr: "دليل عملي" },
   news: { icon: Newspaper, labelFr: "Actualité", labelAr: "خبر" },
   resource: { icon: Download, labelFr: "Ressource", labelAr: "مورد" },
@@ -88,7 +88,7 @@ function scoreVisual(sim: number, isRTL: boolean): { bg: string; text: string; l
   return {
     bg: "bg-amber-100",
     text: "text-amber-800",
-    label: isRTL ? "مطابقة معتدلة" : "Correspondance modérée",
+    label: isRTL ? "مطابقة متوسطة" : "Correspondance modérée",
   };
 }
 
@@ -395,7 +395,7 @@ export const FloatingAssistant = () => {
                           isRTL ? "text-right font-almarai" : ""
                         }`}
                       >
-                        {isRTL ? "بطاقات ذات صلة" : "Fiches liées"}
+                        {isRTL ? "جذاذات ذات صلة" : "Fiches liées"}
                       </p>
                       {msg.sources.map((src) => {
                         const title = isRTL && src.titleAr ? src.titleAr : src.title;
@@ -504,7 +504,7 @@ export const FloatingAssistant = () => {
               </Button>
             </div>
             <p className={`text-[10px] text-muted-foreground mt-1.5 text-center ${isRTL ? "font-almarai" : ""}`} lang={language}>
-              {isRTL ? "أجب باللغة العربية أو الفرنسية" : "Réponses en français ou en arabe"}
+              {isRTL ? "إجابات بالعربية أو بالفرنسية" : "Réponses en français ou en arabe"}
             </p>
           </div>
         </div>

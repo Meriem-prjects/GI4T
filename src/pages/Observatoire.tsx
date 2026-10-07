@@ -110,7 +110,7 @@ const Observatoire = () => {
     ? [
         { label: "حماية البيانات", query: "protection des données" },
         { label: "حرية التعبير", query: "liberté d'expression" },
-        { label: "قانون العمل", query: "droit du travail" },
+        { label: "قانون الشغل", query: "droit du travail" },
         { label: "مجلس الدولة", query: "Conseil d'État" },
       ]
     : [
@@ -238,7 +238,7 @@ const Observatoire = () => {
               }`}
             >
               <span className="text-muted-foreground">
-                {isRTL ? "شائع :" : "Populaire :"}
+                {isRTL ? "الأكثر بحثا :" : "Populaire :"}
               </span>
               {popularTags.map((tag) => (
                 <button
@@ -340,7 +340,7 @@ const Observatoire = () => {
               isRTL ? "flex-row-reverse" : ""
             }`}
           >
-            {isRTL ? "عرض كل الكاتالوج" : "Voir tout le catalogue"}
+            {isRTL ? "عرض الفهرس كاملا" : "Voir tout le catalogue"}
             <ArrowRight className={`w-4 h-4 ${isRTL ? "rotate-180" : ""}`} />
           </button>
         </div>
@@ -458,7 +458,7 @@ const Observatoire = () => {
                 }`}
               >
                 {isRTL
-                  ? "نعتقد أن الوصول إلى القانون ركيزة من ركائز الديمقراطية. منصتنا تحوّل الوثائق القانونية المعقدة إلى بيانات متاحة ومرئية لكل المواطنين."
+                  ? "نؤمن بأنّ النفاذ إلى القانون ركيزة من ركائز الديمقراطية. منصتنا تحوّل الوثائق القانونية المعقدة إلى بيانات متاحة ومرئية لكل المواطنين."
                   : "Nous croyons que l'accès au droit est un pilier de la démocratie. Notre plateforme transforme des documents juridiques complexes en données accessibles et visualisables pour tous les citoyens."}
               </p>
               <div className={`flex flex-wrap gap-3 ${isRTL ? "flex-row-reverse" : ""}`}>

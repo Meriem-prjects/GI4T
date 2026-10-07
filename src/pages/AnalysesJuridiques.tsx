@@ -268,7 +268,7 @@ const AnalysesJuridiques = () => {
                             <Icon className="w-5 h-5" style={{ color: category.color }} />
                           </div>
                           <Badge variant="secondary">
-                            {category.doc_count} {isRTL ? 'وثيقة' : 'analyses'}
+                            {category.doc_count} {isRTL ? 'تحليل' : 'analyses'}
                           </Badge>
                         </div>
                         <CardTitle className={`text-lg mb-2 ${isRTL ? 'text-right' : ''}`}>

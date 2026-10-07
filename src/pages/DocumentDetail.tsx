@@ -905,7 +905,7 @@ const DocumentDetail = () => {
                         <div className={`flex items-center gap-3 ${language === 'ar' ? 'flex-row-reverse justify-end' : 'justify-center md:justify-start'}`}>
                           <MapPin className="w-5 h-5 text-muted-foreground" />
                           {language === 'ar' ? (
-                            <span><span className="font-medium">مستوى القضاء:</span> {currentCourtLevel}</span>
+                            <span><span className="font-medium">درجة التقاضي:</span> {currentCourtLevel}</span>
                           ) : (
                             <>
                               <span className="font-medium">Niveau de juridiction:</span>
@@ -1030,7 +1030,7 @@ const DocumentDetail = () => {
                 {document.file_url && (
                   <Button className="mt-4" asChild>
                     <a href={document.file_url} target="_blank" rel="noopener noreferrer">
-                      {language === 'ar' ? 'استشارة الوثيقة كاملة' : 'Consulter le document complet'}
+                      {language === 'ar' ? 'الاطّلاع على الوثيقة كاملة' : 'Consulter le document complet'}
                     </a>
                   </Button>
                 )}
@@ -1111,7 +1111,7 @@ const DocumentDetail = () => {
                   {currentCourtLevel && (
                     <div>
                       <dt className="text-xs uppercase tracking-wide text-muted-foreground mb-1">
-                        {language === 'ar' ? 'مستوى القضاء' : 'Niveau de juridiction'}
+                        {language === 'ar' ? 'درجة التقاضي' : 'Niveau de juridiction'}
                       </dt>
                       <dd className="font-medium">{currentCourtLevel}</dd>
                     </div>

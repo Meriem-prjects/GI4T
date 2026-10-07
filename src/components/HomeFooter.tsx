@@ -17,7 +17,7 @@ const HomeFooter = () => {
               <img src="/Feelinx_upload/justclic-logo.png" alt="JustClic.tn" className="h-10 w-auto object-contain" />
             </div>
             <p className={`text-gray-300 text-sm leading-relaxed ${isRTL ? 'font-almarai' : ''}`}>
-              {isRTL ? "منصتك للمعلومات المدنية في تونس. الوصول بسهولة إلى حقوقك والخدمات الإدارية." : "Votre plateforme d'information citoyenne en Tunisie. Accédez facilement à vos droits et aux services administratifs."}
+              {isRTL ? "منصّتك المواطنية للمعلومة في تونس: تعرّف بسهولة على حقوقك وعلى الخدمات الإدارية." : "Votre plateforme d'information citoyenne en Tunisie. Accédez facilement à vos droits et aux services administratifs."}
             </p>
           </div>
 

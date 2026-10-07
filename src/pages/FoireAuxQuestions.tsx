@@ -124,7 +124,7 @@ const FoireAuxQuestions = () => {
               <Input
                 placeholder={
                   isRTL
-                    ? "اكتب كلمة أو سؤال (مثال : محامي، تعويض، حرية…)"
+                    ? "اكتب كلمة أو سؤالا (مثال : محامٍ، تعويض، حرية…)"
                     : "Tapez un mot-clé (ex : avocat, indemnisation, liberté…)"
                 }
                 className={`h-14 text-base rounded-xl shadow-sm border-border/60 ${isRTL ? "pr-12 text-right" : "pl-12"} ${font}`}
