@@ -13,3 +13,5 @@ storage/album-photos/*
 # Python (scripts/odf, scripts/dri)
 __pycache__/
 *.pyc
+# Fichiers retirés par scripts/odf/purge-legacy-odf.mjs (supprimés après 7 jours)
+storage/_quarantine/

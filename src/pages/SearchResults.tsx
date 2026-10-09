@@ -37,8 +37,12 @@ const SearchResults = () => {
   // Fetch popular keywords for tags
   const { data: popularKeywords } = useDocumentKeywords(language);
 
+  // Recherche venant d'une autre page (accueil de l'ODF…) : ?query=…&ai=true
+  const urlQuery = searchParams.get('query') || searchParams.get('q') || "";
+  const urlAI = ['true', '1'].includes(searchParams.get('ai') ?? "");
+
   // State for filters
-  const [searchQuery, setSearchQuery] = useState("");
+  const [searchQuery, setSearchQuery] = useState(urlQuery);
   const [selectedCourtType, setSelectedCourtType] = useState("all");
   const [yearFrom, setYearFrom] = useState("");
   const [yearTo, setYearTo] = useState("");
@@ -48,7 +52,7 @@ const SearchResults = () => {
   const [viewMode, setViewMode] = useState("grid");
   const [sortBy, setSortBy] = useState<"recent" | "relevance">("recent");
   const [currentPage, setCurrentPage] = useState(1);
-  const [useAI, setUseAI] = useState(false);
+  const [useAI, setUseAI] = useState(urlAI);
   const [expandedSummaries, setExpandedSummaries] = useState<Set<string>>(new Set());
   const [showStickySearch, setShowStickySearch] = useState(false);
   const [categoriesOpen, setCategoriesOpen] = useState(false);
@@ -61,6 +65,7 @@ const SearchResults = () => {
     const queryFromUrl = searchParams.get('query') || searchParams.get('q');
     if (queryFromUrl) {
       setSearchQuery(decodeURIComponent(queryFromUrl));
+      setCommittedQuery(decodeURIComponent(queryFromUrl));
     }
     const aiFromUrl = searchParams.get('ai');
     if (aiFromUrl === 'true' || aiFromUrl === '1') {
@@ -104,7 +109,9 @@ const SearchResults = () => {
   // Only auto-fire searches in classic mode. AI search (embedding request) is
   // slow and expensive — it should run on explicit submit so the user's full
   // question reaches the embedder, not a mid-typing snippet.
-  const [committedQuery, setCommittedQuery] = useState("");
+  // La requête de l'adresse est lancée tout de suite, y compris en mode IA
+  // (sinon la liste par défaut s'affichait jusqu'au clic sur « Rechercher »).
+  const [committedQuery, setCommittedQuery] = useState(urlQuery);
   useEffect(() => {
     if (!useAI) setCommittedQuery(debouncedQuery);
   }, [debouncedQuery, useAI]);
