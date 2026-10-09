@@ -405,6 +405,8 @@ type TranslationKey =
   | 'observatoireNavAnalysesDesc'
   | 'observatoireNavNews'
   | 'observatoireNavNewsDesc'
+  | 'observatoireNavPublications'
+  | 'observatoireNavPublicationsDesc'
   | 'ourSections'
   // Workflow IA Timeline
   | 'workflowGuide'
@@ -819,6 +821,8 @@ const translations: Record<'fr' | 'ar', Record<TranslationKey, string>> = {
     observatoireNavAnalysesDesc: 'Analyses juridiques',
     observatoireNavNews: 'Actualités',
     observatoireNavNewsDesc: 'Dernières nouvelles',
+    observatoireNavPublications: 'Publications',
+    observatoireNavPublicationsDesc: 'Recueils, notes, policy briefs',
     ourSections: 'Nos Rubriques',
     // Workflow IA Timeline
     workflowGuide: 'Processus de traitement IA',
@@ -1236,6 +1240,8 @@ const translations: Record<'fr' | 'ar', Record<TranslationKey, string>> = {
     observatoireNavAnalysesDesc: 'تحليلات قانونية',
     observatoireNavNews: 'أخبار',
     observatoireNavNewsDesc: 'آخر الأخبار',
+    observatoireNavPublications: 'المنشورات',
+    observatoireNavPublicationsDesc: 'المجموعات والأوراق',
     ourSections: 'أقسامنا',
     // Workflow IA Timeline
     workflowGuide: 'سير عمل المعالجة بالذكاء الاصطناعي',

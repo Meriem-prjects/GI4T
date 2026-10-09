@@ -1,0 +1,13 @@
+{
+  "_doc": "Analyses juridiques dont le nom du fichier français ne reprend pas celui du fichier arabe : clé FR (sans _FR ni « (n) ») → clé AR. Vérifié sur le titre et l'auteur de la page de garde.",
+  "analyses": {
+    "Gargouri_Droit_Proces_Equitable_TRADUCTION": "Analyse_Juridique_ODF_Droit_a_un_proces_equitable",
+    "Chaouachi_Acces_Information_TRADUCTION": "Analyse_Juridique_ODF_Droit_d_acces_a_l_information",
+    "Gargouri_Droit_Candidature_TRADUCTION": "Analyse_Juridique_ODF_Droit_de_se_porter_candidat",
+    "Chaouachi_Liberte_Opinion_Expression_TRADUCTION": "Analyse_Juridique_ODF_Liberte_d_opinion_de_pensee_et_d_expression",
+    "Chaouachi_Liberte_Circulation_TRADUCTION": "Analyse_Juridique_ODF_Liberte_de_circulation",
+    "Masmoudi_Liberte_croyance_TRADUCTION": "Analyse_Juridique_ODF_Liberte_de_croyance_Fadwa_Masmoudi rectifie",
+    "Gargouri_Liberte_Partis_Associations_TRADUCTION": "Analyse_Juridique_ODF_Liberte_de_former_partis_et_associations",
+    "Gargouri_Protection_Donnees_Personnelles_TRADUCTION": "Analyse_Juridique_ODF_Protection_des_donnees_personnelles"
+  }
+}

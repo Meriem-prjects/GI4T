@@ -12,7 +12,7 @@ import { api } from "@/api/client";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useToast } from "@/hooks/use-toast";
 import { renderChatMarkdown, isArabicText } from "@/lib/markdown-chat";
-import { createDocumentPath } from "@/lib/urlUtils";
+import { documentPath } from "@/lib/odf";
 import {
   Dialog,
   DialogContent,
@@ -150,12 +150,14 @@ export function ChatSources({ sources, primaryColor = "#3B82F6", label }: ChatSo
         (pick<string>("translated_content", "translatedContent", "content") as string | null) ?? "";
       const bodyAr =
         (pick<string>("content_ar", "contentAr") as string | null) ??
+        // Documents ODF : `content` est en arabe quand `language` vaut "ar"
+        (raw.language === "ar" ? (pick<string>("content") as string | null) : null) ??
         (isArabicText(bodyFr) ? bodyFr : "");
       const chosen = isRTL && bodyAr ? bodyAr : bodyFr || bodyAr;
       const externalHref =
         source.type === "fiche"
-          ? source.categoryName
-            ? createDocumentPath(source.categoryName, source.title)
+          ? source.id
+            ? documentPath(source.id)
             : null
           : source.href;
       setPreview({

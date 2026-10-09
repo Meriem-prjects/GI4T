@@ -9,3 +9,7 @@ storage/album-photos/*
 !storage/media/.gitkeep
 *.log
 .DS_Store
+
+# Python (scripts/odf, scripts/dri)
+__pycache__/
+*.pyc

@@ -1,11 +1,12 @@
 import { useState } from "react";
-import { Menu, Home, Scale, FileText, Newspaper, Search, ChevronDown, ChevronRight } from "lucide-react";
+import { Menu, Home, Scale, FileText, Newspaper, Search, ChevronDown, ChevronRight, Library } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useTranslation } from "@/hooks/useTranslation";
+import { ODF_HUBS, odfType } from "@/lib/odf";
 
 const ObservatoireHeader = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -28,21 +29,25 @@ const ObservatoireHeader = () => {
       id: 'droits',
       label: isRTL ? 'الحقوق الأساسية' : 'Droits Fondamentaux',
       icon: Scale,
-      link: '/observatoire/droits-fondamentaux',
+      link: ODF_HUBS.droits.path,
       children: [
-        { label: isRTL ? 'النصوص الأساسية' : 'Textes fondamentaux', link: '/observatoire/textes-fondamentaux' }
+        { label: isRTL ? 'حسب الحق الأساسي' : 'Par droit fondamental', link: ODF_HUBS.droits.path },
+        { label: odfType('fiches').label[isRTL ? 'ar' : 'fr'], link: odfType('fiches').path }
       ]
     },
     {
       id: 'analyses',
-      label: isRTL ? 'تحليلات وآراء' : 'Analyses & Opinions',
+      label: ODF_HUBS.analyses.label[isRTL ? 'ar' : 'fr'],
       icon: FileText,
-      link: '/observatoire/analyses-opinions',
-      children: [
-        { label: isRTL ? 'التحاليل القانونية' : 'Analyses juridiques', link: '/observatoire/analyses-juridiques' },
-        { label: isRTL ? 'جذاذات فقه القضاء' : 'Fiches jurisprudence', link: '/observatoire/fiches-jurisprudence' },
-        { label: isRTL ? 'التعاليق' : 'Commentaires', link: '/observatoire/commentaires' }
-      ]
+      link: ODF_HUBS.analyses.path,
+      children: ODF_HUBS.analyses.types.map((k) => ({ label: odfType(k).label[isRTL ? 'ar' : 'fr'], link: odfType(k).path }))
+    },
+    {
+      id: 'publications',
+      label: ODF_HUBS.publications.label[isRTL ? 'ar' : 'fr'],
+      icon: Library,
+      link: ODF_HUBS.publications.path,
+      children: ODF_HUBS.publications.types.map((k) => ({ label: odfType(k).label[isRTL ? 'ar' : 'fr'], link: odfType(k).path }))
     },
     {
       id: 'actualites',

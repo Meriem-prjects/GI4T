@@ -6,61 +6,49 @@ import { generateAndStoreEmbedding } from "../../services/embeddings.js";
 const schema = z.object({
   limit: z.coerce.number().int().min(1).max(500).default(50),
   onlyMissing: z.boolean().default(true),
+  // Documents précis (ex. ceux que l'import ODF vient de créer ou de modifier)
+  ids: z.array(z.string().uuid()).max(200).optional(),
 });
 
+const SELECT = {
+  id: true,
+  title: true,
+  titleAr: true,
+  subtitle: true,
+  subtitleAr: true,
+  summary: true,
+  summaryAr: true,
+  content: true,
+  translatedContent: true,
+} as const;
+
 export async function batchGenerateEmbeddings(req: Request) {
-  const { limit, onlyMissing } = schema.parse(req.body);
+  const { limit, onlyMissing, ids } = schema.parse(req.body);
 
   // Pull bilingual titles + summaries so the embedding weight-boosts the
   // title (see backend/src/services/embeddings.ts). This is essential for
   // fiches whose title is the citizen's search anchor.
-  const rows = onlyMissing
-    ? await prisma.$queryRawUnsafe<
-        Array<{
-          id: string;
-          title: string;
-          title_ar: string | null;
-          summary: string | null;
-          summary_ar: string | null;
-          content: string;
-        }>
-      >(
-        `SELECT id, title, title_ar, summary, summary_ar, content
-         FROM documents
-         WHERE embedding IS NULL
-         LIMIT $1`,
-        limit,
-      )
-    : (await prisma.document.findMany({
-        take: limit,
-        select: {
-          id: true,
-          title: true,
-          titleAr: true,
-          summary: true,
-          summaryAr: true,
-          content: true,
-        },
-      })).map((d) => ({
-        id: d.id,
-        title: d.title,
-        title_ar: d.titleAr,
-        summary: d.summary,
-        summary_ar: d.summaryAr,
-        content: d.content,
-      }));
+  let rows;
+  if (ids?.length) {
+    rows = await prisma.document.findMany({ where: { id: { in: ids } }, select: SELECT });
+  } else if (onlyMissing) {
+    const missing = await prisma.$queryRawUnsafe<Array<{ id: string }>>(
+      `SELECT id FROM documents WHERE embedding IS NULL LIMIT $1`,
+      limit,
+    );
+    rows = await prisma.document.findMany({
+      where: { id: { in: missing.map((m) => m.id) } },
+      select: SELECT,
+    });
+  } else {
+    rows = await prisma.document.findMany({ take: limit, select: SELECT });
+  }
 
   let processed = 0;
   let failed = 0;
   for (const doc of rows) {
     try {
-      await generateAndStoreEmbedding(doc.id, {
-        title: doc.title,
-        titleAr: doc.title_ar,
-        summary: doc.summary,
-        summaryAr: doc.summary_ar,
-        content: doc.content,
-      });
+      await generateAndStoreEmbedding(doc.id, doc);
       processed++;
     } catch (err) {
       console.error("Embedding failed for", doc.id, err);

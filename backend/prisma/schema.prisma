@@ -253,6 +253,13 @@ model Document {
   dates                String[]  @default([])
   documentType         String?   @map("document_type")
   textualMetadata      String?   @map("textual_metadata")
+  // Lecteur page par page (documents ODF « avec page de garde ») : par langue,
+  // dossier des images de pages dans le stockage, nombre de pages et PDF.
+  // Voir scripts/odf/publish-odf-books.ts et src/lib/odf.ts.
+  book                 Json?
+  // Clé stable de l'import ODF (ex. "fiches/2009/fiche200-misenforme")
+  importKey            String?   @unique @map("import_key")
+  sortOrder            Int?      @map("sort_order")
   // Structural fields (introduction, conclusion, sections JSONB,
   // bibliography, legal_problem, proposed_solution, ruling,
   // observations) were merged into `content` / `translated_content`
@@ -274,6 +281,7 @@ model Document {
   @@index([published])
   @@index([categoryId])
   @@index([documentTypeId])
+  @@index([year])
   @@map("documents")
 }
 

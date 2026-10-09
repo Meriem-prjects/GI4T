@@ -1,0 +1,8 @@
+{
+  "_doc": "Corrections au cas par cas. « prefer » : quand plusieurs fichiers donnent le même document, celui à garder (chemin relatif au dossier source). « meta » : valeurs imposées par clé d'import.",
+  "prefer": [
+    "Fiches\\Arabe\\2010\\Fiche175_AR_MisEnForme (1).docx",
+    "Fiches\\Arabe\\2010\\Fiche184_AR_MisEnForme (1).docx"
+  ],
+  "meta": {}
+}

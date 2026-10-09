@@ -22,6 +22,7 @@ import {
   X
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
+import { api } from '@/api/client';
 import { useToast } from '@/hooks/use-toast';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
@@ -72,7 +73,8 @@ interface Category {
 
 interface AdminContentByTypeProps {
   documentTypeName: string;
-  documentTypeId: string;
+  // À défaut, le type est retrouvé par son nom (documentTypeName)
+  documentTypeId?: string;
   title: string;
   description: string;
 }
@@ -84,6 +86,7 @@ const AdminContentByType: React.FC<AdminContentByTypeProps> = ({
   description 
 }) => {
   const [documents, setDocuments] = useState<Document[]>([]);
+  const [resolvedTypeId, setResolvedTypeId] = useState<string | undefined>(documentTypeId);
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
@@ -98,26 +101,28 @@ const AdminContentByType: React.FC<AdminContentByTypeProps> = ({
   useEffect(() => {
     loadDocuments();
     loadCategories();
-  }, [documentTypeId]);
+  }, [documentTypeId, documentTypeName]);
 
   const loadDocuments = async () => {
     try {
-      const { data, error } = await supabase
-        .from('documents')
-        .select(`
-          *,
-          document_categories (
-            category_id,
-            categories (id, name, name_ar, color)
-          ),
-          categories (name, color),
-          document_types (name)
-        `)
-        .eq('document_type_id', documentTypeId)
-        .order('created_at', { ascending: false });
-
-      if (error) throw error;
-      setDocuments(data || []);
+      let typeId = documentTypeId;
+      if (!typeId) {
+        const types = await api.get<{ items: Array<{ id: string; name: string }> }>('/api/document-types', {
+          query: { limit: 100 },
+        });
+        typeId = types.items.find((t) => t.name.trim() === documentTypeName)?.id;
+        if (!typeId) {
+          setDocuments([]);
+          return;
+        }
+      }
+      setResolvedTypeId(typeId);
+      // Tous les documents du type (la liste par défaut de l'API s'arrête à 50),
+      // sans le texte intégral.
+      const res = await api.get<{ items: Document[] }>('/api/documents', {
+        query: { fields: 'card', document_type_id: typeId, limit: 1000, order_by: 'created_at', order: 'desc' },
+      });
+      setDocuments(res.items || []);
     } catch (error) {
       console.error('Error loading documents:', error);
       toast({
@@ -268,12 +273,11 @@ const AdminContentByType: React.FC<AdminContentByTypeProps> = ({
 
   const bulkDeleteDocuments = async () => {
     try {
-      const { error } = await supabase
-        .from('documents')
-        .delete()
-        .in('id', selectedDocuments);
-
-      if (error) throw error;
+      // Un document à la fois : la suppression groupée par `.in('id', …)` n'est
+      // pas comprise par l'API et supprimait d'autres documents.
+      for (const id of selectedDocuments) {
+        await api.delete(`/api/documents/${id}`);
+      }
 
       setDocuments(prev => prev.filter(doc => !selectedDocuments.includes(doc.id)));
       setSelectedDocuments([]);
@@ -293,12 +297,9 @@ const AdminContentByType: React.FC<AdminContentByTypeProps> = ({
 
   const bulkSubmitForValidation = async () => {
     try {
-      const { error } = await supabase
-        .from('documents')
-        .update({ status: 'pending_validation' })
-        .in('id', selectedDocuments);
-
-      if (error) throw error;
+      for (const id of selectedDocuments) {
+        await api.patch(`/api/documents/${id}`, { status: 'pending_validation' });
+      }
 
       // Log activity for each document
       for (const docId of selectedDocuments) {
@@ -399,7 +400,7 @@ const AdminContentByType: React.FC<AdminContentByTypeProps> = ({
           <h1 className="text-2xl font-bold text-foreground">{title}</h1>
           <p className="text-muted-foreground">{description}</p>
         </div>
-        <Link to={`/admin/observatoire/editeur?type=${documentTypeId}`}>
+        <Link to={`/admin/observatoire/editeur?type=${resolvedTypeId ?? ""}`}>
           <Button>
             <FileText className="w-4 h-4 mr-2" />
             Ajouter {documentTypeName}

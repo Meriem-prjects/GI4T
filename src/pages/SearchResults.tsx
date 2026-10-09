@@ -20,7 +20,7 @@ import { useDocumentSearch } from "@/hooks/useDocumentSearch";
 import { useSearchFilters } from "@/hooks/useSearchFilters";
 import { useDocumentKeywords } from "@/hooks/useDocumentKeywords";
 import { useDebouncedValue } from "@/hooks/useDebouncedValue";
-import { createDocumentPath } from "@/lib/urlUtils";
+import { documentPath } from "@/lib/odf";
 import { format } from "date-fns";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useTranslation } from "@/hooks/useTranslation";
@@ -860,9 +860,9 @@ const SearchResults = () => {
                           )}
 
                           {/* Title */}
-                          {result.primaryCategory ? (
+                          {result.id ? (
                             <Link
-                              to={createDocumentPath(result.primaryCategory.name, result.title)}
+                              to={documentPath(result.id)}
                               target="_blank"
                               rel="noopener noreferrer"
                               className="block"
@@ -933,9 +933,9 @@ const SearchResults = () => {
                             </div>
 
                             <div className={`flex ${isRTL ? 'justify-start' : 'justify-end'}`}>
-                              {result.primaryCategory ? (
+                              {result.id ? (
                                 <Link
-                                  to={createDocumentPath(result.primaryCategory.name, result.title)}
+                                  to={documentPath(result.id)}
                                   target="_blank"
                                   rel="noopener noreferrer"
                                 >

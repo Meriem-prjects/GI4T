@@ -9,9 +9,18 @@ function toVectorLiteral(embedding: number[]): string {
 export interface EmbeddingSource {
   title?: string | null;
   titleAr?: string | null;
+  subtitle?: string | null;
+  subtitleAr?: string | null;
   summary?: string | null;
   summaryAr?: string | null;
   content?: string | null;
+  translatedContent?: string | null;
+}
+
+const EMBEDDING_CHARS = 4000;
+
+function stripHtml(s: string): string {
+  return s.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim();
 }
 
 // Build the string passed to the embedding model. Titles are repeated
@@ -25,6 +34,22 @@ export function buildEmbeddingText(doc: EmbeddingSource): string {
   const s = (doc.summary ?? "").trim();
   const sAr = (doc.summaryAr ?? "").trim();
   const c = (doc.content ?? "").trim();
+  const tc = (doc.translatedContent ?? "").trim();
+  if (tc) {
+    // Documents bilingues (ODF « avec page de garde ») : beaucoup de fiches
+    // ont le même titre (« Le droit à la défense — Jurisprudence
+    // administrative 2009 »), on garde donc de la place pour la référence
+    // de la décision, le résumé et le texte dans les deux langues.
+    const head = [t, t, tAr, tAr, doc.subtitle, doc.subtitleAr, s, sAr]
+      .map((x) => (x ?? "").trim())
+      .filter(Boolean)
+      .join("\n\n");
+    const room = Math.max(0, EMBEDDING_CHARS - head.length - 4);
+    const half = Math.floor(room / 2);
+    return [head, stripHtml(c).slice(0, half), stripHtml(tc).slice(0, room - half)]
+      .filter(Boolean)
+      .join("\n\n");
+  }
   const parts: string[] = [];
   // Boost titles: 3× each language.
   if (t) parts.push(t, t, t);
@@ -47,7 +72,7 @@ export async function generateAndStoreEmbedding(
   // text-embedding-3-small has a hard limit of 8192 tokens. We keep
   // a conservative 4 000 character slice (≈ 1 000–4 000 tokens
   // depending on the language) to never hit the limit.
-  const embedding = await generateEmbedding(text.slice(0, 4000));
+  const embedding = await generateEmbedding(text.slice(0, EMBEDDING_CHARS));
   const vectorLiteral = toVectorLiteral(embedding);
   // Inline the vector literal — Prisma's $executeRawUnsafe sometimes
   // fails to cast large numeric strings to ::vector when passed as

@@ -1,299 +1,122 @@
+import { useEffect } from "react";
 import { Link, useParams } from "react-router-dom";
+import { useQuery } from "@tanstack/react-query";
+import { BookOpen, GraduationCap, Heart, Scale, ShieldCheck, Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Breadcrumb, BreadcrumbList, BreadcrumbItem, BreadcrumbLink, BreadcrumbPage, BreadcrumbSeparator } from "@/components/ui/breadcrumb";
-import { FileText, Download, ExternalLink, Heart, ShieldCheck, GraduationCap, BookOpen, Scale, Users } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
-import { useEffect, useState } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
-import { createCategorySlug, createDocumentSlug } from "@/lib/urlUtils";
+import OdfBreadcrumb from "@/components/observatoire/OdfBreadcrumb";
+import OdfDocumentList from "@/components/observatoire/OdfDocumentList";
+import { api } from "@/api/client";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { useOdfFacets } from "@/hooks/useOdf";
+import { createCategorySlug } from "@/lib/urlUtils";
+import { ODF_HUBS, ODF_TYPES, docCount, pick, type Lang } from "@/lib/odf";
 
 interface Category {
   id: string;
   name: string;
-  name_ar: string;
-  description: string;
-  description_ar: string;
-  color: string;
+  name_ar?: string | null;
+  description?: string | null;
+  description_ar?: string | null;
+  color?: string | null;
 }
 
-interface Document {
-  id: string;
-  title: string;
-  title_ar: string;
-  summary: string;
-  summary_ar: string;
-  created_at: string;
-  status: string;
-  file_url: string;
-  pdf_url: string;
-  page_count: number;
-  keywords: string[];
-  document_type: string;
-  year: number;
-  court_category: string;
-  court_level: string;
+const ALL_TYPES = ODF_TYPES.map((t) => t.key);
+
+function iconFor(name: string) {
+  const n = name.toLowerCase();
+  if (n.includes("santé")) return Heart;
+  if (n.includes("justice") || n.includes("défense") || n.includes("procès")) return Scale;
+  if (n.includes("enseignement") || n.includes("éducation")) return GraduationCap;
+  if (n.includes("protection") || n.includes("sécurité")) return ShieldCheck;
+  if (n.includes("syndical") || n.includes("associations") || n.includes("partis")) return Users;
+  return BookOpen;
 }
 
+// Page d'un droit fondamental : tous les documents de l'ODF qui s'y rattachent
+// (fiches, analyses, blogs…), avec filtres et pagination.
 const CategorieDetail = () => {
   const { categorySlug } = useParams<{ categorySlug: string }>();
-  const { isRTL } = useLanguage();
-  const [category, setCategory] = useState<Category | null>(null);
-  const [documents, setDocuments] = useState<Document[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [documentsCount, setDocumentsCount] = useState(0);
+  const { language } = useLanguage();
+  const lang = (language === "ar" ? "ar" : "fr") as Lang;
+
+  const { data: category, isLoading } = useQuery({
+    queryKey: ["category-by-slug", categorySlug],
+    enabled: !!categorySlug,
+    queryFn: async () => {
+      const res = await api.get<{ items: Category[] }>("/api/categories", { query: { limit: 500 } });
+      return (
+        res.items.find(
+          (c) =>
+            createCategorySlug(c.name) === categorySlug ||
+            createCategorySlug(c.name_ar ?? "") === categorySlug ||
+            c.id === categorySlug,
+        ) ?? null
+      );
+    },
+  });
+  const facets = useOdfFacets({ types: ALL_TYPES, categoryId: category?.id }, !!category);
+  const name = category ? pick(lang, category.name, category.name_ar) : "";
 
   useEffect(() => {
-    const fetchCategoryAndDocuments = async () => {
-      if (!categorySlug) return;
-      
-      try {
-        // Create slug from category name for comparison
-        const { data: allCategories, error: categoriesError } = await supabase
-          .from('categories')
-          .select('*');
-        
-        if (categoriesError) throw categoriesError;
-        
-        // Find category by matching slug (name or name_ar), or by id as fallback
-        const categoryData = allCategories?.find(cat => {
-          const slugName = createCategorySlug(cat.name || '');
-          const slugNameAr = createCategorySlug(cat.name_ar || '');
-          return slugName === categorySlug || slugNameAr === categorySlug || cat.id === categorySlug;
-        });
-        
-        if (!categoryData) {
-          throw new Error('Category not found');
-        }
-        
-        setCategory(categoryData);
+    if (name) document.title = `${name} | ODF`;
+  }, [name]);
 
-        // Fetch documents for this category using document_categories junction table
-        const { data: documentsData, error: documentsError } = await supabase
-          .from('documents')
-          .select(`
-            *,
-            document_categories!inner(category_id)
-          `)
-          .eq('document_categories.category_id', categoryData.id)
-          .in('status', ['published', 'processed'])
-          .order('created_at', { ascending: false });
-        
-        if (documentsError) throw documentsError;
-        setDocuments(documentsData || []);
-        setDocumentsCount(documentsData?.length || 0);
-        
-      } catch (error) {
-        console.error('Error fetching data:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchCategoryAndDocuments();
-  }, [categorySlug]);
-
-
-  const getIconForCategory = (categoryName: string) => {
-    const name = categoryName.toLowerCase();
-    if (name.includes('santé') || name.includes('health')) return Heart;
-    if (name.includes('justice') || name.includes('legal')) return Scale;
-    if (name.includes('enseignement') || name.includes('éducation') || name.includes('education')) return GraduationCap;
-    if (name.includes('protection') || name.includes('sécurité')) return ShieldCheck;
-    if (name.includes('civils') || name.includes('politiques')) return Users;
-    return BookOpen;
-  };
-
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('fr-FR', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric'
-    });
-  };
-
-  if (loading) {
+  if (isLoading) {
     return (
       <div className="container mx-auto px-4 py-6">
-        <Skeleton className="h-6 w-96 mb-6" />
-        <Skeleton className="h-32 w-full mb-8" />
-        <div className="grid gap-6">
-          {[1, 2, 3].map((i) => (
-            <Skeleton key={i} className="h-40 w-full" />
-          ))}
-        </div>
+        <Skeleton className="h-5 w-80 mb-6" />
+        <Skeleton className="h-24 w-full mb-8" />
+        <Skeleton className="h-64 w-full" />
       </div>
     );
   }
 
   if (!category) {
     return (
-      <div className="container mx-auto px-4 py-6">
-        <div className="text-center py-12">
-          <h1 className="text-2xl font-bold mb-4">Catégorie introuvable</h1>
-          <p className="text-muted-foreground mb-6">
-            La catégorie que vous recherchez n'existe pas ou a été supprimée.
-          </p>
-          <Link to="/observatoire/droits-fondamentaux">
-            <Button>Retour aux droits fondamentaux</Button>
-          </Link>
-        </div>
+      <div className="container mx-auto px-4 py-16 text-center" dir={lang === "ar" ? "rtl" : "ltr"}>
+        <h1 className="text-2xl font-bold mb-4">{lang === "ar" ? "الحق غير موجود" : "Droit introuvable"}</h1>
+        <Button asChild>
+          <Link to={ODF_HUBS.droits.path}>{lang === "ar" ? "العودة إلى الحقوق الأساسية" : "Retour aux droits fondamentaux"}</Link>
+        </Button>
       </div>
     );
   }
 
-  const Icon = getIconForCategory(category.name);
+  const Icon = iconFor(category.name);
+  const color = category.color || "#4F46E5";
+  const total = facets.data?.total;
 
   return (
-    <div className="container mx-auto px-4 py-6">
-      {/* Breadcrumb */}
-      <div className="mb-6 w-full flex justify-start">
-        <Breadcrumb>
-          <BreadcrumbList className={isRTL ? 'flex-row-reverse' : ''}>
-          <BreadcrumbItem>
-            <BreadcrumbLink asChild>
-              <Link to="/">Accueil</Link>
-            </BreadcrumbLink>
-          </BreadcrumbItem>
-          <BreadcrumbSeparator />
-          <BreadcrumbItem>
-            <BreadcrumbLink asChild>
-              <Link to="/observatoire">Observatoire</Link>
-            </BreadcrumbLink>
-          </BreadcrumbItem>
-          <BreadcrumbSeparator />
-          <BreadcrumbItem>
-            <BreadcrumbLink asChild>
-              <Link to="/observatoire/droits-fondamentaux">Droits fondamentaux</Link>
-            </BreadcrumbLink>
-          </BreadcrumbItem>
-          <BreadcrumbSeparator />
-          <BreadcrumbItem>
-            <BreadcrumbPage>{category.name}</BreadcrumbPage>
-          </BreadcrumbItem>
-          </BreadcrumbList>
-        </Breadcrumb>
+    <div className={lang === "ar" ? "font-almarai" : ""} dir={lang === "ar" ? "rtl" : "ltr"}>
+      <div className="container mx-auto px-4 py-6">
+        <OdfBreadcrumb lang={lang} items={[{ label: ODF_HUBS.droits.label[lang], to: ODF_HUBS.droits.path }, { label: name }]} />
+        <header className="mb-8 flex items-start gap-4">
+          <span className="flex h-14 w-14 flex-shrink-0 items-center justify-center rounded-2xl text-white shadow" style={{ backgroundColor: color }}>
+            <Icon className="h-7 w-7" />
+          </span>
+          <div>
+            <h1 className="text-2xl md:text-3xl font-bold">{name}</h1>
+            {pick(lang, category.description, category.description_ar) && (
+              <p className="mt-1 max-w-3xl text-muted-foreground">{pick(lang, category.description, category.description_ar)}</p>
+            )}
+            {total !== undefined && (
+              <p className="mt-2 text-sm font-medium" style={{ color }}>
+                {lang === "ar" ? `${docCount(total, "ar")} في المرصد` : `${docCount(total, "fr")} dans l'Observatoire`}
+              </p>
+            )}
+          </div>
+        </header>
+        <OdfDocumentList
+          types={ALL_TYPES}
+          lang={lang}
+          layout="list"
+          sorts={["year_desc", "recent", "title"]}
+          filters={{ type: true, year: true }}
+          fixedCategoryId={category.id}
+          showType
+        />
       </div>
-
-      {/* Category Header - Style boutique */}
-      <section className="mb-12">
-        <div 
-          className="bg-gradient-to-r from-primary/10 to-primary/5 rounded-lg p-8 mb-8 relative overflow-hidden"
-          style={{
-            backgroundImage: 'url(/src/assets/justice-background.webp)',
-            backgroundSize: 'cover',
-            backgroundPosition: 'center',
-            backgroundRepeat: 'no-repeat'
-          }}
-        >
-          <div className="absolute inset-0 backdrop-blur-sm bg-background/60 rounded-lg"></div>
-          <div className="relative z-10">
-          <div className="flex items-center gap-4 mb-4">
-            <div 
-              className="w-12 h-12 rounded-full flex items-center justify-center"
-              style={{ backgroundColor: category.color + '20' }}
-            >
-              <Icon className="w-6 h-6" style={{ color: category.color }} />
-            </div>
-          </div>
-          
-          <h1 className="text-3xl md:text-4xl font-bold mb-4">{category.name}</h1>
-          <p className="text-lg text-muted-foreground mb-6 max-w-3xl">
-            {category.description}
-          </p>
-          
-          <div className="flex items-center gap-4">
-            <Badge variant="secondary" className="px-4 py-2">
-              {documentsCount} document{documentsCount > 1 ? 's' : ''} disponible{documentsCount > 1 ? 's' : ''}
-            </Badge>
-            <Badge variant="outline" className="px-4 py-2">
-              Droit fondamental
-            </Badge>
-          </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Documents Section */}
-      <section>
-        <h2 className="text-2xl font-bold mb-6">Documents disponibles</h2>
-        
-        {documents.length === 0 ? (
-          <div className="text-center py-12">
-            <FileText className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
-            <h3 className="text-xl font-semibold mb-2">Aucun document disponible</h3>
-            <p className="text-muted-foreground">
-              Il n'y a actuellement aucun document publié dans cette catégorie.
-            </p>
-          </div>
-        ) : (
-          <div className="grid gap-6">
-            {documents.map((document) => (
-              <Card key={document.id} className="hover:shadow-lg transition-all duration-300">
-                <CardHeader>
-                  <div className="flex items-start justify-between">
-                    <div className="flex-1">
-                       <div className="flex items-center gap-3 mb-2">
-                        <FileText className="w-5 h-5 text-primary" />
-                        {category?.name && (
-                          <Badge variant="secondary" className="bg-blue-100 text-blue-800">
-                            {category.name}
-                          </Badge>
-                        )}
-                        {document.court_category && (
-                          <Badge variant="outline">{document.court_category}</Badge>
-                        )}
-                        {document.court_level && (
-                          <Badge variant="outline">{document.court_level}</Badge>
-                        )}
-                      </div>
-                      <CardTitle className="text-xl mb-2">{document.title}</CardTitle>
-                      {document.summary && (
-                        <CardDescription className="text-base mb-3">
-                          {document.summary}
-                        </CardDescription>
-                      )}
-                      <div className="flex items-center gap-4 text-sm text-muted-foreground mb-3">
-                        <span>Publié le {formatDate(document.created_at)}</span>
-                        {document.page_count && (
-                          <span>• {document.page_count} page{document.page_count > 1 ? 's' : ''}</span>
-                        )}
-                      </div>
-                      {document.keywords && document.keywords.length > 0 && (
-                        <div className="flex flex-wrap gap-2">
-                          {document.keywords.slice(0, 5).map((keyword) => (
-                            <Badge key={keyword} variant="outline" className="text-xs">
-                              {keyword}
-                            </Badge>
-                          ))}
-                        </div>
-                      )}
-                    </div>
-                    <div className="flex flex-col gap-2 ml-4">
-                      <Button size="sm" asChild>
-                        <Link to={`/observatoire/droits-fondamentaux/${createCategorySlug(category?.name || '')}/${createDocumentSlug(document.title)}`}>
-                          <ExternalLink className="w-4 h-4 mr-2" />
-                          Consulter
-                        </Link>
-                      </Button>
-                      {document.pdf_url && (
-                        <Button variant="outline" size="sm" asChild>
-                          <a href={document.pdf_url} download>
-                            <Download className="w-4 h-4 mr-2" />
-                            Télécharger
-                          </a>
-                        </Button>
-                      )}
-                    </div>
-                  </div>
-                </CardHeader>
-              </Card>
-            ))}
-          </div>
-        )}
-      </section>
     </div>
   );
 };

@@ -1,9 +1,19 @@
 import { Button } from "@/components/ui/button";
-import { Home, Search, BookOpen, FileText, Newspaper } from "lucide-react";
+import { Home, Search, BookOpen, FileText, Newspaper, Library } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useTranslation } from "@/hooks/useTranslation";
+import { ODF_HUBS, ODF_TYPES } from "@/lib/odf";
+
+// Onglet actif : la rubrique de la page courante (ex. « Analyses & Opinions »
+// sur /observatoire/blogs ou sur un blog ouvert depuis cette rubrique).
+function isActivePath(pathname: string, path: string): boolean {
+  if (path === "/observatoire") return pathname === path;
+  if (pathname === path || pathname.startsWith(path + "/")) return true;
+  const type = ODF_TYPES.find((t) => pathname === t.path || pathname.startsWith(t.path + "/"));
+  return !!type && ODF_HUBS[type.hub].path === path;
+}
 
 const ObservatoireNav = () => {
   const location = useLocation();
@@ -36,6 +46,12 @@ const ObservatoireNav = () => {
       description: t('observatoireNavAnalysesDesc')
     },
     {
+      path: "/observatoire/publications",
+      label: t('observatoireNavPublications'),
+      icon: Library,
+      description: t('observatoireNavPublicationsDesc')
+    },
+    {
       path: "/observatoire/actualites",
       label: t('observatoireNavNews'),
       icon: Newspaper,
@@ -52,7 +68,7 @@ const ObservatoireNav = () => {
         )}>
           {navItems.map((item) => {
             const Icon = item.icon;
-            const isActive = location.pathname === item.path;
+            const isActive = isActivePath(location.pathname, item.path);
             
             return (
               <Link key={item.path} to={item.path} className="flex-shrink-0">

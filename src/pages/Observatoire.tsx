@@ -3,6 +3,7 @@ import {
   Scale,
   FileText,
   Megaphone,
+  Library,
   ArrowRight,
   Search,
 } from "lucide-react";
@@ -24,6 +25,8 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useTranslation } from "@/hooks/useTranslation";
+import { useOdfFacets, useOdfTypeCounts } from "@/hooks/useOdf";
+import { ODF_HUBS, ODF_TYPES, type OdfTypeKey } from "@/lib/odf";
 
 const Observatoire = () => {
   const navigate = useNavigate();
@@ -37,62 +40,28 @@ const Observatoire = () => {
   const { data: courtTypes } = useCourtTypes();
   const { data: documentTypes } = useDocumentTypes();
 
-  // Years list
-  const { data: years } = useQuery({
-    queryKey: ["document-years"],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("documents")
-        .select("year")
-        .not("year", "is", null)
-        .order("year", { ascending: false });
-      if (error) throw error;
-      return [...new Set(data.map((d) => d.year))].filter(Boolean) as number[];
-    },
-  });
+  // Années et nombres de documents par rubrique (compteurs du serveur)
+  const facets = useOdfFacets({ types: ODF_TYPES.map((t) => t.key) });
+  const years = facets.data?.years.map((y) => y.year);
+  const { counts: typeCounts } = useOdfTypeCounts();
+  const sum = (keys: OdfTypeKey[]) => keys.reduce((n, k) => n + (typeCounts[k] ?? 0), 0);
 
-  // Real counts per rubrique
-  const { data: counts } = useQuery({
-    queryKey: ["observatoire-rubriques-counts"],
+  const { data: newsCount } = useQuery({
+    queryKey: ["observatoire-news-count"],
     queryFn: async () => {
-      const [juris, analyses, news] = await Promise.all([
-        supabase
-          .from("document_types")
-          .select("id")
-          .eq("name", "Fiche de jurisprudence")
-          .maybeSingle()
-          .then(async ({ data }) => {
-            if (!data) return 0;
-            const { count } = await supabase
-              .from("documents")
-              .select("id", { count: "exact", head: true })
-              .eq("document_type_id", data.id)
-              .eq("published", true);
-            return count ?? 0;
-          }),
-        supabase
-          .from("document_types")
-          .select("id")
-          .in("name", ["Analyses juridiques", "Commentaires", "Blogs"])
-          .then(async ({ data }) => {
-            if (!data || data.length === 0) return 0;
-            const ids = data.map((t) => t.id);
-            const { count } = await supabase
-              .from("documents")
-              .select("id", { count: "exact", head: true })
-              .in("document_type_id", ids)
-              .eq("published", true);
-            return count ?? 0;
-          }),
-        supabase
-          .from("news")
-          .select("id", { count: "exact", head: true })
-          .eq("is_published", true)
-          .then(({ count }) => count ?? 0),
-      ]);
-      return { juris, analyses, news };
+      const { count } = await supabase
+        .from("news")
+        .select("id", { count: "exact", head: true })
+        .eq("is_published", true);
+      return count ?? 0;
     },
   });
+  const counts = {
+    juris: sum(ODF_HUBS.droits.types),
+    analyses: sum(ODF_HUBS.analyses.types),
+    publications: sum(ODF_HUBS.publications.types),
+    news: newsCount ?? 0,
+  };
 
   const handleSearch = (e?: React.FormEvent) => {
     e?.preventDefault();
@@ -131,7 +100,7 @@ const Observatoire = () => {
       color: "#4F46E5",
       bgTint: "bg-indigo-50",
       cardBg: "bg-indigo-50/60",
-      count: counts?.juris ?? 0,
+      count: counts.juris,
       cta: isRTL ? "تصفح الملفات" : "Accéder aux dossiers",
       link: "/observatoire/droits-fondamentaux",
     },
@@ -145,9 +114,23 @@ const Observatoire = () => {
       color: "#DC2626",
       bgTint: "bg-red-50",
       cardBg: "bg-red-50/60",
-      count: counts?.analyses ?? 0,
+      count: counts.analyses,
       cta: isRTL ? "قراءة التحاليل" : "Lire les analyses",
       link: "/observatoire/analyses-opinions",
+    },
+    {
+      key: "publications",
+      title: isRTL ? "المنشورات" : "Publications",
+      description: isRTL
+        ? "المجموعات السنوية لفقه القضاء والأوراق الموضوعية وأوراق السياسات وتقديم الهيئات القضائية."
+        : "Recueils annuels de jurisprudence, notes thématiques, policy briefs et présentations des juridictions.",
+      icon: Library,
+      color: "#0F766E",
+      bgTint: "bg-teal-50",
+      cardBg: "bg-teal-50/60",
+      count: counts.publications,
+      cta: isRTL ? "تصفّح المنشورات" : "Voir les publications",
+      link: "/observatoire/publications",
     },
     {
       key: "news",
@@ -159,7 +142,7 @@ const Observatoire = () => {
       color: "#F59E0B",
       bgTint: "bg-amber-50",
       cardBg: "bg-amber-50/60",
-      count: counts?.news ?? 0,
+      count: counts.news,
       isNew: true,
       cta: isRTL ? "عرض الأخبار" : "Voir l'actualité",
       link: "/observatoire/actualites",
@@ -345,7 +328,7 @@ const Observatoire = () => {
           </button>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-5">
           {rubriques.map((r) => {
             const Icon = r.icon;
             return (

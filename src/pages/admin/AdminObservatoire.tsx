@@ -14,6 +14,7 @@ import AdminBlogs from "./AdminBlogs";
 import AdminCommentairesContent from "./AdminCommentairesContent";
 import AdminAnalysesJuridiques from "./AdminAnalysesJuridiques";
 import AdminFichesJurisprudence from "./AdminFichesJurisprudence";
+import AdminOdfType from './AdminOdfType';
 import AdminActualites from "./AdminActualites";
 import AdminActualitesEditor from "./AdminActualitesEditor";
 import AdminHistorique from "./AdminHistorique";
@@ -66,6 +67,11 @@ const AdminObservatoire = () => {
             <Route path="commentaires-content" element={<AdminCommentairesContent />} />
             <Route path="analyses-juridiques" element={<AdminAnalysesJuridiques />} />
             <Route path="fiches-jurisprudence" element={<AdminFichesJurisprudence />} />
+            <Route path="articles" element={<AdminOdfType typeKey="articles" />} />
+            <Route path="recueils" element={<AdminOdfType typeKey="recueils" />} />
+            <Route path="notes-thematiques" element={<AdminOdfType typeKey="notes" />} />
+            <Route path="policy-briefs" element={<AdminOdfType typeKey="policy" />} />
+            <Route path="presentations" element={<AdminOdfType typeKey="presentations" />} />
             {/* Actualités — scoped to observatoire so the list & editor stay isolated. */}
             <Route path="actualites" element={<AdminActualites section="observatoire" />} />
             <Route path="actualites/new" element={<AdminActualitesEditor section="observatoire" />} />

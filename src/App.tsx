@@ -17,12 +17,8 @@ import SearchResults from "./pages/SearchResults";
 
 import NotFound from "./pages/NotFound";
 import TextesFondamentaux from "./pages/TextesFondamentaux";
-import AnalysesOpinions from "./pages/AnalysesOpinions";
-import AnalysesJuridiques from "./pages/AnalysesJuridiques";
-import AnalysesJuridiquesByCategory from "./pages/AnalysesJuridiquesByCategory";
-import Commentaires from "./pages/Commentaires";
-import Blogs from "./pages/Blogs";
-import FichesJurisprudence from "./pages/FichesJurisprudence";
+import OdfTypeListPage from "./pages/OdfTypeListPage";
+import OdfHub from "./components/observatoire/OdfHub";
 import Actualites from "./pages/Actualites";
 import ActualiteDetail from "./pages/ActualiteDetail";
 import AccesAuxDroits from "./pages/AccesAuxDroits";
@@ -81,14 +77,20 @@ const App: React.FC = () => (
             <Route path="/observatoire/droits-fondamentaux" element={<TextesFondamentaux />} />
             <Route path="/observatoire/droits-fondamentaux/:categorySlug" element={<CategorieDetail />} />
             <Route path="/observatoire/droits-fondamentaux/:categorySlug/:documentSlug" element={<DocumentDetail />} />
-            <Route path="/observatoire/document/:documentId" element={<DocumentDetail />} />
-            <Route path="/observatoire/analyses-opinions" element={<AnalysesOpinions />} />
-            <Route path="/observatoire/analyses-juridiques" element={<AnalysesJuridiques />} />
-            <Route path="/observatoire/analyses-juridiques/:categorySlug" element={<AnalysesJuridiquesByCategory />} />
+            <Route path="/observatoire/document/:documentId/:slug?" element={<DocumentDetail />} />
+            <Route path="/observatoire/analyses-opinions" element={<OdfHub hub="analyses" />} />
+            <Route path="/observatoire/publications" element={<OdfHub hub="publications" />} />
+            <Route path="/observatoire/fiches-jurisprudence" element={<OdfTypeListPage typeKey="fiches" />} />
+            <Route path="/observatoire/analyses-juridiques" element={<OdfTypeListPage typeKey="analyses" />} />
+            <Route path="/observatoire/analyses-juridiques/:categorySlug" element={<OdfTypeListPage typeKey="analyses" />} />
             <Route path="/observatoire/analyses-juridiques/:categorySlug/:documentSlug" element={<DocumentDetail />} />
-            <Route path="/observatoire/commentaires" element={<Commentaires />} />
-            <Route path="/observatoire/blogs" element={<Blogs />} />
-            <Route path="/observatoire/fiches-jurisprudence" element={<FichesJurisprudence />} />
+            <Route path="/observatoire/articles" element={<OdfTypeListPage typeKey="articles" />} />
+            <Route path="/observatoire/commentaires" element={<OdfTypeListPage typeKey="commentaires" />} />
+            <Route path="/observatoire/blogs" element={<OdfTypeListPage typeKey="blogs" />} />
+            <Route path="/observatoire/recueils" element={<OdfTypeListPage typeKey="recueils" />} />
+            <Route path="/observatoire/notes-thematiques" element={<OdfTypeListPage typeKey="notes" />} />
+            <Route path="/observatoire/policy-briefs" element={<OdfTypeListPage typeKey="policy" />} />
+            <Route path="/observatoire/presentations" element={<OdfTypeListPage typeKey="presentations" />} />
             <Route path="/observatoire/actualites" element={<Actualites />} />
             <Route path="/observatoire/actualites/:newsId" element={<ActualiteDetail />} />
           </Route>

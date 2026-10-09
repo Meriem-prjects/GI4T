@@ -43,6 +43,41 @@ export async function saveFile(
   return { key, url: buildPublicUrl(bucket, key), size: buffer.length };
 }
 
+// Fichiers des documents ODF lus page par page : chemin imposé par le script
+// d'import (dossier dont le nom contient un hash du document source), écrit
+// tel quel pour que les adresses soient stables et mises en cache longtemps.
+const ODF_KEY_RE = /^odf\/[a-z0-9][a-z0-9_.-]*(?:\/[a-z0-9][a-z0-9_.-]*)*\.(?:webp|pdf)$/;
+
+export function isOdfKey(key: string): boolean {
+  return ODF_KEY_RE.test(key) && !key.includes("..");
+}
+
+function insideBucket(bucket: Bucket, absPath: string): boolean {
+  return absPath.startsWith(resolveBucketDir(bucket) + path.sep);
+}
+
+export async function saveFileAtKey(
+  bucket: Bucket,
+  key: string,
+  buffer: Buffer,
+): Promise<{ key: string; url: string; size: number }> {
+  const absPath = buildStoragePath(bucket, key);
+  if (!insideBucket(bucket, absPath)) throw new Error("Invalid key");
+  await fs.mkdir(path.dirname(absPath), { recursive: true });
+  const tmp = `${absPath}.${randomUUID()}.part`;
+  await fs.writeFile(tmp, buffer);
+  await fs.rename(tmp, absPath);
+  return { key, url: buildPublicUrl(bucket, key), size: buffer.length };
+}
+
+// Supprime un dossier ODF (ex. les pages d'un document supprimé).
+export async function removeOdfDir(bucket: Bucket, dir: string): Promise<void> {
+  if (!/^odf\/[a-z0-9][a-z0-9_.\/-]*$/.test(dir) || dir.includes("..")) return;
+  const absPath = buildStoragePath(bucket, dir);
+  if (!insideBucket(bucket, absPath)) return;
+  await fs.rm(absPath, { recursive: true, force: true });
+}
+
 export async function deleteFile(bucket: Bucket, key: string): Promise<void> {
   const absPath = buildStoragePath(bucket, key);
   await fs.rm(absPath, { force: true });

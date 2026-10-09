@@ -23,6 +23,8 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import { useTranslation } from "@/hooks/useTranslation";
 import PageCarousel, { hasPageBreaks } from "@/components/PageCarousel";
 import TableOfContents, { injectHeadingIds } from "@/components/TableOfContents";
+import OdfBookDocument from "@/components/observatoire/OdfBookDocument";
+import type { OdfDoc } from "@/lib/odf";
 
 interface PageContent {
   pageNumber: number;
@@ -369,19 +371,26 @@ const DocumentDetail = () => {
     return (
       <div className="container mx-auto px-4 py-6">
         <div className="text-center py-12">
-          <h1 className="text-2xl font-bold mb-4">Document introuvable</h1>
+          <h1 className="text-2xl font-bold mb-4">{isRTL ? 'الوثيقة غير موجودة' : 'Document introuvable'}</h1>
           <p className="text-muted-foreground mb-6">
-            Le document que vous recherchez n'existe pas ou a été supprimé.
+            {isRTL
+              ? 'الوثيقة التي تبحث عنها غير موجودة أو تمّ حذفها.'
+              : "Le document que vous recherchez n'existe pas ou a été supprimé."}
           </p>
-          <Link to="/observatoire/droits-fondamentaux">
+          <Link to="/observatoire">
             <Button>
               <ArrowLeft className="w-4 h-4 mr-2" />
-              Retour aux droits fondamentaux
+              {isRTL ? 'العودة إلى المرصد' : "Retour à l'Observatoire"}
             </Button>
           </Link>
         </div>
       </div>
     );
+  }
+
+  // Documents ODF « avec page de garde » : lecture page par page
+  if ((document as unknown as OdfDoc).book) {
+    return <OdfBookDocument doc={document as unknown as OdfDoc} />;
   }
 
   // Choose content based on interface language and original language

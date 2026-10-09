@@ -213,6 +213,14 @@ export class QueryBuilder<T = unknown> implements PromiseLike<QueryResult<T>> {
     // Not fully supported — treat as a no-op hint
     return this;
   }
+  // Not supported by the REST API either — accepted so callers written for
+  // Supabase (`.not("year", "is", null)`, `.overlaps(...)`) no longer throw.
+  not(_col: string, _op: string, _value: unknown): this {
+    return this;
+  }
+  overlaps(_col: string, _value: unknown): this {
+    return this;
+  }
   match(values: Record<string, unknown>): this {
     for (const [col, value] of Object.entries(values)) {
       this.filters.push({ type: "eq", col, value });

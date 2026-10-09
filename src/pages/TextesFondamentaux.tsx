@@ -34,6 +34,8 @@ import {
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/client";
+import { api } from "@/api/client";
+import type { OdfFacets } from "@/hooks/useOdf";
 import { useEffect, useState } from "react";
 import { createCategorySlug } from "@/lib/urlUtils";
 import { useLanguage } from "@/contexts/LanguageContext";
@@ -101,31 +103,16 @@ const TextesFondamentaux = () => {
           return;
         }
         
-        // Récupérer les IDs des catégories liées aux fiches de jurisprudence publiées
-        const { data: docsData, error: docsError } = await supabase
-          .from('documents')
-          .select('id, document_categories(category_id)')
-          .eq('document_type_id', docTypeData.id)
-          .eq('published', true)
-          .in('status', ['processed', 'published']);
-        
-        if (docsError) throw docsError;
-        
-        // Compter les documents par catégorie
-        const counts: Record<string, number> = {};
-        docsData?.forEach(doc => {
-          doc.document_categories?.forEach((dc: { category_id: string }) => {
-            counts[dc.category_id] = (counts[dc.category_id] || 0) + 1;
-          });
+        // Nombre de fiches publiées par droit fondamental (compté par le
+        // serveur : la liste des documents est limitée à 50 éléments)
+        const facets = await api.get<OdfFacets>('/api/documents/facets', {
+          query: { document_type_ids: docTypeData.id },
         });
+        const counts: Record<string, number> = Object.fromEntries(
+          facets.categories.map((c) => [c.id, c.count]),
+        );
         setCategoryCounts(counts);
-        
-        // Extraire les IDs uniques des catégories
-        const categoryIds = [...new Set(
-          docsData?.flatMap(d => 
-            d.document_categories?.map((dc: { category_id: string }) => dc.category_id) || []
-          ) || []
-        )];
+        const categoryIds = facets.categories.map((c) => c.id);
         
         if (categoryIds.length === 0) {
           setCategories([]);
@@ -293,12 +280,18 @@ const TextesFondamentaux = () => {
             </h2>
           </div>
         </div>
-        <div className={`flex items-center justify-between mb-8 ${isRTL ? 'flex-row-reverse' : ''}`}>
+        <div className={`flex flex-wrap items-center justify-between gap-3 mb-8 ${isRTL ? 'flex-row-reverse' : ''}`}>
           <p className={`text-sm text-muted-foreground ${isRTL ? 'arabic-text font-arabic text-right' : ''}`}>
             {isRTL
               ? 'استكشف الحقوق الأساسية حسب المحاور المواضيعية'
               : 'Explorez les droits fondamentaux par catégories thématiques'}
           </p>
+          <Link
+            to="/observatoire/fiches-jurisprudence"
+            className={`text-sm font-semibold text-primary hover:underline ${isRTL ? 'arabic-text font-arabic' : ''}`}
+          >
+            {isRTL ? 'كلّ جذاذات فقه القضاء حسب السنة ←' : 'Toutes les fiches de jurisprudence, par année →'}
+          </Link>
         </div>
 
         {loading ? (
