@@ -82,7 +82,7 @@ export default function DocumentBookViewer({ book, title, uiLang }: Props) {
   const [loaded, setLoaded] = useState(false);
   const [failed, setFailed] = useState(false);
   const [retry, setRetry] = useState(0);
-  const [stageWidth, setStageWidth] = useState(0);
+  const [stage, setStage] = useState({ w: 0, h: 0 });
   const [goTo, setGoTo] = useState("");
 
   const stageRef = useRef<HTMLDivElement>(null);
@@ -123,17 +123,23 @@ export default function DocumentBookViewer({ book, title, uiLang }: Props) {
     }
   }, [ed, page, total]);
 
-  // Miniature courante visible dans la bande
+  // Miniature courante visible dans la bande (sans faire défiler la page
+  // quand la bande est hors de l'écran)
   useEffect(() => {
-    const el = thumbsRef.current?.querySelector<HTMLElement>(`[data-page="${page}"]`);
-    el?.scrollIntoView({ behavior: "smooth", inline: "center", block: "nearest" });
-  }, [page, edition]);
+    const strip = thumbsRef.current;
+    const el = strip?.querySelector<HTMLElement>(`[data-page="${page}"]`);
+    if (!strip || !el) return;
+    const r = strip.getBoundingClientRect();
+    if (r.bottom > 0 && r.top < window.innerHeight) {
+      el.scrollIntoView({ behavior: "smooth", inline: "center", block: "nearest" });
+    }
+  }, [page, edition, full]);
 
-  // Largeur disponible pour la page (mode « page entière »)
+  // Place disponible pour la page (mode « page entière »)
   useEffect(() => {
     const el = stageRef.current;
     if (!el) return;
-    const ro = new ResizeObserver(([entry]) => setStageWidth(entry.contentRect.width));
+    const ro = new ResizeObserver(([entry]) => setStage({ w: entry.contentRect.width, h: entry.contentRect.height }));
     ro.observe(el);
     return () => ro.disconnect();
   }, [full]);
@@ -199,8 +205,8 @@ export default function DocumentBookViewer({ book, title, uiLang }: Props) {
 
   // Taille de la page : entière à l'écran (zoom 1), puis 150 % / 200 %
   const ratio = ed.w / ed.h;
-  const maxHeight = full ? window.innerHeight - 140 : Math.max(420, Math.min(window.innerHeight - 220, 1100));
-  const fitWidth = Math.max(160, Math.min(stageWidth - 16, maxHeight * ratio));
+  const maxHeight = full ? Math.max(200, stage.h - 16) : Math.max(420, Math.min(window.innerHeight - 220, 1100));
+  const fitWidth = Math.max(160, Math.min(stage.w - 16, maxHeight * ratio));
   const pageWidth = Math.round(fitWidth * zoom);
 
   const zoomIn = () => setZoom((z) => ZOOMS[Math.min(ZOOMS.indexOf(z) + 1, ZOOMS.length - 1)]);
@@ -283,12 +289,11 @@ export default function DocumentBookViewer({ book, title, uiLang }: Props) {
     </div>
   );
 
-  const stage = (
-    <div className="relative" dir={bookDir}>
+  const stageEl = (
+    <div className={cn("relative", full && "h-full")} dir={bookDir}>
       <div
         ref={stageRef}
-        className={cn("relative bg-muted/60", zoom > 1 ? "overflow-auto" : "overflow-hidden")}
-        style={{ height: full ? "calc(100vh - 130px)" : undefined }}
+        className={cn("relative bg-muted/60", full && "h-full", zoom > 1 ? "overflow-auto" : "overflow-hidden")}
         onTouchStart={onTouchStart}
         onTouchEnd={onTouchEnd}
       >
@@ -400,7 +405,7 @@ export default function DocumentBookViewer({ book, title, uiLang }: Props) {
     return (
       <div ref={overlayRef} className="fixed inset-0 z-50 flex flex-col bg-neutral-900" role="dialog" aria-modal="true" aria-label={title}>
         {toolbar}
-        <div className="flex-1 min-h-0">{stage}</div>
+        <div className="flex-1 min-h-0">{stageEl}</div>
         {bottom}
       </div>
     );
@@ -409,7 +414,7 @@ export default function DocumentBookViewer({ book, title, uiLang }: Props) {
   return (
     <section className="rounded-xl border bg-card overflow-hidden" aria-label={title}>
       {toolbar}
-      {stage}
+      {stageEl}
       {bottom}
     </section>
   );
