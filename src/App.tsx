@@ -3,7 +3,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { LanguageProvider } from "@/contexts/LanguageContext";
 import ObservatoireProtectedRoute from "@/components/admin/ObservatoireProtectedRoute";
@@ -84,7 +84,9 @@ const App: React.FC = () => (
             <Route path="/observatoire/analyses-juridiques" element={<OdfTypeListPage typeKey="analyses" />} />
             <Route path="/observatoire/analyses-juridiques/:categorySlug" element={<OdfTypeListPage typeKey="analyses" />} />
             <Route path="/observatoire/analyses-juridiques/:categorySlug/:documentSlug" element={<DocumentDetail />} />
-            <Route path="/observatoire/articles" element={<OdfTypeListPage typeKey="articles" />} />
+            <Route path="/observatoire/approche-sociologique" element={<OdfTypeListPage typeKey="articles" />} />
+            <Route path="/observatoire/approche-economique" element={<OdfTypeListPage typeKey="economie" />} />
+            <Route path="/observatoire/articles" element={<Navigate to="/observatoire/approche-sociologique" replace />} />
             <Route path="/observatoire/commentaires" element={<OdfTypeListPage typeKey="commentaires" />} />
             <Route path="/observatoire/blogs" element={<OdfTypeListPage typeKey="blogs" />} />
             <Route path="/observatoire/recueils" element={<OdfTypeListPage typeKey="recueils" />} />

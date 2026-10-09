@@ -4,15 +4,16 @@
 // en image (p<n>.webp), en miniature (t<n>.webp), plus le PDF, dans
 // documents/<book.<langue>.dir>/ du stockage.
 import {
-  BookOpenText,
   FileText,
   Landmark,
   Library,
+  LineChart,
   MessageSquare,
   PenSquare,
   Presentation,
   Scale,
   StickyNote,
+  Users,
   type LucideIcon,
 } from "lucide-react";
 import { API_BASE_URL } from "@/api/client";
@@ -23,6 +24,7 @@ export type OdfTypeKey =
   | "recueils"
   | "analyses"
   | "articles"
+  | "economie"
   | "commentaires"
   | "blogs"
   | "notes"
@@ -37,7 +39,8 @@ export interface OdfTypeDef {
   key: OdfTypeKey;
   dbName: string;
   path: string;
-  hub: OdfHubKey;
+  // Sans rubrique : le type a son propre onglet dans l'en-tête de l'ODF
+  hub?: OdfHubKey;
   label: Text;
   singular: Text;
   description: Text;
@@ -86,19 +89,34 @@ export const ODF_TYPES: OdfTypeDef[] = [
   {
     key: "articles",
     dbName: "Articles",
-    path: "/observatoire/articles",
-    hub: "analyses",
-    label: { fr: "Articles", ar: "المقالات" },
+    path: "/observatoire/approche-sociologique",
+    label: { fr: "Approche sociologique des droits fondamentaux", ar: "المقاربة السوسيولوجية للحقوق الأساسية" },
     singular: { fr: "Article", ar: "مقال" },
     description: {
-      fr: "Lectures de fond sur l'effectivité des droits et des libertés en Tunisie.",
-      ar: "قراءات معمّقة حول فعلية الحقوق والحرّيات في تونس.",
+      fr: "Lectures sociologiques de la jurisprudence : ce que les décisions de justice changent pour les justiciables.",
+      ar: "قراءات سوسيولوجية في فقه القضاء: ما تغيّره القرارات القضائية في حياة المتقاضين.",
     },
     layout: "grid",
     sorts: ["title", "recent"],
     filters: { right: true },
-    icon: BookOpenText,
+    icon: Users,
     color: "#7C3AED",
+  },
+  {
+    key: "economie",
+    dbName: "Approche économique",
+    path: "/observatoire/approche-economique",
+    label: { fr: "Approche économique des droits fondamentaux", ar: "المقاربة الاقتصادية للحقوق الأساسية" },
+    singular: { fr: "Article", ar: "مقال" },
+    description: {
+      fr: "Analyses économiques de la jurisprudence : coûts, effets et enjeux budgétaires de la protection des droits.",
+      ar: "تحاليل اقتصادية لفقه القضاء: كلفة حماية الحقوق وآثارها ورهاناتها على الميزانية.",
+    },
+    layout: "grid",
+    sorts: ["title", "recent"],
+    filters: { right: true },
+    icon: LineChart,
+    color: "#059669",
   },
   {
     key: "commentaires",
@@ -228,10 +246,10 @@ export const ODF_HUBS: Record<OdfHubKey, OdfHubDef> = {
     path: "/observatoire/analyses-opinions",
     label: { fr: "Analyses & Opinions", ar: "تحليلات وآراء" },
     description: {
-      fr: "Analyses, articles, commentaires et billets de magistrats et d'universitaires sur les décisions qui font la jurisprudence.",
-      ar: "تحاليل ومقالات وتعاليق وتدوينات لقضاة وجامعيين حول القرارات التي تصنع فقه القضاء.",
+      fr: "Analyses, commentaires et billets de magistrats et d'universitaires sur les décisions qui font la jurisprudence.",
+      ar: "تحاليل وتعاليق وتدوينات لقضاة وجامعيين حول القرارات التي تصنع فقه القضاء.",
     },
-    types: ["analyses", "articles", "commentaires", "blogs"],
+    types: ["analyses", "commentaires", "blogs"],
   },
   publications: {
     key: "publications",

@@ -12,7 +12,7 @@ export default function OdfTypeListPage({ typeKey }: { typeKey: OdfTypeKey }) {
   const { language } = useLanguage();
   const lang = (language === "ar" ? "ar" : "fr") as Lang;
   const type = odfType(typeKey);
-  const hub = ODF_HUBS[type.hub];
+  const hub = type.hub ? ODF_HUBS[type.hub] : undefined;
   const Icon = type.icon;
   const { categorySlug } = useParams<{ categorySlug?: string }>();
   const [params, setParams] = useSearchParams();
@@ -40,7 +40,7 @@ export default function OdfTypeListPage({ typeKey }: { typeKey: OdfTypeKey }) {
       <div className="container mx-auto px-4 py-6">
         <OdfBreadcrumb
           lang={lang}
-          items={[{ label: hub.label[lang], to: hub.path }, { label: type.label[lang] }]}
+          items={[...(hub ? [{ label: hub.label[lang], to: hub.path }] : []), { label: type.label[lang] }]}
         />
         <header className="mb-8 flex items-start gap-4">
           <span

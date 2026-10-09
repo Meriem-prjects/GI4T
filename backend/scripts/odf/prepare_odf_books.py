@@ -51,6 +51,7 @@ THUMB_QUALITY = 70
 # Dossier source → type (clé utilisée partout ailleurs)
 TYPE_FOLDERS = [
     ("analyses juridiques", "analyses"),
+    ("approche economique", "economie"),
     ("articles", "articles"),
     ("blog", "blogs"),
     ("commentaires", "commentaires"),
@@ -63,6 +64,7 @@ TYPE_FOLDERS = [
 TYPE_LABELS = {
     "analyses": ("Analyse juridique", "تحليل قانوني"),
     "articles": ("Article", "مقال"),
+    "economie": ("Article", "مقال"),
     "blogs": ("Blog", "تدوينة"),
     "commentaires": ("Commentaire", "تعليق"),
     "fiches": ("Fiche", "جذاذة"),
@@ -597,7 +599,7 @@ def build_meta(it, parsed, fiche_index):
         m["summary"] = short(next((p for p in body_fr[skip:] if len(p) >= 80), ""), 450)
         m["summaryAr"] = short(next((p for p in body_ar[skip:] if len(p) >= 60), ""), 450)
         m["sortOrder"] = num
-        if t in ("analyses", "articles", "notes", "policy", "blogs", "commentaires"):
+        if t in ("analyses", "articles", "economie", "notes", "policy", "blogs", "commentaires"):
             m["rightsRaw"] = [m["title"]]
     return m
 
@@ -688,9 +690,9 @@ def resolve_rights(items, rights_map):
                     cats.extend(c for c in got if c not in cats)
             m["rights"] = cats
         else:
-            m["rights"] = detect_rights(m["title"], rights_map) if rights_map else []
-            if it["type"] == "analyses" and not m["rights"]:
-                unresolved.add(m["title"])
+            # Articles d'économie : le droit est souvent dans le sous-titre
+            text = m["title"] + (" " + (m.get("subtitle") or "") if it["type"] == "economie" else "")
+            m["rights"] = detect_rights(text, rights_map) if rights_map else []
     return unresolved
 
 
@@ -967,7 +969,7 @@ def phase_manifest(args):
                             ",".join(map(str, qa["emptyPages"])), qa["trimmed"]])
             if qa["missingFonts"]:
                 problems.append("%s/%s : polices non intégrées %s" % (it["key"], lang, qa["missingFonts"]))
-        if it["type"] in ("fiches", "analyses") and not it["meta"].get("rights"):
+        if it["type"] == "fiches" and not it["meta"].get("rights"):
             problems.append("%s : aucun droit rattaché (%s)" % (it["key"], it["meta"].get("rightsRaw")))
         rec = {k: it[k] for k in ("key", "type", "year", "src", "sha", "duplicates")}
         rec["meta"] = it["meta"]

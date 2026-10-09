@@ -80,6 +80,12 @@ const TYPES: Record<string, { name: string; nameAr: string; description: string;
     description: "Articles de fond sur l'effectivité des droits",
     descriptionAr: "مقالات حول فعلية الحقوق",
   },
+  economie: {
+    name: "Approche économique",
+    nameAr: "المقاربة الاقتصادية",
+    description: "Analyses économiques de la jurisprudence et des droits fondamentaux",
+    descriptionAr: "تحاليل اقتصادية لفقه القضاء وللحقوق الأساسية",
+  },
   notes: {
     name: "Notes thématiques",
     nameAr: "الأوراق الموضوعية",

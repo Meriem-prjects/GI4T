@@ -88,7 +88,7 @@ export default function OdfBookDocument({ doc }: { doc: OdfDoc }) {
   const t = L[lang];
   const dir = lang === "ar" ? "rtl" : "ltr";
   const type = odfTypeByDbName(doc.document_types?.name);
-  const hub = ODF_HUBS[type?.hub ?? "analyses"];
+  const hub = type ? (type.hub ? ODF_HUBS[type.hub] : undefined) : ODF_HUBS.analyses;
   const title = pick(lang, doc.title, doc.title_ar);
   const subtitle = pick(lang, doc.subtitle, doc.subtitle_ar);
   const author = pick(lang, doc.author, doc.author_ar);
@@ -125,7 +125,7 @@ export default function OdfBookDocument({ doc }: { doc: OdfDoc }) {
       <OdfBreadcrumb
         lang={lang}
         items={[
-          { label: hub.label[lang], to: hub.path },
+          ...(hub ? [{ label: hub.label[lang], to: hub.path }] : []),
           ...(type ? [{ label: type.label[lang], to: type.path }] : []),
           { label: title },
         ]}

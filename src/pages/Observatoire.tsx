@@ -6,6 +6,8 @@ import {
   Library,
   ArrowRight,
   Search,
+  Users,
+  LineChart,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -26,7 +28,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useTranslation } from "@/hooks/useTranslation";
 import { useOdfFacets, useOdfTypeCounts } from "@/hooks/useOdf";
-import { ODF_HUBS, ODF_TYPES, type OdfTypeKey } from "@/lib/odf";
+import { ODF_HUBS, ODF_TYPES, odfType, type OdfTypeKey } from "@/lib/odf";
 
 const Observatoire = () => {
   const navigate = useNavigate();
@@ -59,6 +61,8 @@ const Observatoire = () => {
   const counts = {
     juris: sum(ODF_HUBS.droits.types),
     analyses: sum(ODF_HUBS.analyses.types),
+    sociologie: typeCounts.articles ?? 0,
+    economie: typeCounts.economie ?? 0,
     publications: sum(ODF_HUBS.publications.types),
     news: newsCount ?? 0,
   };
@@ -117,6 +121,34 @@ const Observatoire = () => {
       count: counts.analyses,
       cta: isRTL ? "قراءة التحاليل" : "Lire les analyses",
       link: "/observatoire/analyses-opinions",
+    },
+    {
+      key: "sociologie",
+      title: isRTL ? "المقاربة السوسيولوجية للحقوق الأساسية" : "Approche sociologique des droits fondamentaux",
+      description: isRTL
+        ? "قراءات سوسيولوجية في فقه القضاء: ما تغيّره القرارات القضائية في حياة المتقاضين."
+        : "Lectures sociologiques de la jurisprudence : ce que les décisions de justice changent pour les justiciables.",
+      icon: Users,
+      color: "#7C3AED",
+      bgTint: "bg-violet-50",
+      cardBg: "bg-violet-50/60",
+      count: counts.sociologie,
+      cta: isRTL ? "قراءة المقالات" : "Lire les articles",
+      link: odfType("articles").path,
+    },
+    {
+      key: "economie",
+      title: isRTL ? "المقاربة الاقتصادية للحقوق الأساسية" : "Approche économique des droits fondamentaux",
+      description: isRTL
+        ? "تحاليل اقتصادية لفقه القضاء: كلفة حماية الحقوق وآثارها ورهاناتها على الميزانية."
+        : "Analyses économiques de la jurisprudence : coûts, effets et enjeux budgétaires de la protection des droits.",
+      icon: LineChart,
+      color: "#059669",
+      bgTint: "bg-emerald-50",
+      cardBg: "bg-emerald-50/60",
+      count: counts.economie,
+      cta: isRTL ? "قراءة المقالات" : "Lire les articles",
+      link: odfType("economie").path,
     },
     {
       key: "publications",
@@ -328,7 +360,7 @@ const Observatoire = () => {
           </button>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-5">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
           {rubriques.map((r) => {
             const Icon = r.icon;
             return (

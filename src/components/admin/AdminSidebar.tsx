@@ -64,7 +64,7 @@ const AdminSidebar = ({ type, isCollapsed = false, onToggle }: AdminSidebarProps
     location.pathname.includes('/commentaires-content') || 
     location.pathname.includes('/analyses-juridiques') || 
     location.pathname.includes('/fiches-jurisprudence') ||
-    ['/articles', '/recueils', '/notes-thematiques', '/policy-briefs', '/presentations'].some((p) => location.pathname.includes(p))
+    ['/articles', '/approche-economique', '/recueils', '/notes-thematiques', '/policy-briefs', '/presentations'].some((p) => location.pathname.includes(p))
   );
 
   // Navigation items pour Observatoire - standalone items
@@ -95,7 +95,8 @@ const AdminSidebar = ({ type, isCollapsed = false, onToggle }: AdminSidebarProps
       { title: "Commentaires", href: `${basePath}/commentaires-content`, icon: MessageSquare, description: "Commentaires juridiques" },
       { title: "Analyses juridiques", href: `${basePath}/analyses-juridiques`, icon: PenTool, description: "Analyses et études" },
       { title: "Fiches jurisprudence", href: `${basePath}/fiches-jurisprudence`, icon: Scale, description: "Fiches de jurisprudence" },
-      { title: "Articles", href: `${basePath}/articles`, icon: FileText, description: "Articles de fond" },
+      { title: "Approche sociologique", href: `${basePath}/articles`, icon: FileText, description: "Articles de sociologie" },
+      { title: "Approche économique", href: `${basePath}/approche-economique`, icon: FileText, description: "Articles d'économie" },
       { title: "Recueils", href: `${basePath}/recueils`, icon: BookOpen, description: "Recueils annuels" },
       { title: "Notes thématiques", href: `${basePath}/notes-thematiques`, icon: FileText, description: "Notes transversales" },
       { title: "Policy briefs", href: `${basePath}/policy-briefs`, icon: FileText, description: "Recommandations" },

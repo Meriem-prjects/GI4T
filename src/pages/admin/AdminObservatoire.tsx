@@ -68,6 +68,7 @@ const AdminObservatoire = () => {
             <Route path="analyses-juridiques" element={<AdminAnalysesJuridiques />} />
             <Route path="fiches-jurisprudence" element={<AdminFichesJurisprudence />} />
             <Route path="articles" element={<AdminOdfType typeKey="articles" />} />
+            <Route path="approche-economique" element={<AdminOdfType typeKey="economie" />} />
             <Route path="recueils" element={<AdminOdfType typeKey="recueils" />} />
             <Route path="notes-thematiques" element={<AdminOdfType typeKey="notes" />} />
             <Route path="policy-briefs" element={<AdminOdfType typeKey="policy" />} />

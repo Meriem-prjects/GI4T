@@ -407,6 +407,10 @@ type TranslationKey =
   | 'observatoireNavNewsDesc'
   | 'observatoireNavPublications'
   | 'observatoireNavPublicationsDesc'
+  | 'observatoireNavSociology'
+  | 'observatoireNavSociologyDesc'
+  | 'observatoireNavEconomy'
+  | 'observatoireNavEconomyDesc'
   | 'ourSections'
   // Workflow IA Timeline
   | 'workflowGuide'
@@ -823,6 +827,10 @@ const translations: Record<'fr' | 'ar', Record<TranslationKey, string>> = {
     observatoireNavNewsDesc: 'Dernières nouvelles',
     observatoireNavPublications: 'Publications',
     observatoireNavPublicationsDesc: 'Recueils, notes, policy briefs',
+    observatoireNavSociology: 'Approche sociologique',
+    observatoireNavSociologyDesc: 'Les droits vus par la sociologie',
+    observatoireNavEconomy: 'Approche économique',
+    observatoireNavEconomyDesc: 'Les droits vus par l’économie',
     ourSections: 'Nos Rubriques',
     // Workflow IA Timeline
     workflowGuide: 'Processus de traitement IA',
@@ -1242,6 +1250,10 @@ const translations: Record<'fr' | 'ar', Record<TranslationKey, string>> = {
     observatoireNavNewsDesc: 'آخر الأخبار',
     observatoireNavPublications: 'المنشورات',
     observatoireNavPublicationsDesc: 'المجموعات والأوراق',
+    observatoireNavSociology: 'المقاربة السوسيولوجية',
+    observatoireNavSociologyDesc: 'الحقوق من منظور علم الاجتماع',
+    observatoireNavEconomy: 'المقاربة الاقتصادية',
+    observatoireNavEconomyDesc: 'الحقوق من منظور الاقتصاد',
     ourSections: 'أقسامنا',
     // Workflow IA Timeline
     workflowGuide: 'سير عمل المعالجة بالذكاء الاصطناعي',

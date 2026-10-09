@@ -110,7 +110,10 @@
     "secret des correspondances": "Droit à la protection du secret des correspondances",
     "vie privée": "Droit à la protection de la vie privée",
     "présomption d'innocence": "Présomption d'innocence",
-    "droit au logement": "Droit au logement"
+    "droit au logement": "Droit au logement",
+    "poursuite des études": "Droit à l'enseignement",
+    "droit à la propriété": "Droit de la propriété",
+    "égalité successorale": "Droit à l'égalité"
   },
   "create": [
     { "name": "Liberté d'opinion, de pensée et d'expression", "name_ar": "حرية الرأي والفكر والتعبير" }

@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Menu, Home, Scale, FileText, Newspaper, Search, ChevronDown, ChevronRight, Library } from "lucide-react";
+import { Menu, Home, Scale, FileText, Newspaper, Search, ChevronDown, ChevronRight, Library, Users, LineChart } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
@@ -41,6 +41,20 @@ const ObservatoireHeader = () => {
       icon: FileText,
       link: ODF_HUBS.analyses.path,
       children: ODF_HUBS.analyses.types.map((k) => ({ label: odfType(k).label[isRTL ? 'ar' : 'fr'], link: odfType(k).path }))
+    },
+    {
+      id: 'sociologie',
+      label: isRTL ? 'المقاربة السوسيولوجية' : 'Approche sociologique',
+      icon: Users,
+      link: odfType('articles').path,
+      children: []
+    },
+    {
+      id: 'economie',
+      label: isRTL ? 'المقاربة الاقتصادية' : 'Approche économique',
+      icon: LineChart,
+      link: odfType('economie').path,
+      children: []
     },
     {
       id: 'publications',
