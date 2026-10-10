@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Menu, Home, Scale, FileText, Newspaper, Search, ChevronDown, ChevronRight, Library, Users, LineChart } from "lucide-react";
+import { Menu, Home, Scale, FileText, Search, ChevronDown, ChevronRight, Library, Users, LineChart } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
@@ -62,13 +62,6 @@ const ObservatoireHeader = () => {
       icon: Library,
       link: ODF_HUBS.publications.path,
       children: ODF_HUBS.publications.types.map((k) => ({ label: odfType(k).label[isRTL ? 'ar' : 'fr'], link: odfType(k).path }))
-    },
-    {
-      id: 'actualites',
-      label: isRTL ? 'الأخبار' : 'Actualités',
-      icon: Newspaper,
-      link: '/observatoire/actualites',
-      children: []
     }
   ];
 

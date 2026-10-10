@@ -644,3 +644,14 @@ All colors MUST be HSL.
   border-top: 1px solid hsl(var(--foreground) / 0.15);
   margin: 0.6em 0;
 }
+
+/* Défilement horizontal sans barre visible (onglets de l'en-tête…) */
+@layer utilities {
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+}

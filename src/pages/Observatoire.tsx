@@ -2,7 +2,6 @@ import { useState } from "react";
 import {
   Scale,
   FileText,
-  Megaphone,
   Library,
   ArrowRight,
   Search,
@@ -23,8 +22,6 @@ import {
 } from "@/components/ui/select";
 import { useCourtTypes } from "@/hooks/useCourtTypes";
 import { useDocumentTypes } from "@/hooks/useDocumentTypes";
-import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useTranslation } from "@/hooks/useTranslation";
 import { useOdfFacets, useOdfTypeCounts } from "@/hooks/useOdf";
@@ -48,23 +45,12 @@ const Observatoire = () => {
   const { counts: typeCounts } = useOdfTypeCounts();
   const sum = (keys: OdfTypeKey[]) => keys.reduce((n, k) => n + (typeCounts[k] ?? 0), 0);
 
-  const { data: newsCount } = useQuery({
-    queryKey: ["observatoire-news-count"],
-    queryFn: async () => {
-      const { count } = await supabase
-        .from("news")
-        .select("id", { count: "exact", head: true })
-        .eq("is_published", true);
-      return count ?? 0;
-    },
-  });
   const counts = {
     juris: sum(ODF_HUBS.droits.types),
     analyses: sum(ODF_HUBS.analyses.types),
     sociologie: typeCounts.articles ?? 0,
     economie: typeCounts.economie ?? 0,
     publications: sum(ODF_HUBS.publications.types),
-    news: newsCount ?? 0,
   };
 
   const handleSearch = (e?: React.FormEvent) => {
@@ -163,21 +149,6 @@ const Observatoire = () => {
       count: counts.publications,
       cta: isRTL ? "تصفّح المنشورات" : "Voir les publications",
       link: "/observatoire/publications",
-    },
-    {
-      key: "news",
-      title: isRTL ? "الأخبار القانونية" : "Actualités Juridiques",
-      description: isRTL
-        ? "تابعوا مباشرة الإصلاحات الجارية والقرارات الجديدة الصادرة عن المحاكم العليا."
-        : "Suivez en temps réel les réformes en cours et les nouveaux arrêts publiés par les hautes juridictions.",
-      icon: Megaphone,
-      color: "#F59E0B",
-      bgTint: "bg-amber-50",
-      cardBg: "bg-amber-50/60",
-      count: counts.news,
-      isNew: true,
-      cta: isRTL ? "عرض الأخبار" : "Voir l'actualité",
-      link: "/observatoire/actualites",
     },
   ];
 
@@ -360,13 +331,14 @@ const Observatoire = () => {
           </button>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-          {rubriques.map((r) => {
+        {/* 5 rubriques : 3 cartes puis 2 plus larges (grille de 6 colonnes) */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-5">
+          {rubriques.map((r, i) => {
             const Icon = r.icon;
             return (
               <Card
                 key={r.key}
-                className={`group ${r.cardBg} border border-border/60 rounded-2xl cursor-pointer hover:shadow-xl transition-all duration-300`}
+                className={`${i < 3 ? "lg:col-span-2" : "lg:col-span-3"} ${i === rubriques.length - 1 ? "sm:col-span-2" : ""} group ${r.cardBg} border border-border/60 rounded-2xl cursor-pointer hover:shadow-xl transition-all duration-300`}
                 onClick={() => navigate(r.link)}
               >
                 <CardContent className="p-6">
@@ -381,25 +353,16 @@ const Observatoire = () => {
                     >
                       <Icon className="w-6 h-6" style={{ color: r.color }} />
                     </div>
-                    {r.isNew ? (
-                      <Badge
-                        className="font-semibold rounded-full px-3"
-                        style={{ backgroundColor: r.color, color: "white" }}
-                      >
-                        {isRTL ? "جديد" : "New"}
-                      </Badge>
-                    ) : (
-                      <Badge
-                        variant="secondary"
-                        className="font-semibold rounded-full px-3"
-                        style={{
-                          backgroundColor: `${r.color}20`,
-                          color: r.color,
-                        }}
-                      >
-                        {r.count.toLocaleString()}
-                      </Badge>
-                    )}
+                    <Badge
+                      variant="secondary"
+                      className="font-semibold rounded-full px-3"
+                      style={{
+                        backgroundColor: `${r.color}20`,
+                        color: r.color,
+                      }}
+                    >
+                      {r.count.toLocaleString()}
+                    </Badge>
                   </div>
 
                   <h3

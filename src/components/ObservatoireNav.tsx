@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui/button";
-import { Home, Search, BookOpen, FileText, Newspaper, Library, Users, LineChart } from "lucide-react";
+import { Home, Search, BookOpen, FileText, Library, Users, LineChart } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { useLanguage } from "@/contexts/LanguageContext";
@@ -62,12 +62,6 @@ const ObservatoireNav = () => {
       label: t('observatoireNavPublications'),
       icon: Library,
       description: t('observatoireNavPublicationsDesc')
-    },
-    {
-      path: "/observatoire/actualites",
-      label: t('observatoireNavNews'),
-      icon: Newspaper,
-      description: t('observatoireNavNewsDesc')
     }
   ];
 

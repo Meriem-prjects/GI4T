@@ -19,8 +19,6 @@ import NotFound from "./pages/NotFound";
 import TextesFondamentaux from "./pages/TextesFondamentaux";
 import OdfTypeListPage from "./pages/OdfTypeListPage";
 import OdfHub from "./components/observatoire/OdfHub";
-import Actualites from "./pages/Actualites";
-import ActualiteDetail from "./pages/ActualiteDetail";
 import AccesAuxDroits from "./pages/AccesAuxDroits";
 import GuidesPratiques from "./pages/GuidesPratiques";
 import RessourcesPratiques from "./pages/RessourcesPratiques";
@@ -93,8 +91,8 @@ const App: React.FC = () => (
             <Route path="/observatoire/notes-thematiques" element={<OdfTypeListPage typeKey="notes" />} />
             <Route path="/observatoire/policy-briefs" element={<OdfTypeListPage typeKey="policy" />} />
             <Route path="/observatoire/presentations" element={<OdfTypeListPage typeKey="presentations" />} />
-            <Route path="/observatoire/actualites" element={<Actualites />} />
-            <Route path="/observatoire/actualites/:newsId" element={<ActualiteDetail />} />
+            {/* Plus d'actualités dans l'ODF : les anciennes adresses mènent à l'accueil */}
+            <Route path="/observatoire/actualites/*" element={<Navigate to="/observatoire" replace />} />
           </Route>
           
           {/* Accès aux droits interface - Unified Layout */}
