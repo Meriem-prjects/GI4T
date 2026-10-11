@@ -6,6 +6,7 @@ import OdfDocumentList from "@/components/observatoire/OdfDocumentList";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useOdfTypeCounts } from "@/hooks/useOdf";
 import { ODF_HUBS, docCount, odfType, type Lang, type OdfHubKey } from "@/lib/odf";
+import { cn } from "@/lib/utils";
 
 const L = {
   fr: { see: "Voir tout", all: "Tous les documents de la rubrique", count: (n: number) => docCount(n, "fr") },
@@ -35,7 +36,8 @@ export default function OdfHub({ hub: hubKey }: { hub: OdfHubKey }) {
           <p className="mt-2 max-w-3xl text-muted-foreground">{hub.description[lang]}</p>
         </header>
 
-        <div className="mb-12 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        {/* Autant de colonnes que de cartes : pas de vide à droite */}
+        <div className={cn("mb-12 grid gap-4", hub.types.length === 3 ? "md:grid-cols-3" : "sm:grid-cols-2 lg:grid-cols-4")}>
           {hub.types.map((key) => {
             const type = odfType(key);
             const Icon = type.icon;
