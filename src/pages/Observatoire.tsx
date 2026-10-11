@@ -172,8 +172,8 @@ const Observatoire = () => {
               }`}
             >
               {isRTL
-                ? "اِطّلعوا بسهولة على قرارات القضاء والتحاليل القانونية والأدلة العملية"
-                : "Accédez facilement aux décisions de justice, analyses juridiques et guides pratiques"}
+                ? "منصّة مواطنية مخصّصة لمعرفة الحقوق الأساسية وتعزيز الحوار"
+                : "Une plateforme citoyenne dédiée à la connaissance des droits fondamentaux et à la promotion du dialogue"}
             </h1>
             <p
               className={`text-sm md:text-base text-muted-foreground mb-8 ${
@@ -181,8 +181,8 @@ const Observatoire = () => {
               }`}
             >
               {isRTL
-                ? "منصة مواطنية مخصصة للشفافية القانونية ولفهم حقوقكم عبر بيانات مهيكلة."
-                : "Une plateforme citoyenne dédiée à la transparence juridique et à la compréhension de vos droits à travers des données structurées."}
+                ? "اطّلعوا على وثائق علمية موثوقة."
+                : "Accédez à des documents scientifiques qualifiés."}
             </p>
 
             {/* Search bar */}
