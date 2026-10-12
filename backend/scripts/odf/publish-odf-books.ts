@@ -487,8 +487,11 @@ async function buildPayload(it: Item): Promise<Json> {
     sortOrder: typeof m.sortOrder === "number" ? m.sortOrder : null,
   };
   const book: Json = { v: 1, fr: edBook(fr), ar: edBook(it.editions.ar!), refs: m.refs ?? [] };
+  // Empreinte sans l'adresse du serveur (IP ou domaine) : changer d'adresse
+  // ne doit pas remettre tous les documents à jour.
+  const pdfPath = `/api/storage/documents/${fr.dir}/${fr.pdf}`;
   const sync = createHash("sha256")
-    .update(JSON.stringify({ payload, book, rights }))
+    .update(JSON.stringify({ payload: { ...payload, fileUrl: pdfPath, pdfUrl: pdfPath }, book, rights }))
     .digest("hex")
     .slice(0, 16);
   payload.book = { ...book, sync };

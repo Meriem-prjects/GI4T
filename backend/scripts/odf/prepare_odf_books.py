@@ -215,7 +215,10 @@ def phase_scan(args):
                     pk = pair_key(stem)
                     if tkey == "analyses" and lang == "fr":
                         pk = pairs_cfg.get("analyses", {}).get(pk, pk)
-                    groups.setdefault((tkey, year, pk), {}).setdefault(lang, []).append(rel)
+                    # Recueils de jurisprudence constitutionnelle (Recueil_IPCCPL_<année>)
+                    # rangés avec les fiches de leur année : ce sont des recueils
+                    t = "recueils" if tkey == "fiches" and fold(stem).startswith("recueil") else tkey
+                    groups.setdefault((t, year, pk), {}).setdefault(lang, []).append(rel)
 
     items = []
     for (tkey, year, pk), langs in sorted(groups.items(), key=lambda kv: (kv[0][0], kv[0][1] or 0, kv[0][2])):
@@ -250,7 +253,10 @@ def phase_scan(args):
             key = "fiches/%d/%s" % (it["year"], slug)
         elif tkey == "recueils":
             m = re.search(r"(19|20)\d\d", pk)
-            key = "recueils/%s" % (m.group(0) if m else ascii_slug(pk))
+            # recueils/<année> : jurisprudence administrative ; recueils/ipccpl-<année> :
+            # jurisprudence constitutionnelle (une fiche retrouve ainsi le bon recueil)
+            prefix = "ipccpl-" if "ipccpl" in fold(pk) else ""
+            key = "recueils/%s%s" % (prefix, m.group(0) if m else ascii_slug(pk))
         else:
             slug = ascii_slug(pk, 50)
             if len(re.sub(r"[^a-z]", "", slug)) < 6:
@@ -565,8 +571,13 @@ def build_meta(it, parsed, fiche_index):
             elif len(keys) > 1:
                 m.setdefault("refsAmbiguous", []).append(int(n))
         m["refs"] = refs
-        m["summary"] = "Jugements et fiches de jurisprudence de l'année %s." % m["year"] if m["year"] else ""
-        m["summaryAr"] = "أحكام وجذاذات فقه القضاء لسنة %s." % m["year"] if m["year"] else ""
+        if "ipccpl" in fold(name_fr):
+            m["summary"] = ("Décisions de l'Instance provisoire de contrôle de la constitutionnalité des projets de loi "
+                            "et leurs fiches, année %s." % m["year"]) if m["year"] else ""
+            m["summaryAr"] = ("قرارات الهيئة الوقتية لمراقبة دستورية مشاريع القوانين وجذاذاتها لسنة %s." % m["year"]) if m["year"] else ""
+        else:
+            m["summary"] = "Jugements et fiches de jurisprudence de l'année %s." % m["year"] if m["year"] else ""
+            m["summaryAr"] = "أحكام وجذاذات فقه القضاء لسنة %s." % m["year"] if m["year"] else ""
         m["sortOrder"] = m["year"]
     else:
         num, date = name_number_date(name_ar)

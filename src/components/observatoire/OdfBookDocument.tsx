@@ -115,8 +115,16 @@ export default function OdfBookDocument({ doc }: { doc: OdfDoc }) {
   );
   const refs = doc.book?.refs ?? [];
   const cited = useOdfDocuments({ importKeys: refs, pageSize: 80, sort: "number" }, type?.key === "recueils" && refs.length > 0);
-  const recueil = useOdfDocuments({ importKeys: [`recueils/${doc.year}`], pageSize: 1 }, type?.key === "fiches" && !!doc.year);
-  const recueilDoc = recueil.data?.items[0];
+  // Recueil de l'année : administratif (recueils/<année>) ou constitutionnel
+  // (recueils/ipccpl-<année>) ; on préfère celui qui cite la fiche.
+  const recueil = useOdfDocuments(
+    { importKeys: [`recueils/${doc.year}`, `recueils/ipccpl-${doc.year}`], pageSize: 2 },
+    type?.key === "fiches" && !!doc.year,
+  );
+  const recueils = recueil.data?.items ?? [];
+  const recueilDoc =
+    recueils.find((r) => !!doc.import_key && (r.book?.refs ?? []).includes(doc.import_key)) ??
+    recueils.find((r) => r.import_key === `recueils/${doc.year}`);
 
   const text = textFor(doc, lang);
 

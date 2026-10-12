@@ -160,8 +160,8 @@ export const ODF_TYPES: OdfTypeDef[] = [
     label: { fr: "Recueils", ar: "المجموعات" },
     singular: { fr: "Recueil", ar: "مجموعة" },
     description: {
-      fr: "La jurisprudence administrative année par année : les jugements et leurs fiches.",
-      ar: "فقه القضاء الإداري سنة بسنة: الأحكام وجذاذاتها.",
+      fr: "La jurisprudence administrative et constitutionnelle année par année : les décisions et leurs fiches.",
+      ar: "فقه القضاء الإداري والدستوري سنة بسنة: القرارات وجذاذاتها.",
     },
     layout: "grid",
     sorts: ["year_desc", "year_asc"],

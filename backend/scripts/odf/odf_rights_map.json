@@ -45,7 +45,8 @@
     "Liberté du commerce et de l'industrie",
     "Liberté personnelle",
     "Présomption d'innocence",
-    "Liberté d'opinion, de pensée et d'expression"
+    "Liberté d'opinion, de pensée et d'expression",
+    "Droit à la culture"
   ],
   "aliases": {
     "droit de propriété": "Droit de la propriété",
@@ -113,10 +114,12 @@
     "droit au logement": "Droit au logement",
     "poursuite des études": "Droit à l'enseignement",
     "droit à la propriété": "Droit de la propriété",
-    "égalité successorale": "Droit à l'égalité"
+    "égalité successorale": "Droit à l'égalité",
+    "droit à la culture": "Droit à la culture"
   },
   "create": [
-    { "name": "Liberté d'opinion, de pensée et d'expression", "name_ar": "حرية الرأي والفكر والتعبير" }
+    { "name": "Liberté d'opinion, de pensée et d'expression", "name_ar": "حرية الرأي والفكر والتعبير" },
+    { "name": "Droit à la culture", "name_ar": "الحق في الثقافة" }
   ],
   "renames": {
     "Droit d'obtenir un passepor": "Droit d'obtenir un passeport"
